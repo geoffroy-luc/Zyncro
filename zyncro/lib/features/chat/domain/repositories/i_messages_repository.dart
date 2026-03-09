@@ -1,0 +1,27 @@
+import '../../../../shared/models/message.dart';
+
+abstract interface class IMessagesRepository {
+  Stream<List<Message>> watchMessages(String groupId);
+  Future<void> sendMessage({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required String content,
+  });
+
+  /// Enregistre que l'utilisateur est en train d'écrire.
+  Future<void> setTyping({
+    required String groupId,
+    required String userId,
+    required String userName,
+  });
+
+  /// Supprime le statut "en train d'écrire" de l'utilisateur.
+  Future<void> clearTyping({required String groupId, required String userId});
+
+  /// Stream des noms des utilisateurs en train d'écrire (hors [currentUserId]).
+  Stream<List<String>> watchTyping({
+    required String groupId,
+    required String currentUserId,
+  });
+}
