@@ -1,5 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+enum ExpenseType { expense, reimbursement }
+
+enum SplitType { equal, amount, percentage }
+
 class Expense {
   final String id;
   final String groupId;
@@ -13,6 +17,9 @@ class Expense {
   final DateTime date;
   final String createdBy;
   final DateTime createdAt;
+  final ExpenseType expenseType;
+  final SplitType splitType;
+  final Map<String, double>? splitAmounts;
 
   const Expense({
     required this.id,
@@ -27,6 +34,9 @@ class Expense {
     required this.date,
     required this.createdBy,
     required this.createdAt,
+    this.expenseType = ExpenseType.expense,
+    this.splitType = SplitType.equal,
+    this.splitAmounts,
   });
 
   factory Expense.fromMap(String id, Map<String, dynamic> map) {
@@ -43,6 +53,19 @@ class Expense {
       date: (map['date'] as Timestamp).toDate(),
       createdBy: map['createdBy'] as String,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
+      expenseType: ExpenseType.values.byName(
+        map['expenseType'] as String? ?? ExpenseType.expense.name,
+      ),
+      splitType: SplitType.values.byName(
+        map['splitType'] as String? ?? SplitType.equal.name,
+      ),
+      splitAmounts: map['splitAmounts'] == null
+          ? null
+          : Map<String, double>.from(
+              (map['splitAmounts'] as Map<String, dynamic>).map(
+                (k, v) => MapEntry(k, (v as num).toDouble()),
+              ),
+            ),
     );
   }
 
@@ -59,6 +82,9 @@ class Expense {
       'date': Timestamp.fromDate(date),
       'createdBy': createdBy,
       'createdAt': Timestamp.fromDate(createdAt),
+      'expenseType': expenseType.name,
+      'splitType': splitType.name,
+      if (splitAmounts != null) 'splitAmounts': splitAmounts,
     };
   }
 
@@ -71,6 +97,9 @@ class Expense {
     bool? settled,
     String? category,
     DateTime? date,
+    ExpenseType? expenseType,
+    SplitType? splitType,
+    Map<String, double>? splitAmounts,
   }) {
     return Expense(
       id: id,
@@ -85,9 +114,19 @@ class Expense {
       date: date ?? this.date,
       createdBy: createdBy,
       createdAt: createdAt,
+      expenseType: expenseType ?? this.expenseType,
+      splitType: splitType ?? this.splitType,
+      splitAmounts: splitAmounts ?? this.splitAmounts,
     );
   }
 
   double get sharePerPerson =>
       splitWith.isEmpty ? amount : amount / splitWith.length;
+
+  Map<String, double> get effectiveSplitAmounts {
+    if (splitAmounts != null && splitAmounts!.isNotEmpty) return splitAmounts!;
+    if (splitWith.isEmpty) return {};
+    final share = amount / splitWith.length;
+    return {for (final uid in splitWith) uid: share};
+  }
 }

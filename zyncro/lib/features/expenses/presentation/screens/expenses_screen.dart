@@ -17,12 +17,13 @@ const _categoryColors = {
   'Autre': Color(0xFF6B7280),
 };
 
-Color _catColor(String? cat) =>
-    _categoryColors[cat] ?? const Color(0xFF6B7280);
+Color _catColor(String? cat) => _categoryColors[cat] ?? const Color(0xFF6B7280);
 
-String _formatAmount(double v) =>
-    NumberFormat.currency(locale: 'fr_FR', symbol: '€', decimalDigits: 2)
-        .format(v);
+String _formatAmount(double v) => NumberFormat.currency(
+  locale: 'fr_FR',
+  symbol: '€',
+  decimalDigits: 2,
+).format(v);
 
 String _formatDate(DateTime dt) {
   final now = DateTime.now();
@@ -46,8 +47,14 @@ class ExpensesScreen extends ConsumerWidget {
     final myBalance = currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
     final expenses = expensesAsync.asData?.value ?? [];
     final total = expenses.fold(0.0, (sum, e) => sum + e.amount);
-    final memberCount = balances.length;
-    final myShare = memberCount > 0 ? total / memberCount : 0.0;
+    final myShare = currentUid == null
+        ? 0.0
+        : expenses
+              .where((e) => !e.settled)
+              .fold(
+                0.0,
+                (sum, e) => sum + (e.effectiveSplitAmounts[currentUid] ?? 0.0),
+              );
     final pendingCount = expenses.where((e) => !e.settled).length;
 
     return Scaffold(
@@ -70,9 +77,10 @@ class ExpensesScreen extends ConsumerWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                      color: Color(0x33FFB86B),
-                      blurRadius: 16,
-                      offset: Offset(0, 8)),
+                    color: Color(0x33FFB86B),
+                    blurRadius: 16,
+                    offset: Offset(0, 8),
+                  ),
                 ],
               ),
               child: Column(
@@ -83,14 +91,16 @@ class ExpensesScreen extends ConsumerWidget {
                       const Text(
                         'Dépenses',
                         style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600),
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       GestureDetector(
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
-                              builder: (_) => const ExpenseFormScreen()),
+                            builder: (_) => const ExpenseFormScreen(),
+                          ),
                         ),
                         child: Container(
                           width: 44,
@@ -99,10 +109,14 @@ class ExpensesScreen extends ConsumerWidget {
                             color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3)),
+                              color: Colors.white.withValues(alpha: 0.3),
+                            ),
                           ),
-                          child: const Icon(Icons.add,
-                              color: Colors.white, size: 20),
+                          child: const Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ],
@@ -114,7 +128,8 @@ class ExpensesScreen extends ConsumerWidget {
                       color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.2)),
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,8 +137,9 @@ class ExpensesScreen extends ConsumerWidget {
                         Text(
                           'Votre solde',
                           style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: 13),
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 13,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -131,9 +147,10 @@ class ExpensesScreen extends ConsumerWidget {
                               ? '+${_formatAmount(myBalance)}'
                               : _formatAmount(myBalance),
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.w600),
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -151,8 +168,9 @@ class ExpensesScreen extends ConsumerWidget {
                                   ? 'On vous doit de l\'argent'
                                   : 'Vous devez de l\'argent',
                               style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  fontSize: 13),
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 13,
+                              ),
                             ),
                           ],
                         ),
@@ -167,8 +185,7 @@ class ExpensesScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
               child: expensesAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('Erreur: $e')),
                 data: (expenses) => Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,18 +212,22 @@ class ExpensesScreen extends ConsumerWidget {
                             child: Column(
                               children: [
                                 _OverviewRow(
-                                    label: 'Total dépenses',
-                                    value: _formatAmount(total),
-                                    bold: true),
+                                  label: 'Total dépenses',
+                                  value: _formatAmount(total),
+                                  bold: true,
+                                ),
                                 const SizedBox(height: 16),
                                 _OverviewRow(
-                                    label: 'Votre part',
-                                    value: _formatAmount(myShare),
-                                    bold: true),
+                                  label: 'Votre part',
+                                  value: _formatAmount(myShare),
+                                  bold: true,
+                                ),
                                 const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 16),
                                   child: Divider(
-                                      height: 1, color: AppColors.border),
+                                    height: 1,
+                                    color: AppColors.border,
+                                  ),
                                 ),
                                 Row(
                                   mainAxisAlignment:
@@ -215,17 +236,22 @@ class ExpensesScreen extends ConsumerWidget {
                                     const Text(
                                       'Règlements en attente',
                                       style: TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 13),
+                                        color: AppColors.textSecondary,
+                                        fontSize: 13,
+                                      ),
                                     ),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 4),
+                                        horizontal: 12,
+                                        vertical: 4,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.accent
-                                            .withValues(alpha: 0.1),
-                                        borderRadius:
-                                            BorderRadius.circular(100),
+                                        color: AppColors.accent.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          100,
+                                        ),
                                       ),
                                       child: Text(
                                         '$pendingCount',
@@ -273,8 +299,7 @@ class ExpensesScreen extends ConsumerWidget {
                                   final isMe = entry.key == currentUid;
                                   final isPos = entry.value >= 0;
                                   return Padding(
-                                    padding:
-                                        const EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.only(bottom: 12),
                                     child: Row(
                                       children: [
                                         Container(
@@ -287,34 +312,41 @@ class ExpensesScreen extends ConsumerWidget {
                                               colors: isPos
                                                   ? const [
                                                       Color(0xFF2BB8A5),
-                                                      Color(0xFF1E9B8A)
+                                                      Color(0xFF1E9B8A),
                                                     ]
                                                   : const [
                                                       Color(0xFF6B7280),
-                                                      Color(0xFF4B5563)
+                                                      Color(0xFF4B5563),
                                                     ],
                                             ),
                                             shape: BoxShape.circle,
                                           ),
                                           child: Center(
                                             child: Text(
-                                              isMe ? 'M' : entry.key.substring(0, 1).toUpperCase(),
+                                              isMe
+                                                  ? 'M'
+                                                  : entry.key
+                                                        .substring(0, 1)
+                                                        .toUpperCase(),
                                               style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                  fontWeight:
-                                                      FontWeight.w500),
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                             ),
                                           ),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Text(
-                                            isMe ? 'Vous' : entry.key.substring(0, 8),
+                                            isMe
+                                                ? 'Vous'
+                                                : entry.key.substring(0, 8),
                                             style: const TextStyle(
-                                                color: AppColors.textPrimary,
-                                                fontWeight: FontWeight.w500,
-                                                fontSize: 14),
+                                              color: AppColors.textPrimary,
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 14,
+                                            ),
                                           ),
                                         ),
                                         Row(
@@ -330,8 +362,7 @@ class ExpensesScreen extends ConsumerWidget {
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              _formatAmount(
-                                                  entry.value.abs()),
+                                              _formatAmount(entry.value.abs()),
                                               style: TextStyle(
                                                 color: isPos
                                                     ? const Color(0xFF2BB8A5)
@@ -361,18 +392,24 @@ class ExpensesScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(vertical: 32),
                           child: Column(
                             children: [
-                              const Icon(Icons.receipt_long_outlined,
-                                  size: 48, color: AppColors.textSecondary),
+                              const Icon(
+                                Icons.receipt_long_outlined,
+                                size: 48,
+                                color: AppColors.textSecondary,
+                              ),
                               const SizedBox(height: 12),
-                              const Text('Aucune dépense',
-                                  style: TextStyle(
-                                      color: AppColors.textSecondary)),
+                              const Text(
+                                'Aucune dépense',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
                               const SizedBox(height: 16),
                               ElevatedButton.icon(
                                 onPressed: () => Navigator.of(context).push(
                                   MaterialPageRoute(
-                                      builder: (_) =>
-                                          const ExpenseFormScreen()),
+                                    builder: (_) => const ExpenseFormScreen(),
+                                  ),
                                 ),
                                 icon: const Icon(Icons.add),
                                 label: const Text('Ajouter'),
@@ -391,13 +428,15 @@ class ExpensesScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ...expenses.map((e) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _ExpenseCard(
-                              expense: e,
-                              isMe: e.paidBy == currentUid,
-                            ),
-                          )),
+                      ...expenses.map(
+                        (e) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _ExpenseCard(
+                            expense: e,
+                            isMe: e.paidBy == currentUid,
+                          ),
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -423,7 +462,10 @@ class _SectionCard extends StatelessWidget {
         border: Border.all(color: AppColors.border),
         boxShadow: const [
           BoxShadow(
-              color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
+            color: Color(0x0A000000),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
       child: child,
@@ -435,17 +477,21 @@ class _OverviewRow extends StatelessWidget {
   final String label;
   final String value;
   final bool bold;
-  const _OverviewRow(
-      {required this.label, required this.value, this.bold = false});
+  const _OverviewRow({
+    required this.label,
+    required this.value,
+    this.bold = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style:
-                const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
         Text(
           value,
           style: TextStyle(
@@ -489,12 +535,15 @@ class _ExpenseCard extends ConsumerWidget {
           content: const Text('Cette action est irréversible.'),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Annuler')),
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annuler'),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Supprimer',
-                  style: TextStyle(color: AppColors.error)),
+              child: const Text(
+                'Supprimer',
+                style: TextStyle(color: AppColors.error),
+              ),
             ),
           ],
         ),
@@ -513,7 +562,10 @@ class _ExpenseCard extends ConsumerWidget {
           border: Border.all(color: AppColors.border),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
+              color: Color(0x0A000000),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
         child: Row(
@@ -523,8 +575,9 @@ class _ExpenseCard extends ConsumerWidget {
               height: 80,
               decoration: BoxDecoration(
                 color: color,
-                borderRadius:
-                    const BorderRadius.horizontal(left: Radius.circular(14)),
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(14),
+                ),
               ),
             ),
             Expanded(
@@ -548,24 +601,53 @@ class _ExpenseCard extends ConsumerWidget {
                                   fontSize: 14,
                                 ),
                               ),
+                              if (expense.expenseType ==
+                                  ExpenseType.reimbursement) ...[
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF4F7CFF,
+                                    ).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  child: const Text(
+                                    'Remboursement',
+                                    style: TextStyle(
+                                      color: Color(0xFF4F7CFF),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                               const SizedBox(height: 4),
                               Row(
                                 children: [
                                   Text(
                                     'Payé par ${isMe ? 'vous' : expense.paidByName}',
                                     style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12),
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                  const Text(' • ',
-                                      style: TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 12)),
+                                  const Text(
+                                    ' • ',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
                                   Text(
                                     _formatDate(expense.date),
                                     style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12),
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -586,11 +668,14 @@ class _ExpenseCard extends ConsumerWidget {
                             const SizedBox(height: 4),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: expense.settled
-                                    ? const Color(0xFF2BB8A5)
-                                        .withValues(alpha: 0.1)
+                                    ? const Color(
+                                        0xFF2BB8A5,
+                                      ).withValues(alpha: 0.1)
                                     : AppColors.accent.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(100),
                               ),
@@ -613,7 +698,9 @@ class _ExpenseCard extends ConsumerWidget {
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
@@ -621,9 +708,10 @@ class _ExpenseCard extends ConsumerWidget {
                         child: Text(
                           expense.category!,
                           style: TextStyle(
-                              color: color,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500),
+                            color: color,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],

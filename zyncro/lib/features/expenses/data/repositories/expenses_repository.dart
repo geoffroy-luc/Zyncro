@@ -13,7 +13,11 @@ class ExpensesRepository implements IExpensesRepository {
     return _col(groupId)
         .orderBy('date', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((doc) => Expense.fromMap(doc.id, doc.data())).toList());
+        .map(
+          (snap) => snap.docs
+              .map((doc) => Expense.fromMap(doc.id, doc.data()))
+              .toList(),
+        );
   }
 
   @override
@@ -24,6 +28,9 @@ class ExpensesRepository implements IExpensesRepository {
     required String paidBy,
     required String paidByName,
     required List<String> splitWith,
+    required ExpenseType expenseType,
+    required SplitType splitType,
+    Map<String, double>? splitAmounts,
     String? category,
     required DateTime date,
     required String userId,
@@ -42,6 +49,9 @@ class ExpensesRepository implements IExpensesRepository {
       date: date,
       createdBy: userId,
       createdAt: DateTime.now(),
+      expenseType: expenseType,
+      splitType: splitType,
+      splitAmounts: splitAmounts,
     );
     await ref.set(expense.toMap());
     return expense;
