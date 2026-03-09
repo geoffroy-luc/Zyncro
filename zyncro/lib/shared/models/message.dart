@@ -10,6 +10,7 @@ class Message {
   final String content;
   final MessageType type;
   final DateTime timestamp;
+  final DateTime? editedAt;
 
   const Message({
     required this.id,
@@ -19,6 +20,7 @@ class Message {
     required this.content,
     required this.type,
     required this.timestamp,
+    this.editedAt,
   });
 
   factory Message.fromMap(String id, Map<String, dynamic> map) {
@@ -30,6 +32,9 @@ class Message {
       content: map['content'] as String,
       type: MessageType.values.byName(map['type'] as String? ?? 'text'),
       timestamp: (map['timestamp'] as Timestamp).toDate(),
+      editedAt: map['editedAt'] == null
+          ? null
+          : (map['editedAt'] as Timestamp).toDate(),
     );
   }
 
@@ -41,6 +46,7 @@ class Message {
       'content': content,
       'type': type.name,
       'timestamp': Timestamp.fromDate(timestamp),
+      if (editedAt != null) 'editedAt': Timestamp.fromDate(editedAt!),
     };
   }
 }

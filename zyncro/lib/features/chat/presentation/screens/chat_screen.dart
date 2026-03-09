@@ -87,12 +87,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _controller.clear();
 
     try {
-      await ref.read(messagesRepositoryProvider).sendMessage(
-        groupId: groupId,
-        senderId: user.uid,
-        senderName: user.displayName ?? user.email ?? 'Anonyme',
-        content: text,
-      );
+      await ref
+          .read(messagesRepositoryProvider)
+          .sendMessage(
+            groupId: groupId,
+            senderId: user.uid,
+            senderName: user.displayName ?? user.email ?? 'Anonyme',
+            content: text,
+          );
       // Scroll vers le bas après envoi
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -103,6 +105,109 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
     } finally {
       if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> _onMyMessageLongPress(Message message) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Modifier'),
+              onTap: () => Navigator.of(ctx).pop('edit'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text(
+                'Supprimer',
+                style: TextStyle(color: Colors.red),
+              ),
+              onTap: () => Navigator.of(ctx).pop('delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (!mounted || action == null) return;
+    if (action == 'edit') {
+      await _editMessage(message);
+      return;
+    }
+    if (action == 'delete') {
+      await _deleteMessage(message);
+    }
+  }
+
+  Future<void> _editMessage(Message message) async {
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+
+    final newText = await showDialog<String>(
+      context: context,
+      builder: (ctx) => _EditMessageDialog(initialText: message.content),
+    );
+
+    final updated = newText?.trim();
+    if (updated == null || updated.isEmpty || updated == message.content) {
+      return;
+    }
+
+    try {
+      await ref
+          .read(messagesRepositoryProvider)
+          .editMessage(
+            groupId: groupId,
+            messageId: message.id,
+            content: updated,
+          );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de modifier le message.')),
+      );
+    }
+  }
+
+  Future<void> _deleteMessage(Message message) async {
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer le message'),
+        content: const Text('Ce message sera supprimé définitivement.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ref
+          .read(messagesRepositoryProvider)
+          .deleteMessage(groupId: groupId, messageId: message.id);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de supprimer le message.')),
+      );
     }
   }
 
@@ -144,7 +249,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      group?.emoji ?? (group?.name.substring(0, 2).toUpperCase() ?? '??'),
+                      group?.emoji ??
+                          (group?.name.substring(0, 2).toUpperCase() ?? '??'),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
@@ -168,7 +274,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                       Text(
                         '${group?.memberIds.length ?? 0} membre${(group?.memberIds.length ?? 0) > 1 ? 's' : ''}',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -194,14 +303,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 }
                 return ListView.builder(
                   controller: _scrollController,
-                  reverse: true, // Newest at bottom, messages come desc from Firestore
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  reverse:
+                      true, // Newest at bottom, messages come desc from Firestore
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
                   itemCount: messages.length,
                   itemBuilder: (_, i) => Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: _MessageBubble(
                       message: messages[i],
                       isMe: messages[i].senderId == currentUser?.uid,
+                      onLongPress: messages[i].senderId == currentUser?.uid
+                          ? () => _onMyMessageLongPress(messages[i])
+                          : null,
                     ),
                   ),
                 );
@@ -210,7 +326,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
 
           // ── Typing indicator ────────────────────────────────────────
-          _TypingIndicator(typingUsers: ref.watch(typingProvider).asData?.value ?? []),
+          _TypingIndicator(
+            typingUsers: ref.watch(typingProvider).asData?.value ?? [],
+          ),
 
           // ── Input bar ───────────────────────────────────────────────
           Container(
@@ -224,7 +342,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               children: [
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF7F9FC),
                       borderRadius: BorderRadius.circular(24),
@@ -234,7 +355,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       controller: _controller,
                       decoration: const InputDecoration(
                         hintText: 'Écrire un message...',
-                        hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        hintStyle: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -244,7 +368,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                       maxLines: 4,
                       minLines: 1,
-                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                      ),
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
                     ),
@@ -265,7 +392,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF4F7CFF).withValues(alpha: 0.25),
+                          color: const Color(
+                            0xFF4F7CFF,
+                          ).withValues(alpha: 0.25),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -274,7 +403,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     child: _sending
                         ? const Padding(
                             padding: EdgeInsets.all(12),
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
                         : const Icon(Icons.send, color: Colors.white, size: 20),
                   ),
@@ -284,6 +416,58 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _EditMessageDialog extends StatefulWidget {
+  final String initialText;
+
+  const _EditMessageDialog({required this.initialText});
+
+  @override
+  State<_EditMessageDialog> createState() => _EditMessageDialogState();
+}
+
+class _EditMessageDialogState extends State<_EditMessageDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialText);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Modifier le message'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        minLines: 1,
+        maxLines: 6,
+        decoration: const InputDecoration(
+          hintText: 'Votre message',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
+          child: const Text('Enregistrer'),
+        ),
+      ],
     );
   }
 }
@@ -301,7 +485,8 @@ class _TypingIndicator extends StatelessWidget {
     if (typingUsers.length == 1) {
       label = '${typingUsers[0]} est en train d\'écrire...';
     } else if (typingUsers.length == 2) {
-      label = '${typingUsers[0]} et ${typingUsers[1]} sont en train d\'écrire...';
+      label =
+          '${typingUsers[0]} et ${typingUsers[1]} sont en train d\'écrire...';
     } else {
       label = 'Plusieurs personnes sont en train d\'écrire...';
     }
@@ -325,8 +510,13 @@ class _TypingIndicator extends StatelessWidget {
 class _MessageBubble extends StatelessWidget {
   final Message message;
   final bool isMe;
+  final VoidCallback? onLongPress;
 
-  const _MessageBubble({required this.message, required this.isMe});
+  const _MessageBubble({
+    required this.message,
+    required this.isMe,
+    this.onLongPress,
+  });
 
   // Génère une couleur cohérente depuis l'uid de l'expéditeur
   Color _avatarColor(String uid) {
@@ -352,6 +542,10 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final timeLabel = message.editedAt == null
+        ? _formatTime(message.timestamp)
+        : '${_formatTime(message.timestamp)} · modifié';
+
     if (message.type == MessageType.system) {
       return Center(
         child: Container(
@@ -362,7 +556,10 @@ class _MessageBubble extends StatelessWidget {
           ),
           child: Text(
             message.content,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+            ),
             textAlign: TextAlign.center,
           ),
         ),
@@ -373,32 +570,48 @@ class _MessageBubble extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Container(
-            constraints: const BoxConstraints(maxWidth: 280),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+          GestureDetector(
+            onLongPress: onLongPress,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 280),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(4),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x1A000000),
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(4),
+              child: Text(
+                message.content,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
               ),
-              boxShadow: [BoxShadow(color: Color(0x1A000000), blurRadius: 4, offset: Offset(0, 2))],
-            ),
-            child: Text(
-              message.content,
-              style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            _formatTime(message.timestamp),
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 10),
+            timeLabel,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 10,
+            ),
           ),
         ],
       );
@@ -415,12 +628,22 @@ class _MessageBubble extends StatelessWidget {
           decoration: BoxDecoration(
             color: avatarColor,
             shape: BoxShape.circle,
-            boxShadow: const [BoxShadow(color: Color(0x1A000000), blurRadius: 4, offset: Offset(0, 2))],
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1A000000),
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
           child: Center(
             child: Text(
               _initials(message.senderName),
-              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ),
@@ -449,17 +672,30 @@ class _MessageBubble extends StatelessWidget {
                   bottomRight: Radius.circular(16),
                 ),
                 border: Border.all(color: AppColors.border),
-                boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))],
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0A000000),
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
               child: Text(
                 message.content,
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, height: 1.4),
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              _formatTime(message.timestamp),
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 10),
+              timeLabel,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 10,
+              ),
             ),
           ],
         ),

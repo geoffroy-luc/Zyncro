@@ -8,6 +8,15 @@ abstract interface class IMessagesRepository {
     required String senderName,
     required String content,
   });
+  Future<void> editMessage({
+    required String groupId,
+    required String messageId,
+    required String content,
+  });
+  Future<void> deleteMessage({
+    required String groupId,
+    required String messageId,
+  });
 
   /// Enregistre que l'utilisateur est en train d'écrire.
   Future<void> setTyping({

@@ -17,7 +17,11 @@ class MessagesRepository implements IMessagesRepository {
         .orderBy('timestamp', descending: true)
         .limit(100)
         .snapshots()
-        .map((snap) => snap.docs.map((doc) => Message.fromMap(doc.id, doc.data())).toList());
+        .map(
+          (snap) => snap.docs
+              .map((doc) => Message.fromMap(doc.id, doc.data()))
+              .toList(),
+        );
   }
 
   @override
@@ -37,7 +41,10 @@ class MessagesRepository implements IMessagesRepository {
   }
 
   @override
-  Future<void> clearTyping({required String groupId, required String userId}) async {
+  Future<void> clearTyping({
+    required String groupId,
+    required String userId,
+  }) async {
     try {
       await _typingCol(groupId).doc(userId).delete();
     } on FirebaseException {
@@ -51,19 +58,22 @@ class MessagesRepository implements IMessagesRepository {
     required String currentUserId,
   }) {
     final staleThreshold = const Duration(seconds: 6);
-    return _typingCol(groupId).snapshots().map((snap) {
-      final now = DateTime.now();
-      return snap.docs
-          .where((doc) => doc.id != currentUserId)
-          .where((doc) {
-            final ts = doc.data()['updatedAt'];
-            if (ts == null) return false;
-            final updated = (ts as Timestamp).toDate();
-            return now.difference(updated) < staleThreshold;
-          })
-          .map((doc) => doc.data()['name'] as String? ?? 'Quelqu\'un')
-          .toList();
-    }).handleError((_) => <String>[]);
+    return _typingCol(groupId)
+        .snapshots()
+        .map((snap) {
+          final now = DateTime.now();
+          return snap.docs
+              .where((doc) => doc.id != currentUserId)
+              .where((doc) {
+                final ts = doc.data()['updatedAt'];
+                if (ts == null) return false;
+                final updated = (ts as Timestamp).toDate();
+                return now.difference(updated) < staleThreshold;
+              })
+              .map((doc) => doc.data()['name'] as String? ?? 'Quelqu\'un')
+              .toList();
+        })
+        .handleError((_) => <String>[]);
   }
 
   @override
@@ -84,5 +94,25 @@ class MessagesRepository implements IMessagesRepository {
       timestamp: DateTime.now(),
     );
     await ref.set(message.toMap());
+  }
+
+  @override
+  Future<void> editMessage({
+    required String groupId,
+    required String messageId,
+    required String content,
+  }) async {
+    await _col(groupId).doc(messageId).update({
+      'content': content,
+      'editedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  @override
+  Future<void> deleteMessage({
+    required String groupId,
+    required String messageId,
+  }) async {
+    await _col(groupId).doc(messageId).delete();
   }
 }
