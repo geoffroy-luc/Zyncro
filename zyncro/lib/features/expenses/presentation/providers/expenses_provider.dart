@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/expenses_repository.dart';
 import '../../domain/repositories/i_expenses_repository.dart';
 import '../../../../shared/models/expense.dart';
+import '../../../../shared/models/group_member.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 
 final expensesRepositoryProvider = Provider<IExpensesRepository>(
@@ -14,18 +15,24 @@ final expensesProvider = StreamProvider<List<Expense>>((ref) {
   return ref.watch(expensesRepositoryProvider).watchExpenses(groupId);
 });
 
+final expenseMembersProvider = StreamProvider<List<GroupMember>>((ref) {
+  final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
+  if (groupId == null) return Stream.value([]);
+  return ref.watch(groupsRepositoryProvider).watchMembers(groupId);
+});
+
 /// Calcule le solde net de chaque membre : positif = on lui doit, négatif = il doit
 final balancesProvider = Provider<Map<String, double>>((ref) {
   final expenses = ref.watch(expensesProvider).asData?.value ?? [];
   final balances = <String, double>{};
 
   for (final expense in expenses.where((e) => !e.settled)) {
-    final share = expense.sharePerPerson;
+    final splitAmounts = expense.effectiveSplitAmounts;
     // Le payeur avance pour tout le monde
     balances[expense.paidBy] = (balances[expense.paidBy] ?? 0) + expense.amount;
     // Chaque participant doit sa part
-    for (final uid in expense.splitWith) {
-      balances[uid] = (balances[uid] ?? 0) - share;
+    for (final entry in splitAmounts.entries) {
+      balances[entry.key] = (balances[entry.key] ?? 0) - entry.value;
     }
   }
 

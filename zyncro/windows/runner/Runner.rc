@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "zyncro" "\0"
+            VALUE "FileDescription", "Zyncro" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "zyncro" "\0"
+            VALUE "InternalName", "Zyncro" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "zyncro.exe" "\0"
-            VALUE "ProductName", "zyncro" "\0"
+            VALUE "OriginalFilename", "Zyncro.exe" "\0"
+            VALUE "ProductName", "Zyncro" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

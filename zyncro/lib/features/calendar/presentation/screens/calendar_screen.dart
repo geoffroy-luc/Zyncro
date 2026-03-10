@@ -3,20 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/event.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/events_provider.dart';
 import 'event_form_screen.dart';
 
-const _eventColors = [
-  Color(0xFF4F7CFF),
-  Color(0xFF2BB8A5),
-  Color(0xFFFFB86B),
-  Color(0xFFE85D75),
-  Color(0xFF9B59B6),
-];
+const _defaultEventColor = Color(0xFF4F7CFF);
 
-Color _eventColor(String id) =>
-    _eventColors[id.hashCode.abs() % _eventColors.length];
+Color _eventColor(Event e) {
+  if (e.color == null) return _defaultEventColor;
+  try {
+    return Color(int.parse('FF${e.color!.replaceAll('#', '')}', radix: 16));
+  } catch (_) {
+    return _defaultEventColor;
+  }
+}
 
 String _timeLabel(DateTime dt) => DateFormat('HH:mm').format(dt);
 
@@ -147,6 +149,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => EventFormScreen(initialDate: _selectedDay ?? today),
+          ),
+        ),
+        backgroundColor: const Color(0xFF4F7CFF).withValues(alpha: 0.85),
+        shape: const CircleBorder(side: BorderSide(color: Colors.white24, width: 2)),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: CustomScrollView(
         slivers: [
           // ── Header ──────────────────────────────────────────────────
@@ -165,36 +177,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           color: AppColors.textPrimary,
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => EventFormScreen(
-                                initialDate: _selectedDay ?? today),
-                          ),
-                        ),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
-                            ),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF4F7CFF)
-                                    .withValues(alpha: 0.25),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child:
-                              const Icon(Icons.add, color: Colors.white, size: 20),
                         ),
                       ),
                     ],
@@ -329,8 +311,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             final isToday = _isSameDay(cellDate, today);
                             final isSelected = _selectedDay != null &&
                                 _isSameDay(cellDate, _selectedDay!);
-                            final hasEvent = monthEvents
-                                .any((e) => _eventOnDay(e, cellDate));
+                            final dayEvents = monthEvents
+                                .where((e) => _eventOnDay(e, cellDate))
+                                .toList();
                             return GestureDetector(
                               onTap: () => setState(() {
                                 _selectedDay =
@@ -383,17 +366,24 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    if (hasEvent)
-                                      Container(
-                                        width: 4,
-                                        height: 4,
-                                        margin:
-                                            const EdgeInsets.only(top: 2),
-                                        decoration: BoxDecoration(
-                                          color: isToday
-                                              ? Colors.white
-                                              : AppColors.secondary,
-                                          shape: BoxShape.circle,
+                                    if (dayEvents.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 2),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: dayEvents.take(3).map((e) =>
+                                            Container(
+                                              width: 4,
+                                              height: 4,
+                                              margin: const EdgeInsets.symmetric(horizontal: 1),
+                                              decoration: BoxDecoration(
+                                                color: isToday
+                                                    ? Colors.white
+                                                    : _eventColor(e),
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                          ).toList(),
                                         ),
                                       ),
                                   ],
@@ -525,44 +515,25 @@ class _EventCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final color = _eventColor(event.id);
+    final color = _eventColor(event);
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
-    return Dismissible(
-      key: Key(event.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Icon(Icons.delete_outline, color: AppColors.error),
-      ),
-      confirmDismiss: (_) => showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Supprimer l\'événement'),
-          content: const Text('Cette action est irréversible.'),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Annuler')),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Supprimer',
-                  style: TextStyle(color: AppColors.error)),
-            ),
-          ],
-        ),
-      ),
-      onDismissed: (_) async {
-        if (groupId != null) {
-          await ref
-              .read(eventsRepositoryProvider)
-              .deleteEvent(groupId, event.id);
-        }
-      },
+    final authUser = ref.watch(authStateProvider).asData?.value;
+    final group = ref.watch(selectedGroupProvider);
+
+    // Peut supprimer : créateur de l'event OU owner du groupe
+    final canDelete = authUser != null && (
+      event.createdBy == authUser.uid ||
+      group?.createdBy == authUser.uid
+    );
+
+    void openEdit() {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => EventFormScreen(event: event),
+      ));
+    }
+
+    final cardContent = GestureDetector(
+      onTap: canDelete ? openEdit : null,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -613,7 +584,21 @@ class _EventCard extends ConsumerWidget {
                       const Icon(Icons.place_outlined,
                           size: 14, color: AppColors.textSecondary),
                       const SizedBox(width: 6),
-                      Text(event.location!,
+                      Expanded(
+                        child: Text(event.location!,
+                            style: const TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12),
+                            overflow: TextOverflow.ellipsis),
+                      ),
+                    ]),
+                  ],
+                  if (event.creatorName != null) ...[
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      const Icon(Icons.person_outline,
+                          size: 14, color: AppColors.textSecondary),
+                      const SizedBox(width: 6),
+                      Text(event.creatorName!,
                           style: const TextStyle(
                               color: AppColors.textSecondary, fontSize: 12)),
                     ]),
@@ -621,66 +606,157 @@ class _EventCard extends ConsumerWidget {
                 ],
               ),
             ),
+            if (canDelete)
+              const Icon(Icons.edit_outlined,
+                  size: 16, color: AppColors.textSecondary),
           ],
         ),
       ),
     );
+
+    if (!canDelete) return cardContent;
+
+    return Dismissible(
+      key: Key(event.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.delete_outline, color: AppColors.error),
+      ),
+      confirmDismiss: (_) => showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Supprimer l\'événement'),
+          content: const Text('Cette action est irréversible.'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Annuler')),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Supprimer',
+                  style: TextStyle(color: AppColors.error)),
+            ),
+          ],
+        ),
+      ),
+      onDismissed: (_) async {
+        if (groupId != null) {
+          final authUserSnap = ref.read(authStateProvider).asData?.value;
+          final eventsRepo = ref.read(eventsRepositoryProvider);
+          final msgRepo = ref.read(messagesRepositoryProvider);
+          try {
+            await eventsRepo.deleteEvent(groupId, event.id);
+            final userName = authUserSnap?.displayName ?? authUserSnap?.email ?? 'Quelqu\'un';
+            if (authUserSnap != null) {
+              msgRepo.sendSystemMessage(
+                groupId: groupId,
+                userId: authUserSnap.uid,
+                content: '📅 $userName a supprimé un événement « ${event.title} »',
+                notifScreen: 'calendar',
+              );
+            }
+          } catch (_) {}
+        }
+      },
+      child: cardContent,
+    );
   }
 }
 
-class _AgendaEventCard extends StatelessWidget {
+class _AgendaEventCard extends ConsumerWidget {
   final Event event;
   const _AgendaEventCard({required this.event});
 
   @override
-  Widget build(BuildContext context) {
-    final color = _eventColor(event.id);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border(left: BorderSide(color: color, width: 4)),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(event.title,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              )),
-          const SizedBox(height: 8),
-          Row(children: [
-            const Icon(Icons.access_time,
-                size: 14, color: AppColors.textSecondary),
-            const SizedBox(width: 6),
-            Text(
-              event.endDate != null
-                  ? '${_timeLabel(event.startDate)} → ${_timeLabel(event.endDate!)}'
-                  : _timeLabel(event.startDate),
-              style:
-                  const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final color = _eventColor(event);
+    final authUser = ref.watch(authStateProvider).asData?.value;
+    final group = ref.watch(selectedGroupProvider);
+
+    final canEdit = authUser != null && (
+      event.createdBy == authUser.uid ||
+      group?.createdBy == authUser.uid
+    );
+
+    return GestureDetector(
+      onTap: canEdit
+          ? () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => EventFormScreen(event: event),
+              ))
+          : null,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border(left: BorderSide(color: color, width: 4)),
+          boxShadow: const [
+            BoxShadow(
+                color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(event.title,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      )),
+                ),
+                if (canEdit)
+                  const Icon(Icons.edit_outlined,
+                      size: 16, color: AppColors.textSecondary),
+              ],
             ),
-            if (event.location != null) ...[
-              const SizedBox(width: 16),
-              const Icon(Icons.place_outlined,
+            const SizedBox(height: 8),
+            Row(children: [
+              const Icon(Icons.access_time,
                   size: 14, color: AppColors.textSecondary),
               const SizedBox(width: 6),
-              Expanded(
-                child: Text(event.location!,
-                    style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 12),
-                    overflow: TextOverflow.ellipsis),
+              Text(
+                event.endDate != null
+                    ? '${_timeLabel(event.startDate)} → ${_timeLabel(event.endDate!)}'
+                    : _timeLabel(event.startDate),
+                style:
+                    const TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
+              if (event.location != null) ...[
+                const SizedBox(width: 16),
+                const Icon(Icons.place_outlined,
+                    size: 14, color: AppColors.textSecondary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(event.location!,
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12),
+                      overflow: TextOverflow.ellipsis),
+                ),
+              ],
+            ]),
+            if (event.creatorName != null) ...[
+              const SizedBox(height: 4),
+              Row(children: [
+                const Icon(Icons.person_outline,
+                    size: 14, color: AppColors.textSecondary),
+                const SizedBox(width: 6),
+                Text(event.creatorName!,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12)),
+              ]),
             ],
-          ]),
-        ],
+          ],
+        ),
       ),
     );
   }
