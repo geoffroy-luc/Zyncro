@@ -530,16 +530,16 @@ class _ExpenseCard extends ConsumerWidget {
       ),
       confirmDismiss: (_) => showDialog<bool>(
         context: context,
-        builder: (_) => AlertDialog(
+        builder: (dialogContext) => AlertDialog(
           title: const Text('Supprimer la dépense'),
           content: const Text('Cette action est irréversible.'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
               child: const Text('Annuler'),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text(
                 'Supprimer',
                 style: TextStyle(color: AppColors.error),

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../domain/repositories/i_auth_repository.dart';
 
 class AuthRepository implements IAuthRepository {
@@ -53,6 +54,7 @@ class AuthRepository implements IAuthRepository {
 
   @override
   Future<void> signOut() async {
+    await NotificationService.removeToken();
     await _googleSignIn.signOut();
     await _auth.signOut();
   }
