@@ -48,7 +48,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
         onPressed: () => _openEditor(),
         backgroundColor: const Color(0xFF2BB8A5).withValues(alpha: 0.85),
         shape: const CircleBorder(
-          side: BorderSide(color: Colors.white70, width: 2),
+          side: BorderSide(color: Colors.white24, width: 2),
         ),
         child: const Icon(Icons.add, color: Colors.white),
       ),
