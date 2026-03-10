@@ -8,6 +8,8 @@ abstract interface class INotesRepository {
     required String content,
     bool isPinned,
     String? color,
+    bool isChecklist,
+    List<ChecklistItem> checklist,
     required String userId,
   });
   Future<void> updateNote(String groupId, Note note);

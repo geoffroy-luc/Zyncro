@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout -b features/fab_bottom_right)",
+      "Bash(git add zyncro/lib/features/notes/presentation/screens/notes_screen.dart zyncro/lib/features/expenses/presentation/screens/expenses_screen.dart zyncro/lib/features/calendar/presentation/screens/calendar_screen.dart)",
+      "Bash(git commit:*)",
+      "Bash(git checkout features/depense_option)",
+      "Bash(git checkout -b features/checklist_notes)"
+    ]
+  }
+}

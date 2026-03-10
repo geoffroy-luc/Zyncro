@@ -549,16 +549,17 @@ class _MessageBubble extends StatelessWidget {
     if (message.type == MessageType.system) {
       return Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFFE5E7EB).withValues(alpha: 0.5),
+            color: const Color(0xFFEDEFF2),
             borderRadius: BorderRadius.circular(100),
           ),
           child: Text(
             message.content,
             style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 11,
+              color: Color(0xFF6B7280),
+              fontSize: 12,
             ),
             textAlign: TextAlign.center,
           ),

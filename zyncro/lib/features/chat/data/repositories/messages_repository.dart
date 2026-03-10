@@ -77,6 +77,26 @@ class MessagesRepository implements IMessagesRepository {
   }
 
   @override
+  Future<void> sendSystemMessage({
+    required String groupId,
+    required String userId,
+    required String content,
+    String notifScreen = 'chat',
+  }) async {
+    final ref = _col(groupId).doc();
+    await ref.set({
+      'id': ref.id,
+      'groupId': groupId,
+      'senderId': userId,
+      'senderName': null,
+      'content': content,
+      'type': 'system',
+      'timestamp': Timestamp.fromDate(DateTime.now()),
+      'notifScreen': notifScreen,
+    });
+  }
+
+  @override
   Future<void> sendMessage({
     required String groupId,
     required String senderId,

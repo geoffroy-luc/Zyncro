@@ -10,20 +10,22 @@ export const onNewMessage = onDocumentCreated(
     if (!message) return;
 
     const { groupId } = event.params;
+    const isSystemMessage = message.type === "system";
 
-    // Récupère les membres du groupe
-    const groupDoc = await admin
-      .firestore()
-      .doc(`groups/${groupId}`)
-      .get();
+    // Récupère le groupe (membres + nom)
+    const groupDoc = await admin.firestore().doc(`groups/${groupId}`).get();
+    const groupData = groupDoc.data();
+    const memberIds: string[] = groupData?.memberIds ?? [];
+    const groupName: string = groupData?.name ?? "Zyncro";
 
-    const memberIds: string[] = groupDoc.data()?.memberIds ?? [];
+    // On exclut toujours l'expéditeur (qu'il s'agisse d'un message texte ou système)
+    const excludeUid = message.senderId;
 
-    // Récupère les tokens FCM de chaque membre (sauf l'expéditeur)
+    // Collecte les tokens FCM
     const tokens: string[] = [];
     await Promise.all(
       memberIds
-        .filter((uid) => uid !== message.senderId)
+        .filter((uid) => uid !== excludeUid)
         .map(async (uid) => {
           const userDoc = await admin.firestore().doc(`users/${uid}`).get();
           const token = userDoc.data()?.fcmToken;
@@ -36,14 +38,23 @@ export const onNewMessage = onDocumentCreated(
     const content: string = message.content ?? "";
     const preview = content.length > 80 ? content.substring(0, 80) + "…" : content;
 
+    // Titre et écran cible selon le type de message
+    const title: string = isSystemMessage
+      ? groupName
+      : (message.senderName ?? "Nouveau message");
+    const screen: string = isSystemMessage
+      ? (message.notifScreen ?? "chat")
+      : "chat";
+
     await admin.messaging().sendEachForMulticast({
       tokens,
       notification: {
-        title: message.senderName ?? "Nouveau message",
+        title,
         body: preview,
       },
       data: {
         groupId,
+        screen,
       },
       android: {
         priority: "high",

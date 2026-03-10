@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../app/router.dart';
+import '../../features/groups/presentation/providers/groups_provider.dart';
 
 /// Background message handler — must be a top-level function.
 @pragma('vm:entry-point')
@@ -54,10 +56,38 @@ class NotificationService {
       ref.read(foregroundMessageProvider.notifier).set(message);
     });
 
-    // Opened from notification while app was in background
+    // App en arrière-plan → utilisateur tape la notif
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      // Navigate based on message data if needed in the future
+      _navigateFromNotification(message.data, ref);
     });
+
+    // App complètement fermée → utilisateur tape la notif
+    final initialMessage = await _messaging.getInitialMessage();
+    if (initialMessage != null) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      _navigateFromNotification(initialMessage.data, ref);
+    }
+  }
+
+  static void _navigateFromNotification(
+    Map<String, dynamic> data,
+    WidgetRef ref,
+  ) {
+    final groupId = data['groupId'] as String?;
+    final screen = data['screen'] as String? ?? 'chat';
+
+    if (groupId != null) {
+      ref.read(selectedGroupIdProvider.notifier).select(groupId);
+    }
+
+    final path = switch (screen) {
+      'calendar' => '/calendar',
+      'notes' => '/notes',
+      'expenses' => '/expenses',
+      _ => '/chat',
+    };
+
+    ref.read(routerProvider).go(path);
   }
 
   static Future<void> _saveToken(String userId, String token) async {

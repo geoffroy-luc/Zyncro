@@ -48,6 +48,15 @@ const _avatarColors = [
 Color _avatarColor(String uid) =>
     _avatarColors[uid.hashCode.abs() % _avatarColors.length];
 
+Color _eventColorFromHex(String? hex) {
+  if (hex == null) return const Color(0xFF4F7CFF);
+  try {
+    return Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
+  } catch (_) {
+    return const Color(0xFF4F7CFF);
+  }
+}
+
 String _initials(String? name) {
   if (name == null || name.isEmpty) return '?';
   final parts = name.trim().split(' ');
@@ -505,13 +514,10 @@ class _EventRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isToday = _isToday(event.startDate);
 
-    final colors = [
-      [const Color(0xFF4F7CFF), const Color(0xFF315FEA)],
-      [const Color(0xFF2BB8A5), const Color(0xFF1E9B8A)],
-      [const Color(0xFFFFB86B), const Color(0xFFF5A855)],
-    ];
-    final colorPair =
-        colors[event.id.hashCode.abs() % colors.length];
+    final base = _eventColorFromHex(event.color);
+    final colorPair = [base, HSLColor.fromColor(base).withLightness(
+      (HSLColor.fromColor(base).lightness - 0.12).clamp(0.0, 1.0),
+    ).toColor()];
 
     String dateLabel;
     if (isToday) {

@@ -9,6 +9,8 @@ abstract interface class IEventsRepository {
     required DateTime startDate,
     DateTime? endDate,
     String? location,
+    String? color,
+    String? creatorName,
     required String userId,
   });
   Future<void> updateEvent(String groupId, Event event);

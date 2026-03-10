@@ -1,0 +1,120 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Vérifie l'appartenance : members subcollection en priorité, fallback sur memberIds
+    function isMember(groupId) {
+      return isAuth() && (
+        exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)) ||
+        request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.memberIds
+      );
+    }
+
+    // Vérifie que l'utilisateur est owner via son document member
+    function isGroupOwner(groupId) {
+      return isAuth() &&
+        get(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)).data.role == 'owner';
+    }
+
+    // ── Users ────────────────────────────────────────────────────────────────
+
+    match /users/{userId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && request.auth.uid == userId;
+    }
+
+    // ── Groups ───────────────────────────────────────────────────────────────
+
+    match /groups/{groupId} {
+      // Utilise resource.data pour éviter la dépendance circulaire (get sur soi-même)
+      allow read: if isAuth() && request.auth.uid in resource.data.memberIds;
+      allow create: if isAuth();
+      allow update: if isAuth()
+                    && (resource.data.createdBy == request.auth.uid
+                        || (request.resource.data.memberIds.hasAll(resource.data.memberIds)
+                            && request.auth.uid in request.resource.data.memberIds));
+      allow delete: if isAuth() && resource.data.createdBy == request.auth.uid;
+
+      // ── Members ───────────────────────────────────────────────────────────
+
+      match /members/{memberId} {
+        // Lisible par tout utilisateur authentifié (nécessaire pour isMember/isGroupOwner)
+        allow read: if isAuth();
+        // Chaque user peut créer/modifier son propre doc ; l'owner peut gérer tous les membres
+        allow write: if isAuth() && (request.auth.uid == memberId || isGroupOwner(groupId));
+      }
+
+      // ── Messages ──────────────────────────────────────────────────────────
+
+      match /messages/{messageId} {
+        allow read: if isMember(groupId);
+
+        // Création : membre + senderId == soi-même
+        allow create: if isMember(groupId)
+                      && request.auth.uid == request.resource.data.senderId;
+
+        // Modification : auteur uniquement, messages texte seulement
+        allow update: if isMember(groupId)
+                      && resource.data.type == 'text'
+                      && resource.data.senderId == request.auth.uid;
+
+        // Suppression : auteur OU owner du groupe
+        allow delete: if isMember(groupId)
+                      && (resource.data.senderId == request.auth.uid
+                          || isGroupOwner(groupId));
+      }
+
+      // ── Typing ────────────────────────────────────────────────────────────
+
+      match /typing/{userId} {
+        allow read: if isMember(groupId);
+        allow write: if isAuth() && request.auth.uid == userId;
+      }
+
+      // ── Events ────────────────────────────────────────────────────────────
+
+      match /events/{eventId} {
+        allow read: if isMember(groupId);
+        allow create: if isMember(groupId);
+        allow update: if isMember(groupId)
+                      && (resource.data.createdBy == request.auth.uid
+                          || isGroupOwner(groupId));
+        allow delete: if isMember(groupId)
+                      && (resource.data.createdBy == request.auth.uid
+                          || isGroupOwner(groupId));
+      }
+
+      // ── Notes ─────────────────────────────────────────────────────────────
+
+      match /notes/{noteId} {
+        allow read: if isMember(groupId);
+        allow create: if isMember(groupId);
+        allow update: if isMember(groupId)
+                      && (resource.data.createdBy == request.auth.uid
+                          || isGroupOwner(groupId));
+        allow delete: if isMember(groupId)
+                      && (resource.data.createdBy == request.auth.uid
+                          || isGroupOwner(groupId));
+      }
+
+      // ── Expenses ──────────────────────────────────────────────────────────
+
+      match /expenses/{expenseId} {
+        allow read: if isMember(groupId);
+        allow create: if isMember(groupId);
+        allow update: if isMember(groupId)
+                      && (resource.data.createdBy == request.auth.uid
+                          || isGroupOwner(groupId));
+        allow delete: if isMember(groupId)
+                      && (resource.data.createdBy == request.auth.uid
+                          || isGroupOwner(groupId));
+      }
+    }
+  }
+}

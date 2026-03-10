@@ -6,6 +6,56 @@ import '../../../../shared/models/note.dart';
 import '../providers/notes_provider.dart';
 import 'note_editor_screen.dart';
 
+class _ChecklistPreview extends StatelessWidget {
+  final Note note;
+  final int maxItems;
+
+  const _ChecklistPreview({required this.note, required this.maxItems});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = note.checklist.take(maxItems).toList();
+    final remaining = note.checklist.length - items.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ...items.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 3),
+              child: Row(
+                children: [
+                  Icon(
+                    item.done ? Icons.check_box : Icons.check_box_outline_blank,
+                    size: 13,
+                    color: item.done ? AppColors.secondary : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      item.text,
+                      style: TextStyle(
+                        color: item.done ? AppColors.textSecondary : AppColors.textPrimary,
+                        fontSize: 12,
+                        decoration: item.done ? TextDecoration.lineThrough : null,
+                        height: 1.4,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            )),
+        if (remaining > 0)
+          Text(
+            '+ $remaining autre${remaining > 1 ? 's' : ''}',
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+          ),
+      ],
+    );
+  }
+}
+
 Color _hexToColor(String? hex) {
   if (hex == null) return AppColors.secondary;
   return Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
@@ -281,7 +331,11 @@ class _PinnedNoteCard extends StatelessWidget {
                           color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(Icons.description_outlined, size: 16, color: color),
+                        child: Icon(
+                          note.isChecklist ? Icons.checklist_outlined : Icons.description_outlined,
+                          size: 16,
+                          color: color,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -298,13 +352,16 @@ class _PinnedNoteCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    note.content,
-                    style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 13, height: 1.5),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  if (note.isChecklist)
+                    _ChecklistPreview(note: note, maxItems: 3)
+                  else
+                    Text(
+                      note.content,
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 13, height: 1.5),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -369,7 +426,11 @@ class _RecentNoteCard extends StatelessWidget {
                         color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.description_outlined, size: 16, color: color),
+                      child: Icon(
+                        note.isChecklist ? Icons.checklist_outlined : Icons.description_outlined,
+                        size: 16,
+                        color: color,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -384,13 +445,15 @@ class _RecentNoteCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Expanded(
-                      child: Text(
-                        note.content,
-                        style: const TextStyle(
-                            color: AppColors.textSecondary, fontSize: 11, height: 1.4),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      child: note.isChecklist
+                          ? _ChecklistPreview(note: note, maxItems: 2)
+                          : Text(
+                              note.content,
+                              style: const TextStyle(
+                                  color: AppColors.textSecondary, fontSize: 11, height: 1.4),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                     ),
                     const SizedBox(height: 8),
                     Row(

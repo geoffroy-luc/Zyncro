@@ -24,6 +24,8 @@ class EventsRepository implements IEventsRepository {
     required DateTime startDate,
     DateTime? endDate,
     String? location,
+    String? color,
+    String? creatorName,
     required String userId,
   }) async {
     final ref = _col(groupId).doc();
@@ -35,7 +37,9 @@ class EventsRepository implements IEventsRepository {
       startDate: startDate,
       endDate: endDate,
       location: location,
+      color: color,
       createdBy: userId,
+      creatorName: creatorName,
       createdAt: DateTime.now(),
     );
     await ref.set(event.toMap());

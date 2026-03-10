@@ -33,4 +33,13 @@ abstract interface class IMessagesRepository {
     required String groupId,
     required String currentUserId,
   });
+
+  /// Envoie un message système dans le chat (action sur événement, note, dépense…).
+  /// [notifScreen] indique vers quel écran pointer lors du tap sur la notification.
+  Future<void> sendSystemMessage({
+    required String groupId,
+    required String userId,
+    required String content,
+    String notifScreen = 'chat',
+  });
 }

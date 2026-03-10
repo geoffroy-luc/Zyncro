@@ -8,7 +8,9 @@ class Event {
   final DateTime startDate;
   final DateTime? endDate;
   final String? location;
+  final String? color;
   final String createdBy;
+  final String? creatorName;
   final DateTime createdAt;
 
   const Event({
@@ -19,7 +21,9 @@ class Event {
     required this.startDate,
     this.endDate,
     this.location,
+    this.color,
     required this.createdBy,
+    this.creatorName,
     required this.createdAt,
   });
 
@@ -34,7 +38,9 @@ class Event {
           ? (map['endDate'] as Timestamp).toDate()
           : null,
       location: map['location'] as String?,
+      color: map['color'] as String?,
       createdBy: map['createdBy'] as String,
+      creatorName: map['creatorName'] as String?,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
     );
   }
@@ -47,7 +53,9 @@ class Event {
       'startDate': Timestamp.fromDate(startDate),
       'endDate': endDate != null ? Timestamp.fromDate(endDate!) : null,
       'location': location,
+      'color': color,
       'createdBy': createdBy,
+      'creatorName': creatorName,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -58,6 +66,7 @@ class Event {
     DateTime? startDate,
     DateTime? endDate,
     String? location,
+    String? color,
   }) {
     return Event(
       id: id,
@@ -67,7 +76,9 @@ class Event {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       location: location ?? this.location,
+      color: color ?? this.color,
       createdBy: createdBy,
+      creatorName: creatorName,
       createdAt: createdAt,
     );
   }

@@ -1,5 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+class ChecklistItem {
+  final String text;
+  final bool done;
+
+  const ChecklistItem({required this.text, this.done = false});
+
+  factory ChecklistItem.fromMap(Map<String, dynamic> map) =>
+      ChecklistItem(text: map['text'] as String, done: map['done'] as bool? ?? false);
+
+  Map<String, dynamic> toMap() => {'text': text, 'done': done};
+
+  ChecklistItem copyWith({String? text, bool? done}) =>
+      ChecklistItem(text: text ?? this.text, done: done ?? this.done);
+}
+
 class Note {
   final String id;
   final String groupId;
@@ -7,6 +22,8 @@ class Note {
   final String content;
   final bool isPinned;
   final String? color;
+  final bool isChecklist;
+  final List<ChecklistItem> checklist;
   final String createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -18,12 +35,15 @@ class Note {
     required this.content,
     required this.isPinned,
     this.color,
+    this.isChecklist = false,
+    this.checklist = const [],
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
   });
 
   factory Note.fromMap(String id, Map<String, dynamic> map) {
+    final rawChecklist = map['checklist'] as List<dynamic>?;
     return Note(
       id: id,
       groupId: map['groupId'] as String,
@@ -31,6 +51,11 @@ class Note {
       content: map['content'] as String,
       isPinned: map['isPinned'] as bool? ?? false,
       color: map['color'] as String?,
+      isChecklist: map['isChecklist'] as bool? ?? false,
+      checklist: rawChecklist
+              ?.map((e) => ChecklistItem.fromMap(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       createdBy: map['createdBy'] as String,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       updatedAt: (map['updatedAt'] as Timestamp).toDate(),
@@ -44,6 +69,8 @@ class Note {
       'content': content,
       'isPinned': isPinned,
       'color': color,
+      'isChecklist': isChecklist,
+      'checklist': checklist.map((e) => e.toMap()).toList(),
       'createdBy': createdBy,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
@@ -55,6 +82,8 @@ class Note {
     String? content,
     bool? isPinned,
     String? color,
+    bool? isChecklist,
+    List<ChecklistItem>? checklist,
   }) {
     return Note(
       id: id,
@@ -63,6 +92,8 @@ class Note {
       content: content ?? this.content,
       isPinned: isPinned ?? this.isPinned,
       color: color ?? this.color,
+      isChecklist: isChecklist ?? this.isChecklist,
+      checklist: checklist ?? this.checklist,
       createdBy: createdBy,
       createdAt: createdAt,
       updatedAt: DateTime.now(),

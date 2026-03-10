@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/expense.dart';
 import '../../../../shared/models/group_member.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/expenses_provider.dart';
 
@@ -242,6 +244,17 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               userId: user.uid,
             );
       }
+      final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+      final expenseTitle = _expenseType == ExpenseType.reimbursement
+          ? (_titleController.text.trim().isEmpty ? 'Remboursement' : _titleController.text.trim())
+          : _titleController.text.trim();
+      final typeLabel = _expenseType == ExpenseType.reimbursement ? 'remboursement' : 'dépense';
+      ref.read(messagesRepositoryProvider).sendSystemMessage(
+            groupId: groupId,
+            userId: user.uid,
+            content: '💰 $userName a ajouté un${ _expenseType == ExpenseType.reimbursement ? '' : 'e'} $typeLabel « $expenseTitle » (${amount.toStringAsFixed(2)}€)',
+            notifScreen: 'expenses',
+          );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -322,6 +335,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   prefixIcon: const Icon(Icons.receipt_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r"[a-zA-ZÀ-ÿ0-9 '\-]")),
+                ],
                 validator: (v) {
                   if (_expenseType == ExpenseType.reimbursement) return null;
                   return v == null || v.trim().isEmpty ? 'Champ requis' : null;
