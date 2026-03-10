@@ -44,6 +44,11 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _openEditor(),
+        backgroundColor: const Color(0xFF2BB8A5),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: notesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Erreur: $e')),
@@ -77,29 +82,6 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                               color: AppColors.textPrimary,
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => _openEditor(),
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [Color(0xFF2BB8A5), Color(0xFF1E9B8A)],
-                                ),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF2BB8A5).withValues(alpha: 0.25),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(Icons.add, color: Colors.white, size: 20),
                             ),
                           ),
                         ],

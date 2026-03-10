@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/expense.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/expenses_provider.dart';
 import 'expense_form_screen.dart';
@@ -19,11 +20,18 @@ const _categoryColors = {
 
 Color _catColor(String? cat) => _categoryColors[cat] ?? const Color(0xFF6B7280);
 
-String _formatAmount(double v) => NumberFormat.currency(
-  locale: 'fr_FR',
-  symbol: '€',
-  decimalDigits: 2,
-).format(v);
+String _formatAmount(double v) {
+  final abs = v.abs();
+  if (abs >= 1000000) {
+    final m = v / 1000000;
+    return '${m.toStringAsFixed(m.truncateToDouble() == m ? 0 : 1).replaceAll('.', ',')}M €';
+  }
+  if (abs >= 1000) {
+    final k = v / 1000;
+    return '${k.toStringAsFixed(k.truncateToDouble() == k ? 0 : 1).replaceAll('.', ',')}k €';
+  }
+  return NumberFormat.currency(locale: 'fr_FR', symbol: '€', decimalDigits: 2).format(v);
+}
 
 String _formatDate(DateTime dt) {
   final now = DateTime.now();
@@ -59,6 +67,13 @@ class ExpensesScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ExpenseFormScreen()),
+        ),
+        backgroundColor: const Color(0xFFFFB86B),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -94,29 +109,6 @@ class ExpensesScreen extends ConsumerWidget {
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ExpenseFormScreen(),
-                          ),
-                        ),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.add,
-                            color: Colors.white,
-                            size: 20,
-                          ),
                         ),
                       ),
                     ],
@@ -515,47 +507,16 @@ class _ExpenseCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final color = _catColor(expense.category);
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    final authUser = ref.watch(authStateProvider).asData?.value;
+    final group = ref.watch(selectedGroupProvider);
 
-    return Dismissible(
-      key: Key(expense.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Icon(Icons.delete_outline, color: AppColors.error),
-      ),
-      confirmDismiss: (_) => showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Supprimer la dépense'),
-          content: const Text('Cette action est irréversible.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Annuler'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text(
-                'Supprimer',
-                style: TextStyle(color: AppColors.error),
-              ),
-            ),
-          ],
-        ),
-      ),
-      onDismissed: (_) async {
-        if (groupId != null) {
-          await ref
-              .read(expensesRepositoryProvider)
-              .deleteExpense(groupId, expense.id);
-        }
-      },
-      child: Container(
+    // Peut supprimer : créateur de la dépense OU owner du groupe
+    final canDelete = authUser != null && (
+      expense.createdBy == authUser.uid ||
+      group?.createdBy == authUser.uid
+    );
+
+    final cardContent = Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -721,7 +682,62 @@ class _ExpenseCard extends ConsumerWidget {
             ),
           ],
         ),
+    );
+
+    if (!canDelete) return cardContent;
+
+    return Dismissible(
+      key: Key(expense.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.delete_outline, color: AppColors.error),
       ),
+      confirmDismiss: (_) => showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Supprimer la dépense'),
+          content: const Text('Cette action est irréversible.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Annuler'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text(
+                'Supprimer',
+                style: TextStyle(color: AppColors.error),
+              ),
+            ),
+          ],
+        ),
+      ),
+      onDismissed: (_) async {
+        if (groupId != null) {
+          final authUserSnap = ref.read(authStateProvider).asData?.value;
+          final expensesRepo = ref.read(expensesRepositoryProvider);
+          final msgRepo = ref.read(messagesRepositoryProvider);
+          try {
+            await expensesRepo.deleteExpense(groupId, expense.id);
+            final userName = authUserSnap?.displayName ?? authUserSnap?.email ?? 'Quelqu\'un';
+            if (authUserSnap != null) {
+              msgRepo.sendSystemMessage(
+                groupId: groupId,
+                userId: authUserSnap.uid,
+                content: '💰 $userName a supprimé une dépense « ${expense.title} »',
+                notifScreen: 'expenses',
+              );
+            }
+          } catch (_) {}
+        }
+      },
+      child: cardContent,
     );
   }
 }
