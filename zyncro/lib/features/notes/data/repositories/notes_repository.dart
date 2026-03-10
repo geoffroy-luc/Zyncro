@@ -33,6 +33,8 @@ class NotesRepository implements INotesRepository {
     required String content,
     bool isPinned = false,
     String? color,
+    bool isChecklist = false,
+    List<ChecklistItem> checklist = const [],
     required String userId,
   }) async {
     final ref = _col(groupId).doc();
@@ -44,6 +46,8 @@ class NotesRepository implements INotesRepository {
       content: content,
       isPinned: isPinned,
       color: color,
+      isChecklist: isChecklist,
+      checklist: checklist,
       createdBy: userId,
       createdAt: now,
       updatedAt: now,
