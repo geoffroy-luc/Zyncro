@@ -30,7 +30,11 @@ String _formatAmount(double v) {
     final k = v / 1000;
     return '${k.toStringAsFixed(k.truncateToDouble() == k ? 0 : 1).replaceAll('.', ',')}k €';
   }
-  return NumberFormat.currency(locale: 'fr_FR', symbol: '€', decimalDigits: 2).format(v);
+  return NumberFormat.currency(
+    locale: 'fr_FR',
+    symbol: '€',
+    decimalDigits: 2,
+  ).format(v);
 }
 
 String _formatDate(DateTime dt) {
@@ -68,9 +72,9 @@ class ExpensesScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const ExpenseFormScreen()),
-        ),
+        onPressed: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const ExpenseFormScreen())),
         backgroundColor: const Color(0xFFFFB86B),
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -511,177 +515,176 @@ class _ExpenseCard extends ConsumerWidget {
     final group = ref.watch(selectedGroupProvider);
 
     // Peut supprimer : créateur de la dépense OU owner du groupe
-    final canDelete = authUser != null && (
-      expense.createdBy == authUser.uid ||
-      group?.createdBy == authUser.uid
-    );
+    final canDelete =
+        authUser != null &&
+        (expense.createdBy == authUser.uid || group?.createdBy == authUser.uid);
 
     final cardContent = Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0A000000),
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 6,
-              height: 80,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(14),
-                ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 6,
+            height: 80,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(14),
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                expense.title,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              if (expense.expenseType ==
-                                  ExpenseType.reimbursement) ...[
-                                const SizedBox(height: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF4F7CFF,
-                                    ).withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(100),
-                                  ),
-                                  child: const Text(
-                                    'Remboursement',
-                                    style: TextStyle(
-                                      color: Color(0xFF4F7CFF),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Text(
-                                    'Payé par ${isMe ? 'vous' : expense.paidByName}',
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const Text(
-                                    ' • ',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  Text(
-                                    _formatDate(expense.date),
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _formatAmount(expense.amount),
+                              expense.title,
                               style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w600,
-                                fontSize: 17,
+                                fontSize: 14,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: expense.settled
-                                    ? const Color(
-                                        0xFF2BB8A5,
-                                      ).withValues(alpha: 0.1)
-                                    : AppColors.accent.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                              child: Text(
-                                expense.settled ? 'Réglé' : 'En attente',
-                                style: TextStyle(
-                                  color: expense.settled
-                                      ? const Color(0xFF2BB8A5)
-                                      : AppColors.accent,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
+                            if (expense.expenseType ==
+                                ExpenseType.reimbursement) ...[
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFF4F7CFF,
+                                  ).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                child: const Text(
+                                  'Remboursement',
+                                  style: TextStyle(
+                                    color: Color(0xFF4F7CFF),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
+                            ],
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(
+                                  'Payé par ${isMe ? 'vous' : expense.paidByName}',
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const Text(
+                                  ' • ',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  _formatDate(expense.date),
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                    if (expense.category != null) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          expense.category!,
-                          style: TextStyle(
-                            color: color,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            _formatAmount(expense.amount),
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 17,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: expense.settled
+                                  ? const Color(
+                                      0xFF2BB8A5,
+                                    ).withValues(alpha: 0.1)
+                                  : AppColors.accent.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              expense.settled ? 'Réglé' : 'En attente',
+                              style: TextStyle(
+                                color: expense.settled
+                                    ? const Color(0xFF2BB8A5)
+                                    : AppColors.accent,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
+                  ),
+                  if (expense.category != null) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        expense.category!,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
 
     if (!canDelete) return cardContent;
@@ -725,12 +728,16 @@ class _ExpenseCard extends ConsumerWidget {
           final msgRepo = ref.read(messagesRepositoryProvider);
           try {
             await expensesRepo.deleteExpense(groupId, expense.id);
-            final userName = authUserSnap?.displayName ?? authUserSnap?.email ?? 'Quelqu\'un';
+            final userName =
+                authUserSnap?.displayName ??
+                authUserSnap?.email ??
+                'Quelqu\'un';
             if (authUserSnap != null) {
               msgRepo.sendSystemMessage(
                 groupId: groupId,
                 userId: authUserSnap.uid,
-                content: '💰 $userName a supprimé une dépense « ${expense.title} »',
+                content:
+                    '💰 $userName a supprimé une dépense « ${expense.title} »',
                 notifScreen: 'expenses',
               );
             }
