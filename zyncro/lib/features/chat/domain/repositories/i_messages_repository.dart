@@ -33,4 +33,12 @@ abstract interface class IMessagesRepository {
     required String groupId,
     required String currentUserId,
   });
+
+  /// Envoie un message système (action automatique).
+  Future<void> sendSystemMessage({
+    required String groupId,
+    required String userId,
+    required String content,
+    required String notifScreen,
+  });
 }

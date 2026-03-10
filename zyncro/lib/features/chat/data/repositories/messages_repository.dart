@@ -115,4 +115,23 @@ class MessagesRepository implements IMessagesRepository {
   }) async {
     await _col(groupId).doc(messageId).delete();
   }
+
+  @override
+  Future<void> sendSystemMessage({
+    required String groupId,
+    required String userId,
+    required String content,
+    required String notifScreen,
+  }) async {
+    final ref = _col(groupId).doc();
+    final message = Message(
+      id: ref.id,
+      groupId: groupId,
+      senderId: userId,
+      content: content,
+      type: MessageType.system,
+      timestamp: DateTime.now(),
+    );
+    await ref.set({...message.toMap(), 'notifScreen': notifScreen});
+  }
 }

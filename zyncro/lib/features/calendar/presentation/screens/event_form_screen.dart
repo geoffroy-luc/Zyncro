@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../shared/models/event.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/events_provider.dart';
 
 class EventFormScreen extends ConsumerStatefulWidget {
   final DateTime? initialDate;
+  final Event? event;
 
-  const EventFormScreen({super.key, this.initialDate});
+  const EventFormScreen({super.key, this.initialDate, this.event});
 
   @override
   ConsumerState<EventFormScreen> createState() => _EventFormScreenState();
@@ -30,9 +32,26 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   @override
   void initState() {
     super.initState();
-    _startDate = widget.initialDate ?? DateTime.now();
-    _endDate = _startDate;
-    _endTime = TimeOfDay(hour: _startTime.hour + 1, minute: _startTime.minute);
+    final e = widget.event;
+    if (e != null) {
+      _titleController.text = e.title;
+      _locationController.text = e.location ?? '';
+      _descriptionController.text = e.description ?? '';
+      _startDate = e.startDate;
+      _startTime = TimeOfDay.fromDateTime(e.startDate);
+      if (e.endDate != null) {
+        _hasEndDate = true;
+        _endDate = e.endDate;
+        _endTime = TimeOfDay.fromDateTime(e.endDate!);
+      } else {
+        _endDate = _startDate;
+        _endTime = TimeOfDay(hour: _startTime.hour + 1, minute: _startTime.minute);
+      }
+    } else {
+      _startDate = widget.initialDate ?? DateTime.now();
+      _endDate = _startDate;
+      _endTime = TimeOfDay(hour: _startTime.hour + 1, minute: _startTime.minute);
+    }
   }
 
   @override
@@ -102,20 +121,37 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     }
 
     setState(() => _saving = true);
+    final repo = ref.read(eventsRepositoryProvider);
+    final title = _titleController.text.trim();
+    final description = _descriptionController.text.trim().isNotEmpty
+        ? _descriptionController.text.trim()
+        : null;
+    final location = _locationController.text.trim().isNotEmpty
+        ? _locationController.text.trim()
+        : null;
     try {
-      await ref.read(eventsRepositoryProvider).createEvent(
-            groupId: groupId,
-            title: _titleController.text.trim(),
-            description: _descriptionController.text.trim().isNotEmpty
-                ? _descriptionController.text.trim()
-                : null,
+      if (widget.event != null) {
+        await repo.updateEvent(
+          groupId,
+          widget.event!.copyWith(
+            title: title,
+            description: description,
             startDate: startDt,
             endDate: endDt,
-            location: _locationController.text.trim().isNotEmpty
-                ? _locationController.text.trim()
-                : null,
-            userId: user.uid,
-          );
+            location: location,
+          ),
+        );
+      } else {
+        await repo.createEvent(
+          groupId: groupId,
+          title: title,
+          description: description,
+          startDate: startDt,
+          endDate: endDt,
+          location: location,
+          userId: user.uid,
+        );
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -206,7 +242,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Nouvel événement'),
+        title: Text(widget.event != null ? 'Modifier l\'événement' : 'Nouvel événement'),
         actions: [
           IconButton(
             icon: _saving

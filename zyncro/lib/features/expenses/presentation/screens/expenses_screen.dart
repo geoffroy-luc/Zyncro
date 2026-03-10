@@ -75,7 +75,8 @@ class ExpensesScreen extends ConsumerWidget {
         onPressed: () => Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => const ExpenseFormScreen())),
-        backgroundColor: const Color(0xFFFFB86B),
+        backgroundColor: const Color(0xFFFFB86B).withValues(alpha: 0.85),
+        shape: const CircleBorder(side: BorderSide(color: Colors.white24, width: 2)),
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: SingleChildScrollView(

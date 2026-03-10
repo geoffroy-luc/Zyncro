@@ -155,7 +155,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             builder: (_) => EventFormScreen(initialDate: _selectedDay ?? today),
           ),
         ),
-        backgroundColor: const Color(0xFF4F7CFF),
+        backgroundColor: const Color(0xFF4F7CFF).withValues(alpha: 0.85),
+        shape: const CircleBorder(side: BorderSide(color: Colors.white24, width: 2)),
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: CustomScrollView(

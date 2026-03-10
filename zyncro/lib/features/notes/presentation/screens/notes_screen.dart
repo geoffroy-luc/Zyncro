@@ -32,9 +32,9 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
   String _search = '';
 
   void _openEditor({Note? note}) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => NoteEditorScreen(note: note)),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => NoteEditorScreen(note: note)));
   }
 
   @override
@@ -46,7 +46,10 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
       backgroundColor: const Color(0xFFF7F9FC),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openEditor(),
-        backgroundColor: const Color(0xFF2BB8A5),
+        backgroundColor: const Color(0xFF2BB8A5).withValues(alpha: 0.85),
+        shape: const CircleBorder(
+          side: BorderSide(color: Colors.white70, width: 2),
+        ),
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: notesAsync.when(
@@ -56,10 +59,16 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
           final filtered = _search.isEmpty
               ? allNotes
               : allNotes
-                  .where((n) =>
-                      n.title.toLowerCase().contains(_search.toLowerCase()) ||
-                      n.content.toLowerCase().contains(_search.toLowerCase()))
-                  .toList();
+                    .where(
+                      (n) =>
+                          n.title.toLowerCase().contains(
+                            _search.toLowerCase(),
+                          ) ||
+                          n.content.toLowerCase().contains(
+                            _search.toLowerCase(),
+                          ),
+                    )
+                    .toList();
 
           final pinned = filtered.where((n) => n.isPinned).toList();
           final recent = filtered.where((n) => !n.isPinned).toList();
@@ -97,18 +106,27 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                           children: [
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 14),
-                              child: Icon(Icons.search, color: AppColors.textSecondary, size: 20),
+                              child: Icon(
+                                Icons.search,
+                                color: AppColors.textSecondary,
+                                size: 20,
+                              ),
                             ),
                             Expanded(
                               child: TextField(
                                 onChanged: (v) => setState(() => _search = v),
                                 decoration: const InputDecoration(
                                   hintText: 'Rechercher...',
-                                  hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                                  hintStyle: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 14,
+                                  ),
                                   border: InputBorder.none,
                                   enabledBorder: InputBorder.none,
                                   focusedBorder: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(vertical: 12),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                   filled: false,
                                 ),
                               ),
@@ -131,11 +149,16 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.description_outlined,
-                            size: 48, color: AppColors.textSecondary),
+                        const Icon(
+                          Icons.description_outlined,
+                          size: 48,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(height: 12),
-                        const Text('Aucune note',
-                            style: TextStyle(color: AppColors.textSecondary)),
+                        const Text(
+                          'Aucune note',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
                           onPressed: () => _openEditor(),
@@ -155,7 +178,11 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                       if (pinned.isNotEmpty) ...[
                         const Row(
                           children: [
-                            Icon(Icons.push_pin, size: 16, color: AppColors.accent),
+                            Icon(
+                              Icons.push_pin,
+                              size: 16,
+                              color: AppColors.accent,
+                            ),
                             SizedBox(width: 8),
                             Text(
                               'Épinglées',
@@ -168,13 +195,15 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        ...pinned.map((note) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _PinnedNoteCard(
-                                note: note,
-                                onTap: () => _openEditor(note: note),
-                              ),
-                            )),
+                        ...pinned.map(
+                          (note) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _PinnedNoteCard(
+                              note: note,
+                              onTap: () => _openEditor(note: note),
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 8),
                       ],
 
@@ -194,11 +223,11 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 0.85,
-                          ),
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 0.85,
+                              ),
                           itemCount: recent.length,
                           itemBuilder: (_, i) => _RecentNoteCard(
                             note: recent[i],
@@ -236,7 +265,11 @@ class _PinnedNoteCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color.withValues(alpha: 0.15), width: 2),
           boxShadow: const [
-            BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
         child: Column(
@@ -246,7 +279,9 @@ class _PinnedNoteCard extends StatelessWidget {
               height: 6,
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(14),
+                ),
               ),
             ),
             Padding(
@@ -263,7 +298,11 @@ class _PinnedNoteCard extends StatelessWidget {
                           color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(Icons.description_outlined, size: 16, color: color),
+                        child: Icon(
+                          Icons.description_outlined,
+                          size: 16,
+                          color: color,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -276,25 +315,39 @@ class _PinnedNoteCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const Icon(Icons.push_pin, size: 16, color: AppColors.accent),
+                      const Icon(
+                        Icons.push_pin,
+                        size: 16,
+                        color: AppColors.accent,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
                     note.content,
                     style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 13, height: 1.5),
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(Icons.access_time, size: 12, color: AppColors.textSecondary),
+                      const Icon(
+                        Icons.access_time,
+                        size: 12,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         _formatDate(note.updatedAt),
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
@@ -325,7 +378,11 @@ class _RecentNoteCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
           boxShadow: const [
-            BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
         child: Column(
@@ -335,7 +392,9 @@ class _RecentNoteCard extends StatelessWidget {
               height: 4,
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(14),
+                ),
               ),
             ),
             Expanded(
@@ -351,7 +410,11 @@ class _RecentNoteCard extends StatelessWidget {
                         color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.description_outlined, size: 16, color: color),
+                      child: Icon(
+                        Icons.description_outlined,
+                        size: 16,
+                        color: color,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -369,7 +432,10 @@ class _RecentNoteCard extends StatelessWidget {
                       child: Text(
                         note.content,
                         style: const TextStyle(
-                            color: AppColors.textSecondary, fontSize: 11, height: 1.4),
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                          height: 1.4,
+                        ),
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -377,11 +443,18 @@ class _RecentNoteCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.access_time, size: 11, color: AppColors.textSecondary),
+                        const Icon(
+                          Icons.access_time,
+                          size: 11,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           _formatDate(note.updatedAt),
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 10),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 10,
+                          ),
                         ),
                       ],
                     ),

@@ -9,7 +9,9 @@ class Event {
   final DateTime? endDate;
   final String? location;
   final String createdBy;
+  final String? creatorName;
   final DateTime createdAt;
+  final String? color;
 
   const Event({
     required this.id,
@@ -20,7 +22,9 @@ class Event {
     this.endDate,
     this.location,
     required this.createdBy,
+    this.creatorName,
     required this.createdAt,
+    this.color,
   });
 
   factory Event.fromMap(String id, Map<String, dynamic> map) {
@@ -35,7 +39,9 @@ class Event {
           : null,
       location: map['location'] as String?,
       createdBy: map['createdBy'] as String,
+      creatorName: map['creatorName'] as String?,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
+      color: map['color'] as String?,
     );
   }
 
@@ -48,7 +54,9 @@ class Event {
       'endDate': endDate != null ? Timestamp.fromDate(endDate!) : null,
       'location': location,
       'createdBy': createdBy,
+      if (creatorName != null) 'creatorName': creatorName,
       'createdAt': Timestamp.fromDate(createdAt),
+      if (color != null) 'color': color,
     };
   }
 
@@ -58,6 +66,7 @@ class Event {
     DateTime? startDate,
     DateTime? endDate,
     String? location,
+    String? color,
   }) {
     return Event(
       id: id,
@@ -68,7 +77,9 @@ class Event {
       endDate: endDate ?? this.endDate,
       location: location ?? this.location,
       createdBy: createdBy,
+      creatorName: creatorName,
       createdAt: createdAt,
+      color: color ?? this.color,
     );
   }
 }
