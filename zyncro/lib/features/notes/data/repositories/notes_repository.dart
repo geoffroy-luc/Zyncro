@@ -23,7 +23,11 @@ class NotesRepository implements INotesRepository {
             return b.updatedAt.compareTo(a.updatedAt);
           });
           return notes;
-        });
+        })
+        .handleError(
+          (_) {},
+          test: (e) => e is FirebaseException && e.code == 'permission-denied',
+        );
   }
 
   @override

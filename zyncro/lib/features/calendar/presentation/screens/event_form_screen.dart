@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/event.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/events_provider.dart';
 
@@ -28,6 +29,18 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   DateTime? _endDate;
   TimeOfDay? _endTime;
   bool _saving = false;
+  String? _selectedColor;
+
+  static const _colorPalette = [
+    '#4F7CFF',
+    '#2BB8A5',
+    '#FF6B6B',
+    '#FFA940',
+    '#7B61FF',
+    '#52C41A',
+    '#FF85C2',
+    '#1890FF',
+  ];
 
   @override
   void initState() {
@@ -39,6 +52,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       _descriptionController.text = e.description ?? '';
       _startDate = e.startDate;
       _startTime = TimeOfDay.fromDateTime(e.startDate);
+      _selectedColor = e.color;
       if (e.endDate != null) {
         _hasEndDate = true;
         _endDate = e.endDate;
@@ -130,7 +144,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         ? _locationController.text.trim()
         : null;
     try {
-      if (widget.event != null) {
+      final isCreating = widget.event == null;
+      if (!isCreating) {
         await repo.updateEvent(
           groupId,
           widget.event!.copyWith(
@@ -139,6 +154,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
             startDate: startDt,
             endDate: endDt,
             location: location,
+            color: _selectedColor,
           ),
         );
       } else {
@@ -150,8 +166,17 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           endDate: endDt,
           location: location,
           userId: user.uid,
+          color: _selectedColor,
         );
       }
+      final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+      final action = isCreating ? 'a créé un événement' : 'a modifié l\'événement';
+      ref.read(messagesRepositoryProvider).sendSystemMessage(
+        groupId: groupId,
+        userId: user.uid,
+        content: '📅 $userName $action « $title »',
+        notifScreen: 'calendar',
+      );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -291,6 +316,42 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 ),
                 textCapitalization: TextCapitalization.sentences,
                 maxLines: 3,
+              ),
+              const SizedBox(height: 24),
+              Text('Couleur',
+                  style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500)),
+              const SizedBox(height: 10),
+              Row(
+                children: _colorPalette.map((hex) {
+                  final color = Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
+                  final isSelected = _selectedColor == hex;
+                  return GestureDetector(
+                    onTap: () => setState(() {
+                      _selectedColor = isSelected ? null : hex;
+                    }),
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: isSelected
+                            ? Border.all(color: AppColors.textPrimary, width: 2.5)
+                            : null,
+                        boxShadow: isSelected
+                            ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 6, offset: const Offset(0, 2))]
+                            : null,
+                      ),
+                      child: isSelected
+                          ? const Icon(Icons.check, color: Colors.white, size: 16)
+                          : null,
+                    ),
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 24),
               _dateTimeRow(

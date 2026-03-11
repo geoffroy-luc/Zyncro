@@ -5,8 +5,22 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/expense.dart';
 import '../../../../shared/models/group_member.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/expenses_provider.dart';
+
+Color _memberColor(String uid) {
+  const colors = [
+    Color(0xFF2BB8A5),
+    Color(0xFF4F7CFF),
+    Color(0xFFFFB86B),
+    Color(0xFFE85D75),
+    Color(0xFF9B59B6),
+    Color(0xFF27AE60),
+  ];
+  final index = uid.codeUnits.fold(0, (a, b) => a + b) % colors.length;
+  return colors[index];
+}
 
 const _categories = [
   ('Alimentation', Icons.restaurant_outlined, Color(0xFF2BB8A5)),
@@ -195,19 +209,21 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         for (final m in members) m.uid: m.displayName,
       };
 
+      String expenseTitle;
       if (_expenseType == ExpenseType.reimbursement) {
         final toUid = _reimbursementToUid;
         if (toUid == null) {
           setState(() => _splitError = 'Choisissez à qui vous remboursez.');
           return;
         }
+        expenseTitle = _titleController.text.trim().isEmpty
+            ? 'Remboursement'
+            : _titleController.text.trim();
         await ref
             .read(expensesRepositoryProvider)
             .createExpense(
               groupId: groupId,
-              title: _titleController.text.trim().isEmpty
-                  ? 'Remboursement'
-                  : _titleController.text.trim(),
+              title: expenseTitle,
               amount: amount,
               paidBy: toUid,
               paidByName: memberNameByUid[toUid] ?? toUid,
@@ -225,11 +241,12 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           total: amount,
         );
         if (splitAmounts == null) return;
+        expenseTitle = _titleController.text.trim();
         await ref
             .read(expensesRepositoryProvider)
             .createExpense(
               groupId: groupId,
-              title: _titleController.text.trim(),
+              title: expenseTitle,
               amount: amount,
               paidBy: user.uid,
               paidByName: user.displayName ?? user.email ?? 'Moi',
@@ -242,6 +259,13 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               userId: user.uid,
             );
       }
+      final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+      ref.read(messagesRepositoryProvider).sendSystemMessage(
+        groupId: groupId,
+        userId: user.uid,
+        content: '💰 $userName a ajouté une dépense « $expenseTitle » (${amount.toStringAsFixed(2)} €)',
+        notifScreen: 'expenses',
+      );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -400,24 +424,97 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               const SizedBox(height: 24),
 
               if (_expenseType == ExpenseType.reimbursement) ...[
-                DropdownButtonFormField<String>(
-                  initialValue: _reimbursementToUid,
-                  decoration: const InputDecoration(
-                    labelText: 'Je rembourse à',
-                    prefixIcon: Icon(Icons.person_outline),
+                const Text(
+                  'Je rembourse à',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
-                  items: members
-                      .where((m) => m.uid != currentUid)
-                      .map(
-                        (m) => DropdownMenuItem(
-                          value: m.uid,
-                          child: Text(_memberLabel(m, currentUid)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() => _reimbursementToUid = v),
-                  validator: (v) => v == null ? 'Champ requis' : null,
                 ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: members
+                      .where((m) => m.uid != currentUid)
+                      .map((m) {
+                        final isSelected = _reimbursementToUid == m.uid;
+                        final color = _memberColor(m.uid);
+                        final initials = m.displayName.isNotEmpty
+                            ? m.displayName[0].toUpperCase()
+                            : '?';
+                        return GestureDetector(
+                          onTap: () =>
+                              setState(() => _reimbursementToUid = m.uid),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? color.withValues(alpha: 0.10)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSelected ? color : AppColors.border,
+                                width: isSelected ? 1.5 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: color.withValues(
+                                    alpha: isSelected ? 0.2 : 0.1,
+                                  ),
+                                  child: Text(
+                                    initials,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: color,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  _memberLabel(m, currentUid),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                    color: isSelected
+                                        ? color
+                                        : AppColors.textPrimary,
+                                  ),
+                                ),
+                                if (isSelected) ...[
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.check_circle_rounded,
+                                    size: 16,
+                                    color: color,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        );
+                      })
+                      .toList(),
+                ),
+                if (_splitError != null && _reimbursementToUid == null) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Choisissez à qui vous remboursez.',
+                    style: TextStyle(color: AppColors.error, fontSize: 12),
+                  ),
+                ],
               ] else ...[
                 const Text(
                   'Répartition',

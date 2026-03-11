@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/note.dart';
+import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/notes_provider.dart';
 import 'note_editor_screen.dart';
 
@@ -35,6 +36,24 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => NoteEditorScreen(note: note)));
+  }
+
+  Future<void> _togglePin(Note note) async {
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+    try {
+      await ref
+          .read(notesRepositoryProvider)
+          .updateNote(groupId, note.copyWith(isPinned: !note.isPinned));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Impossible d\'épingler : permission refusée.'),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -201,6 +220,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                             child: _PinnedNoteCard(
                               note: note,
                               onTap: () => _openEditor(note: note),
+                              onTogglePin: () => _togglePin(note),
                             ),
                           ),
                         ),
@@ -232,6 +252,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                           itemBuilder: (_, i) => _RecentNoteCard(
                             note: recent[i],
                             onTap: () => _openEditor(note: recent[i]),
+                            onTogglePin: () => _togglePin(recent[i]),
                           ),
                         ),
                       ],
@@ -248,11 +269,110 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
   }
 }
 
+// ── Aperçu checklist ──────────────────────────────────────────────────────────
+
+Widget _buildChecklistPreview(
+  List<ChecklistItem> items,
+  Color accentColor, {
+  int maxItems = 3,
+  double fontSize = 11,
+}) {
+  final done = items.where((i) => i.done).length;
+  final total = items.length;
+  final display = items.take(maxItems).toList();
+  final remaining = total - display.length;
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Barre de progression
+      if (total > 0) ...[
+        Row(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: total > 0 ? done / total : 0,
+                  minHeight: 4,
+                  backgroundColor: accentColor.withValues(alpha: 0.15),
+                  valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '$done/$total',
+              style: TextStyle(
+                fontSize: fontSize - 1,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+      ],
+      // Items
+      ...display.map(
+        (item) => Padding(
+          padding: const EdgeInsets.only(bottom: 3),
+          child: Row(
+            children: [
+              Icon(
+                item.done
+                    ? Icons.check_box_rounded
+                    : Icons.check_box_outline_blank_rounded,
+                size: fontSize + 1,
+                color: item.done ? accentColor : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  item.text,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    color: item.done
+                        ? AppColors.textSecondary
+                        : AppColors.textPrimary,
+                    decoration: item.done ? TextDecoration.lineThrough : null,
+                    decorationColor: AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      if (remaining > 0)
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(
+            '+ $remaining autre${remaining > 1 ? 's' : ''}',
+            style: TextStyle(
+              fontSize: fontSize - 1,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+// ── Carte épinglée (pleine largeur) ──────────────────────────────────────────
+
 class _PinnedNoteCard extends StatelessWidget {
   final Note note;
   final VoidCallback onTap;
+  final VoidCallback onTogglePin;
 
-  const _PinnedNoteCard({required this.note, required this.onTap});
+  const _PinnedNoteCard({
+    required this.note,
+    required this.onTap,
+    required this.onTogglePin,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -299,7 +419,9 @@ class _PinnedNoteCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
-                          Icons.description_outlined,
+                          note.isChecklist
+                              ? Icons.checklist_rounded
+                              : Icons.description_outlined,
                           size: 16,
                           color: color,
                         ),
@@ -315,24 +437,45 @@ class _PinnedNoteCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const Icon(
-                        Icons.push_pin,
-                        size: 16,
-                        color: AppColors.accent,
+                      // Bouton épingler/désépingler
+                      GestureDetector(
+                        onTap: onTogglePin,
+                        behavior: HitTestBehavior.opaque,
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(
+                            note.isPinned
+                                ? Icons.push_pin
+                                : Icons.push_pin_outlined,
+                            size: 18,
+                            color: note.isPinned
+                                ? AppColors.accent
+                                : AppColors.textSecondary,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    note.content,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                  // Contenu
+                  if (note.isChecklist && note.checklist.isNotEmpty)
+                    _buildChecklistPreview(
+                      note.checklist,
+                      color,
+                      maxItems: 4,
                       fontSize: 13,
-                      height: 1.5,
+                    )
+                  else
+                    Text(
+                      note.content,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        height: 1.5,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -361,11 +504,18 @@ class _PinnedNoteCard extends StatelessWidget {
   }
 }
 
+// ── Carte récente (grille 2 colonnes) ────────────────────────────────────────
+
 class _RecentNoteCard extends StatelessWidget {
   final Note note;
   final VoidCallback onTap;
+  final VoidCallback onTogglePin;
 
-  const _RecentNoteCard({required this.note, required this.onTap});
+  const _RecentNoteCard({
+    required this.note,
+    required this.onTap,
+    required this.onTogglePin,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -388,6 +538,7 @@ class _RecentNoteCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Bande couleur
             Container(
               height: 4,
               decoration: BoxDecoration(
@@ -399,24 +550,52 @@ class _RecentNoteCard extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.description_outlined,
-                        size: 16,
-                        color: color,
-                      ),
+                    // Icône + bouton épingler
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            note.isChecklist
+                                ? Icons.checklist_rounded
+                                : Icons.description_outlined,
+                            size: 15,
+                            color: color,
+                          ),
+                        ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: onTogglePin,
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              note.isPinned
+                                  ? Icons.push_pin
+                                  : Icons.push_pin_outlined,
+                              size: 16,
+                              color: note.isPinned
+                                  ? AppColors.accent
+                                  : AppColors.textSecondary.withValues(
+                                      alpha: 0.5,
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
+                    // Titre
                     Text(
                       note.title,
                       style: const TextStyle(
@@ -428,19 +607,28 @@ class _RecentNoteCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
+                    // Contenu
                     Expanded(
-                      child: Text(
-                        note.content,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 11,
-                          height: 1.4,
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      child: note.isChecklist && note.checklist.isNotEmpty
+                          ? _buildChecklistPreview(
+                              note.checklist,
+                              color,
+                              maxItems: 3,
+                              fontSize: 11,
+                            )
+                          : Text(
+                              note.content,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                                height: 1.4,
+                              ),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
+                    // Date
                     Row(
                       children: [
                         const Icon(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -27,6 +29,10 @@ class NotificationService {
   static final _messaging = FirebaseMessaging.instance;
   static final _db = FirebaseFirestore.instance;
 
+  // Subscriptions à annuler lors du logout pour éviter les listeners fantômes
+  static StreamSubscription<String>? _tokenRefreshSub;
+  static StreamSubscription<RemoteMessage>? _foregroundSub;
+
   /// Call once after Firebase.initializeApp() — before runApp().
   static void registerBackgroundHandler() {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -34,6 +40,10 @@ class NotificationService {
 
   /// Call when a user is authenticated.
   static Future<void> initialize(String userId, WidgetRef ref) async {
+    // Annuler les anciens listeners avant d'en créer de nouveaux
+    await _tokenRefreshSub?.cancel();
+    await _foregroundSub?.cancel();
+
     // Request permission (iOS & Android 13+)
     final settings = await _messaging.requestPermission(
       alert: true,
@@ -46,11 +56,13 @@ class NotificationService {
     final token = await _messaging.getToken();
     if (token != null) await _saveToken(userId, token);
 
-    // Refresh token
-    _messaging.onTokenRefresh.listen((t) => _saveToken(userId, t));
+    // Refresh token — stocké pour pouvoir l'annuler au logout
+    _tokenRefreshSub = _messaging.onTokenRefresh.listen(
+      (t) => _saveToken(userId, t),
+    );
 
-    // Foreground messages → update provider so the UI can show a banner
-    FirebaseMessaging.onMessage.listen((message) {
+    // Foreground messages — stocké pour pouvoir l'annuler au logout
+    _foregroundSub = FirebaseMessaging.onMessage.listen((message) {
       ref.read(foregroundMessageProvider.notifier).set(message);
     });
 
@@ -61,17 +73,31 @@ class NotificationService {
   }
 
   static Future<void> _saveToken(String userId, String token) async {
-    await _db.collection('users').doc(userId).set(
-      {'fcmToken': token, 'updatedAt': FieldValue.serverTimestamp()},
-      SetOptions(merge: true),
-    );
+    try {
+      await _db.collection('users').doc(userId).set(
+        {'fcmToken': token, 'updatedAt': FieldValue.serverTimestamp()},
+        SetOptions(merge: true),
+      );
+    } on FirebaseException {
+      // Règles Firestore non configurées pour la collection users — on ignore.
+    }
   }
 
   /// Remove token on sign-out so the user stops receiving notifications.
   static Future<void> removeToken() async {
+    // Annuler les listeners immédiatement pour éviter tout appel post-logout
+    await _tokenRefreshSub?.cancel();
+    await _foregroundSub?.cancel();
+    _tokenRefreshSub = null;
+    _foregroundSub = null;
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    await _db.collection('users').doc(user.uid).update({'fcmToken': null});
+    try {
+      await _db.collection('users').doc(user.uid).update({'fcmToken': null});
+    } on FirebaseException {
+      // Règles non configurées ou utilisateur déjà déconnecté — on ignore.
+    }
     await _messaging.deleteToken();
   }
 }

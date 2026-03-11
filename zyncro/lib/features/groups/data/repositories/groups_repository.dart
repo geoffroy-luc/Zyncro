@@ -15,6 +15,10 @@ class GroupsRepository implements IGroupsRepository {
         .map(
           (snap) =>
               snap.docs.map((doc) => Group.fromMap(doc.id, doc.data())).toList(),
+        )
+        .handleError(
+          (_) {},
+          test: (e) => e is FirebaseException && e.code == 'permission-denied',
         );
   }
 
@@ -118,6 +122,10 @@ class GroupsRepository implements IGroupsRepository {
         .map(
           (snap) =>
               snap.docs.map((doc) => GroupMember.fromMap(doc.data())).toList(),
+        )
+        .handleError(
+          (_) {},
+          test: (e) => e is FirebaseException && e.code == 'permission-denied',
         );
   }
 
@@ -133,8 +141,55 @@ class GroupsRepository implements IGroupsRepository {
   }
 
   @override
-  Future<void> leaveGroup(String groupId, String userId) =>
-      removeMember(groupId, userId);
+  Future<void> leaveGroup(
+    String groupId,
+    String userId, {
+    String? systemMessage,
+  }) async {
+    final groupRef = _db.collection('groups').doc(groupId);
+    final batch = _db.batch();
+    batch.update(groupRef, {
+      'memberIds': FieldValue.arrayRemove([userId]),
+    });
+    batch.delete(groupRef.collection('members').doc(userId));
+    if (systemMessage != null) {
+      final msgRef = groupRef.collection('messages').doc();
+      batch.set(msgRef, {
+        'groupId': groupId,
+        'senderId': userId,
+        'senderName': null,
+        'content': systemMessage,
+        'type': 'system',
+        'timestamp': FieldValue.serverTimestamp(),
+        'notifScreen': 'chat',
+      });
+    }
+    await batch.commit();
+  }
+
+  @override
+  Future<void> transferOwnership(
+    String groupId,
+    String currentOwnerId,
+    String newOwnerId,
+  ) async {
+    final groupRef = _db.collection('groups').doc(groupId);
+    final batch = _db.batch();
+    batch.update(groupRef, {'createdBy': newOwnerId});
+    batch.update(groupRef.collection('members').doc(newOwnerId), {'role': 'owner'});
+    batch.update(groupRef.collection('members').doc(currentOwnerId), {'role': 'member'});
+    await batch.commit();
+  }
+
+  @override
+  Future<void> deleteGroup(String groupId, String? inviteCode) async {
+    final batch = _db.batch();
+    batch.delete(_db.collection('groups').doc(groupId));
+    if (inviteCode != null) {
+      batch.delete(_db.collection('invite_codes').doc(inviteCode));
+    }
+    await batch.commit();
+  }
 
   @override
   Future<String> generateInviteCode(String groupId) async {

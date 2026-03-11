@@ -14,6 +14,8 @@ abstract interface class IGroupsRepository {
   Future<Group?> joinGroupByCode(String code, String userId, String displayName);
   Stream<List<GroupMember>> watchMembers(String groupId);
   Future<void> removeMember(String groupId, String userId);
-  Future<void> leaveGroup(String groupId, String userId);
+  Future<void> leaveGroup(String groupId, String userId, {String? systemMessage});
+  Future<void> transferOwnership(String groupId, String currentOwnerId, String newOwnerId);
+  Future<void> deleteGroup(String groupId, String? inviteCode);
   Future<String> generateInviteCode(String groupId);
 }

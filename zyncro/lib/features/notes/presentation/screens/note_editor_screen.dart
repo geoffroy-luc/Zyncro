@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/note.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/notes_provider.dart';
 
@@ -142,7 +143,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       final checklist = _isChecklist ? _buildChecklist() : <ChecklistItem>[];
       final content = _isChecklist ? '' : _contentController.text.trim();
 
-      if (widget.note == null) {
+      final isCreating = widget.note == null;
+      if (isCreating) {
         await repo.createNote(
           groupId: groupId,
           title: title,
@@ -166,6 +168,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ),
         );
       }
+      final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+      final action = isCreating ? 'a créé une note' : 'a modifié la note';
+      ref.read(messagesRepositoryProvider).sendSystemMessage(
+        groupId: groupId,
+        userId: user.uid,
+        content: '📝 $userName $action « $title »',
+        notifScreen: 'notes',
+      );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -203,6 +213,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (confirm == true && mounted) {
       try {
         await ref.read(notesRepositoryProvider).deleteNote(groupId, widget.note!.id);
+        final user = ref.read(authStateProvider).asData?.value;
+        if (user != null) {
+          final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+          ref.read(messagesRepositoryProvider).sendSystemMessage(
+            groupId: groupId,
+            userId: user.uid,
+            content: '📝 $userName a supprimé la note « ${widget.note!.title} »',
+            notifScreen: 'notes',
+          );
+        }
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
@@ -284,34 +304,74 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             const SizedBox(height: 20),
 
             // Épingler + Toggle checklist
-            Row(
+            Wrap(
+              spacing: 8,
               children: [
-                Expanded(
-                  child: SwitchListTile(
-                    value: _isPinned,
-                    onChanged: (v) => setState(() => _isPinned = v),
-                    title: const Text('Épingler'),
-                    secondary: const Icon(Icons.push_pin_outlined),
-                    contentPadding: EdgeInsets.zero,
+                FilterChip(
+                  avatar: Icon(
+                    _isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                    size: 16,
+                    color: _isPinned ? _selectedColor : AppColors.textSecondary,
+                  ),
+                  label: const Text('Épingler'),
+                  selected: _isPinned,
+                  onSelected: (v) => setState(() => _isPinned = v),
+                  selectedColor: _selectedColor.withValues(alpha: 0.12),
+                  checkmarkColor: _selectedColor,
+                  showCheckmark: false,
+                  side: BorderSide(
+                    color: _isPinned
+                        ? _selectedColor
+                        : AppColors.border,
+                  ),
+                  labelStyle: TextStyle(
+                    fontSize: 13,
+                    color: _isPinned
+                        ? _selectedColor
+                        : AppColors.textSecondary,
+                    fontWeight: _isPinned
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SwitchListTile(
-                    value: _isChecklist,
-                    onChanged: (v) {
-                      setState(() {
-                        _isChecklist = v;
-                        if (v && _checklist.isEmpty) {
-                          _checklist.add(const ChecklistItem(text: ''));
-                          _itemControllers.add(TextEditingController());
-                          _itemFocusNodes.add(FocusNode());
-                        }
-                      });
-                    },
-                    title: const Text('Checklist'),
-                    secondary: const Icon(Icons.checklist_outlined),
-                    contentPadding: EdgeInsets.zero,
+                FilterChip(
+                  avatar: Icon(
+                    _isChecklist
+                        ? Icons.checklist_rounded
+                        : Icons.checklist_outlined,
+                    size: 16,
+                    color: _isChecklist
+                        ? _selectedColor
+                        : AppColors.textSecondary,
+                  ),
+                  label: const Text('Checklist'),
+                  selected: _isChecklist,
+                  onSelected: (v) {
+                    setState(() {
+                      _isChecklist = v;
+                      if (v && _checklist.isEmpty) {
+                        _checklist.add(const ChecklistItem(text: ''));
+                        _itemControllers.add(TextEditingController());
+                        _itemFocusNodes.add(FocusNode());
+                      }
+                    });
+                  },
+                  selectedColor: _selectedColor.withValues(alpha: 0.12),
+                  checkmarkColor: _selectedColor,
+                  showCheckmark: false,
+                  side: BorderSide(
+                    color: _isChecklist
+                        ? _selectedColor
+                        : AppColors.border,
+                  ),
+                  labelStyle: TextStyle(
+                    fontSize: 13,
+                    color: _isChecklist
+                        ? _selectedColor
+                        : AppColors.textSecondary,
+                    fontWeight: _isChecklist
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                   ),
                 ),
               ],

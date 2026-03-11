@@ -19,6 +19,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   ref.listen(authStateProvider, (_, __) => notifier.value++);
   ref.listen(selectedGroupIdProvider, (_, __) => notifier.value++);
+  ref.listen(userGroupsProvider, (_, __) => notifier.value++);
   ref.onDispose(notifier.dispose);
 
   return GoRouter(

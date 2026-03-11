@@ -21,6 +21,10 @@ class MessagesRepository implements IMessagesRepository {
           (snap) => snap.docs
               .map((doc) => Message.fromMap(doc.id, doc.data()))
               .toList(),
+        )
+        .handleError(
+          (_) {},
+          test: (e) => e is FirebaseException && e.code == 'permission-denied',
         );
   }
 

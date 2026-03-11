@@ -10,6 +10,7 @@ abstract interface class IEventsRepository {
     DateTime? endDate,
     String? location,
     required String userId,
+    String? color,
   });
   Future<void> updateEvent(String groupId, Event event);
   Future<void> deleteEvent(String groupId, String eventId);

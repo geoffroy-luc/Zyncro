@@ -13,7 +13,14 @@ class EventsRepository implements IEventsRepository {
     return _col(groupId)
         .orderBy('startDate')
         .snapshots()
-        .map((snap) => snap.docs.map((doc) => Event.fromMap(doc.id, doc.data())).toList());
+        .map(
+          (snap) =>
+              snap.docs.map((doc) => Event.fromMap(doc.id, doc.data())).toList(),
+        )
+        .handleError(
+          (_) {},
+          test: (e) => e is FirebaseException && e.code == 'permission-denied',
+        );
   }
 
   @override
@@ -25,6 +32,7 @@ class EventsRepository implements IEventsRepository {
     DateTime? endDate,
     String? location,
     required String userId,
+    String? color,
   }) async {
     final ref = _col(groupId).doc();
     final event = Event(
@@ -37,6 +45,7 @@ class EventsRepository implements IEventsRepository {
       location: location,
       createdBy: userId,
       createdAt: DateTime.now(),
+      color: color,
     );
     await ref.set(event.toMap());
     return event;

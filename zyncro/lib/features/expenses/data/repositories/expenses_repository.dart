@@ -17,6 +17,10 @@ class ExpensesRepository implements IExpensesRepository {
           (snap) => snap.docs
               .map((doc) => Expense.fromMap(doc.id, doc.data()))
               .toList(),
+        )
+        .handleError(
+          (_) {},
+          test: (e) => e is FirebaseException && e.code == 'permission-denied',
         );
   }
 

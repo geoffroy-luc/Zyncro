@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/group.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../chat/presentation/providers/messages_provider.dart';
 import '../providers/groups_provider.dart';
 
 class GroupSelectionScreen extends ConsumerWidget {
@@ -470,6 +471,14 @@ class _JoinGroupSheetState extends ConsumerState<_JoinGroupSheet> {
         setState(() => _error = 'Code invalide ou groupe introuvable.');
         return;
       }
+
+      final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+      ref.read(messagesRepositoryProvider).sendSystemMessage(
+        groupId: group.id,
+        userId: user.uid,
+        content: '👋 $userName a rejoint le groupe',
+        notifScreen: 'chat',
+      );
 
       await ref.read(selectedGroupIdProvider.notifier).select(group.id);
       if (mounted) {

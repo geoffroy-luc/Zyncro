@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/group_member.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../chat/presentation/providers/messages_provider.dart';
 import '../providers/groups_provider.dart';
 
 // ── Members stream provider ──────────────────────────────────────────────────
@@ -245,14 +246,41 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                         ),
                       ),
                       trailing: isOwner && !isCurrentUser && !member.isOwner
-                          ? IconButton(
+                          ? PopupMenuButton<String>(
                               icon: const Icon(
-                                Icons.person_remove_outlined,
-                                color: AppColors.error,
+                                Icons.more_vert,
+                                color: AppColors.textSecondary,
                                 size: 20,
                               ),
-                              onPressed: () =>
-                                  _confirmRemove(context, ref, member),
+                              onSelected: (action) {
+                                if (action == 'transfer') {
+                                  _confirmTransferOwnership(context, ref, member);
+                                } else if (action == 'remove') {
+                                  _confirmRemove(context, ref, member);
+                                }
+                              },
+                              itemBuilder: (_) => [
+                                const PopupMenuItem(
+                                  value: 'transfer',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.workspace_premium_outlined, size: 18),
+                                      SizedBox(width: 10),
+                                      Text('Nommer propriétaire'),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'remove',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.person_remove_outlined, size: 18, color: AppColors.error),
+                                      SizedBox(width: 10),
+                                      Text('Retirer du groupe', style: TextStyle(color: AppColors.error)),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             )
                           : null,
                     );
@@ -266,16 +294,137 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
 
           // ── Leave group ──────────────────────────────────────────
           TextButton.icon(
-            onPressed: () => _confirmLeave(context, ref, currentUser?.uid),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            onPressed: isOwner
+                ? () => showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: const Text('Impossible de quitter'),
+                        content: const Text(
+                          'Tu es propriétaire du groupe. Transfère la propriété à un autre membre avant de quitter.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('OK'),
+                          ),
+                        ],
+                      ),
+                    )
+                : () => _confirmLeave(context, ref, currentUser?.uid),
+            style: TextButton.styleFrom(
+              foregroundColor: isOwner ? AppColors.textSecondary : AppColors.error,
+            ),
             icon: const Icon(Icons.exit_to_app_outlined),
             label: const Text('Quitter ce groupe'),
           ),
+
+          if (isOwner) ...[
+            const Divider(height: 32),
+            TextButton.icon(
+              onPressed: () => _confirmDeleteGroup(context, ref, group.id, group.inviteCode),
+              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+              icon: const Icon(Icons.delete_forever_outlined),
+              label: const Text('Supprimer le groupe'),
+            ),
+          ],
 
           const SizedBox(height: 24),
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDeleteGroup(
+    BuildContext context,
+    WidgetRef ref,
+    String groupId,
+    String? inviteCode,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Supprimer le groupe'),
+        content: const Text(
+          'Cette action est irréversible. Tout le contenu du groupe (messages, notes, dépenses, événements) sera perdu.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(groupsRepositoryProvider).deleteGroup(groupId, inviteCode);
+      await ref.read(selectedGroupIdProvider.notifier).select(null);
+      if (context.mounted) context.go('/groups');
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmTransferOwnership(
+    BuildContext context,
+    WidgetRef ref,
+    GroupMember newOwner,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Transférer la propriété'),
+        content: Text(
+          'Nommer ${newOwner.displayName} propriétaire du groupe ? Tu deviendras simple membre.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Transférer'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    final currentUser = ref.read(authStateProvider).asData?.value;
+    if (groupId == null || currentUser == null) return;
+
+    try {
+      await ref.read(groupsRepositoryProvider).transferOwnership(
+        groupId,
+        currentUser.uid,
+        newOwner.uid,
+      );
+      final ownerName = currentUser.displayName ?? currentUser.email ?? 'Quelqu\'un';
+      ref.read(messagesRepositoryProvider).sendSystemMessage(
+        groupId: groupId,
+        userId: currentUser.uid,
+        content: '👑 $ownerName a transféré la propriété du groupe à ${newOwner.displayName}',
+        notifScreen: 'chat',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $e')),
+        );
+      }
+    }
   }
 
   Future<void> _confirmRemove(
@@ -307,7 +456,17 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
 
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
+    final currentUser = ref.read(authStateProvider).asData?.value;
     await ref.read(groupsRepositoryProvider).removeMember(groupId, member.uid);
+    if (currentUser != null) {
+      final ownerName = currentUser.displayName ?? currentUser.email ?? 'Quelqu\'un';
+      ref.read(messagesRepositoryProvider).sendSystemMessage(
+        groupId: groupId,
+        userId: currentUser.uid,
+        content: '👋 $ownerName a retiré ${member.displayName} du groupe',
+        notifScreen: 'chat',
+      );
+    }
   }
 
   Future<void> _confirmLeave(
@@ -341,9 +500,27 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
 
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    await ref.read(groupsRepositoryProvider).leaveGroup(groupId, userId);
-    await ref.read(selectedGroupIdProvider.notifier).select(null);
-    if (context.mounted) context.go('/groups');
+    final user = ref.read(authStateProvider).asData?.value;
+    final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
+
+    try {
+      // Message inclus dans le même batch que le leave → atomique
+      await ref.read(groupsRepositoryProvider).leaveGroup(
+        groupId,
+        userId,
+        systemMessage: '👋 $userName a quitté le groupe',
+      );
+      await ref.read(selectedGroupIdProvider.notifier).select(null);
+      if (context.mounted) context.go('/groups');
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Impossible de quitter le groupe. Vérifie les règles Firestore.'),
+          ),
+        );
+      }
+    }
   }
 
   Color _avatarColor(String uid) {
