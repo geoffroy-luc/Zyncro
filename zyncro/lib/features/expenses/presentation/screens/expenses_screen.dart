@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +9,7 @@ import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/expenses_provider.dart';
 import 'expense_form_screen.dart';
+import 'reimbursement_form_screen.dart';
 
 const _categoryColors = {
   'Alimentation': Color(0xFF2BB8A5),
@@ -46,405 +48,654 @@ String _formatDate(DateTime dt) {
   return DateFormat('d MMM', 'fr_FR').format(dt);
 }
 
-class ExpensesScreen extends ConsumerWidget {
+typedef _Settlement = ({String fromUid, String toUid, double amount});
+
+List<_Settlement> _computeSettlements(Map<String, double> balances) {
+  final creditors =
+      balances.entries
+          .where((e) => e.value > 0.01)
+          .map((e) => MapEntry(e.key, e.value))
+          .toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+  final debtors =
+      balances.entries
+          .where((e) => e.value < -0.01)
+          .map((e) => MapEntry(e.key, e.value))
+          .toList()
+        ..sort((a, b) => a.value.compareTo(b.value));
+
+  final result = <_Settlement>[];
+  int ci = 0, di = 0;
+  while (ci < creditors.length && di < debtors.length) {
+    final credit = creditors[ci].value;
+    final debt = debtors[di].value.abs();
+    final transfer = min(credit, debt);
+    result.add((
+      fromUid: debtors[di].key,
+      toUid: creditors[ci].key,
+      amount: transfer,
+    ));
+    creditors[ci] = MapEntry(creditors[ci].key, credit - transfer);
+    debtors[di] = MapEntry(debtors[di].key, debtors[di].value + transfer);
+    if (creditors[ci].value < 0.01) ci++;
+    if (debtors[di].value > -0.01) di++;
+  }
+  return result;
+}
+
+class ExpensesScreen extends ConsumerStatefulWidget {
   const ExpensesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ExpensesScreen> createState() => _ExpensesScreenState();
+}
+
+class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  int _currentTab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this)
+      ..addListener(() {
+        if (_tabController.index != _currentTab) {
+          setState(() => _currentTab = _tabController.index);
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
-    final expensesAsync = ref.watch(expensesProvider);
+    final expenses = ref.watch(expensesProvider).asData?.value ?? [];
     final balances = ref.watch(balancesProvider);
     final currentUid = ref.watch(authStateProvider).asData?.value?.uid;
+    final members = ref.watch(expenseMembersProvider).asData?.value ?? [];
+    final nameByUid = {for (final m in members) m.uid: m.displayName};
 
     final myBalance = currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
-    final expenses = expensesAsync.asData?.value ?? [];
     final total = expenses.fold(0.0, (sum, e) => sum + e.amount);
     final myShare = currentUid == null
         ? 0.0
-        : expenses
-              .where((e) => !e.settled)
-              .fold(
-                0.0,
-                (sum, e) => sum + (e.effectiveSplitAmounts[currentUid] ?? 0.0),
-              );
-    final pendingCount = expenses.where((e) => !e.settled).length;
+        : expenses.fold(
+            0.0,
+            (sum, e) => sum + (e.effectiveSplitAmounts[currentUid] ?? 0.0),
+          );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const ExpenseFormScreen())),
-        backgroundColor: const Color(0xFFFFB86B).withValues(alpha: 0.85),
-        shape: const CircleBorder(side: BorderSide(color: Colors.white24, width: 2)),
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: _currentTab == 0
+          ? FloatingActionButton(
+              heroTag: 'fab_expenses',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ExpenseFormScreen()),
+              ),
+              backgroundColor: const Color(0xFFFFB86B).withValues(alpha: 0.85),
+              shape: const CircleBorder(
+                side: BorderSide(color: Colors.white24, width: 2),
+              ),
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
+      body: Column(
+        children: [
+          // ── Header gradient ──────────────────────────────────────
+          Container(
+            padding: EdgeInsets.fromLTRB(24, topPad + 24, 24, 0),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFFFFB86B), Color(0xFFF5A855)],
+              ),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(32),
+                bottomRight: Radius.circular(32),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x33FFB86B),
+                  blurRadius: 16,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Dépenses',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TabBar(
+                  controller: _tabController,
+                  indicatorColor: Colors.white,
+                  indicatorWeight: 3,
+                  dividerColor: Colors.transparent,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.white60,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                  ),
+                  tabs: const [
+                    Tab(text: 'Dépenses'),
+                    Tab(text: 'Équilibre'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // ── Tabs ─────────────────────────────────────────────────
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // ── Tab 0 : Dépenses ─────────────────────────────
+                _DepensesTab(
+                  expenses: expenses,
+                  total: total,
+                  myShare: myShare,
+                  currentUid: currentUid,
+                ),
+                // ── Tab 1 : Équilibre ────────────────────────────
+                _EquilibreTab(
+                  myBalance: myBalance,
+                  balances: balances,
+                  nameByUid: nameByUid,
+                  currentUid: currentUid,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // ── Header gradient ──────────────────────────────────────
-            Container(
-              padding: EdgeInsets.fromLTRB(24, topPad + 24, 24, 32),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFFFB86B), Color(0xFFF5A855)],
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x33FFB86B),
-                    blurRadius: 16,
-                    offset: Offset(0, 8),
+    );
+  }
+}
+
+// ── Tab Dépenses ─────────────────────────────────────────────────────────────
+
+class _DepensesTab extends ConsumerWidget {
+  final List<Expense> expenses;
+  final double total;
+  final double myShare;
+  final String? currentUid;
+
+  const _DepensesTab({
+    required this.expenses,
+    required this.total,
+    required this.myShare,
+    required this.currentUid,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Aperçu du groupe
+          _SectionCard(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Aperçu du groupe',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1, color: AppColors.border),
+                  const SizedBox(height: 16),
+                  _OverviewRow(
+                    label: 'Total dépenses',
+                    value: _formatAmount(total),
+                    bold: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _OverviewRow(
+                    label: 'Votre part',
+                    value: _formatAmount(myShare),
+                    bold: true,
                   ),
                 ],
               ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Dépenses',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          if (expenses.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.receipt_long_outlined,
+                      size: 48,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Aucune dépense',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ExpenseFormScreen(),
                         ),
                       ),
-                    ],
+                      icon: const Icon(Icons.add),
+                      label: const Text('Ajouter'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else ...[
+            const Text(
+              'Dépenses récentes',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...expenses.map(
+              (e) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _ExpenseCard(expense: e, isMe: e.paidBy == currentUid),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Tab Équilibre ─────────────────────────────────────────────────────────────
+
+class _EquilibreTab extends StatelessWidget {
+  final double myBalance;
+  final Map<String, double> balances;
+  final Map<String, String> nameByUid;
+  final String? currentUid;
+
+  const _EquilibreTab({
+    required this.myBalance,
+    required this.balances,
+    required this.nameByUid,
+    required this.currentUid,
+  });
+
+  String _name(String uid) {
+    if (uid == currentUid) return 'Vous';
+    return nameByUid[uid] ?? uid.substring(0, min(6, uid.length));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settlements = _computeSettlements(balances);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Carte mon solde
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: myBalance >= 0
+                    ? const [Color(0xFF2BB8A5), Color(0xFF1E9B8A)]
+                    : const [Color(0xFFFF6B6B), Color(0xFFE85D75)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color:
+                      (myBalance >= 0
+                              ? const Color(0xFF2BB8A5)
+                              : const Color(0xFFFF6B6B))
+                          .withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Votre solde',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 13,
                   ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  myBalance >= 0
+                      ? '+${_formatAmount(myBalance)}'
+                      : _formatAmount(myBalance),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      myBalance >= 0 ? Icons.trending_up : Icons.trending_down,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      myBalance >= 0
+                          ? 'On vous doit de l\'argent'
+                          : 'Vous devez de l\'argent',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 13,
                       ),
                     ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Soldes par membre
+          if (balances.isNotEmpty) ...[
+            _SectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 16, 20, 12),
+                    child: Text(
+                      'Soldes',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, color: AppColors.border),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Votre solde',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          myBalance >= 0
-                              ? '+${_formatAmount(myBalance)}'
-                              : _formatAmount(myBalance),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(
-                              myBalance >= 0
-                                  ? Icons.trending_up
-                                  : Icons.trending_down,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              myBalance >= 0
-                                  ? 'On vous doit de l\'argent'
-                                  : 'Vous devez de l\'argent',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 13,
+                      children: balances.entries.map((entry) {
+                        final isPos = entry.value >= 0;
+                        final name = _name(entry.key);
+                        final initials = name.length >= 2
+                            ? name.substring(0, 2).toUpperCase()
+                            : name.toUpperCase();
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: isPos
+                                        ? const [
+                                            Color(0xFF2BB8A5),
+                                            Color(0xFF1E9B8A),
+                                          ]
+                                        : const [
+                                            Color(0xFF6B7280),
+                                            Color(0xFF4B5563),
+                                          ],
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    initials,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  name,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    isPos
+                                        ? Icons.arrow_upward
+                                        : Icons.arrow_downward,
+                                    size: 16,
+                                    color: isPos
+                                        ? const Color(0xFF2BB8A5)
+                                        : const Color(0xFFFF6B6B),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _formatAmount(entry.value.abs()),
+                                    style: TextStyle(
+                                      color: isPos
+                                          ? const Color(0xFF2BB8A5)
+                                          : const Color(0xFFFF6B6B),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+          ],
 
-            // ── Contenu ──────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-              child: expensesAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Erreur: $e')),
-                data: (expenses) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Aperçu groupe
-                    _SectionCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(20, 16, 20, 16),
-                            child: Text(
-                              'Aperçu du groupe',
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                          const Divider(height: 1, color: AppColors.border),
-                          Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              children: [
-                                _OverviewRow(
-                                  label: 'Total dépenses',
-                                  value: _formatAmount(total),
-                                  bold: true,
-                                ),
-                                const SizedBox(height: 16),
-                                _OverviewRow(
-                                  label: 'Votre part',
-                                  value: _formatAmount(myShare),
-                                  bold: true,
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                  child: Divider(
-                                    height: 1,
-                                    color: AppColors.border,
-                                  ),
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+          // Suggestions de remboursement
+          if (settlements.isNotEmpty) ...[
+            _SectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 16, 20, 12),
+                    child: Text(
+                      'À régler',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, color: AppColors.border),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: settlements.map((s) {
+                        final fromName = _name(s.fromUid);
+                        final toName = _name(s.toUid);
+                        final isMe = s.fromUid == currentUid;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      'Règlements en attente',
-                                      style: TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.accent.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                          100,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        '$pendingCount',
+                                    RichText(
+                                      text: TextSpan(
                                         style: const TextStyle(
-                                          color: AppColors.accent,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13,
+                                          fontSize: 14,
+                                          color: AppColors.textPrimary,
                                         ),
+                                        children: [
+                                          TextSpan(
+                                            text: fromName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const TextSpan(text: ' doit '),
+                                          TextSpan(
+                                            text: _formatAmount(s.amount),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFFFF6B6B),
+                                            ),
+                                          ),
+                                          const TextSpan(text: ' à '),
+                                          TextSpan(
+                                            text: toName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Soldes par membre
-                    if (balances.isNotEmpty) ...[
-                      _SectionCard(
-                        child: Column(
-                          children: [
-                            const Padding(
-                              padding: EdgeInsets.fromLTRB(20, 16, 20, 12),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Soldes',
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
-                                  ),
-                                ),
                               ),
-                            ),
-                            const Divider(height: 1, color: AppColors.border),
-                            Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: Column(
-                                children: balances.entries.map((entry) {
-                                  final isMe = entry.key == currentUid;
-                                  final isPos = entry.value >= 0;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 40,
-                                          height: 40,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                              colors: isPos
-                                                  ? const [
-                                                      Color(0xFF2BB8A5),
-                                                      Color(0xFF1E9B8A),
-                                                    ]
-                                                  : const [
-                                                      Color(0xFF6B7280),
-                                                      Color(0xFF4B5563),
-                                                    ],
-                                            ),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              isMe
-                                                  ? 'M'
-                                                  : entry.key
-                                                        .substring(0, 1)
-                                                        .toUpperCase(),
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            isMe
-                                                ? 'Vous'
-                                                : entry.key.substring(0, 8),
-                                            style: const TextStyle(
-                                              color: AppColors.textPrimary,
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              isPos
-                                                  ? Icons.arrow_upward
-                                                  : Icons.arrow_downward,
-                                              size: 16,
-                                              color: isPos
-                                                  ? const Color(0xFF2BB8A5)
-                                                  : const Color(0xFFFF6B6B),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              _formatAmount(entry.value.abs()),
-                                              style: TextStyle(
-                                                color: isPos
-                                                    ? const Color(0xFF2BB8A5)
-                                                    : const Color(0xFFFF6B6B),
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                              if (isMe) ...[
+                                const SizedBox(width: 12),
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => ReimbursementFormScreen(
+                                        initialToUid: s.toUid,
+                                        initialAmount: s.amount,
+                                      ),
                                     ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Liste
-                    if (expenses.isEmpty)
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 32),
-                          child: Column(
-                            children: [
-                              const Icon(
-                                Icons.receipt_long_outlined,
-                                size: 48,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(height: 12),
-                              const Text(
-                                'Aucune dépense',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                onPressed: () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const ExpenseFormScreen(),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF4F7CFF),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      side: const BorderSide(
+                                        color: Color(0xFF4F7CFF),
+                                      ),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Rembourser',
+                                    style: TextStyle(fontSize: 12),
                                   ),
                                 ),
-                                icon: const Icon(Icons.add),
-                                label: const Text('Ajouter'),
-                              ),
+                              ],
                             ],
                           ),
-                        ),
-                      )
-                    else ...[
-                      const Text(
-                        'Dépenses récentes',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else if (balances.isNotEmpty) ...[
+            _SectionCard(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2BB8A5).withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 12),
-                      ...expenses.map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _ExpenseCard(
-                            expense: e,
-                            isMe: e.paidBy == currentUid,
-                          ),
-                        ),
+                      child: const Icon(
+                        Icons.check,
+                        size: 18,
+                        color: Color(0xFF2BB8A5),
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Les comptes sont équilibrés',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
 }
+
+// ── Widgets helpers ───────────────────────────────────────────────────────────
 
 class _SectionCard extends StatelessWidget {
   final Widget child;
@@ -510,15 +761,10 @@ class _ExpenseCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final color = _catColor(expense.category);
+    final color = expense.expenseType == ExpenseType.reimbursement
+        ? const Color(0xFF27AE60)
+        : _catColor(expense.category);
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
-    final authUser = ref.watch(authStateProvider).asData?.value;
-    final group = ref.watch(selectedGroupProvider);
-
-    // Peut supprimer : créateur de la dépense OU owner du groupe
-    final canDelete =
-        authUser != null &&
-        (expense.createdBy == authUser.uid || group?.createdBy == authUser.uid);
 
     final cardContent = Container(
       decoration: BoxDecoration(
@@ -583,7 +829,7 @@ class _ExpenseCard extends ConsumerWidget {
                                 child: const Text(
                                   'Remboursement',
                                   style: TextStyle(
-                                    color: Color(0xFF4F7CFF),
+                                    color: Color(0xFF27AE60),
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -619,43 +865,13 @@ class _ExpenseCard extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            _formatAmount(expense.amount),
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 17,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: expense.settled
-                                  ? const Color(
-                                      0xFF2BB8A5,
-                                    ).withValues(alpha: 0.1)
-                                  : AppColors.accent.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            child: Text(
-                              expense.settled ? 'Réglé' : 'En attente',
-                              style: TextStyle(
-                                color: expense.settled
-                                    ? const Color(0xFF2BB8A5)
-                                    : AppColors.accent,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
+                      Text(
+                        _formatAmount(expense.amount),
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 17,
+                        ),
                       ),
                     ],
                   ),
@@ -687,8 +903,6 @@ class _ExpenseCard extends ConsumerWidget {
         ],
       ),
     );
-
-    if (!canDelete) return cardContent;
 
     return Dismissible(
       key: Key(expense.id),

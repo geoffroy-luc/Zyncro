@@ -298,6 +298,7 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
     final user = ref.read(authStateProvider).asData?.value;
     if (user == null) return;
     try {
+      final freshUser = ref.read(authRepositoryProvider).currentUser ?? user;
       final group = await ref.read(groupsRepositoryProvider).createGroup(
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim().isNotEmpty
@@ -305,7 +306,7 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
             : null,
         emoji: _selectedEmoji,
         userId: user.uid,
-        displayName: user.displayName ?? user.email ?? 'Membre',
+        displayName: freshUser.displayName ?? user.email ?? 'Membre',
       );
       if (mounted) {
         await ref.read(selectedGroupIdProvider.notifier).select(group.id);
@@ -459,10 +460,11 @@ class _JoinGroupSheetState extends ConsumerState<_JoinGroupSheet> {
     });
 
     try {
+      final freshUser = ref.read(authRepositoryProvider).currentUser ?? user;
       final group = await ref.read(groupsRepositoryProvider).joinGroupByCode(
         code,
         user.uid,
-        user.displayName ?? user.email ?? 'Membre',
+        freshUser.displayName ?? user.email ?? 'Membre',
       );
 
       if (!mounted) return;
@@ -472,7 +474,7 @@ class _JoinGroupSheetState extends ConsumerState<_JoinGroupSheet> {
         return;
       }
 
-      final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+      final userName = freshUser.displayName ?? user.email ?? 'Quelqu\'un';
       ref.read(messagesRepositoryProvider).sendSystemMessage(
         groupId: group.id,
         userId: user.uid,

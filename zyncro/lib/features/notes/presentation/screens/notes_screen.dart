@@ -64,6 +64,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_notes',
         onPressed: () => _openEditor(),
         backgroundColor: const Color(0xFF2BB8A5).withValues(alpha: 0.85),
         shape: const CircleBorder(

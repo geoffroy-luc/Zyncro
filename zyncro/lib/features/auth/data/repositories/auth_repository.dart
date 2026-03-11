@@ -11,6 +11,9 @@ class AuthRepository implements IAuthRepository {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   @override
+  User? get currentUser => _auth.currentUser;
+
+  @override
   Future<User> signInWithEmail(String email, String password) async {
     final credential = await _auth.signInWithEmailAndPassword(
       email: email,
@@ -47,9 +50,11 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<User> signInAnonymously() async {
+  Future<User> signInAnonymously(String displayName) async {
     final credential = await _auth.signInAnonymously();
-    return credential.user!;
+    await credential.user!.updateDisplayName(displayName.trim());
+    await credential.user!.reload();
+    return _auth.currentUser!;
   }
 
   @override

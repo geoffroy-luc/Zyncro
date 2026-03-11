@@ -111,7 +111,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class _AppShell extends ConsumerWidget {
+class _AppShell extends StatelessWidget {
   final StatefulNavigationShell shell;
 
   const _AppShell({required this.shell});
@@ -133,9 +133,7 @@ class _AppShell extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final group = ref.watch(selectedGroupProvider);
-
+  Widget build(BuildContext context) {
     return Scaffold(
       body: shell,
       bottomNavigationBar: Container(
@@ -148,90 +146,6 @@ class _AppShell extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Group switcher ──────────────────────────────────
-              Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: AppColors.border)),
-                ),
-                child: Row(
-                  children: [
-                    // Group name → settings
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => context.push('/group-settings'),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.group_outlined,
-                                size: 14,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
-                                  group?.name ?? 'Groupe',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 2),
-                              const Icon(
-                                Icons.settings_outlined,
-                                size: 12,
-                                color: AppColors.textSecondary,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Switch group button
-                    InkWell(
-                      onTap: () async {
-                        await ref
-                            .read(selectedGroupIdProvider.notifier)
-                            .select(null);
-                        if (context.mounted) context.go('/groups');
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.swap_horiz,
-                              size: 14,
-                              color: AppColors.textSecondary,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              'Changer',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               // ── Nav items ───────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),

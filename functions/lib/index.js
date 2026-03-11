@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onNewMessage = exports.onGroupDeleted = void 0;
+exports.onNewMessage = exports.onMemberRemoved = exports.onGroupDeleted = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-functions/v2/firestore");
 admin.initializeApp();
@@ -50,6 +50,30 @@ exports.onGroupDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}", 
             snap = await colRef.limit(500).get();
         }
     }));
+});
+/** Notifie un membre quand il est retiré d'un groupe. */
+exports.onMemberRemoved = (0, firestore_1.onDocumentDeleted)("groups/{groupId}/members/{userId}", async (event) => {
+    var _a, _b, _c;
+    const { groupId, userId } = event.params;
+    const db = admin.firestore();
+    // Token FCM du membre retiré
+    const userDoc = await db.doc(`users/${userId}`).get();
+    const token = (_a = userDoc.data()) === null || _a === void 0 ? void 0 : _a.fcmToken;
+    if (!token)
+        return;
+    // Nom du groupe
+    const groupDoc = await db.doc(`groups/${groupId}`).get();
+    const groupName = (_c = (_b = groupDoc.data()) === null || _b === void 0 ? void 0 : _b.name) !== null && _c !== void 0 ? _c : "le groupe";
+    await admin.messaging().send({
+        token,
+        notification: {
+            title: "Retiré du groupe",
+            body: `Tu as été retiré du groupe « ${groupName} ».`,
+        },
+        data: { groupId },
+        android: { priority: "high" },
+        apns: { payload: { aps: { sound: "default" } } },
+    });
 });
 exports.onNewMessage = (0, firestore_1.onDocumentCreated)("groups/{groupId}/messages/{messageId}", async (event) => {
     var _a, _b, _c, _d, _e;

@@ -150,6 +150,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_calendar',
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => EventFormScreen(initialDate: _selectedDay ?? today),
@@ -517,14 +518,6 @@ class _EventCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final color = _eventColor(event);
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
-    final authUser = ref.watch(authStateProvider).asData?.value;
-    final group = ref.watch(selectedGroupProvider);
-
-    // Peut supprimer : créateur de l'event OU owner du groupe
-    final canDelete = authUser != null && (
-      event.createdBy == authUser.uid ||
-      group?.createdBy == authUser.uid
-    );
 
     void openEdit() {
       Navigator.of(context).push(MaterialPageRoute(
@@ -533,7 +526,7 @@ class _EventCard extends ConsumerWidget {
     }
 
     final cardContent = GestureDetector(
-      onTap: canDelete ? openEdit : null,
+      onTap: openEdit,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -606,15 +599,12 @@ class _EventCard extends ConsumerWidget {
                 ],
               ),
             ),
-            if (canDelete)
-              const Icon(Icons.edit_outlined,
-                  size: 16, color: AppColors.textSecondary),
+            const Icon(Icons.edit_outlined,
+                size: 16, color: AppColors.textSecondary),
           ],
         ),
       ),
     );
-
-    if (!canDelete) return cardContent;
 
     return Dismissible(
       key: Key(event.id),
@@ -676,20 +666,11 @@ class _AgendaEventCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final color = _eventColor(event);
-    final authUser = ref.watch(authStateProvider).asData?.value;
-    final group = ref.watch(selectedGroupProvider);
-
-    final canEdit = authUser != null && (
-      event.createdBy == authUser.uid ||
-      group?.createdBy == authUser.uid
-    );
 
     return GestureDetector(
-      onTap: canEdit
-          ? () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => EventFormScreen(event: event),
-              ))
-          : null,
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => EventFormScreen(event: event),
+      )),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -714,9 +695,8 @@ class _AgendaEventCard extends ConsumerWidget {
                         fontSize: 14,
                       )),
                 ),
-                if (canEdit)
-                  const Icon(Icons.edit_outlined,
-                      size: 16, color: AppColors.textSecondary),
+                const Icon(Icons.edit_outlined,
+                    size: 16, color: AppColors.textSecondary),
               ],
             ),
             const SizedBox(height: 8),

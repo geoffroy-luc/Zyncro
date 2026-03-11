@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/event.dart';
@@ -128,9 +129,33 @@ class DashboardScreen extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
+                      // Retour vers Mes espaces
+                      GestureDetector(
+                        onTap: () async {
+                          await ref
+                              .read(selectedGroupIdProvider.notifier)
+                              .select(null);
+                          if (context.mounted) context.go('/groups');
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Emoji + nom du groupe
                       Container(
-                        width: 48,
-                        height: 48,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
@@ -142,11 +167,11 @@ class DashboardScreen extends ConsumerWidget {
                         child: Center(
                           child: Text(
                             group?.emoji ?? '🏠',
-                            style: const TextStyle(fontSize: 22),
+                            style: const TextStyle(fontSize: 20),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,7 +180,7 @@ class DashboardScreen extends ConsumerWidget {
                               group?.name ?? '',
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
+                                fontSize: 17,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -163,10 +188,27 @@ class DashboardScreen extends ConsumerWidget {
                               '${group?.memberIds.length ?? 0} membre${(group?.memberIds.length ?? 0) > 1 ? 's' : ''}',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 13,
+                                fontSize: 12,
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      // Paramètres du groupe
+                      GestureDetector(
+                        onTap: () => context.push('/group-settings'),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.settings_outlined,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ],
@@ -501,17 +543,26 @@ class _EventRow extends StatelessWidget {
   final Event event;
   const _EventRow({required this.event});
 
+  Color _parseEventColor() {
+    if (event.color == null) return const Color(0xFF4F7CFF);
+    try {
+      return Color(int.parse('FF${event.color!.replaceAll('#', '')}', radix: 16));
+    } catch (_) {
+      return const Color(0xFF4F7CFF);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isToday = _isToday(event.startDate);
 
-    final colors = [
-      [const Color(0xFF4F7CFF), const Color(0xFF315FEA)],
-      [const Color(0xFF2BB8A5), const Color(0xFF1E9B8A)],
-      [const Color(0xFFFFB86B), const Color(0xFFF5A855)],
-    ];
-    final colorPair =
-        colors[event.id.hashCode.abs() % colors.length];
+    final baseColor = _parseEventColor();
+    final colorPair = [baseColor, Color.fromARGB(
+      (baseColor.a * 255.0).round() & 0xff,
+      ((baseColor.r * 255.0).round() & 0xff) * 4 ~/ 5,
+      ((baseColor.g * 255.0).round() & 0xff) * 4 ~/ 5,
+      ((baseColor.b * 255.0).round() & 0xff) * 4 ~/ 5,
+    )];
 
     String dateLabel;
     if (isToday) {

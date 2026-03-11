@@ -60,6 +60,35 @@ export const onGroupDeleted = onDocumentDeleted(
   }
 );
 
+/** Notifie un membre quand il est retiré d'un groupe. */
+export const onMemberRemoved = onDocumentDeleted(
+  "groups/{groupId}/members/{userId}",
+  async (event) => {
+    const { groupId, userId } = event.params;
+    const db = admin.firestore();
+
+    // Token FCM du membre retiré
+    const userDoc = await db.doc(`users/${userId}`).get();
+    const token = userDoc.data()?.fcmToken;
+    if (!token) return;
+
+    // Nom du groupe
+    const groupDoc = await db.doc(`groups/${groupId}`).get();
+    const groupName: string = groupDoc.data()?.name ?? "le groupe";
+
+    await admin.messaging().send({
+      token,
+      notification: {
+        title: "Retiré du groupe",
+        body: `Tu as été retiré du groupe « ${groupName} ».`,
+      },
+      data: { groupId },
+      android: { priority: "high" },
+      apns: { payload: { aps: { sound: "default" } } },
+    });
+  }
+);
+
 export const onNewMessage = onDocumentCreated(
   "groups/{groupId}/messages/{messageId}",
   async (event) => {

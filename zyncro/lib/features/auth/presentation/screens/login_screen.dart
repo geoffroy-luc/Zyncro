@@ -98,8 +98,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _signInAnonymously(String pseudo) async {
     _startLoading(_LoadingType.anonymous);
     try {
-      final user = await ref.read(authRepositoryProvider).signInAnonymously();
-      await user.updateDisplayName(pseudo.trim());
+      await ref.read(authRepositoryProvider).signInAnonymously(pseudo);
     } on FirebaseAuthException catch (_) {
       _setError('Connexion anonyme échouée.');
     } finally {

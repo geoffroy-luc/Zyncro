@@ -5,7 +5,9 @@
       "Bash(npx firebase:*)",
       "Bash(npx tsc:*)",
       "Bash(echo \"Exit: $?\")",
-      "Bash(echo \"TypeScript exit: $?\")"
+      "Bash(echo \"TypeScript exit: $?\")",
+      "Bash(grep -E \"\\\\.dart$\")",
+      "Bash(grep -r \"firestore.rules\\\\|rules_version\" /home/zoff/Dev/Zyncro --include=*.json --include=*.ts --include=*.js --include=*.rules)"
     ]
   }
 }
