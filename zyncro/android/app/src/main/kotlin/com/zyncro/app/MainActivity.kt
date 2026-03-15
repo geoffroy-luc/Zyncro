@@ -1,4 +1,4 @@
-package com.example.zyncro
+package com.zyncro.app
 
 import io.flutter.embedding.android.FlutterActivity
 
