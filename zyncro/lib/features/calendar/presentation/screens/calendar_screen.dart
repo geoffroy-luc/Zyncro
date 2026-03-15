@@ -3,9 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/event.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../chat/presentation/providers/messages_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/events_provider.dart';
 import 'event_form_screen.dart';
 
@@ -517,7 +514,6 @@ class _EventCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final color = _eventColor(event);
-    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
 
     void openEdit() {
       Navigator.of(context).push(MaterialPageRoute(
@@ -606,56 +602,7 @@ class _EventCard extends ConsumerWidget {
       ),
     );
 
-    return Dismissible(
-      key: Key(event.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Icon(Icons.delete_outline, color: AppColors.error),
-      ),
-      confirmDismiss: (_) => showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Supprimer l\'événement'),
-          content: const Text('Cette action est irréversible.'),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('Annuler')),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Supprimer',
-                  style: TextStyle(color: AppColors.error)),
-            ),
-          ],
-        ),
-      ),
-      onDismissed: (_) async {
-        if (groupId != null) {
-          final authUserSnap = ref.read(authStateProvider).asData?.value;
-          final eventsRepo = ref.read(eventsRepositoryProvider);
-          final msgRepo = ref.read(messagesRepositoryProvider);
-          try {
-            await eventsRepo.deleteEvent(groupId, event.id);
-            final userName = authUserSnap?.displayName ?? authUserSnap?.email ?? 'Quelqu\'un';
-            if (authUserSnap != null) {
-              msgRepo.sendSystemMessage(
-                groupId: groupId,
-                userId: authUserSnap.uid,
-                content: '📅 $userName a supprimé un événement « ${event.title} »',
-                notifScreen: 'calendar',
-              );
-            }
-          } catch (_) {}
-        }
-      },
-      child: cardContent,
-    );
+    return cardContent;
   }
 }
 

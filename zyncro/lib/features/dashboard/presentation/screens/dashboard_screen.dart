@@ -70,6 +70,8 @@ class DashboardScreen extends ConsumerWidget {
     final allExpenses = ref.watch(expensesProvider).asData?.value ?? [];
     final balances = ref.watch(balancesProvider);
     final allMessages = ref.watch(messagesProvider).asData?.value ?? [];
+    final members = ref.watch(expenseMembersProvider).asData?.value ?? [];
+    final memberNames = {for (final m in members) m.uid: m.displayName};
 
     final now = DateTime.now();
 
@@ -385,8 +387,10 @@ class DashboardScreen extends ConsumerWidget {
                                   .map((m) => Padding(
                                         padding:
                                             const EdgeInsets.only(bottom: 12),
-                                        child: _MessageRow(message: m,
-                                            isMe: m.senderId == currentUid),
+                                        child: _MessageRow(
+                                            message: m,
+                                            isMe: m.senderId == currentUid,
+                                            memberNames: memberNames),
                                       ))
                                   .toList(),
                             ),
@@ -770,12 +774,14 @@ class _ExpenseRow extends StatelessWidget {
 class _MessageRow extends StatelessWidget {
   final Message message;
   final bool isMe;
-  const _MessageRow({required this.message, required this.isMe});
+  final Map<String, String> memberNames;
+  const _MessageRow({required this.message, required this.isMe, required this.memberNames});
 
   @override
   Widget build(BuildContext context) {
     final color = _avatarColor(message.senderId ?? '');
-    final name = isMe ? 'Vous' : (message.senderName ?? '?');
+    final resolvedName = isMe ? 'Vous' : (memberNames[message.senderId] ?? message.senderName ?? '?');
+    final name = resolvedName;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -785,7 +791,7 @@ class _MessageRow extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           child: Center(
             child: Text(
-              _initials(isMe ? 'Moi' : message.senderName),
+              _initials(isMe ? 'Moi' : resolvedName),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 11,

@@ -5,8 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/expense.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../chat/presentation/providers/messages_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/expenses_provider.dart';
 import 'expense_form_screen.dart';
 import 'reimbursement_form_screen.dart';
@@ -764,7 +762,6 @@ class _ExpenseCard extends ConsumerWidget {
     final color = expense.expenseType == ExpenseType.reimbursement
         ? const Color(0xFF27AE60)
         : _catColor(expense.category);
-    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
 
     final cardContent = Container(
       decoration: BoxDecoration(
@@ -904,61 +901,12 @@ class _ExpenseCard extends ConsumerWidget {
       ),
     );
 
-    return Dismissible(
-      key: Key(expense.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Icon(Icons.delete_outline, color: AppColors.error),
-      ),
-      confirmDismiss: (_) => showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Supprimer la dépense'),
-          content: const Text('Cette action est irréversible.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Annuler'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text(
-                'Supprimer',
-                style: TextStyle(color: AppColors.error),
-              ),
-            ),
-          ],
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ExpenseFormScreen(expense: expense),
         ),
       ),
-      onDismissed: (_) async {
-        if (groupId != null) {
-          final authUserSnap = ref.read(authStateProvider).asData?.value;
-          final expensesRepo = ref.read(expensesRepositoryProvider);
-          final msgRepo = ref.read(messagesRepositoryProvider);
-          try {
-            await expensesRepo.deleteExpense(groupId, expense.id);
-            final userName =
-                authUserSnap?.displayName ??
-                authUserSnap?.email ??
-                'Quelqu\'un';
-            if (authUserSnap != null) {
-              msgRepo.sendSystemMessage(
-                groupId: groupId,
-                userId: authUserSnap.uid,
-                content:
-                    '💰 $userName a supprimé une dépense « ${expense.title} »',
-                notifScreen: 'expenses',
-              );
-            }
-          } catch (_) {}
-        }
-      },
       child: cardContent,
     );
   }

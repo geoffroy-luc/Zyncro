@@ -31,7 +31,8 @@ const _categories = [
 ];
 
 class ExpenseFormScreen extends ConsumerStatefulWidget {
-  const ExpenseFormScreen({super.key});
+  final Expense? expense;
+  const ExpenseFormScreen({super.key, this.expense});
 
   @override
   ConsumerState<ExpenseFormScreen> createState() => _ExpenseFormScreenState();
@@ -53,6 +54,22 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
   bool _recalculating = false;
   String? _paidByUid;
   String? _paidByName;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.expense;
+    if (e != null) {
+      _titleController.text = e.title;
+      _amountController.text = e.amount.toStringAsFixed(2);
+      _date = e.date;
+      _paidByUid = e.paidBy;
+      _paidByName = e.paidByName;
+      _selectedMemberUids = e.splitWith.toSet();
+      _splitType = e.splitType;
+      _selectedCategory = e.category;
+    }
+  }
 
   @override
   void dispose() {
@@ -222,33 +239,55 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         return;
       }
       final title = _titleController.text.trim();
-      // Si c'est l'utilisateur courant qui paie, on préfère son displayName Firebase (toujours à jour)
       final effectivePaidByUid = _paidByUid ?? user.uid;
       final effectivePaidByName = effectivePaidByUid == user.uid
           ? (user.displayName ?? user.email ?? _paidByName ?? 'Moi')
           : (_paidByName ?? 'Membre');
-      await ref.read(expensesRepositoryProvider).createExpense(
-        groupId: groupId,
-        title: title,
-        amount: amount,
-        paidBy: effectivePaidByUid,
-        paidByName: effectivePaidByName,
-        splitWith: splitAmounts.keys.toList(),
-        expenseType: ExpenseType.expense,
-        splitType: _splitType,
-        splitAmounts: splitAmounts,
-        category: _selectedCategory,
-        date: _date,
-        userId: user.uid,
-      );
       final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
-      ref.read(messagesRepositoryProvider).sendSystemMessage(
-        groupId: groupId,
-        userId: user.uid,
-        content:
-            '💰 $userName a ajouté une dépense « $title » (${amount.toStringAsFixed(2)} €)',
-        notifScreen: 'expenses',
-      );
+
+      if (widget.expense != null) {
+        final updated = widget.expense!.copyWith(
+          title: title,
+          amount: amount,
+          paidBy: effectivePaidByUid,
+          paidByName: effectivePaidByName,
+          splitWith: splitAmounts.keys.toList(),
+          splitType: _splitType,
+          splitAmounts: splitAmounts,
+          category: _selectedCategory,
+          date: _date,
+        );
+        await ref.read(expensesRepositoryProvider).updateExpense(groupId, updated);
+        ref.read(messagesRepositoryProvider).sendSystemMessage(
+          groupId: groupId,
+          userId: user.uid,
+          content:
+              '💰 $userName a modifié la dépense « $title » (${amount.toStringAsFixed(2)} €)',
+          notifScreen: 'expenses',
+        );
+      } else {
+        await ref.read(expensesRepositoryProvider).createExpense(
+          groupId: groupId,
+          title: title,
+          amount: amount,
+          paidBy: effectivePaidByUid,
+          paidByName: effectivePaidByName,
+          splitWith: splitAmounts.keys.toList(),
+          expenseType: ExpenseType.expense,
+          splitType: _splitType,
+          splitAmounts: splitAmounts,
+          category: _selectedCategory,
+          date: _date,
+          userId: user.uid,
+        );
+        ref.read(messagesRepositoryProvider).sendSystemMessage(
+          groupId: groupId,
+          userId: user.uid,
+          content:
+              '💰 $userName a ajouté une dépense « $title » (${amount.toStringAsFixed(2)} €)',
+          notifScreen: 'expenses',
+        );
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -260,6 +299,55 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     }
   }
 
+  Future<void> _delete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Supprimer la dépense'),
+        content: const Text('Cette action est irréversible.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Supprimer',
+                style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      final user = ref.read(authStateProvider).asData?.value;
+      final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+      if (groupId == null) return;
+      try {
+        await ref
+            .read(expensesRepositoryProvider)
+            .deleteExpense(groupId, widget.expense!.id);
+        final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
+        if (user != null) {
+          ref.read(messagesRepositoryProvider).sendSystemMessage(
+            groupId: groupId,
+            userId: user.uid,
+            content:
+                '💰 $userName a supprimé une dépense « ${widget.expense!.title} »',
+            notifScreen: 'expenses',
+          );
+        }
+        if (mounted) Navigator.of(context).pop();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Permission refusée')),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final members = ref.watch(expenseMembersProvider).asData?.value ?? [];
@@ -268,13 +356,30 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
 
     // Initialise la sélection avec tous les membres au premier chargement
     if (!_membersInitialized && members.isNotEmpty) {
-      _selectedMemberUids = members.map((m) => m.uid).toSet();
       _membersInitialized = true;
-      if (_paidByUid == null && currentUid != null) {
-        final me = members.firstWhere((m) => m.uid == currentUid,
-            orElse: () => members.first);
-        _paidByUid = me.uid;
-        _paidByName = me.displayName;
+      if (widget.expense == null) {
+        _selectedMemberUids = members.map((m) => m.uid).toSet();
+        if (_paidByUid == null && currentUid != null) {
+          final me = members.firstWhere((m) => m.uid == currentUid,
+              orElse: () => members.first);
+          _paidByUid = me.uid;
+          _paidByName = me.displayName;
+        }
+      } else {
+        // En mode édition, pré-remplir les controllers de répartition
+        final e = widget.expense!;
+        final splitAmounts = e.splitAmounts;
+        if (splitAmounts != null && e.splitType != SplitType.equal) {
+          for (final uid in _selectedMemberUids) {
+            final v = splitAmounts[uid] ?? 0.0;
+            if (e.splitType == SplitType.amount) {
+              _amountSplitControllers[uid]?.text = v.toStringAsFixed(2);
+            } else {
+              _percentageSplitControllers[uid]?.text =
+                  (v / e.amount * 100).toStringAsFixed(2);
+            }
+          }
+        }
       }
     }
 
@@ -284,8 +389,13 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Nouvelle dépense'),
+        title: Text(widget.expense != null ? 'Modifier la dépense' : 'Nouvelle dépense'),
         actions: [
+          if (widget.expense != null)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+              onPressed: _delete,
+            ),
           IconButton(
             icon: _saving
                 ? const SizedBox(

@@ -7,7 +7,8 @@
       "Bash(echo \"Exit: $?\")",
       "Bash(echo \"TypeScript exit: $?\")",
       "Bash(grep -E \"\\\\.dart$\")",
-      "Bash(grep -r \"firestore.rules\\\\|rules_version\" /home/zoff/Dev/Zyncro --include=*.json --include=*.ts --include=*.js --include=*.rules)"
+      "Bash(grep -r \"firestore.rules\\\\|rules_version\" /home/zoff/Dev/Zyncro --include=*.json --include=*.ts --include=*.js --include=*.rules)",
+      "Bash(find /home/zoff/Dev/Zyncro -name *.rules -o -name firestore.* -o -name security*)"
     ]
   }
 }

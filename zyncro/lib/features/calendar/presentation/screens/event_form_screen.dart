@@ -113,6 +113,52 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   DateTime _combine(DateTime date, TimeOfDay time) =>
       DateTime(date.year, date.month, date.day, time.hour, time.minute);
 
+  Future<void> _delete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Supprimer l\'événement'),
+        content: const Text('Cette action est irréversible.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Supprimer',
+                style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      final user = ref.read(authStateProvider).asData?.value;
+      final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+      if (groupId == null) return;
+      try {
+        await ref.read(eventsRepositoryProvider).deleteEvent(groupId, widget.event!.id);
+        final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
+        if (user != null) {
+          ref.read(messagesRepositoryProvider).sendSystemMessage(
+            groupId: groupId,
+            userId: user.uid,
+            content: '📅 $userName a supprimé un événement « ${widget.event!.title} »',
+            notifScreen: 'calendar',
+          );
+        }
+        if (mounted) Navigator.of(context).pop();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Permission refusée')),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -269,6 +315,11 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       appBar: AppBar(
         title: Text(widget.event != null ? 'Modifier l\'événement' : 'Nouvel événement'),
         actions: [
+          if (widget.event != null)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+              onPressed: _delete,
+            ),
           IconButton(
             icon: _saving
                 ? const SizedBox(
