@@ -22,6 +22,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _scrollController = ScrollController();
   bool _sending = false;
   Timer? _typingTimer;
+  final Set<String> _visibleTimestamps = {};
 
   // Sauvegardés pour pouvoir les utiliser dans dispose() sans ref
   String? _currentGroupId;
@@ -72,6 +73,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
+  void _toggleTimestamp(String messageId) {
+    setState(() {
+      if (_visibleTimestamps.contains(messageId)) {
+        _visibleTimestamps.remove(messageId);
+      } else {
+        _visibleTimestamps.add(messageId);
+      }
+    });
+  }
+
   Future<void> _send() async {
     final text = _controller.text.trim();
     if (text.isEmpty || _sending) return;
@@ -95,7 +106,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             senderName: user.displayName ?? user.email ?? 'Anonyme',
             content: text,
           );
-      // Scroll vers le bas après envoi
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           0,
@@ -108,7 +118,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  Future<void> _onMyMessageLongPress(Message message) async {
+  static const _quickEmojis = ['❤️', '😂', '😮', '😢', '😡', '👍'];
+
+  static bool _isSameGroup(Message older, Message newer) {
+    if (older.senderId == null || older.senderId != newer.senderId) return false;
+    if (older.type == MessageType.system || newer.type == MessageType.system) {
+      return false;
+    }
+    return newer.timestamp.difference(older.timestamp).inMinutes < 3;
+  }
+
+  Future<void> _onDoubleTap(Message message) async {
+    final currentUser = ref.read(authStateProvider).asData?.value;
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (currentUser == null || groupId == null) return;
+
+    const emoji = '❤️';
+    final hasReacted =
+        message.reactions[emoji]?.contains(currentUser.uid) == true;
+    await ref.read(messagesRepositoryProvider).toggleReaction(
+          groupId: groupId,
+          messageId: message.id,
+          emoji: emoji,
+          userId: currentUser.uid,
+          hasReacted: hasReacted,
+        );
+  }
+
+  Future<void> _onMessageLongPress(Message message, bool isMe) async {
+    final currentUser = ref.read(authStateProvider).asData?.value;
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (currentUser == null || groupId == null) return;
+
     final action = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -116,25 +157,77 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('Modifier'),
-              onTap: () => Navigator.of(ctx).pop('edit'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text(
-                'Supprimer',
-                style: TextStyle(color: Colors.red),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: _quickEmojis.map((emoji) {
+                  final hasReacted =
+                      message.reactions[emoji]?.contains(currentUser.uid) ==
+                          true;
+                  return GestureDetector(
+                    onTap: () => Navigator.of(ctx).pop('react:$emoji'),
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: hasReacted
+                            ? const Color(0xFF4F7CFF).withValues(alpha: 0.15)
+                            : const Color(0xFFF7F9FC),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: hasReacted
+                              ? const Color(0xFF4F7CFF)
+                              : AppColors.border,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(fontSize: 22),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
-              onTap: () => Navigator.of(ctx).pop('delete'),
             ),
+            if (isMe) ...[
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('Modifier'),
+                onTap: () => Navigator.of(ctx).pop('edit'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text(
+                  'Supprimer',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () => Navigator.of(ctx).pop('delete'),
+              ),
+            ],
           ],
         ),
       ),
     );
 
     if (!mounted || action == null) return;
+
+    if (action.startsWith('react:')) {
+      final emoji = action.substring(6);
+      final hasReacted =
+          message.reactions[emoji]?.contains(currentUser.uid) == true;
+      await ref.read(messagesRepositoryProvider).toggleReaction(
+            groupId: groupId,
+            messageId: message.id,
+            emoji: emoji,
+            userId: currentUser.uid,
+            hasReacted: hasReacted,
+          );
+      return;
+    }
     if (action == 'edit') {
       await _editMessage(message);
       return;
@@ -303,23 +396,56 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 }
                 return ListView.builder(
                   controller: _scrollController,
-                  reverse:
-                      true, // Newest at bottom, messages come desc from Firestore
+                  reverse: true,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
+                    horizontal: 16,
                     vertical: 20,
                   ),
                   itemCount: messages.length,
-                  itemBuilder: (_, i) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _MessageBubble(
-                      message: messages[i],
-                      isMe: messages[i].senderId == currentUser?.uid,
-                      onLongPress: messages[i].senderId == currentUser?.uid
-                          ? () => _onMyMessageLongPress(messages[i])
-                          : null,
-                    ),
-                  ),
+                  itemBuilder: (_, i) {
+                    final msg = messages[i];
+                    final isMe = msg.senderId == currentUser?.uid;
+
+                    // Dans la liste reversed: index 0 = plus récent (bas)
+                    // index i-1 = message plus récent (en dessous visuellement)
+                    // index i+1 = message plus ancien (au dessus visuellement)
+                    final newerMsg = i > 0 ? messages[i - 1] : null;
+                    final olderMsg =
+                        i < messages.length - 1 ? messages[i + 1] : null;
+
+                    // isFirstInGroup = bas du groupe (le plus récent du groupe)
+                    final isFirstInGroup =
+                        newerMsg == null || !_isSameGroup(msg, newerMsg);
+                    // isLastInGroup = haut du groupe (le plus ancien du groupe)
+                    final isLastInGroup =
+                        olderMsg == null || !_isSameGroup(olderMsg, msg);
+
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: isFirstInGroup ? 10 : 2,
+                      ),
+                      child: _MessageBubble(
+                        message: msg,
+                        isMe: isMe,
+                        currentUserId: currentUser?.uid,
+                        showTimestamp:
+                            _visibleTimestamps.contains(msg.id),
+                        showAvatar: !isMe && isFirstInGroup,
+                        showSenderName: !isMe && isLastInGroup,
+                        isFirstInGroup: isFirstInGroup,
+                        isLastInGroup: isLastInGroup,
+                        onTap: msg.type != MessageType.system
+                            ? () => _toggleTimestamp(msg.id)
+                            : null,
+                        onDoubleTap: msg.type != MessageType.system
+                            ? () => _onDoubleTap(msg)
+                            : null,
+                        onLongPress: msg.type != MessageType.system
+                            ? () => _onMessageLongPress(msg, isMe)
+                            : null,
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -392,9 +518,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(
-                            0xFF4F7CFF,
-                          ).withValues(alpha: 0.25),
+                          color: const Color(0xFF4F7CFF).withValues(alpha: 0.25),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -510,15 +634,30 @@ class _TypingIndicator extends StatelessWidget {
 class _MessageBubble extends StatelessWidget {
   final Message message;
   final bool isMe;
+  final String? currentUserId;
+  final bool showTimestamp;
+  final bool showAvatar;
+  final bool showSenderName;
+  final bool isFirstInGroup;
+  final bool isLastInGroup;
+  final VoidCallback? onTap;
+  final VoidCallback? onDoubleTap;
   final VoidCallback? onLongPress;
 
   const _MessageBubble({
     required this.message,
     required this.isMe,
+    required this.showTimestamp,
+    required this.showAvatar,
+    required this.showSenderName,
+    required this.isFirstInGroup,
+    required this.isLastInGroup,
+    this.currentUserId,
+    this.onTap,
+    this.onDoubleTap,
     this.onLongPress,
   });
 
-  // Génère une couleur cohérente depuis l'uid de l'expéditeur
   Color _avatarColor(String uid) {
     final colors = [
       const Color(0xFF4F7CFF),
@@ -542,10 +681,6 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeLabel = message.editedAt == null
-        ? _formatTime(message.timestamp)
-        : '${_formatTime(message.timestamp)} · modifié';
-
     if (message.type == MessageType.system) {
       return Center(
         child: Container(
@@ -566,28 +701,61 @@ class _MessageBubble extends StatelessWidget {
       );
     }
 
+    final timeLabel = message.editedAt == null
+        ? _formatTime(message.timestamp)
+        : '${_formatTime(message.timestamp)} · modifié';
+
+    final reactionsRow = message.reactions.isNotEmpty
+        ? _ReactionsRow(
+            reactions: message.reactions,
+            currentUserId: currentUserId,
+          )
+        : null;
+
+    // ── Timestamp flottant (visible au tap) ──────────────────────────
+    final timestampWidget = showTimestamp
+        ? Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Center(
+              child: Text(
+                timeLabel,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+          )
+        : null;
+
     if (isMe) {
+      // Border radius selon position dans le groupe
+      final radius = BorderRadius.only(
+        topLeft: const Radius.circular(16),
+        topRight: Radius.circular(isLastInGroup ? 16 : 4),
+        bottomLeft: const Radius.circular(16),
+        bottomRight: Radius.circular(isFirstInGroup ? 4 : 4),
+      );
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          if (timestampWidget != null) timestampWidget,
           GestureDetector(
+            onTap: onTap,
+            onDoubleTap: onDoubleTap,
             onLongPress: onLongPress,
             child: Container(
               constraints: const BoxConstraints(maxWidth: 280),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
                 ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(4),
-                ),
-                boxShadow: [
+                borderRadius: radius,
+                boxShadow: const [
                   BoxShadow(
                     color: Color(0x1A000000),
                     blurRadius: 4,
@@ -605,101 +773,165 @@ class _MessageBubble extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            timeLabel,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 10,
-            ),
-          ),
+          if (reactionsRow != null) ...[
+            const SizedBox(height: 4),
+            reactionsRow,
+          ],
         ],
       );
     }
 
-    // Message reçu
+    // ── Message reçu ────────────────────────────────────────────────
     final avatarColor = _avatarColor(message.senderId ?? '');
-    return Row(
+
+    final radius = BorderRadius.only(
+      topLeft: Radius.circular(isLastInGroup ? 16 : 4),
+      topRight: const Radius.circular(16),
+      bottomLeft: Radius.circular(isFirstInGroup ? 16 : 4),
+      bottomRight: const Radius.circular(16),
+    );
+
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: avatarColor,
-            shape: BoxShape.circle,
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1A000000),
-                blurRadius: 4,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Center(
+        if (showSenderName)
+          Padding(
+            padding: const EdgeInsets.only(left: 46, bottom: 2),
             child: Text(
-              _initials(message.senderName),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
               message.senderName ?? '',
               style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              constraints: const BoxConstraints(maxWidth: 260),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-                border: Border.all(color: AppColors.border),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Text(
-                message.content,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                  height: 1.4,
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              timeLabel,
-              style: const TextStyle(
                 color: AppColors.textSecondary,
-                fontSize: 10,
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
               ),
+            ),
+          ),
+        if (timestampWidget != null) timestampWidget,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Avatar ou placeholder pour maintenir l'alignement
+            if (showAvatar)
+              Container(
+                width: 30,
+                height: 30,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: avatarColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    _initials(message.senderName),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              )
+            else
+              const SizedBox(width: 38),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: onTap,
+                  onDoubleTap: onDoubleTap,
+                  onLongPress: onLongPress,
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 260),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: radius,
+                      border: Border.all(color: AppColors.border),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x0A000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      message.content,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ),
+                if (reactionsRow != null) ...[
+                  const SizedBox(height: 4),
+                  reactionsRow,
+                ],
+              ],
             ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _ReactionsRow extends StatelessWidget {
+  final Map<String, List<String>> reactions;
+  final String? currentUserId;
+
+  const _ReactionsRow({required this.reactions, this.currentUserId});
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = reactions.entries.where((e) => e.value.isNotEmpty).toList();
+    if (entries.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: entries.map((e) {
+        final emoji = e.key;
+        final users = e.value;
+        final isMine = currentUserId != null && users.contains(currentUserId);
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: isMine
+                ? const Color(0xFF4F7CFF).withValues(alpha: 0.15)
+                : const Color(0xFFF0F2F5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isMine
+                  ? const Color(0xFF4F7CFF).withValues(alpha: 0.4)
+                  : AppColors.border,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 3),
+              Text(
+                '${users.length}',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isMine
+                      ? const Color(0xFF315FEA)
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }
