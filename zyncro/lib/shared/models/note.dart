@@ -27,6 +27,7 @@ class Note {
   final String createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? updatedBy;
 
   const Note({
     required this.id,
@@ -40,6 +41,7 @@ class Note {
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
+    this.updatedBy,
   });
 
   factory Note.fromMap(String id, Map<String, dynamic> map) {
@@ -59,6 +61,7 @@ class Note {
       createdBy: map['createdBy'] as String,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       updatedAt: (map['updatedAt'] as Timestamp).toDate(),
+      updatedBy: map['updatedBy'] as String?,
     );
   }
 
@@ -74,6 +77,7 @@ class Note {
       'createdBy': createdBy,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      if (updatedBy != null) 'updatedBy': updatedBy,
     };
   }
 
@@ -84,6 +88,7 @@ class Note {
     String? color,
     bool? isChecklist,
     List<ChecklistItem>? checklist,
+    String? updatedBy,
   }) {
     return Note(
       id: id,
@@ -97,6 +102,7 @@ class Note {
       createdBy: createdBy,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
+      updatedBy: updatedBy ?? this.updatedBy,
     );
   }
 }

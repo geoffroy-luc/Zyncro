@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../app/router.dart';
+import '../../features/groups/presentation/providers/groups_provider.dart';
 
 /// Background message handler — must be a top-level function.
 @pragma('vm:entry-point')
@@ -32,6 +34,7 @@ class NotificationService {
   // Subscriptions à annuler lors du logout pour éviter les listeners fantômes
   static StreamSubscription<String>? _tokenRefreshSub;
   static StreamSubscription<RemoteMessage>? _foregroundSub;
+  static StreamSubscription<RemoteMessage>? _openedAppSub;
 
   /// Call once after Firebase.initializeApp() — before runApp().
   static void registerBackgroundHandler() {
@@ -66,9 +69,50 @@ class NotificationService {
       ref.read(foregroundMessageProvider.notifier).set(message);
     });
 
-    // Opened from notification while app was in background
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      // Navigate based on message data if needed in the future
+    // Cold start : app lancée depuis une notif (app était terminée)
+    final initialMessage = await _messaging.getInitialMessage();
+    if (initialMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleNotificationTap(initialMessage, ref);
+      });
+    }
+
+    // Background → foreground : tap sur une notif
+    _openedAppSub = FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      _handleNotificationTap(message, ref);
+    });
+  }
+
+  static Future<void> _handleNotificationTap(
+    RemoteMessage message,
+    WidgetRef ref,
+  ) async {
+    debugPrint('[Notif] tap — data: ${message.data}');
+
+    final groupId = message.data['groupId'] as String?;
+    if (groupId == null) return;
+
+    final screen = message.data['screen'] as String?;
+    final route = switch (screen) {
+      'chat' => '/chat',
+      'expenses' => '/expenses',
+      'notes' => '/notes',
+      'calendar' => '/calendar',
+      _ => '/home',
+    };
+
+    debugPrint('[Notif] groupId=$groupId  screen=$screen  → route=$route');
+
+    // Sélectionner le bon groupe
+    await ref.read(selectedGroupIdProvider.notifier).select(groupId);
+
+    // Double post-frame : le 1er frame laisse GoRouter traiter le refresh
+    // déclenché par selectedGroupIdProvider, le 2e effectue la navigation.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        debugPrint('[Notif] navigating → $route');
+        ref.read(routerProvider).go(route);
+      });
     });
   }
 
@@ -88,8 +132,10 @@ class NotificationService {
     // Annuler les listeners immédiatement pour éviter tout appel post-logout
     await _tokenRefreshSub?.cancel();
     await _foregroundSub?.cancel();
+    await _openedAppSub?.cancel();
     _tokenRefreshSub = null;
     _foregroundSub = null;
+    _openedAppSub = null;
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -113,6 +159,14 @@ class NotificationBanner extends ConsumerWidget {
       if (message == null) return;
       final notification = message.notification;
       if (notification == null) return;
+
+      // Ne pas afficher le bandeau si on est déjà sur l'écran correspondant
+      final screen = message.data['screen'] as String?;
+      if (screen != null) {
+        final currentPath = ref.read(routerProvider).routeInformationProvider.value.uri.path;
+        if (currentPath == '/$screen') return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Column(
