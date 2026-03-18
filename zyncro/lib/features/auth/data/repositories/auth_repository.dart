@@ -68,4 +68,16 @@ class AuthRepository implements IAuthRepository {
   Future<void> resetPassword(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
   }
+
+  @override
+  Future<void> updateDisplayName(String displayName) async {
+    await _auth.currentUser?.updateDisplayName(displayName.trim());
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await NotificationService.removeToken();
+    await _googleSignIn.signOut();
+    await _auth.currentUser?.delete();
+  }
 }

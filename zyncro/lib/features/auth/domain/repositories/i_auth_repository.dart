@@ -13,4 +13,6 @@ abstract interface class IAuthRepository {
   Future<User> signInAnonymously(String displayName);
   Future<void> signOut();
   Future<void> resetPassword(String email);
+  Future<void> updateDisplayName(String displayName);
+  Future<void> deleteAccount();
 }
