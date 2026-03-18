@@ -21,9 +21,9 @@ class GroupSelectionScreen extends ConsumerWidget {
         title: const Text('Mes espaces'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout_outlined),
-            tooltip: 'Se déconnecter',
-            onPressed: () => ref.read(authRepositoryProvider).signOut(),
+            icon: const Icon(Icons.account_circle_outlined),
+            tooltip: 'Mon profil',
+            onPressed: () => context.push('/profile'),
           ),
         ],
       ),
