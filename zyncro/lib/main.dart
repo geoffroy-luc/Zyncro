@@ -8,10 +8,10 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Future.wait([
+    Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+    initializeDateFormatting('fr_FR', null),
+  ]);
   NotificationService.registerBackgroundHandler();
-  await initializeDateFormatting('fr_FR', null);
   runApp(const ProviderScope(child: ZyncroApp()));
 }

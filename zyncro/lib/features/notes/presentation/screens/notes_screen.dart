@@ -611,11 +611,17 @@ class _RecentNoteCard extends StatelessWidget {
                     // Contenu
                     Expanded(
                       child: note.isChecklist && note.checklist.isNotEmpty
-                          ? _buildChecklistPreview(
-                              note.checklist,
-                              color,
-                              maxItems: 3,
-                              fontSize: 11,
+                          ? ClipRect(
+                              child: OverflowBox(
+                                alignment: Alignment.topLeft,
+                                maxHeight: double.infinity,
+                                child: _buildChecklistPreview(
+                                  note.checklist,
+                                  color,
+                                  maxItems: 3,
+                                  fontSize: 11,
+                                ),
+                              ),
                             )
                           : Text(
                               note.content,
