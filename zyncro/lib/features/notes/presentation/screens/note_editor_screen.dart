@@ -90,6 +90,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   void _toggleChecklistItem(int index, bool done) {
     setState(() {
       _checklist[index] = _checklist[index].copyWith(done: done);
+      if (done) {
+        final item = _checklist.removeAt(index);
+        final ctrl = _itemControllers.removeAt(index);
+        final focus = _itemFocusNodes.removeAt(index);
+        _checklist.add(item);
+        _itemControllers.add(ctrl);
+        _itemFocusNodes.add(focus);
+      }
     });
   }
 
@@ -267,21 +275,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Contenu (seulement si pas checklist)
-              if (!_isChecklist)
-                TextFormField(
-                  controller: _contentController,
-                  decoration: const InputDecoration(
-                    labelText: 'Contenu (optionnel)',
-                    prefixIcon: Icon(Icons.notes_outlined),
-                    alignLabelWithHint: true,
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
-                  maxLines: 4,
-                ),
-
-              const SizedBox(height: 24),
-
               // Couleur
               Text(
                 'Couleur',
@@ -363,6 +356,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 ],
               ),
 
+              // Contenu (seulement si pas checklist)
+              if (!_isChecklist) ...[
+                const SizedBox(height: 24),
+                TextFormField(
+                  controller: _contentController,
+                  decoration: const InputDecoration(
+                    labelText: 'Contenu (optionnel)',
+                    prefixIcon: Icon(Icons.notes_outlined),
+                    alignLabelWithHint: true,
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
+                  maxLines: 4,
+                ),
+              ],
+
               // Checklist items
               if (_isChecklist) ...[
                 const SizedBox(height: 16),
@@ -405,6 +413,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                                   : TextDecoration.none,
                               height: 1.6,
                             ),
+                            maxLines: null,
                             textCapitalization: TextCapitalization.sentences,
                             onSubmitted: (_) => _addChecklistItem(),
                           ),
