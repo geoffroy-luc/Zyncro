@@ -159,6 +159,14 @@ class NotificationBanner extends ConsumerWidget {
       if (message == null) return;
       final notification = message.notification;
       if (notification == null) return;
+
+      // Ne pas afficher le bandeau si on est déjà sur l'écran correspondant
+      final screen = message.data['screen'] as String?;
+      if (screen != null) {
+        final currentPath = ref.read(routerProvider).routeInformationProvider.value.uri.path;
+        if (currentPath == '/$screen') return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Column(
