@@ -142,7 +142,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         DateTime(_displayedMonth.year, _displayedMonth.month, 1);
     final daysInMonth =
         DateTime(_displayedMonth.year, _displayedMonth.month + 1, 0).day;
-    final leadingBlanks = firstOfMonth.weekday % 7;
+    final leadingBlanks = firstOfMonth.weekday - 1;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
@@ -276,7 +276,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     child: Column(
                       children: [
                         Row(
-                          children: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+                          children: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
                               .map((d) => Expanded(
                                     child: Center(
                                       child: Text(d,
