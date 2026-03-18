@@ -138,4 +138,37 @@ class MessagesRepository implements IMessagesRepository {
     );
     await ref.set({...message.toMap(), 'notifScreen': notifScreen});
   }
+
+  @override
+  Future<void> toggleReaction({
+    required String groupId,
+    required String messageId,
+    required String emoji,
+    required String userId,
+    required bool hasReacted,
+  }) async {
+    final ref = _col(groupId).doc(messageId);
+    await _db.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      final data = snap.data() ?? {};
+      final reactions = (data['reactions'] as Map<String, dynamic>? ?? {}).map(
+        (k, v) => MapEntry(k, List<String>.from(v as List)),
+      );
+
+      // Retire l'utilisateur de toutes les réactions existantes
+      for (final key in reactions.keys) {
+        reactions[key]?.remove(userId);
+      }
+
+      // Ajoute la nouvelle réaction sauf si l'utilisateur la retirait
+      if (!hasReacted) {
+        reactions[emoji] = [...(reactions[emoji] ?? []), userId];
+      }
+
+      // Supprime les listes vides
+      reactions.removeWhere((_, v) => v.isEmpty);
+
+      tx.update(ref, {'reactions': reactions});
+    });
+  }
 }

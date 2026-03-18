@@ -11,6 +11,7 @@ class Message {
   final MessageType type;
   final DateTime timestamp;
   final DateTime? editedAt;
+  final Map<String, List<String>> reactions;
 
   const Message({
     required this.id,
@@ -21,6 +22,7 @@ class Message {
     required this.type,
     required this.timestamp,
     this.editedAt,
+    this.reactions = const {},
   });
 
   factory Message.fromMap(String id, Map<String, dynamic> map) {
@@ -35,6 +37,9 @@ class Message {
       editedAt: map['editedAt'] == null
           ? null
           : (map['editedAt'] as Timestamp).toDate(),
+      reactions: (map['reactions'] as Map<String, dynamic>? ?? {}).map(
+        (k, v) => MapEntry(k, List<String>.from(v as List)),
+      ),
     );
   }
 
@@ -47,6 +52,7 @@ class Message {
       'type': type.name,
       'timestamp': Timestamp.fromDate(timestamp),
       if (editedAt != null) 'editedAt': Timestamp.fromDate(editedAt!),
+      if (reactions.isNotEmpty) 'reactions': reactions,
     };
   }
 }

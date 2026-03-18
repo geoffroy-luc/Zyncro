@@ -41,4 +41,13 @@ abstract interface class IMessagesRepository {
     required String content,
     required String notifScreen,
   });
+
+  /// Ajoute ou retire une réaction emoji sur un message.
+  Future<void> toggleReaction({
+    required String groupId,
+    required String messageId,
+    required String emoji,
+    required String userId,
+    required bool hasReacted,
+  });
 }
