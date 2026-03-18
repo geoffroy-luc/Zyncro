@@ -201,6 +201,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
             endDate: endDt,
             location: location,
             color: _selectedColor,
+            updatedBy: user.uid,
           ),
         );
       } else {

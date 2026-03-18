@@ -256,6 +256,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           splitAmounts: splitAmounts,
           category: _selectedCategory,
           date: _date,
+          updatedBy: user.uid,
         );
         await ref.read(expensesRepositoryProvider).updateExpense(groupId, updated);
         ref.read(messagesRepositoryProvider).sendSystemMessage(

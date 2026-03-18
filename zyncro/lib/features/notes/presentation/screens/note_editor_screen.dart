@@ -156,6 +156,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             color: _selectedColor,
             isChecklist: _isChecklist,
             checklist: checklist,
+            updatedBy: user.uid,
           ),
         );
       }

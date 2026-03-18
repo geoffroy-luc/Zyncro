@@ -12,6 +12,7 @@ class Event {
   final String? creatorName;
   final DateTime createdAt;
   final String? color;
+  final String? updatedBy;
 
   const Event({
     required this.id,
@@ -25,6 +26,7 @@ class Event {
     this.creatorName,
     required this.createdAt,
     this.color,
+    this.updatedBy,
   });
 
   factory Event.fromMap(String id, Map<String, dynamic> map) {
@@ -42,6 +44,7 @@ class Event {
       creatorName: map['creatorName'] as String?,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       color: map['color'] as String?,
+      updatedBy: map['updatedBy'] as String?,
     );
   }
 
@@ -57,6 +60,7 @@ class Event {
       if (creatorName != null) 'creatorName': creatorName,
       'createdAt': Timestamp.fromDate(createdAt),
       if (color != null) 'color': color,
+      if (updatedBy != null) 'updatedBy': updatedBy,
     };
   }
 
@@ -67,6 +71,7 @@ class Event {
     DateTime? endDate,
     String? location,
     String? color,
+    String? updatedBy,
   }) {
     return Event(
       id: id,
@@ -80,6 +85,7 @@ class Event {
       creatorName: creatorName,
       createdAt: createdAt,
       color: color ?? this.color,
+      updatedBy: updatedBy ?? this.updatedBy,
     );
   }
 }

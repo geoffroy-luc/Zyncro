@@ -20,6 +20,7 @@ class Expense {
   final ExpenseType expenseType;
   final SplitType splitType;
   final Map<String, double>? splitAmounts;
+  final String? updatedBy;
 
   const Expense({
     required this.id,
@@ -37,6 +38,7 @@ class Expense {
     this.expenseType = ExpenseType.expense,
     this.splitType = SplitType.equal,
     this.splitAmounts,
+    this.updatedBy,
   });
 
   factory Expense.fromMap(String id, Map<String, dynamic> map) {
@@ -66,6 +68,7 @@ class Expense {
                 (k, v) => MapEntry(k, (v as num).toDouble()),
               ),
             ),
+      updatedBy: map['updatedBy'] as String?,
     );
   }
 
@@ -85,6 +88,7 @@ class Expense {
       'expenseType': expenseType.name,
       'splitType': splitType.name,
       if (splitAmounts != null) 'splitAmounts': splitAmounts,
+      if (updatedBy != null) 'updatedBy': updatedBy,
     };
   }
 
@@ -100,6 +104,7 @@ class Expense {
     ExpenseType? expenseType,
     SplitType? splitType,
     Map<String, double>? splitAmounts,
+    String? updatedBy,
   }) {
     return Expense(
       id: id,
@@ -117,6 +122,7 @@ class Expense {
       expenseType: expenseType ?? this.expenseType,
       splitType: splitType ?? this.splitType,
       splitAmounts: splitAmounts ?? this.splitAmounts,
+      updatedBy: updatedBy ?? this.updatedBy,
     );
   }
 
