@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../../domain/repositories/i_messages_repository.dart';
 import '../../../../shared/models/message.dart';
 
@@ -145,6 +147,37 @@ class MessagesRepository implements IMessagesRepository {
       timestamp: DateTime.now(),
     );
     await ref.set({...message.toMap(), 'notifScreen': notifScreen});
+  }
+
+  @override
+  Future<void> sendAudio({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required String filePath,
+    required int durationSeconds,
+  }) async {
+    final ref = _col(groupId).doc();
+    final storageRef = FirebaseStorage.instance
+        .ref('audio/$groupId/${ref.id}.m4a');
+    final bytes = await File(filePath).readAsBytes();
+    await storageRef.putData(
+      bytes,
+      SettableMetadata(contentType: 'audio/m4a'),
+    );
+    final url = await storageRef.getDownloadURL();
+
+    final content = jsonEncode({'url': url, 'duration': durationSeconds});
+    final message = Message(
+      id: ref.id,
+      groupId: groupId,
+      senderId: senderId,
+      senderName: senderName,
+      content: content,
+      type: MessageType.audio,
+      timestamp: DateTime.now(),
+    );
+    await ref.set(message.toMap());
   }
 
   @override
