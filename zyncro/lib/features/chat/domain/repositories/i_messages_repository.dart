@@ -7,6 +7,9 @@ abstract interface class IMessagesRepository {
     required String senderId,
     required String senderName,
     required String content,
+    String? replyToId,
+    String? replyToSenderName,
+    String? replyToContent,
   });
   Future<void> editMessage({
     required String groupId,

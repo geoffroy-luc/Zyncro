@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -23,6 +24,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _sending = false;
   Timer? _typingTimer;
   final Set<String> _visibleTimestamps = {};
+  Message? _replyingTo;
 
   // Sauvegardés pour pouvoir les utiliser dans dispose() sans ref
   String? _currentGroupId;
@@ -96,6 +98,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     setState(() => _sending = true);
     _controller.clear();
+    final reply = _replyingTo;
+    setState(() => _replyingTo = null);
 
     try {
       await ref
@@ -105,6 +109,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             senderId: user.uid,
             senderName: user.displayName ?? user.email ?? 'Anonyme',
             content: text,
+            replyToId: reply?.id,
+            replyToSenderName: reply?.senderName,
+            replyToContent: reply?.content,
           );
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -192,8 +199,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 }).toList(),
               ),
             ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.reply_outlined),
+              title: const Text('Répondre'),
+              onTap: () => Navigator.of(ctx).pop('reply'),
+            ),
             if (isMe) ...[
-              const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
                 title: const Text('Modifier'),
@@ -215,6 +227,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (!mounted || action == null) return;
 
+    if (action == 'reply') {
+      setState(() => _replyingTo = message);
+      return;
+    }
     if (action.startsWith('react:')) {
       final emoji = action.substring(6);
       final hasReacted =
@@ -309,8 +325,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final topPad = MediaQuery.of(context).padding.top;
     final bottomPad = MediaQuery.of(context).viewInsets.bottom;
     final group = ref.watch(selectedGroupProvider);
-    final currentUser = ref.watch(authStateProvider).asData?.value;
+    // .value renvoie le dernier UID connu même si le provider repasse
+    // brièvement en AsyncLoading (ex: rebuild déclenché par messagesProvider)
+    final currentUid = ref.watch(
+      authStateProvider.select((s) => s.value?.uid),
+    );
     final messagesAsync = ref.watch(messagesProvider);
+
+    if (currentUid == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
@@ -404,19 +430,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   itemCount: messages.length,
                   itemBuilder: (_, i) {
                     final msg = messages[i];
-                    final isMe = msg.senderId == currentUser?.uid;
+                    final isMe = msg.senderId == currentUid;
 
-                    // Dans la liste reversed: index 0 = plus récent (bas)
-                    // index i-1 = message plus récent (en dessous visuellement)
-                    // index i+1 = message plus ancien (au dessus visuellement)
                     final newerMsg = i > 0 ? messages[i - 1] : null;
                     final olderMsg =
                         i < messages.length - 1 ? messages[i + 1] : null;
 
-                    // isFirstInGroup = bas du groupe (le plus récent du groupe)
                     final isFirstInGroup =
                         newerMsg == null || !_isSameGroup(msg, newerMsg);
-                    // isLastInGroup = haut du groupe (le plus ancien du groupe)
                     final isLastInGroup =
                         olderMsg == null || !_isSameGroup(olderMsg, msg);
 
@@ -424,25 +445,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       padding: EdgeInsets.only(
                         bottom: isFirstInGroup ? 10 : 2,
                       ),
-                      child: _MessageBubble(
-                        message: msg,
+                      child: _SwipeToReply(
                         isMe: isMe,
-                        currentUserId: currentUser?.uid,
-                        showTimestamp:
-                            _visibleTimestamps.contains(msg.id),
-                        showAvatar: !isMe && isFirstInGroup,
-                        showSenderName: !isMe && isLastInGroup,
-                        isFirstInGroup: isFirstInGroup,
-                        isLastInGroup: isLastInGroup,
-                        onTap: msg.type != MessageType.system
-                            ? () => _toggleTimestamp(msg.id)
+                        onReply: msg.type != MessageType.system
+                            ? () => setState(() => _replyingTo = msg)
                             : null,
-                        onDoubleTap: msg.type != MessageType.system
-                            ? () => _onDoubleTap(msg)
-                            : null,
-                        onLongPress: msg.type != MessageType.system
-                            ? () => _onMessageLongPress(msg, isMe)
-                            : null,
+                        child: _MessageBubble(
+                          message: msg,
+                          isMe: isMe,
+                          currentUserId: currentUid,
+                          showTimestamp: _visibleTimestamps.contains(msg.id),
+                          showAvatar: !isMe && isFirstInGroup,
+                          showSenderName: !isMe && isLastInGroup,
+                          isFirstInGroup: isFirstInGroup,
+                          isLastInGroup: isLastInGroup,
+                          onTap: msg.type != MessageType.system
+                              ? () => _toggleTimestamp(msg.id)
+                              : null,
+                          onDoubleTap: msg.type != MessageType.system
+                              ? () => _onDoubleTap(msg)
+                              : null,
+                          onLongPress: msg.type != MessageType.system
+                              ? () => _onMessageLongPress(msg, isMe)
+                              : null,
+                        ),
                       ),
                     );
                   },
@@ -455,6 +481,60 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           _TypingIndicator(
             typingUsers: ref.watch(typingProvider).asData?.value ?? [],
           ),
+
+          // ── Reply bar ───────────────────────────────────────────────
+          if (_replyingTo != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: AppColors.border)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 3,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4F7CFF),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _replyingTo!.senderName ?? '',
+                          style: const TextStyle(
+                            color: Color(0xFF4F7CFF),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          _replyingTo!.content,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    color: AppColors.textSecondary,
+                    onPressed: () => setState(() => _replyingTo = null),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
 
           // ── Input bar ───────────────────────────────────────────────
           Container(
@@ -763,13 +843,25 @@ class _MessageBubble extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Text(
-                message.content,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  height: 1.4,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (message.replyToContent != null)
+                    _ReplyPreview(
+                      senderName: message.replyToSenderName,
+                      content: message.replyToContent!,
+                      isMe: true,
+                    ),
+                  Text(
+                    message.content,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -858,13 +950,25 @@ class _MessageBubble extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Text(
-                      message.content,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                        height: 1.4,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (message.replyToContent != null)
+                          _ReplyPreview(
+                            senderName: message.replyToSenderName,
+                            content: message.replyToContent!,
+                            isMe: false,
+                          ),
+                        Text(
+                          message.content,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -932,6 +1036,186 @@ class _ReactionsRow extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+// ── Reply preview (dans la bulle) ────────────────────────────────────────────
+
+class _ReplyPreview extends StatelessWidget {
+  final String? senderName;
+  final String content;
+  final bool isMe;
+
+  const _ReplyPreview({
+    required this.content,
+    required this.isMe,
+    this.senderName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: isMe
+            ? Colors.white.withValues(alpha: 0.2)
+            : const Color(0xFFF0F2F5),
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(
+            color: isMe
+                ? Colors.white.withValues(alpha: 0.7)
+                : const Color(0xFF4F7CFF),
+            width: 3,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (senderName != null)
+            Text(
+              senderName!,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: isMe
+                    ? Colors.white.withValues(alpha: 0.9)
+                    : const Color(0xFF4F7CFF),
+              ),
+            ),
+          Text(
+            content,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              color: isMe
+                  ? Colors.white.withValues(alpha: 0.75)
+                  : AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Swipe to reply ────────────────────────────────────────────────────────────
+
+class _SwipeToReply extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onReply;
+  final bool isMe;
+
+  const _SwipeToReply({required this.child, required this.isMe, this.onReply});
+
+  @override
+  State<_SwipeToReply> createState() => _SwipeToReplyState();
+}
+
+class _SwipeToReplyState extends State<_SwipeToReply>
+    with SingleTickerProviderStateMixin {
+  // Valeur signée : positif = droite (messages reçus), négatif = gauche (mes messages)
+  double _dragX = 0;
+  bool _triggered = false;
+  late final AnimationController _controller;
+  Animation<double>? _resetAnimation;
+
+  static const _threshold = 56.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onDragUpdate(DragUpdateDetails d) {
+    if (widget.onReply == null) return;
+    // isMe → swipe gauche (dx négatif vers le centre)
+    // !isMe → swipe droite (dx positif vers le centre)
+    final delta = widget.isMe ? d.delta.dx : d.delta.dx;
+    final wrongDirection = widget.isMe ? delta > 0 : delta < 0;
+    if (wrongDirection && _dragX == 0) return;
+
+    _resetAnimation?.removeListener(_onResetTick);
+    _controller.stop();
+    setState(() {
+      if (widget.isMe) {
+        _dragX = (_dragX + delta).clamp(-_threshold, 0.0);
+      } else {
+        _dragX = (_dragX + delta).clamp(0.0, _threshold);
+      }
+    });
+    if (_dragX.abs() >= _threshold && !_triggered) {
+      _triggered = true;
+      HapticFeedback.lightImpact();
+      widget.onReply?.call();
+    }
+  }
+
+  void _onResetTick() {
+    if (mounted) setState(() => _dragX = _resetAnimation!.value);
+  }
+
+  void _onDragEnd(DragEndDetails _) {
+    _triggered = false;
+    _resetAnimation?.removeListener(_onResetTick);
+    _resetAnimation = Tween<double>(begin: _dragX, end: 0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    )..addListener(_onResetTick);
+    _controller.forward(from: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final absX = _dragX.abs();
+    return GestureDetector(
+      onHorizontalDragUpdate: _onDragUpdate,
+      onHorizontalDragEnd: _onDragEnd,
+      child: SizedBox(
+        width: double.infinity,
+        child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Transform.translate(
+            offset: Offset(_dragX, 0),
+            child: SizedBox(width: double.infinity, child: widget.child),
+          ),
+          if (absX > 8)
+            Positioned(
+              // isMe : icône à droite du message (côté centre)
+              // !isMe : icône à gauche du message (côté centre)
+              left: widget.isMe ? null : absX - 28,
+              right: widget.isMe ? absX - 28 : null,
+              top: 0,
+              bottom: 0,
+              child: Opacity(
+                opacity: (absX / _threshold).clamp(0.0, 1.0),
+                child: const Align(
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.reply_rounded,
+                    color: Color(0xFF4F7CFF),
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+      ),
     );
   }
 }

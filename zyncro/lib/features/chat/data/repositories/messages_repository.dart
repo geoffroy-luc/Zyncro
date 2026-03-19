@@ -86,6 +86,9 @@ class MessagesRepository implements IMessagesRepository {
     required String senderId,
     required String senderName,
     required String content,
+    String? replyToId,
+    String? replyToSenderName,
+    String? replyToContent,
   }) async {
     final ref = _col(groupId).doc();
     final message = Message(
@@ -96,6 +99,9 @@ class MessagesRepository implements IMessagesRepository {
       content: content,
       type: MessageType.text,
       timestamp: DateTime.now(),
+      replyToId: replyToId,
+      replyToSenderName: replyToSenderName,
+      replyToContent: replyToContent,
     );
     await ref.set(message.toMap());
   }

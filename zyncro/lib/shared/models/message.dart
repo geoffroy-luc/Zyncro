@@ -12,6 +12,9 @@ class Message {
   final DateTime timestamp;
   final DateTime? editedAt;
   final Map<String, List<String>> reactions;
+  final String? replyToId;
+  final String? replyToSenderName;
+  final String? replyToContent;
 
   const Message({
     required this.id,
@@ -23,6 +26,9 @@ class Message {
     required this.timestamp,
     this.editedAt,
     this.reactions = const {},
+    this.replyToId,
+    this.replyToSenderName,
+    this.replyToContent,
   });
 
   factory Message.fromMap(String id, Map<String, dynamic> map) {
@@ -40,6 +46,9 @@ class Message {
       reactions: (map['reactions'] as Map<String, dynamic>? ?? {}).map(
         (k, v) => MapEntry(k, List<String>.from(v as List)),
       ),
+      replyToId: map['replyToId'] as String?,
+      replyToSenderName: map['replyToSenderName'] as String?,
+      replyToContent: map['replyToContent'] as String?,
     );
   }
 
@@ -53,6 +62,9 @@ class Message {
       'timestamp': Timestamp.fromDate(timestamp),
       if (editedAt != null) 'editedAt': Timestamp.fromDate(editedAt!),
       if (reactions.isNotEmpty) 'reactions': reactions,
+      if (replyToId != null) 'replyToId': replyToId,
+      if (replyToSenderName != null) 'replyToSenderName': replyToSenderName,
+      if (replyToContent != null) 'replyToContent': replyToContent,
     };
   }
 }
