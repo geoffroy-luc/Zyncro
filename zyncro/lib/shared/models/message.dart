@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum MessageType { text, system, image, file }
+enum MessageType { text, system, image, file, poll }
 
 class Message {
   final String id;

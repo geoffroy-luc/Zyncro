@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -132,6 +133,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (older.type == MessageType.system || newer.type == MessageType.system) {
       return false;
     }
+    if (older.type == MessageType.poll || newer.type == MessageType.poll) {
+      return false;
+    }
     return newer.timestamp.difference(older.timestamp).inMinutes < 3;
   }
 
@@ -205,12 +209,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               title: const Text('Répondre'),
               onTap: () => Navigator.of(ctx).pop('reply'),
             ),
-            if (isMe) ...[
+            if (isMe && message.type != MessageType.poll)
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
                 title: const Text('Modifier'),
                 onTap: () => Navigator.of(ctx).pop('edit'),
               ),
+            if (isMe)
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
                 title: const Text(
@@ -219,7 +224,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
                 onTap: () => Navigator.of(ctx).pop('delete'),
               ),
-            ],
           ],
         ),
       ),
@@ -316,6 +320,51 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Impossible de supprimer le message.')),
+      );
+    }
+  }
+
+  Future<void> _votePoll(Message message, int optionIndex) async {
+    final currentUser = ref.read(authStateProvider).asData?.value;
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (currentUser == null || groupId == null) return;
+
+    final key = optionIndex.toString();
+    final hasVoted =
+        message.reactions[key]?.contains(currentUser.uid) == true;
+    await ref.read(messagesRepositoryProvider).toggleReaction(
+          groupId: groupId,
+          messageId: message.id,
+          emoji: key,
+          userId: currentUser.uid,
+          hasReacted: hasVoted,
+        );
+  }
+
+  Future<void> _showCreatePoll() async {
+    final user = ref.read(authStateProvider).asData?.value;
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (user == null || groupId == null) return;
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (ctx) => const _CreatePollDialog(),
+    );
+    if (result == null || !mounted) return;
+
+    await ref.read(messagesRepositoryProvider).sendPoll(
+          groupId: groupId,
+          senderId: user.uid,
+          senderName: user.displayName ?? user.email ?? 'Anonyme',
+          question: result['question'] as String,
+          options: List<String>.from(result['options'] as List),
+        );
+
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
       );
     }
   }
@@ -441,13 +490,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     final isLastInGroup =
                         olderMsg == null || !_isSameGroup(olderMsg, msg);
 
+                    final isPoll = msg.type == MessageType.poll;
                     return Padding(
                       padding: EdgeInsets.only(
                         bottom: isFirstInGroup ? 10 : 2,
                       ),
                       child: _SwipeToReply(
                         isMe: isMe,
-                        onReply: msg.type != MessageType.system
+                        onReply: msg.type != MessageType.system && !isPoll
                             ? () => setState(() => _replyingTo = msg)
                             : null,
                         child: _MessageBubble(
@@ -459,14 +509,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           showSenderName: !isMe && isLastInGroup,
                           isFirstInGroup: isFirstInGroup,
                           isLastInGroup: isLastInGroup,
-                          onTap: msg.type != MessageType.system
+                          onTap: msg.type != MessageType.system && !isPoll
                               ? () => _toggleTimestamp(msg.id)
                               : null,
-                          onDoubleTap: msg.type != MessageType.system
+                          onDoubleTap: msg.type != MessageType.system && !isPoll
                               ? () => _onDoubleTap(msg)
                               : null,
                           onLongPress: msg.type != MessageType.system
                               ? () => _onMessageLongPress(msg, isMe)
+                              : null,
+                          onVote: isPoll
+                              ? (i) => _votePoll(msg, i)
                               : null,
                         ),
                       ),
@@ -538,7 +591,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
           // ── Input bar ───────────────────────────────────────────────
           Container(
-            padding: EdgeInsets.fromLTRB(24, 12, 24, 12 + bottomPad),
+            padding: EdgeInsets.fromLTRB(12, 12, 24, 12 + bottomPad),
             decoration: const BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: AppColors.border)),
@@ -546,6 +599,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                GestureDetector(
+                  onTap: _showCreatePoll,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    margin: const EdgeInsets.only(right: 8, bottom: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F9FC),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: const Icon(
+                      Icons.poll_outlined,
+                      color: AppColors.textSecondary,
+                      size: 18,
+                    ),
+                  ),
+                ),
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -723,6 +794,7 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onDoubleTap;
   final VoidCallback? onLongPress;
+  final void Function(int)? onVote;
 
   const _MessageBubble({
     required this.message,
@@ -736,6 +808,7 @@ class _MessageBubble extends StatelessWidget {
     this.onTap,
     this.onDoubleTap,
     this.onLongPress,
+    this.onVote,
   });
 
   Color _avatarColor(String uid) {
@@ -761,6 +834,16 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (message.type == MessageType.poll) {
+      return _PollCard(
+        message: message,
+        isMe: isMe,
+        currentUserId: currentUserId,
+        onVote: onVote,
+        onLongPress: onLongPress,
+      );
+    }
+
     if (message.type == MessageType.system) {
       return Center(
         child: Container(
@@ -1216,6 +1299,367 @@ class _SwipeToReplyState extends State<_SwipeToReply>
         ],
       ),
       ),
+    );
+  }
+}
+
+// ── Poll card ─────────────────────────────────────────────────────────────────
+
+class _PollCard extends StatelessWidget {
+  final Message message;
+  final bool isMe;
+  final String? currentUserId;
+  final void Function(int)? onVote;
+  final VoidCallback? onLongPress;
+
+  const _PollCard({
+    required this.message,
+    required this.isMe,
+    this.currentUserId,
+    this.onVote,
+    this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<String, dynamic> data;
+    try {
+      data = jsonDecode(message.content) as Map<String, dynamic>;
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+
+    final question = data['question'] as String? ?? '';
+    final options = List<String>.from(data['options'] as List? ?? []);
+
+    String? userVoteKey;
+    for (final key in message.reactions.keys) {
+      if (message.reactions[key]?.contains(currentUserId) == true) {
+        userVoteKey = key;
+        break;
+      }
+    }
+
+    int totalVotes = 0;
+    for (final voters in message.reactions.values) {
+      totalVotes += voters.length;
+    }
+
+    return GestureDetector(
+      onLongPress: onLongPress,
+      child: Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 320),
+          margin: EdgeInsets.only(left: isMe ? 40 : 0, right: isMe ? 0 : 40),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0A000000),
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // En-tête gradient
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                  ),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(15),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.poll_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        question,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Options
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                child: Column(
+                  children: List.generate(options.length, (i) {
+                    final key = i.toString();
+                    final votes = message.reactions[key]?.length ?? 0;
+                    final pct =
+                        totalVotes > 0 ? votes / totalVotes : 0.0;
+                    final isSelected = userVoteKey == key;
+
+                    return GestureDetector(
+                      onTap: () => onVote?.call(i),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 9,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF4F7CFF).withValues(alpha: 0.08)
+                              : const Color(0xFFF7F9FC),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFF4F7CFF)
+                                : AppColors.border,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  isSelected
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  size: 15,
+                                  color: isSelected
+                                      ? const Color(0xFF4F7CFF)
+                                      : AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    options[i],
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  '$votes',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (totalVotes > 0) ...[
+                              const SizedBox(height: 6),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: pct,
+                                  minHeight: 4,
+                                  backgroundColor: Colors.grey.shade200,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    isSelected
+                                        ? const Color(0xFF4F7CFF)
+                                        : const Color(0xFF4F7CFF)
+                                            .withValues(alpha: 0.35),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              // Pied de carte
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                child: Text(
+                  '$totalVotes vote${totalVotes != 1 ? 's' : ''}'
+                  '${message.senderName != null ? ' · ${isMe ? 'Votre sondage' : message.senderName!}' : ''}',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Create poll dialog ────────────────────────────────────────────────────────
+
+class _CreatePollDialog extends StatefulWidget {
+  const _CreatePollDialog();
+
+  @override
+  State<_CreatePollDialog> createState() => _CreatePollDialogState();
+}
+
+class _CreatePollDialogState extends State<_CreatePollDialog> {
+  final _questionController = TextEditingController();
+  final List<TextEditingController> _optionControllers = [
+    TextEditingController(),
+    TextEditingController(),
+  ];
+
+  @override
+  void dispose() {
+    _questionController.dispose();
+    for (final c in _optionControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  bool get _isValid {
+    if (_questionController.text.trim().isEmpty) return false;
+    final filled =
+        _optionControllers.where((c) => c.text.trim().isNotEmpty).length;
+    return filled >= 2;
+  }
+
+  void _addOption() {
+    if (_optionControllers.length >= 5) return;
+    setState(() => _optionControllers.add(TextEditingController()));
+  }
+
+  void _removeOption(int index) {
+    if (_optionControllers.length <= 2) return;
+    final c = _optionControllers.removeAt(index);
+    c.dispose();
+    setState(() {});
+  }
+
+  void _submit() {
+    final question = _questionController.text.trim();
+    final options = _optionControllers
+        .map((c) => c.text.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (question.isEmpty || options.length < 2) return;
+    Navigator.of(context).pop({'question': question, 'options': options});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.poll_outlined, color: Color(0xFF4F7CFF), size: 20),
+          SizedBox(width: 8),
+          Text('Créer un sondage'),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _questionController,
+              autofocus: true,
+              maxLines: 2,
+              minLines: 1,
+              decoration: const InputDecoration(
+                labelText: 'Question',
+                hintText: 'Posez votre question…',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Options',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...List.generate(_optionControllers.length, (i) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _optionControllers[i],
+                        decoration: InputDecoration(
+                          hintText: 'Option ${i + 1}',
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          isDense: true,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                    if (_optionControllers.length > 2)
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        color: AppColors.textSecondary,
+                        onPressed: () => _removeOption(i),
+                        padding: const EdgeInsets.only(left: 4),
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
+                ),
+              );
+            }),
+            if (_optionControllers.length < 5)
+              TextButton.icon(
+                onPressed: _addOption,
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Ajouter une option'),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF4F7CFF),
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: _isValid ? _submit : null,
+          child: const Text('Créer'),
+        ),
+      ],
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/repositories/i_messages_repository.dart';
 import '../../../../shared/models/message.dart';
@@ -143,6 +145,28 @@ class MessagesRepository implements IMessagesRepository {
       timestamp: DateTime.now(),
     );
     await ref.set({...message.toMap(), 'notifScreen': notifScreen});
+  }
+
+  @override
+  Future<void> sendPoll({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required String question,
+    required List<String> options,
+  }) async {
+    final ref = _col(groupId).doc();
+    final content = jsonEncode({'question': question, 'options': options});
+    final message = Message(
+      id: ref.id,
+      groupId: groupId,
+      senderId: senderId,
+      senderName: senderName,
+      content: content,
+      type: MessageType.poll,
+      timestamp: DateTime.now(),
+    );
+    await ref.set(message.toMap());
   }
 
   @override

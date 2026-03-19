@@ -45,6 +45,15 @@ abstract interface class IMessagesRepository {
     required String notifScreen,
   });
 
+  /// Envoie un sondage dans le groupe.
+  Future<void> sendPoll({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required String question,
+    required List<String> options,
+  });
+
   /// Ajoute ou retire une réaction emoji sur un message.
   Future<void> toggleReaction({
     required String groupId,
