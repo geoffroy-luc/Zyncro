@@ -28,8 +28,8 @@ exports.onGroupDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}", 
             await admin.messaging().sendEachForMulticast({
                 tokens,
                 notification: {
-                    title: "Groupe supprimé",
-                    body: `Le groupe « ${groupName} » a été supprimé.`,
+                    title: groupName,
+                    body: "Le groupe a été supprimé.",
                 },
                 data: { groupId },
                 android: { priority: "high" },
@@ -67,8 +67,8 @@ exports.onMemberRemoved = (0, firestore_1.onDocumentDeleted)("groups/{groupId}/m
     await admin.messaging().send({
         token,
         notification: {
-            title: "Retiré du groupe",
-            body: `Tu as été retiré du groupe « ${groupName} ».`,
+            title: groupName,
+            body: "Tu as été retiré du groupe.",
         },
         data: { groupId },
         android: { priority: "high" },
@@ -104,18 +104,20 @@ exports.onNewMessage = (0, firestore_1.onDocumentCreated)("groups/{groupId}/mess
     }));
     if (tokens.length === 0)
         return;
-    let preview;
+    const senderName = (_f = message.senderName) !== null && _f !== void 0 ? _f : "Quelqu'un";
+    let body;
     if (message.type === "audio") {
-        preview = "a envoyé un message vocal 🎤";
+        body = `${senderName} a envoyé un message vocal 🎤`;
     }
     else if (message.type === "poll") {
-        preview = "a créé un sondage 📊";
+        body = `${senderName} a créé un sondage 📊`;
     }
     else {
-        const content = (_f = message.content) !== null && _f !== void 0 ? _f : "";
-        preview = content.length > 80 ? content.substring(0, 80) + "…" : content;
+        const content = (_g = message.content) !== null && _g !== void 0 ? _g : "";
+        const preview = content.length > 80 ? content.substring(0, 80) + "…" : content;
+        body = `${senderName}: ${preview}`;
     }
-    await sendNotif(tokens, (_g = message.senderName) !== null && _g !== void 0 ? _g : "Nouveau message", preview, groupId, "chat", groupName);
+    await sendNotif(tokens, groupName, body, groupId, "chat");
 });
 // ── Helpers ──────────────────────────────────────────────────────────────────
 /** Récupère le displayName Firebase Auth d'un utilisateur. */
@@ -155,21 +157,20 @@ async function getGroupName(db, groupId) {
     return (_b = (_a = groupDoc.data()) === null || _a === void 0 ? void 0 : _a.name) !== null && _b !== void 0 ? _b : "";
 }
 /** Envoie une notification multicast si la liste de tokens est non vide.
- *  Ajoute le nom du groupe dans le corps si fourni. */
-async function sendNotif(tokens, title, body, groupId, screen, groupName) {
+ *  title = nom du groupe, body = action de l'utilisateur. */
+async function sendNotif(tokens, groupName, body, groupId, screen) {
     if (tokens.length === 0)
         return;
-    const fullBody = groupName ? `${groupName} — ${body}` : body;
     await admin.messaging().sendEachForMulticast({
         tokens,
-        notification: { title, body: fullBody },
+        notification: { title: groupName, body },
         data: { groupId, screen },
         android: { priority: "high" },
         apns: { payload: { aps: { sound: "default" } } },
     });
 }
 exports.onExpenseUpdated = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/expenses/{expenseId}", async (event) => {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e;
     const after = (_a = event.data) === null || _a === void 0 ? void 0 : _a.after.data();
     if (!after)
         return;
@@ -192,13 +193,11 @@ exports.onExpenseUpdated = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/
     const actorName = after.updatedBy
         ? await getDisplayName(after.updatedBy)
         : ((_e = after.paidByName) !== null && _e !== void 0 ? _e : "Quelqu'un");
-    const title = (_f = after.title) !== null && _f !== void 0 ? _f : "Dépense";
-    const amount = (_g = after.amount) !== null && _g !== void 0 ? _g : 0;
-    await sendNotif(tokens, `${actorName} a modifié une dépense`, `${title} · ${amount.toFixed(2)} €`, groupId, "expenses", groupName);
+    await sendNotif(tokens, groupName, `${actorName} a modifié une dépense`, groupId, "expenses");
 });
 // ── Événements ────────────────────────────────────────────────────────────────
 exports.onEventCreated = (0, firestore_1.onDocumentCreated)("groups/{groupId}/events/{eventId}", async (event) => {
-    var _a, _b;
+    var _a;
     const data = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
     if (!data)
         return;
@@ -209,10 +208,10 @@ exports.onEventCreated = (0, firestore_1.onDocumentCreated)("groups/{groupId}/ev
         getGroupTokens(db, groupId, createdBy),
         data.creatorName ? Promise.resolve(data.creatorName) : getDisplayName(createdBy),
     ]);
-    await sendNotif(tokens, `${name} a créé un événement`, (_b = data.title) !== null && _b !== void 0 ? _b : "Événement", groupId, "calendar", groupName);
+    await sendNotif(tokens, groupName, `${name} a créé un événement`, groupId, "calendar");
 });
 exports.onEventUpdated = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/events/{eventId}", async (event) => {
-    var _a, _b, _c, _d;
+    var _a, _b, _c;
     const after = (_a = event.data) === null || _a === void 0 ? void 0 : _a.after.data();
     if (!after)
         return;
@@ -225,10 +224,10 @@ exports.onEventUpdated = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/ev
             ? Promise.resolve((_c = after.creatorName) !== null && _c !== void 0 ? _c : null).then((n) => n !== null && n !== void 0 ? n : getDisplayName(actorUid))
             : getDisplayName(actorUid),
     ]);
-    await sendNotif(tokens, `${name} a modifié un événement`, (_d = after.title) !== null && _d !== void 0 ? _d : "Événement", groupId, "calendar", groupName);
+    await sendNotif(tokens, groupName, `${name} a modifié un événement`, groupId, "calendar");
 });
 exports.onEventDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}/events/{eventId}", async (event) => {
-    var _a, _b;
+    var _a;
     const before = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
     if (!before)
         return;
@@ -239,11 +238,11 @@ exports.onEventDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}/ev
         getGroupTokens(db, groupId),
         before.creatorName ? Promise.resolve(before.creatorName) : getDisplayName(createdBy),
     ]);
-    await sendNotif(tokens, `${name} a supprimé un événement`, (_b = before.title) !== null && _b !== void 0 ? _b : "Événement", groupId, "calendar", groupName);
+    await sendNotif(tokens, groupName, `${name} a supprimé un événement`, groupId, "calendar");
 });
 // ── Notes ─────────────────────────────────────────────────────────────────────
 exports.onNoteCreated = (0, firestore_1.onDocumentCreated)("groups/{groupId}/notes/{noteId}", async (event) => {
-    var _a, _b;
+    var _a;
     const data = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
     if (!data)
         return;
@@ -254,10 +253,10 @@ exports.onNoteCreated = (0, firestore_1.onDocumentCreated)("groups/{groupId}/not
         getGroupTokens(db, groupId, createdBy),
         getDisplayName(createdBy),
     ]);
-    await sendNotif(tokens, `${name} a créé une note`, (_b = data.title) !== null && _b !== void 0 ? _b : "Note", groupId, "notes", groupName);
+    await sendNotif(tokens, groupName, `${name} a créé une note`, groupId, "notes");
 });
 exports.onNoteUpdated = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/notes/{noteId}", async (event) => {
-    var _a, _b, _c, _d;
+    var _a, _b, _c;
     const before = (_a = event.data) === null || _a === void 0 ? void 0 : _a.before.data();
     const after = (_b = event.data) === null || _b === void 0 ? void 0 : _b.after.data();
     if (!before || !after)
@@ -273,10 +272,10 @@ exports.onNoteUpdated = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/not
         getGroupTokens(db, groupId, actorUid),
         getDisplayName(actorUid),
     ]);
-    await sendNotif(tokens, `${name} a modifié une note`, (_d = after.title) !== null && _d !== void 0 ? _d : "Note", groupId, "notes", groupName);
+    await sendNotif(tokens, groupName, `${name} a modifié une note`, groupId, "notes");
 });
 exports.onNoteDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}/notes/{noteId}", async (event) => {
-    var _a, _b;
+    var _a;
     const before = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
     if (!before)
         return;
@@ -287,10 +286,10 @@ exports.onNoteDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}/not
         getGroupTokens(db, groupId),
         getDisplayName(createdBy),
     ]);
-    await sendNotif(tokens, `${name} a supprimé une note`, (_b = before.title) !== null && _b !== void 0 ? _b : "Note", groupId, "notes", groupName);
+    await sendNotif(tokens, groupName, `${name} a supprimé une note`, groupId, "notes");
 });
 exports.onNewExpense = (0, firestore_1.onDocumentCreated)("groups/{groupId}/expenses/{expenseId}", async (event) => {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d;
     const expense = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
     if (!expense)
         return;
@@ -313,8 +312,6 @@ exports.onNewExpense = (0, firestore_1.onDocumentCreated)("groups/{groupId}/expe
     if (tokens.length === 0)
         return;
     const paidByName = (_d = expense.paidByName) !== null && _d !== void 0 ? _d : "Quelqu'un";
-    const title = (_e = expense.title) !== null && _e !== void 0 ? _e : "Nouvelle dépense";
-    const amount = (_f = expense.amount) !== null && _f !== void 0 ? _f : 0;
-    await sendNotif(tokens, `${paidByName} a ajouté une dépense`, `${title} · ${amount.toFixed(2)} €`, groupId, "expenses", groupName);
+    await sendNotif(tokens, groupName, `${paidByName} a ajouté une dépense`, groupId, "expenses");
 });
 //# sourceMappingURL=index.js.map

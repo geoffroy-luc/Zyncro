@@ -31,8 +31,8 @@ export const onGroupDeleted = onDocumentDeleted(
         await admin.messaging().sendEachForMulticast({
           tokens,
           notification: {
-            title: "Groupe supprimé",
-            body: `Le groupe « ${groupName} » a été supprimé.`,
+            title: groupName,
+            body: "Le groupe a été supprimé.",
           },
           data: { groupId },
           android: { priority: "high" },
@@ -79,8 +79,8 @@ export const onMemberRemoved = onDocumentDeleted(
     await admin.messaging().send({
       token,
       notification: {
-        title: "Retiré du groupe",
-        body: `Tu as été retiré du groupe « ${groupName} ».`,
+        title: groupName,
+        body: "Tu as été retiré du groupe.",
       },
       data: { groupId },
       android: { priority: "high" },
@@ -123,24 +123,19 @@ export const onNewMessage = onDocumentCreated(
 
     if (tokens.length === 0) return;
 
-    let preview: string;
+    const senderName: string = message.senderName ?? "Quelqu'un";
+    let body: string;
     if (message.type === "audio") {
-      preview = "a envoyé un message vocal 🎤";
+      body = `${senderName} a envoyé un message vocal 🎤`;
     } else if (message.type === "poll") {
-      preview = "a créé un sondage 📊";
+      body = `${senderName} a créé un sondage 📊`;
     } else {
       const content: string = message.content ?? "";
-      preview = content.length > 80 ? content.substring(0, 80) + "…" : content;
+      const preview = content.length > 80 ? content.substring(0, 80) + "…" : content;
+      body = `${senderName}: ${preview}`;
     }
 
-    await sendNotif(
-      tokens,
-      message.senderName ?? "Nouveau message",
-      preview,
-      groupId,
-      "chat",
-      groupName
-    );
+    await sendNotif(tokens, groupName, body, groupId, "chat");
   }
 );
 
@@ -189,20 +184,18 @@ async function getGroupName(
 }
 
 /** Envoie une notification multicast si la liste de tokens est non vide.
- *  Ajoute le nom du groupe dans le corps si fourni. */
+ *  title = nom du groupe, body = action de l'utilisateur. */
 async function sendNotif(
   tokens: string[],
-  title: string,
+  groupName: string,
   body: string,
   groupId: string,
-  screen: string,
-  groupName?: string
+  screen: string
 ): Promise<void> {
   if (tokens.length === 0) return;
-  const fullBody = groupName ? `${groupName} — ${body}` : body;
   await admin.messaging().sendEachForMulticast({
     tokens,
-    notification: { title, body: fullBody },
+    notification: { title: groupName, body },
     data: { groupId, screen },
     android: { priority: "high" },
     apns: { payload: { aps: { sound: "default" } } },
@@ -236,16 +229,7 @@ export const onExpenseUpdated = onDocumentUpdated(
     const actorName = after.updatedBy
       ? await getDisplayName(after.updatedBy)
       : (after.paidByName ?? "Quelqu'un");
-    const title: string = after.title ?? "Dépense";
-    const amount: number = after.amount ?? 0;
-    await sendNotif(
-      tokens,
-      `${actorName} a modifié une dépense`,
-      `${title} · ${amount.toFixed(2)} €`,
-      groupId,
-      "expenses",
-      groupName
-    );
+    await sendNotif(tokens, groupName, `${actorName} a modifié une dépense`, groupId, "expenses");
   }
 );
 
@@ -263,7 +247,7 @@ export const onEventCreated = onDocumentCreated(
       getGroupTokens(db, groupId, createdBy),
       data.creatorName ? Promise.resolve(data.creatorName) : getDisplayName(createdBy),
     ]);
-    await sendNotif(tokens, `${name} a créé un événement`, data.title ?? "Événement", groupId, "calendar", groupName);
+    await sendNotif(tokens, groupName, `${name} a créé un événement`, groupId, "calendar");
   }
 );
 
@@ -281,7 +265,7 @@ export const onEventUpdated = onDocumentUpdated(
         ? Promise.resolve(after.creatorName ?? null).then((n) => n ?? getDisplayName(actorUid))
         : getDisplayName(actorUid),
     ]);
-    await sendNotif(tokens, `${name} a modifié un événement`, after.title ?? "Événement", groupId, "calendar", groupName);
+    await sendNotif(tokens, groupName, `${name} a modifié un événement`, groupId, "calendar");
   }
 );
 
@@ -297,7 +281,7 @@ export const onEventDeleted = onDocumentDeleted(
       getGroupTokens(db, groupId),
       before.creatorName ? Promise.resolve(before.creatorName) : getDisplayName(createdBy),
     ]);
-    await sendNotif(tokens, `${name} a supprimé un événement`, before.title ?? "Événement", groupId, "calendar", groupName);
+    await sendNotif(tokens, groupName, `${name} a supprimé un événement`, groupId, "calendar");
   }
 );
 
@@ -315,7 +299,7 @@ export const onNoteCreated = onDocumentCreated(
       getGroupTokens(db, groupId, createdBy),
       getDisplayName(createdBy),
     ]);
-    await sendNotif(tokens, `${name} a créé une note`, data.title ?? "Note", groupId, "notes", groupName);
+    await sendNotif(tokens, groupName, `${name} a créé une note`, groupId, "notes");
   }
 );
 
@@ -337,7 +321,7 @@ export const onNoteUpdated = onDocumentUpdated(
       getGroupTokens(db, groupId, actorUid),
       getDisplayName(actorUid),
     ]);
-    await sendNotif(tokens, `${name} a modifié une note`, after.title ?? "Note", groupId, "notes", groupName);
+    await sendNotif(tokens, groupName, `${name} a modifié une note`, groupId, "notes");
   }
 );
 
@@ -353,7 +337,7 @@ export const onNoteDeleted = onDocumentDeleted(
       getGroupTokens(db, groupId),
       getDisplayName(createdBy),
     ]);
-    await sendNotif(tokens, `${name} a supprimé une note`, before.title ?? "Note", groupId, "notes", groupName);
+    await sendNotif(tokens, groupName, `${name} a supprimé une note`, groupId, "notes");
   }
 );
 
@@ -385,16 +369,7 @@ export const onNewExpense = onDocumentCreated(
     if (tokens.length === 0) return;
 
     const paidByName: string = expense.paidByName ?? "Quelqu'un";
-    const title: string = expense.title ?? "Nouvelle dépense";
-    const amount: number = expense.amount ?? 0;
 
-    await sendNotif(
-      tokens,
-      `${paidByName} a ajouté une dépense`,
-      `${title} · ${amount.toFixed(2)} €`,
-      groupId,
-      "expenses",
-      groupName
-    );
+    await sendNotif(tokens, groupName, `${paidByName} a ajouté une dépense`, groupId, "expenses");
   }
 );
