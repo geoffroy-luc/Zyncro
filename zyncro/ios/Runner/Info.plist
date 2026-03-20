@@ -45,6 +45,8 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Zyncro utilise le microphone pour envoyer des messages audio.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

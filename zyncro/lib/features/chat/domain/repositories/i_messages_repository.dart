@@ -45,11 +45,28 @@ abstract interface class IMessagesRepository {
     required String notifScreen,
   });
 
+  /// Envoie un clip audio dans le groupe.
+  Future<void> sendAudio({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required String filePath,
+    required int durationSeconds,
+  });
+
   /// Envoie un sondage dans le groupe.
   Future<void> sendPoll({
     required String groupId,
     required String senderId,
     required String senderName,
+    required String question,
+    required List<String> options,
+  });
+
+  /// Modifie un sondage existant (réinitialise les votes).
+  Future<void> editPoll({
+    required String groupId,
+    required String messageId,
     required String question,
     required List<String> options,
   });

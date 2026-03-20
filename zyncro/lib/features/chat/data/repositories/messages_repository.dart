@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../../domain/repositories/i_messages_repository.dart';
 import '../../../../shared/models/message.dart';
 
@@ -148,6 +150,42 @@ class MessagesRepository implements IMessagesRepository {
   }
 
   @override
+  Future<void> sendAudio({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required String filePath,
+    required int durationSeconds,
+  }) async {
+    final ref = _col(groupId).doc();
+    final storageRef = FirebaseStorage.instance
+        .ref('audio/$groupId/${ref.id}.m4a');
+    final snapshot = await storageRef.putFile(
+      File(filePath),
+      SettableMetadata(contentType: 'audio/m4a'),
+    );
+    if (snapshot.state != TaskState.success) {
+      throw FirebaseException(
+        plugin: 'firebase_storage',
+        message: 'Upload failed with state: ${snapshot.state}',
+      );
+    }
+    final url = await storageRef.getDownloadURL();
+
+    final content = jsonEncode({'url': url, 'duration': durationSeconds});
+    final message = Message(
+      id: ref.id,
+      groupId: groupId,
+      senderId: senderId,
+      senderName: senderName,
+      content: content,
+      type: MessageType.audio,
+      timestamp: DateTime.now(),
+    );
+    await ref.set(message.toMap());
+  }
+
+  @override
   Future<void> sendPoll({
     required String groupId,
     required String senderId,
@@ -167,6 +205,21 @@ class MessagesRepository implements IMessagesRepository {
       timestamp: DateTime.now(),
     );
     await ref.set(message.toMap());
+  }
+
+  @override
+  Future<void> editPoll({
+    required String groupId,
+    required String messageId,
+    required String question,
+    required List<String> options,
+  }) async {
+    final content = jsonEncode({'question': question, 'options': options});
+    await _col(groupId).doc(messageId).update({
+      'content': content,
+      'reactions': {},
+      'editedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   @override
