@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/event.dart';
@@ -10,17 +9,10 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../calendar/presentation/providers/events_provider.dart';
 import '../../../calendar/presentation/screens/event_form_screen.dart';
 import '../../../expenses/presentation/providers/expenses_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../notes/presentation/providers/notes_provider.dart';
 import '../../../notes/presentation/screens/note_editor_screen.dart';
 
-String _greeting() {
-  final h = DateTime.now().hour;
-  if (h < 12) return 'Bonjour';
-  if (h < 18) return 'Bon après-midi';
-  return 'Bonsoir';
-}
 
 bool _isToday(DateTime dt) {
   final now = DateTime.now();
@@ -61,8 +53,6 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final group = ref.watch(selectedGroupProvider);
-    final topPad = MediaQuery.of(context).padding.top;
     final currentUid = ref.watch(authStateProvider).asData?.value?.uid;
 
     final allEvents = ref.watch(eventsProvider).asData?.value ?? [];
@@ -95,9 +85,6 @@ class DashboardScreen extends ConsumerWidget {
         currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
     final pendingCount = allExpenses.where((e) => !e.settled).length;
 
-    // Événements aujourd'hui
-    final todayEvents = allEvents.where((e) => _isToday(e.startDate)).length;
-
     // Derniers messages (activité récente)
     final recentMessages = allMessages.take(3).toList();
 
@@ -106,155 +93,6 @@ class DashboardScreen extends ConsumerWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ── Header gradient ──────────────────────────────────────
-            Container(
-              padding: EdgeInsets.fromLTRB(24, topPad + 24, 24, 32),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x334F7CFF),
-                    blurRadius: 16,
-                    offset: Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      // Retour vers Mes espaces
-                      GestureDetector(
-                        onTap: () async {
-                          await ref
-                              .read(selectedGroupIdProvider.notifier)
-                              .select(null);
-                          if (context.mounted) context.go('/groups');
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Emoji + nom du groupe
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            width: 2,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            group?.emoji ?? '🏠',
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              group?.name ?? '',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              '${group?.memberIds.length ?? 0} membre${(group?.memberIds.length ?? 0) > 1 ? 's' : ''}',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Paramètres du groupe
-                      GestureDetector(
-                        onTap: () => context.push('/group-settings'),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.settings_outlined,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  // Carte de résumé
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.2)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${_greeting()} 👋',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          todayEvents == 0 && pendingCount == 0
-                              ? 'Aucun événement ni dépense en attente aujourd\'hui.'
-                              : [
-                                  if (todayEvents > 0)
-                                    '$todayEvents événement${todayEvents > 1 ? 's' : ''} aujourd\'hui',
-                                  if (pendingCount > 0)
-                                    '$pendingCount dépense${pendingCount > 1 ? 's' : ''} en attente',
-                                ].join(' • '),
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 15),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
             // ── Contenu ──────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),

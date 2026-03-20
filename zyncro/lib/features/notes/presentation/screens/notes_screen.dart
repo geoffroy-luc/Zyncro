@@ -58,7 +58,6 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final topPad = MediaQuery.of(context).padding.top;
     final notesAsync = ref.watch(notesProvider);
 
     return Scaffold(
@@ -100,23 +99,9 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
               SliverToBoxAdapter(
                 child: Container(
                   color: Colors.white,
-                  padding: EdgeInsets.fromLTRB(24, topPad + 16, 24, 20),
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Notes',
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
                       Container(
                         decoration: BoxDecoration(
                           color: const Color(0xFFF7F9FC),

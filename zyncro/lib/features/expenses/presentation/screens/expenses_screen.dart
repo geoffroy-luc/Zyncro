@@ -112,7 +112,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   @override
   Widget build(BuildContext context) {
-    final topPad = MediaQuery.of(context).padding.top;
     final expenses = ref.watch(expensesProvider).asData?.value ?? [];
     final balances = ref.watch(balancesProvider);
     final currentUid = ref.watch(authStateProvider).asData?.value?.uid;
@@ -145,59 +144,27 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           : null,
       body: Column(
         children: [
-          // ── Header gradient ──────────────────────────────────────
+          // ── Tab bar ──────────────────────────────────────────────
           Container(
-            padding: EdgeInsets.fromLTRB(24, topPad + 24, 24, 0),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFFFB86B), Color(0xFFF5A855)],
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: const Color(0xFFFFB86B),
+              indicatorWeight: 3,
+              dividerColor: AppColors.border,
+              labelColor: const Color(0xFFFFB86B),
+              unselectedLabelColor: AppColors.textSecondary,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w400,
+                fontSize: 14,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x33FFB86B),
-                  blurRadius: 16,
-                  offset: Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Dépenses',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TabBar(
-                  controller: _tabController,
-                  indicatorColor: Colors.white,
-                  indicatorWeight: 3,
-                  dividerColor: Colors.transparent,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white60,
-                  labelStyle: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14,
-                  ),
-                  tabs: const [
-                    Tab(text: 'Dépenses'),
-                    Tab(text: 'Équilibre'),
-                  ],
-                ),
+              tabs: const [
+                Tab(text: 'Dépenses'),
+                Tab(text: 'Équilibre'),
               ],
             ),
           ),

@@ -11,9 +11,9 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/message.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
 import '../../domain/repositories/i_messages_repository.dart';
 import '../providers/messages_provider.dart';
+import '../../../groups/presentation/providers/groups_provider.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -195,12 +195,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       height: 48,
                       decoration: BoxDecoration(
                         color: hasReacted
-                            ? const Color(0xFF4F7CFF).withValues(alpha: 0.15)
+                            ? const Color(0xFFE85D75).withValues(alpha: 0.15)
                             : const Color(0xFFF7F9FC),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: hasReacted
-                              ? const Color(0xFF4F7CFF)
+                              ? const Color(0xFFE85D75)
                               : AppColors.border,
                         ),
                       ),
@@ -536,9 +536,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final topPad = MediaQuery.of(context).padding.top;
     final bottomPad = MediaQuery.of(context).viewInsets.bottom;
-    final group = ref.watch(selectedGroupProvider);
     // .value renvoie le dernier UID connu même si le provider repasse
     // brièvement en AsyncLoading (ex: rebuild déclenché par messagesProvider)
     final currentUid = ref.watch(
@@ -556,70 +554,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       backgroundColor: const Color(0xFFF7F9FC),
       body: Column(
         children: [
-          // ── Header ──────────────────────────────────────────────────
-          Container(
-            color: Colors.white,
-            padding: EdgeInsets.fromLTRB(24, topPad + 12, 16, 16),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4F7CFF).withValues(alpha: 0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      group?.emoji ??
-                          (group?.name.substring(0, 2).toUpperCase() ?? '??'),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        group?.name ?? '',
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 17,
-                        ),
-                      ),
-                      Text(
-                        '${group?.memberIds.length ?? 0} membre${(group?.memberIds.length ?? 0) > 1 ? 's' : ''}',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: AppColors.border),
-
           // ── Messages ────────────────────────────────────────────────
           Expanded(
             child: messagesAsync.when(
@@ -714,7 +648,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     width: 3,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4F7CFF),
+                      color: const Color(0xFFE85D75),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -726,7 +660,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         Text(
                           _replyingTo!.senderName ?? '',
                           style: const TextStyle(
-                            color: Color(0xFF4F7CFF),
+                            color: Color(0xFFE85D75),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -824,12 +758,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                              colors: [Color(0xFFE85D75), Color(0xFFC94060)],
                             ),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF4F7CFF)
+                                color: const Color(0xFFE85D75)
                                     .withValues(alpha: 0.25),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
@@ -916,12 +850,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                          colors: [Color(0xFFE85D75), Color(0xFFC94060)],
                         ),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4F7CFF).withValues(alpha: 0.25),
+                            color: const Color(0xFFE85D75).withValues(alpha: 0.25),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
@@ -952,12 +886,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       gradient: const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                        colors: [Color(0xFFE85D75), Color(0xFFC94060)],
                       ),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF4F7CFF).withValues(alpha: 0.25),
+                          color: const Color(0xFFE85D75).withValues(alpha: 0.25),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -1131,7 +1065,7 @@ class _MessageBubble extends StatelessWidget {
 
   Color _avatarColor(String uid) {
     final colors = [
-      const Color(0xFF4F7CFF),
+      const Color(0xFFE85D75),
       const Color(0xFF2BB8A5),
       const Color(0xFFFFB86B),
       const Color(0xFFE85D75),
@@ -1233,7 +1167,7 @@ class _MessageBubble extends StatelessWidget {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                  colors: [Color(0xFFE85D75), Color(0xFFC94060)],
                 ),
                 borderRadius: radius,
                 boxShadow: const [
@@ -1395,12 +1329,12 @@ class _ReactionsRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
             color: isMine
-                ? const Color(0xFF4F7CFF).withValues(alpha: 0.15)
+                ? const Color(0xFFE85D75).withValues(alpha: 0.15)
                 : const Color(0xFFF0F2F5),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isMine
-                  ? const Color(0xFF4F7CFF).withValues(alpha: 0.4)
+                  ? const Color(0xFFE85D75).withValues(alpha: 0.4)
                   : AppColors.border,
             ),
           ),
@@ -1415,7 +1349,7 @@ class _ReactionsRow extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: isMine
-                      ? const Color(0xFF315FEA)
+                      ? const Color(0xFFC94060)
                       : AppColors.textSecondary,
                 ),
               ),
@@ -1454,7 +1388,7 @@ class _ReplyPreview extends StatelessWidget {
           left: BorderSide(
             color: isMe
                 ? Colors.white.withValues(alpha: 0.7)
-                : const Color(0xFF4F7CFF),
+                : const Color(0xFFE85D75),
             width: 3,
           ),
         ),
@@ -1470,7 +1404,7 @@ class _ReplyPreview extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: isMe
                     ? Colors.white.withValues(alpha: 0.9)
-                    : const Color(0xFF4F7CFF),
+                    : const Color(0xFFE85D75),
               ),
             ),
           Text(
@@ -1594,7 +1528,7 @@ class _SwipeToReplyState extends State<_SwipeToReply>
                   alignment: Alignment.center,
                   child: Icon(
                     Icons.reply_rounded,
-                    color: Color(0xFF4F7CFF),
+                    color: Color(0xFFE85D75),
                     size: 20,
                   ),
                 ),
@@ -1687,10 +1621,10 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
                 : 0.0;
 
             final fg =
-                widget.isMe ? Colors.white : const Color(0xFF4F7CFF);
+                widget.isMe ? Colors.white : const Color(0xFFE85D75);
             final fgFaded = widget.isMe
                 ? Colors.white.withValues(alpha: 0.35)
-                : const Color(0xFF4F7CFF).withValues(alpha: 0.25);
+                : const Color(0xFFE85D75).withValues(alpha: 0.25);
 
             return Row(
               mainAxisSize: MainAxisSize.min,
@@ -1715,7 +1649,7 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
                     decoration: BoxDecoration(
                       color: widget.isMe
                           ? Colors.white.withValues(alpha: 0.25)
-                          : const Color(0xFF4F7CFF).withValues(alpha: 0.1),
+                          : const Color(0xFFE85D75).withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: isLoading
@@ -1814,7 +1748,7 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
                               decoration: BoxDecoration(
                                 color: widget.isMe
                                     ? Colors.white.withValues(alpha: 0.25)
-                                    : const Color(0xFF4F7CFF)
+                                    : const Color(0xFFE85D75)
                                         .withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -1916,7 +1850,7 @@ class _PollCard extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                    colors: [Color(0xFFE85D75), Color(0xFFC94060)],
                   ),
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(15),
@@ -1992,12 +1926,12 @@ class _PollCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFF4F7CFF).withValues(alpha: 0.08)
+                              ? const Color(0xFFE85D75).withValues(alpha: 0.08)
                               : const Color(0xFFF7F9FC),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFF4F7CFF)
+                                ? const Color(0xFFE85D75)
                                 : AppColors.border,
                           ),
                         ),
@@ -2016,7 +1950,7 @@ class _PollCard extends StatelessWidget {
                                           : Icons.radio_button_unchecked),
                                   size: 15,
                                   color: isSelected
-                                      ? const Color(0xFF4F7CFF)
+                                      ? const Color(0xFFE85D75)
                                       : AppColors.textSecondary,
                                 ),
                                 const SizedBox(width: 8),
@@ -2049,8 +1983,8 @@ class _PollCard extends StatelessWidget {
                                   backgroundColor: Colors.grey.shade200,
                                   valueColor: AlwaysStoppedAnimation(
                                     isSelected
-                                        ? const Color(0xFF4F7CFF)
-                                        : const Color(0xFF4F7CFF)
+                                        ? const Color(0xFFE85D75)
+                                        : const Color(0xFFE85D75)
                                             .withValues(alpha: 0.35),
                                   ),
                                 ),
@@ -2164,7 +2098,7 @@ class _EditPollDialogState extends State<_EditPollDialog> {
     return AlertDialog(
       title: const Row(
         children: [
-          Icon(Icons.poll_outlined, color: Color(0xFF4F7CFF), size: 20),
+          Icon(Icons.poll_outlined, color: Color(0xFFE85D75), size: 20),
           SizedBox(width: 8),
           Text('Modifier le sondage'),
         ],
@@ -2234,7 +2168,7 @@ class _EditPollDialogState extends State<_EditPollDialog> {
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Ajouter une option'),
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF4F7CFF),
+                  foregroundColor: const Color(0xFFE85D75),
                   padding: EdgeInsets.zero,
                 ),
               ),
@@ -2249,7 +2183,7 @@ class _EditPollDialogState extends State<_EditPollDialog> {
                 'Les participants peuvent voter pour plusieurs options',
                 style: TextStyle(fontSize: 11),
               ),
-              activeThumbColor: const Color(0xFF4F7CFF),
+              activeThumbColor: const Color(0xFFE85D75),
               contentPadding: EdgeInsets.zero,
               dense: true,
             ),
@@ -2361,7 +2295,7 @@ class _CreatePollDialogState extends State<_CreatePollDialog> {
     return AlertDialog(
       title: const Row(
         children: [
-          Icon(Icons.poll_outlined, color: Color(0xFF4F7CFF), size: 20),
+          Icon(Icons.poll_outlined, color: Color(0xFFE85D75), size: 20),
           SizedBox(width: 8),
           Text('Créer un sondage'),
         ],
@@ -2431,7 +2365,7 @@ class _CreatePollDialogState extends State<_CreatePollDialog> {
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Ajouter une option'),
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF4F7CFF),
+                  foregroundColor: const Color(0xFFE85D75),
                   padding: EdgeInsets.zero,
                 ),
               ),
@@ -2446,7 +2380,7 @@ class _CreatePollDialogState extends State<_CreatePollDialog> {
                 'Les participants peuvent voter pour plusieurs options',
                 style: TextStyle(fontSize: 11),
               ),
-              activeThumbColor: const Color(0xFF4F7CFF),
+              activeThumbColor: const Color(0xFFE85D75),
               contentPadding: EdgeInsets.zero,
               dense: true,
             ),
