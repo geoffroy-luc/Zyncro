@@ -453,6 +453,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   if (v == null || v.trim().isEmpty) return 'Champ requis';
                   final p = _parseDouble(v);
                   if (p == null || p <= 0) return 'Montant invalide';
+                  if (p > 999999.99) return 'Montant trop élevé (max 999 999,99 €)';
                   return null;
                 },
               ),
