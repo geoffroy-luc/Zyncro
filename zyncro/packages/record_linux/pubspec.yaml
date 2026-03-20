@@ -1,0 +1,19 @@
+name: record_linux
+description: Stub record_linux compatible with record_platform_interface 1.5.0
+version: 0.8.0
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  record_platform_interface: ^1.5.0
+
+flutter:
+  plugin:
+    implements: record
+    platforms:
+      linux:
+        dartPluginClass: RecordLinux

@@ -45,12 +45,42 @@ abstract interface class IMessagesRepository {
     required String notifScreen,
   });
 
+  /// Envoie un clip audio dans le groupe.
+  Future<void> sendAudio({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required String filePath,
+    required int durationSeconds,
+  });
+
+  /// Envoie un sondage dans le groupe.
+  Future<void> sendPoll({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required String question,
+    required List<String> options,
+    bool multipleChoice = false,
+  });
+
+  /// Modifie un sondage existant (réinitialise les votes).
+  Future<void> editPoll({
+    required String groupId,
+    required String messageId,
+    required String question,
+    required List<String> options,
+    bool multipleChoice = false,
+  });
+
   /// Ajoute ou retire une réaction emoji sur un message.
+  /// Si [exclusive] est true, retire l'utilisateur de toutes les autres réactions.
   Future<void> toggleReaction({
     required String groupId,
     required String messageId,
     required String emoji,
     required String userId,
     required bool hasReacted,
+    bool exclusive = true,
   });
 }

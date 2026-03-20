@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +30,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final Set<String> _visibleTimestamps = {};
   Message? _replyingTo;
 
+  final _recorder = AudioRecorder();
+  bool _isRecording = false;
+  bool _isUploading = false;
+  Duration _recordingDuration = Duration.zero;
+  Timer? _recordingTimer;
+
   // Sauvegardés pour pouvoir les utiliser dans dispose() sans ref
   String? _currentGroupId;
   String? _currentUserId;
@@ -38,6 +48,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _onTextChanged() {
+    setState(() {}); // toggle mic ↔ send button
     final user = ref.read(authStateProvider).asData?.value;
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (user == null || groupId == null || _controller.text.isEmpty) return;
@@ -68,6 +79,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void dispose() {
     _typingTimer?.cancel();
+    _recordingTimer?.cancel();
+    _recorder.dispose();
     _clearTyping();
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
@@ -130,6 +143,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   static bool _isSameGroup(Message older, Message newer) {
     if (older.senderId == null || older.senderId != newer.senderId) return false;
     if (older.type == MessageType.system || newer.type == MessageType.system) {
+      return false;
+    }
+    if (older.type == MessageType.poll || newer.type == MessageType.poll) {
       return false;
     }
     return newer.timestamp.difference(older.timestamp).inMinutes < 3;
@@ -205,12 +221,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               title: const Text('Répondre'),
               onTap: () => Navigator.of(ctx).pop('reply'),
             ),
-            if (isMe) ...[
+            if (isMe &&
+                message.type != MessageType.poll &&
+                message.type != MessageType.audio)
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
                 title: const Text('Modifier'),
                 onTap: () => Navigator.of(ctx).pop('edit'),
               ),
+            if (isMe && message.type == MessageType.poll)
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('Modifier le sondage'),
+                onTap: () => Navigator.of(ctx).pop('edit_poll'),
+              ),
+            if (isMe)
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
                 title: const Text(
@@ -219,7 +244,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
                 onTap: () => Navigator.of(ctx).pop('delete'),
               ),
-            ],
           ],
         ),
       ),
@@ -246,6 +270,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
     if (action == 'edit') {
       await _editMessage(message);
+      return;
+    }
+    if (action == 'edit_poll') {
+      await _editPoll(message);
       return;
     }
     if (action == 'delete') {
@@ -279,6 +307,47 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Impossible de modifier le message.')),
+      );
+    }
+  }
+
+  Future<void> _editPoll(Message message) async {
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(message.content) as Map<String, dynamic>;
+    } catch (_) {
+      return;
+    }
+
+    final question = data['question'] as String? ?? '';
+    final options = List<String>.from(data['options'] as List? ?? []);
+    final multipleChoice = data['multipleChoice'] as bool? ?? false;
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (ctx) => _EditPollDialog(
+        question: question,
+        options: options,
+        multipleChoice: multipleChoice,
+      ),
+    );
+    if (result == null || !mounted) return;
+
+    try {
+      await ref.read(messagesRepositoryProvider).editPoll(
+            groupId: groupId,
+            messageId: message.id,
+            question: result['question'] as String,
+            options: List<String>.from(result['options'] as List),
+            multipleChoice: result['multipleChoice'] as bool? ?? false,
+          );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de modifier le sondage.')),
       );
     }
   }
@@ -317,6 +386,151 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Impossible de supprimer le message.')),
       );
+    }
+  }
+
+  Future<void> _votePoll(Message message, int optionIndex) async {
+    final currentUser = ref.read(authStateProvider).asData?.value;
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (currentUser == null || groupId == null) return;
+
+    final key = optionIndex.toString();
+    final hasVoted =
+        message.reactions[key]?.contains(currentUser.uid) == true;
+
+    bool multipleChoice = false;
+    try {
+      final data = jsonDecode(message.content) as Map<String, dynamic>;
+      multipleChoice = data['multipleChoice'] as bool? ?? false;
+    } catch (_) {}
+
+    await ref.read(messagesRepositoryProvider).toggleReaction(
+          groupId: groupId,
+          messageId: message.id,
+          emoji: key,
+          userId: currentUser.uid,
+          hasReacted: hasVoted,
+          exclusive: !multipleChoice,
+        );
+  }
+
+  Future<void> _showCreatePoll() async {
+    final user = ref.read(authStateProvider).asData?.value;
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (user == null || groupId == null) return;
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (ctx) => const _CreatePollDialog(),
+    );
+    if (result == null || !mounted) return;
+
+    await ref.read(messagesRepositoryProvider).sendPoll(
+          groupId: groupId,
+          senderId: user.uid,
+          senderName: user.displayName ?? user.email ?? 'Anonyme',
+          question: result['question'] as String,
+          options: List<String>.from(result['options'] as List),
+          multipleChoice: result['multipleChoice'] as bool? ?? false,
+        );
+
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  String _fmtDuration(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  Future<void> _startRecording() async {
+    if (!await _recorder.hasPermission()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Permission microphone refusée.'),
+          ),
+        );
+      }
+      return;
+    }
+    final dir = await getTemporaryDirectory();
+    final path =
+        '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    await _recorder.start(
+      const RecordConfig(encoder: AudioEncoder.aacLc),
+      path: path,
+    );
+    setState(() {
+      _isRecording = true;
+      _recordingDuration = Duration.zero;
+    });
+    _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() => _recordingDuration += const Duration(seconds: 1));
+      }
+    });
+  }
+
+  Future<void> _cancelRecording() async {
+    _recordingTimer?.cancel();
+    await _recorder.cancel();
+    setState(() {
+      _isRecording = false;
+      _recordingDuration = Duration.zero;
+    });
+  }
+
+  Future<void> _stopAndSendAudio() async {
+    _recordingTimer?.cancel();
+    final path = await _recorder.stop();
+    final duration = _recordingDuration;
+    setState(() {
+      _isRecording = false;
+      _isUploading = true;
+      _recordingDuration = Duration.zero;
+    });
+
+    if (path == null) {
+      if (mounted) setState(() => _isUploading = false);
+      return;
+    }
+
+    final user = ref.read(authStateProvider).asData?.value;
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (user == null || groupId == null) {
+      if (mounted) setState(() => _isUploading = false);
+      return;
+    }
+
+    try {
+      await ref.read(messagesRepositoryProvider).sendAudio(
+            groupId: groupId,
+            senderId: user.uid,
+            senderName: user.displayName ?? user.email ?? 'Anonyme',
+            filePath: path,
+            durationSeconds: duration.inSeconds,
+          );
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Audio error: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
     }
   }
 
@@ -441,13 +655,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     final isLastInGroup =
                         olderMsg == null || !_isSameGroup(olderMsg, msg);
 
+                    final isPoll = msg.type == MessageType.poll;
                     return Padding(
                       padding: EdgeInsets.only(
                         bottom: isFirstInGroup ? 10 : 2,
                       ),
                       child: _SwipeToReply(
                         isMe: isMe,
-                        onReply: msg.type != MessageType.system
+                        onReply: msg.type != MessageType.system && !isPoll
                             ? () => setState(() => _replyingTo = msg)
                             : null,
                         child: _MessageBubble(
@@ -459,14 +674,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           showSenderName: !isMe && isLastInGroup,
                           isFirstInGroup: isFirstInGroup,
                           isLastInGroup: isLastInGroup,
-                          onTap: msg.type != MessageType.system
+                          onTap: msg.type != MessageType.system && !isPoll
                               ? () => _toggleTimestamp(msg.id)
                               : null,
-                          onDoubleTap: msg.type != MessageType.system
+                          onDoubleTap: msg.type != MessageType.system && !isPoll
                               ? () => _onDoubleTap(msg)
                               : null,
                           onLongPress: msg.type != MessageType.system
                               ? () => _onMessageLongPress(msg, isMe)
+                              : null,
+                          onVote: isPoll
+                              ? (i) => _votePoll(msg, i)
                               : null,
                         ),
                       ),
@@ -538,14 +756,117 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
           // ── Input bar ───────────────────────────────────────────────
           Container(
-            padding: EdgeInsets.fromLTRB(24, 12, 24, 12 + bottomPad),
+            padding: EdgeInsets.fromLTRB(12, 12, 24, 12 + bottomPad),
             decoration: const BoxDecoration(
               color: Colors.white,
               border: Border(top: BorderSide(color: AppColors.border)),
             ),
-            child: Row(
+            child: _isRecording
+                // ── Recording mode ────────────────────────────────────
+                ? Row(
+                    children: [
+                      GestureDetector(
+                        onTap: _cancelRecording,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          margin: const EdgeInsets.only(right: 12, bottom: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF7F9FC),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.red,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _fmtDuration(_recordingDuration),
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Enregistrement…',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: _stopAndSendAudio,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF4F7CFF)
+                                    .withValues(alpha: 0.25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                // ── Normal mode ───────────────────────────────────────
+                : Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                GestureDetector(
+                  onTap: _showCreatePoll,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    margin: const EdgeInsets.only(right: 8, bottom: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F9FC),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: const Icon(
+                      Icons.poll_outlined,
+                      color: AppColors.textSecondary,
+                      size: 18,
+                    ),
+                  ),
+                ),
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -584,7 +905,45 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                GestureDetector(
+                // Mic quand champ vide, Send quand du texte
+                if (_controller.text.isEmpty && !_sending)
+                  GestureDetector(
+                    onTap: _startRecording,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4F7CFF).withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: _isUploading
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.mic,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                    ),
+                  )
+                else
+                  GestureDetector(
                   onTap: _send,
                   child: Container(
                     width: 44,
@@ -723,6 +1082,7 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onDoubleTap;
   final VoidCallback? onLongPress;
+  final void Function(int)? onVote;
 
   const _MessageBubble({
     required this.message,
@@ -736,7 +1096,38 @@ class _MessageBubble extends StatelessWidget {
     this.onTap,
     this.onDoubleTap,
     this.onLongPress,
+    this.onVote,
   });
+
+  Widget _messageContent(bool isMe) {
+    if (message.type == MessageType.audio) {
+      try {
+        final data = jsonDecode(message.content) as Map<String, dynamic>;
+        return _AudioPlayerWidget(
+          key: ValueKey(message.id),
+          url: data['url'] as String? ?? '',
+          durationSeconds: (data['duration'] as num?)?.toInt() ?? 0,
+          isMe: isMe,
+        );
+      } catch (_) {
+        return Text(
+          '🎵 Audio',
+          style: TextStyle(
+            color: isMe ? Colors.white : AppColors.textPrimary,
+            fontSize: 14,
+          ),
+        );
+      }
+    }
+    return Text(
+      message.content,
+      style: TextStyle(
+        color: isMe ? Colors.white : AppColors.textPrimary,
+        fontSize: 14,
+        height: 1.4,
+      ),
+    );
+  }
 
   Color _avatarColor(String uid) {
     final colors = [
@@ -761,6 +1152,16 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (message.type == MessageType.poll) {
+      return _PollCard(
+        message: message,
+        isMe: isMe,
+        currentUserId: currentUserId,
+        onVote: onVote,
+        onLongPress: onLongPress,
+      );
+    }
+
     if (message.type == MessageType.system) {
       return Center(
         child: Container(
@@ -853,14 +1254,7 @@ class _MessageBubble extends StatelessWidget {
                       content: message.replyToContent!,
                       isMe: true,
                     ),
-                  Text(
-                    message.content,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      height: 1.4,
-                    ),
-                  ),
+                  _messageContent(true),
                 ],
               ),
             ),
@@ -960,14 +1354,7 @@ class _MessageBubble extends StatelessWidget {
                             content: message.replyToContent!,
                             isMe: false,
                           ),
-                        Text(
-                          message.content,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 14,
-                            height: 1.4,
-                          ),
-                        ),
+                        _messageContent(false),
                       ],
                     ),
                   ),
@@ -1216,6 +1603,866 @@ class _SwipeToReplyState extends State<_SwipeToReply>
         ],
       ),
       ),
+    );
+  }
+}
+
+// ── Audio player widget ───────────────────────────────────────────────────────
+
+class _AudioPlayerWidget extends StatefulWidget {
+  final String url;
+  final int durationSeconds;
+  final bool isMe;
+
+  const _AudioPlayerWidget({
+    super.key,
+    required this.url,
+    required this.durationSeconds,
+    required this.isMe,
+  });
+
+  @override
+  State<_AudioPlayerWidget> createState() => _AudioPlayerWidgetState();
+}
+
+class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
+  late final AudioPlayer _player;
+  double _speed = 1.0;
+  double _lastTapDx = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _player = AudioPlayer();
+    if (widget.url.isNotEmpty) {
+      _player.setUrl(widget.url);
+    }
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  String _fmt(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  void _seekTo(double dx, double width) {
+    final total = _player.duration;
+    if (total == null || total.inMilliseconds == 0) return;
+    final ratio = (dx / width).clamp(0.0, 1.0);
+    _player.seek(Duration(milliseconds: (total.inMilliseconds * ratio).round()));
+  }
+
+  void _toggleSpeed() {
+    final next = _speed == 1.0 ? 2.0 : 1.0;
+    setState(() => _speed = next);
+    _player.setSpeed(next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fallback = Duration(seconds: widget.durationSeconds);
+
+    return StreamBuilder<PlayerState>(
+      stream: _player.playerStateStream,
+      builder: (context, stateSnap) {
+        final state = stateSnap.data;
+        final isPlaying = state?.playing ?? false;
+        final isLoading = state?.processingState == ProcessingState.loading ||
+            state?.processingState == ProcessingState.buffering;
+
+        return StreamBuilder<Duration>(
+          stream: _player.positionStream,
+          builder: (context, posSnap) {
+            final position = posSnap.data ?? Duration.zero;
+            final total = _player.duration ?? fallback;
+            final progress = total.inMilliseconds > 0
+                ? (position.inMilliseconds / total.inMilliseconds)
+                    .clamp(0.0, 1.0)
+                : 0.0;
+
+            final fg =
+                widget.isMe ? Colors.white : const Color(0xFF4F7CFF);
+            final fgFaded = widget.isMe
+                ? Colors.white.withValues(alpha: 0.35)
+                : const Color(0xFF4F7CFF).withValues(alpha: 0.25);
+
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: isLoading
+                      ? null
+                      : () async {
+                          if (isPlaying) {
+                            await _player.pause();
+                          } else {
+                            if (_player.processingState ==
+                                ProcessingState.completed) {
+                              await _player.seek(Duration.zero);
+                            }
+                            await _player.play();
+                          }
+                        },
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: widget.isMe
+                          ? Colors.white.withValues(alpha: 0.25)
+                          : const Color(0xFF4F7CFF).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: isLoading
+                        ? Padding(
+                            padding: const EdgeInsets.all(9),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: fg,
+                            ),
+                          )
+                        : Icon(
+                            isPlaying ? Icons.pause : Icons.play_arrow,
+                            size: 20,
+                            color: fg,
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            // onTap consomme l'événement → empêche l'affichage
+                            // du timestamp par le parent
+                            onTap: () =>
+                                _seekTo(_lastTapDx, constraints.maxWidth),
+                            onTapDown: (d) {
+                              _lastTapDx = d.localPosition.dx;
+                            },
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  minHeight: 6,
+                                  backgroundColor: fgFaded,
+                                  valueColor: AlwaysStoppedAnimation(fg),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            '${_fmt(position)} / ${_fmt(total)}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: widget.isMe
+                                  ? Colors.white.withValues(alpha: 0.8)
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          const Spacer(),
+                          // ── -5s ──
+                          GestureDetector(
+                            onTap: () {
+                              final t = position - const Duration(seconds: 5);
+                              _player.seek(
+                                  t < Duration.zero ? Duration.zero : t);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(Icons.replay_5,
+                                  size: 24, color: fg),
+                            ),
+                          ),
+                          // ── +5s ──
+                          GestureDetector(
+                            onTap: () {
+                              final t = position + const Duration(seconds: 5);
+                              _player.seek(t > total ? total : t);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(Icons.forward_5,
+                                  size: 24, color: fg),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          // ── vitesse ──
+                          GestureDetector(
+                            onTap: _toggleSpeed,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: widget.isMe
+                                    ? Colors.white.withValues(alpha: 0.25)
+                                    : const Color(0xFF4F7CFF)
+                                        .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                _speed == 1.0 ? '1×' : '2×',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: fg,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+// ── Poll card ─────────────────────────────────────────────────────────────────
+
+class _PollCard extends StatelessWidget {
+  final Message message;
+  final bool isMe;
+  final String? currentUserId;
+  final void Function(int)? onVote;
+  final VoidCallback? onLongPress;
+
+  const _PollCard({
+    required this.message,
+    required this.isMe,
+    this.currentUserId,
+    this.onVote,
+    this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<String, dynamic> data;
+    try {
+      data = jsonDecode(message.content) as Map<String, dynamic>;
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+
+    final question = data['question'] as String? ?? '';
+    final options = List<String>.from(data['options'] as List? ?? []);
+    final multipleChoice = data['multipleChoice'] as bool? ?? false;
+
+    final userVoteKeys = <String>{};
+    for (final key in message.reactions.keys) {
+      if (message.reactions[key]?.contains(currentUserId) == true) {
+        userVoteKeys.add(key);
+      }
+    }
+
+    int totalVotes = 0;
+    for (final voters in message.reactions.values) {
+      totalVotes += voters.length;
+    }
+
+    return GestureDetector(
+      onLongPress: onLongPress,
+      child: Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 320),
+          margin: EdgeInsets.only(left: isMe ? 40 : 0, right: isMe ? 0 : 40),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0A000000),
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // En-tête gradient
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                  ),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(15),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.poll_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            question,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (multipleChoice) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          'Choix multiples',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              // Options
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                child: Column(
+                  children: List.generate(options.length, (i) {
+                    final key = i.toString();
+                    final votes = message.reactions[key]?.length ?? 0;
+                    final pct =
+                        totalVotes > 0 ? votes / totalVotes : 0.0;
+                    final isSelected = userVoteKeys.contains(key);
+
+                    return GestureDetector(
+                      onTap: () => onVote?.call(i),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 9,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF4F7CFF).withValues(alpha: 0.08)
+                              : const Color(0xFFF7F9FC),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFF4F7CFF)
+                                : AppColors.border,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  multipleChoice
+                                      ? (isSelected
+                                          ? Icons.check_box
+                                          : Icons.check_box_outline_blank)
+                                      : (isSelected
+                                          ? Icons.radio_button_checked
+                                          : Icons.radio_button_unchecked),
+                                  size: 15,
+                                  color: isSelected
+                                      ? const Color(0xFF4F7CFF)
+                                      : AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    options[i],
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  '$votes',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (totalVotes > 0) ...[
+                              const SizedBox(height: 6),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: pct,
+                                  minHeight: 4,
+                                  backgroundColor: Colors.grey.shade200,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    isSelected
+                                        ? const Color(0xFF4F7CFF)
+                                        : const Color(0xFF4F7CFF)
+                                            .withValues(alpha: 0.35),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              // Pied de carte
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                child: Text(
+                  '$totalVotes vote${totalVotes != 1 ? 's' : ''}'
+                  '${message.senderName != null ? ' · ${isMe ? 'Votre sondage' : message.senderName!}' : ''}'
+                  '${message.editedAt != null ? ' · modifié' : ''}',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Edit poll dialog ──────────────────────────────────────────────────────────
+
+class _EditPollDialog extends StatefulWidget {
+  final String question;
+  final List<String> options;
+  final bool multipleChoice;
+
+  const _EditPollDialog({
+    required this.question,
+    required this.options,
+    this.multipleChoice = false,
+  });
+
+  @override
+  State<_EditPollDialog> createState() => _EditPollDialogState();
+}
+
+class _EditPollDialogState extends State<_EditPollDialog> {
+  late final TextEditingController _questionController;
+  late final List<TextEditingController> _optionControllers;
+  late bool _multipleChoice;
+
+  @override
+  void initState() {
+    super.initState();
+    _questionController = TextEditingController(text: widget.question);
+    _optionControllers =
+        widget.options.map((o) => TextEditingController(text: o)).toList();
+    while (_optionControllers.length < 2) {
+      _optionControllers.add(TextEditingController());
+    }
+    _multipleChoice = widget.multipleChoice;
+  }
+
+  @override
+  void dispose() {
+    _questionController.dispose();
+    for (final c in _optionControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  bool get _isValid {
+    if (_questionController.text.trim().isEmpty) return false;
+    return _optionControllers.where((c) => c.text.trim().isNotEmpty).length >=
+        2;
+  }
+
+  void _addOption() {
+    if (_optionControllers.length >= 5) return;
+    setState(() => _optionControllers.add(TextEditingController()));
+  }
+
+  void _removeOption(int index) {
+    if (_optionControllers.length <= 2) return;
+    final c = _optionControllers.removeAt(index);
+    c.dispose();
+    setState(() {});
+  }
+
+  void _submit() {
+    final question = _questionController.text.trim();
+    final options = _optionControllers
+        .map((c) => c.text.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (question.isEmpty || options.length < 2) return;
+    Navigator.of(context).pop({
+      'question': question,
+      'options': options,
+      'multipleChoice': _multipleChoice,
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.poll_outlined, color: Color(0xFF4F7CFF), size: 20),
+          SizedBox(width: 8),
+          Text('Modifier le sondage'),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _questionController,
+              autofocus: true,
+              maxLines: 2,
+              minLines: 1,
+              decoration: const InputDecoration(
+                labelText: 'Question',
+                hintText: 'Posez votre question…',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Options',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...List.generate(_optionControllers.length, (i) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _optionControllers[i],
+                        decoration: InputDecoration(
+                          hintText: 'Option ${i + 1}',
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          isDense: true,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                    if (_optionControllers.length > 2)
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        color: AppColors.textSecondary,
+                        onPressed: () => _removeOption(i),
+                        padding: const EdgeInsets.only(left: 4),
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
+                ),
+              );
+            }),
+            if (_optionControllers.length < 5)
+              TextButton.icon(
+                onPressed: _addOption,
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Ajouter une option'),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF4F7CFF),
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            SwitchListTile(
+              value: _multipleChoice,
+              onChanged: (v) => setState(() => _multipleChoice = v),
+              title: const Text(
+                'Réponses multiples',
+                style: TextStyle(fontSize: 14),
+              ),
+              subtitle: const Text(
+                'Les participants peuvent voter pour plusieurs options',
+                style: TextStyle(fontSize: 11),
+              ),
+              activeThumbColor: const Color(0xFF4F7CFF),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.orange.withValues(alpha: 0.3),
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_outlined,
+                    color: Colors.orange,
+                    size: 16,
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Les votes existants seront réinitialisés.',
+                      style: TextStyle(fontSize: 12, color: Colors.orange),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: _isValid ? _submit : null,
+          child: const Text('Modifier'),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Create poll dialog ────────────────────────────────────────────────────────
+
+class _CreatePollDialog extends StatefulWidget {
+  const _CreatePollDialog();
+
+  @override
+  State<_CreatePollDialog> createState() => _CreatePollDialogState();
+}
+
+class _CreatePollDialogState extends State<_CreatePollDialog> {
+  final _questionController = TextEditingController();
+  final List<TextEditingController> _optionControllers = [
+    TextEditingController(),
+    TextEditingController(),
+  ];
+  bool _multipleChoice = false;
+
+  @override
+  void dispose() {
+    _questionController.dispose();
+    for (final c in _optionControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  bool get _isValid {
+    if (_questionController.text.trim().isEmpty) return false;
+    final filled =
+        _optionControllers.where((c) => c.text.trim().isNotEmpty).length;
+    return filled >= 2;
+  }
+
+  void _addOption() {
+    if (_optionControllers.length >= 5) return;
+    setState(() => _optionControllers.add(TextEditingController()));
+  }
+
+  void _removeOption(int index) {
+    if (_optionControllers.length <= 2) return;
+    final c = _optionControllers.removeAt(index);
+    c.dispose();
+    setState(() {});
+  }
+
+  void _submit() {
+    final question = _questionController.text.trim();
+    final options = _optionControllers
+        .map((c) => c.text.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (question.isEmpty || options.length < 2) return;
+    Navigator.of(context).pop({
+      'question': question,
+      'options': options,
+      'multipleChoice': _multipleChoice,
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.poll_outlined, color: Color(0xFF4F7CFF), size: 20),
+          SizedBox(width: 8),
+          Text('Créer un sondage'),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _questionController,
+              autofocus: true,
+              maxLines: 2,
+              minLines: 1,
+              decoration: const InputDecoration(
+                labelText: 'Question',
+                hintText: 'Posez votre question…',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Options',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...List.generate(_optionControllers.length, (i) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _optionControllers[i],
+                        decoration: InputDecoration(
+                          hintText: 'Option ${i + 1}',
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          isDense: true,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                    if (_optionControllers.length > 2)
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        color: AppColors.textSecondary,
+                        onPressed: () => _removeOption(i),
+                        padding: const EdgeInsets.only(left: 4),
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
+                ),
+              );
+            }),
+            if (_optionControllers.length < 5)
+              TextButton.icon(
+                onPressed: _addOption,
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Ajouter une option'),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF4F7CFF),
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            SwitchListTile(
+              value: _multipleChoice,
+              onChanged: (v) => setState(() => _multipleChoice = v),
+              title: const Text(
+                'Réponses multiples',
+                style: TextStyle(fontSize: 14),
+              ),
+              subtitle: const Text(
+                'Les participants peuvent voter pour plusieurs options',
+                style: TextStyle(fontSize: 11),
+              ),
+              activeThumbColor: const Color(0xFF4F7CFF),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: _isValid ? _submit : null,
+          child: const Text('Créer'),
+        ),
+      ],
     );
   }
 }
