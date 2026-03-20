@@ -192,6 +192,18 @@ class GroupsRepository implements IGroupsRepository {
   }
 
   @override
+  Future<void> updateGroupInfo(
+    String groupId, {
+    required String name,
+    String? description,
+  }) async {
+    await _db.collection('groups').doc(groupId).update({
+      'name': name,
+      'description': description,
+    });
+  }
+
+  @override
   Future<String> generateInviteCode(String groupId) async {
     final code = Group.generateInviteCode();
     final batch = _db.batch();

@@ -391,8 +391,12 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
               controller: _nameController,
               decoration: const InputDecoration(labelText: "Nom de l'espace"),
               textCapitalization: TextCapitalization.sentences,
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Champ requis' : null,
+              maxLength: 30,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Champ requis';
+                if (v.trim().length > 30) return '30 caractères maximum';
+                return null;
+              },
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -400,6 +404,12 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
               decoration: const InputDecoration(
                 labelText: 'Description (optionnel)',
               ),
+              maxLength: 150,
+              maxLines: 2,
+              validator: (v) {
+                if (v != null && v.trim().length > 150) return '150 caractères maximum';
+                return null;
+              },
             ),
             const SizedBox(height: 24),
             ElevatedButton(
