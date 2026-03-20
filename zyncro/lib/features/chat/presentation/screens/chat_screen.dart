@@ -324,10 +324,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     final question = data['question'] as String? ?? '';
     final options = List<String>.from(data['options'] as List? ?? []);
+    final multipleChoice = data['multipleChoice'] as bool? ?? false;
 
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (ctx) => _EditPollDialog(question: question, options: options),
+      builder: (ctx) => _EditPollDialog(
+        question: question,
+        options: options,
+        multipleChoice: multipleChoice,
+      ),
     );
     if (result == null || !mounted) return;
 
@@ -337,6 +342,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             messageId: message.id,
             question: result['question'] as String,
             options: List<String>.from(result['options'] as List),
+            multipleChoice: result['multipleChoice'] as bool? ?? false,
           );
     } catch (_) {
       if (!mounted) return;
@@ -391,12 +397,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final key = optionIndex.toString();
     final hasVoted =
         message.reactions[key]?.contains(currentUser.uid) == true;
+
+    bool multipleChoice = false;
+    try {
+      final data = jsonDecode(message.content) as Map<String, dynamic>;
+      multipleChoice = data['multipleChoice'] as bool? ?? false;
+    } catch (_) {}
+
     await ref.read(messagesRepositoryProvider).toggleReaction(
           groupId: groupId,
           messageId: message.id,
           emoji: key,
           userId: currentUser.uid,
           hasReacted: hasVoted,
+          exclusive: !multipleChoice,
         );
   }
 
@@ -417,6 +431,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           senderName: user.displayName ?? user.email ?? 'Anonyme',
           question: result['question'] as String,
           options: List<String>.from(result['options'] as List),
+          multipleChoice: result['multipleChoice'] as bool? ?? false,
         );
 
     if (_scrollController.hasClients) {
@@ -1855,12 +1870,12 @@ class _PollCard extends StatelessWidget {
 
     final question = data['question'] as String? ?? '';
     final options = List<String>.from(data['options'] as List? ?? []);
+    final multipleChoice = data['multipleChoice'] as bool? ?? false;
 
-    String? userVoteKey;
+    final userVoteKeys = <String>{};
     for (final key in message.reactions.keys) {
       if (message.reactions[key]?.contains(currentUserId) == true) {
-        userVoteKey = key;
-        break;
+        userVoteKeys.add(key);
       }
     }
 
@@ -1907,26 +1922,52 @@ class _PollCard extends StatelessWidget {
                     top: Radius.circular(15),
                   ),
                 ),
-                child: Row(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.poll_rounded,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        question,
-                        style: const TextStyle(
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.poll_rounded,
                           color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          height: 1.3,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            question,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (multipleChoice) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          'Choix multiples',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -1939,7 +1980,7 @@ class _PollCard extends StatelessWidget {
                     final votes = message.reactions[key]?.length ?? 0;
                     final pct =
                         totalVotes > 0 ? votes / totalVotes : 0.0;
-                    final isSelected = userVoteKey == key;
+                    final isSelected = userVoteKeys.contains(key);
 
                     return GestureDetector(
                       onTap: () => onVote?.call(i),
@@ -1966,9 +2007,13 @@ class _PollCard extends StatelessWidget {
                             Row(
                               children: [
                                 Icon(
-                                  isSelected
-                                      ? Icons.radio_button_checked
-                                      : Icons.radio_button_unchecked,
+                                  multipleChoice
+                                      ? (isSelected
+                                          ? Icons.check_box
+                                          : Icons.check_box_outline_blank)
+                                      : (isSelected
+                                          ? Icons.radio_button_checked
+                                          : Icons.radio_button_unchecked),
                                   size: 15,
                                   color: isSelected
                                       ? const Color(0xFF4F7CFF)
@@ -2044,8 +2089,13 @@ class _PollCard extends StatelessWidget {
 class _EditPollDialog extends StatefulWidget {
   final String question;
   final List<String> options;
+  final bool multipleChoice;
 
-  const _EditPollDialog({required this.question, required this.options});
+  const _EditPollDialog({
+    required this.question,
+    required this.options,
+    this.multipleChoice = false,
+  });
 
   @override
   State<_EditPollDialog> createState() => _EditPollDialogState();
@@ -2054,6 +2104,7 @@ class _EditPollDialog extends StatefulWidget {
 class _EditPollDialogState extends State<_EditPollDialog> {
   late final TextEditingController _questionController;
   late final List<TextEditingController> _optionControllers;
+  late bool _multipleChoice;
 
   @override
   void initState() {
@@ -2064,6 +2115,7 @@ class _EditPollDialogState extends State<_EditPollDialog> {
     while (_optionControllers.length < 2) {
       _optionControllers.add(TextEditingController());
     }
+    _multipleChoice = widget.multipleChoice;
   }
 
   @override
@@ -2100,7 +2152,11 @@ class _EditPollDialogState extends State<_EditPollDialog> {
         .where((s) => s.isNotEmpty)
         .toList();
     if (question.isEmpty || options.length < 2) return;
-    Navigator.of(context).pop({'question': question, 'options': options});
+    Navigator.of(context).pop({
+      'question': question,
+      'options': options,
+      'multipleChoice': _multipleChoice,
+    });
   }
 
   @override
@@ -2182,7 +2238,22 @@ class _EditPollDialogState extends State<_EditPollDialog> {
                   padding: EdgeInsets.zero,
                 ),
               ),
-            const SizedBox(height: 8),
+            SwitchListTile(
+              value: _multipleChoice,
+              onChanged: (v) => setState(() => _multipleChoice = v),
+              title: const Text(
+                'Réponses multiples',
+                style: TextStyle(fontSize: 14),
+              ),
+              subtitle: const Text(
+                'Les participants peuvent voter pour plusieurs options',
+                style: TextStyle(fontSize: 11),
+              ),
+              activeThumbColor: const Color(0xFF4F7CFF),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
+            const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -2241,6 +2312,7 @@ class _CreatePollDialogState extends State<_CreatePollDialog> {
     TextEditingController(),
     TextEditingController(),
   ];
+  bool _multipleChoice = false;
 
   @override
   void dispose() {
@@ -2277,7 +2349,11 @@ class _CreatePollDialogState extends State<_CreatePollDialog> {
         .where((s) => s.isNotEmpty)
         .toList();
     if (question.isEmpty || options.length < 2) return;
-    Navigator.of(context).pop({'question': question, 'options': options});
+    Navigator.of(context).pop({
+      'question': question,
+      'options': options,
+      'multipleChoice': _multipleChoice,
+    });
   }
 
   @override
@@ -2359,6 +2435,21 @@ class _CreatePollDialogState extends State<_CreatePollDialog> {
                   padding: EdgeInsets.zero,
                 ),
               ),
+            SwitchListTile(
+              value: _multipleChoice,
+              onChanged: (v) => setState(() => _multipleChoice = v),
+              title: const Text(
+                'Réponses multiples',
+                style: TextStyle(fontSize: 14),
+              ),
+              subtitle: const Text(
+                'Les participants peuvent voter pour plusieurs options',
+                style: TextStyle(fontSize: 11),
+              ),
+              activeThumbColor: const Color(0xFF4F7CFF),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
           ],
         ),
       ),

@@ -192,9 +192,14 @@ class MessagesRepository implements IMessagesRepository {
     required String senderName,
     required String question,
     required List<String> options,
+    bool multipleChoice = false,
   }) async {
     final ref = _col(groupId).doc();
-    final content = jsonEncode({'question': question, 'options': options});
+    final content = jsonEncode({
+      'question': question,
+      'options': options,
+      'multipleChoice': multipleChoice,
+    });
     final message = Message(
       id: ref.id,
       groupId: groupId,
@@ -213,8 +218,13 @@ class MessagesRepository implements IMessagesRepository {
     required String messageId,
     required String question,
     required List<String> options,
+    bool multipleChoice = false,
   }) async {
-    final content = jsonEncode({'question': question, 'options': options});
+    final content = jsonEncode({
+      'question': question,
+      'options': options,
+      'multipleChoice': multipleChoice,
+    });
     await _col(groupId).doc(messageId).update({
       'content': content,
       'reactions': {},
@@ -229,6 +239,7 @@ class MessagesRepository implements IMessagesRepository {
     required String emoji,
     required String userId,
     required bool hasReacted,
+    bool exclusive = true,
   }) async {
     final ref = _col(groupId).doc(messageId);
     await _db.runTransaction((tx) async {
@@ -238,9 +249,11 @@ class MessagesRepository implements IMessagesRepository {
         (k, v) => MapEntry(k, List<String>.from(v as List)),
       );
 
-      // Retire l'utilisateur de toutes les réactions existantes
-      for (final key in reactions.keys) {
-        reactions[key]?.remove(userId);
+      // En mode exclusif (choix unique), retire l'utilisateur de toutes les autres réactions
+      if (exclusive) {
+        for (final key in reactions.keys) {
+          reactions[key]?.remove(userId);
+        }
       }
 
       // Ajoute la nouvelle réaction sauf si l'utilisateur la retirait

@@ -61,6 +61,7 @@ abstract interface class IMessagesRepository {
     required String senderName,
     required String question,
     required List<String> options,
+    bool multipleChoice = false,
   });
 
   /// Modifie un sondage existant (réinitialise les votes).
@@ -69,14 +70,17 @@ abstract interface class IMessagesRepository {
     required String messageId,
     required String question,
     required List<String> options,
+    bool multipleChoice = false,
   });
 
   /// Ajoute ou retire une réaction emoji sur un message.
+  /// Si [exclusive] est true, retire l'utilisateur de toutes les autres réactions.
   Future<void> toggleReaction({
     required String groupId,
     required String messageId,
     required String emoji,
     required String userId,
     required bool hasReacted,
+    bool exclusive = true,
   });
 }
