@@ -76,16 +76,17 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Erreur: $e')),
         data: (allNotes) {
+          final searchLower = _search.toLowerCase();
           final filtered = _search.isEmpty
               ? allNotes
               : allNotes
                     .where(
                       (n) =>
-                          n.title.toLowerCase().contains(
-                            _search.toLowerCase(),
-                          ) ||
-                          n.content.toLowerCase().contains(
-                            _search.toLowerCase(),
+                          n.title.toLowerCase().contains(searchLower) ||
+                          n.content.toLowerCase().contains(searchLower) ||
+                          n.checklist.any(
+                            (item) =>
+                                item.text.toLowerCase().contains(searchLower),
                           ),
                     )
                     .toList();
