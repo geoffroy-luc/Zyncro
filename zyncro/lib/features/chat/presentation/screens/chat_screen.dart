@@ -229,6 +229,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 title: const Text('Modifier'),
                 onTap: () => Navigator.of(ctx).pop('edit'),
               ),
+            if (isMe && message.type == MessageType.poll)
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('Modifier le sondage'),
+                onTap: () => Navigator.of(ctx).pop('edit_poll'),
+              ),
             if (isMe)
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
@@ -266,6 +272,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       await _editMessage(message);
       return;
     }
+    if (action == 'edit_poll') {
+      await _editPoll(message);
+      return;
+    }
     if (action == 'delete') {
       await _deleteMessage(message);
     }
@@ -297,6 +307,41 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Impossible de modifier le message.')),
+      );
+    }
+  }
+
+  Future<void> _editPoll(Message message) async {
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(message.content) as Map<String, dynamic>;
+    } catch (_) {
+      return;
+    }
+
+    final question = data['question'] as String? ?? '';
+    final options = List<String>.from(data['options'] as List? ?? []);
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (ctx) => _EditPollDialog(question: question, options: options),
+    );
+    if (result == null || !mounted) return;
+
+    try {
+      await ref.read(messagesRepositoryProvider).editPoll(
+            groupId: groupId,
+            messageId: message.id,
+            question: result['question'] as String,
+            options: List<String>.from(result['options'] as List),
+          );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de modifier le sondage.')),
       );
     }
   }
@@ -1978,7 +2023,8 @@ class _PollCard extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
                 child: Text(
                   '$totalVotes vote${totalVotes != 1 ? 's' : ''}'
-                  '${message.senderName != null ? ' · ${isMe ? 'Votre sondage' : message.senderName!}' : ''}',
+                  '${message.senderName != null ? ' · ${isMe ? 'Votre sondage' : message.senderName!}' : ''}'
+                  '${message.editedAt != null ? ' · modifié' : ''}',
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 11,
@@ -1989,6 +2035,193 @@ class _PollCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Edit poll dialog ──────────────────────────────────────────────────────────
+
+class _EditPollDialog extends StatefulWidget {
+  final String question;
+  final List<String> options;
+
+  const _EditPollDialog({required this.question, required this.options});
+
+  @override
+  State<_EditPollDialog> createState() => _EditPollDialogState();
+}
+
+class _EditPollDialogState extends State<_EditPollDialog> {
+  late final TextEditingController _questionController;
+  late final List<TextEditingController> _optionControllers;
+
+  @override
+  void initState() {
+    super.initState();
+    _questionController = TextEditingController(text: widget.question);
+    _optionControllers =
+        widget.options.map((o) => TextEditingController(text: o)).toList();
+    while (_optionControllers.length < 2) {
+      _optionControllers.add(TextEditingController());
+    }
+  }
+
+  @override
+  void dispose() {
+    _questionController.dispose();
+    for (final c in _optionControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  bool get _isValid {
+    if (_questionController.text.trim().isEmpty) return false;
+    return _optionControllers.where((c) => c.text.trim().isNotEmpty).length >=
+        2;
+  }
+
+  void _addOption() {
+    if (_optionControllers.length >= 5) return;
+    setState(() => _optionControllers.add(TextEditingController()));
+  }
+
+  void _removeOption(int index) {
+    if (_optionControllers.length <= 2) return;
+    final c = _optionControllers.removeAt(index);
+    c.dispose();
+    setState(() {});
+  }
+
+  void _submit() {
+    final question = _questionController.text.trim();
+    final options = _optionControllers
+        .map((c) => c.text.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (question.isEmpty || options.length < 2) return;
+    Navigator.of(context).pop({'question': question, 'options': options});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.poll_outlined, color: Color(0xFF4F7CFF), size: 20),
+          SizedBox(width: 8),
+          Text('Modifier le sondage'),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _questionController,
+              autofocus: true,
+              maxLines: 2,
+              minLines: 1,
+              decoration: const InputDecoration(
+                labelText: 'Question',
+                hintText: 'Posez votre question…',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Options',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...List.generate(_optionControllers.length, (i) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _optionControllers[i],
+                        decoration: InputDecoration(
+                          hintText: 'Option ${i + 1}',
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          isDense: true,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                    if (_optionControllers.length > 2)
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        color: AppColors.textSecondary,
+                        onPressed: () => _removeOption(i),
+                        padding: const EdgeInsets.only(left: 4),
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
+                ),
+              );
+            }),
+            if (_optionControllers.length < 5)
+              TextButton.icon(
+                onPressed: _addOption,
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Ajouter une option'),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF4F7CFF),
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.orange.withValues(alpha: 0.3),
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_outlined,
+                    color: Colors.orange,
+                    size: 16,
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Les votes existants seront réinitialisés.',
+                      style: TextStyle(fontSize: 12, color: Colors.orange),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: _isValid ? _submit : null,
+          child: const Text('Modifier'),
+        ),
+      ],
     );
   }
 }

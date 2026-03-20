@@ -63,6 +63,14 @@ abstract interface class IMessagesRepository {
     required List<String> options,
   });
 
+  /// Modifie un sondage existant (réinitialise les votes).
+  Future<void> editPoll({
+    required String groupId,
+    required String messageId,
+    required String question,
+    required List<String> options,
+  });
+
   /// Ajoute ou retire une réaction emoji sur un message.
   Future<void> toggleReaction({
     required String groupId,

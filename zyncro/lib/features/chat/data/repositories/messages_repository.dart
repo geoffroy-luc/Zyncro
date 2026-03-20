@@ -208,6 +208,21 @@ class MessagesRepository implements IMessagesRepository {
   }
 
   @override
+  Future<void> editPoll({
+    required String groupId,
+    required String messageId,
+    required String question,
+    required List<String> options,
+  }) async {
+    final content = jsonEncode({'question': question, 'options': options});
+    await _col(groupId).doc(messageId).update({
+      'content': content,
+      'reactions': {},
+      'editedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  @override
   Future<void> toggleReaction({
     required String groupId,
     required String messageId,
