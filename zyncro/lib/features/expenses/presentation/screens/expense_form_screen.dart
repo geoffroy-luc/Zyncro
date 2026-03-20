@@ -424,8 +424,12 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   prefixIcon: Icon(Icons.receipt_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Champ requis' : null,
+                maxLength: 50,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Champ requis';
+                  if (v.trim().length > 50) return '50 caractères maximum';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
 
