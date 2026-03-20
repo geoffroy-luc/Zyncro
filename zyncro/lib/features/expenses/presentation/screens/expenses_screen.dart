@@ -277,6 +277,10 @@ class _DepensesTab extends ConsumerWidget {
                           builder: (_) => const ExpenseFormScreen(),
                         ),
                       ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFB86B),
+                        foregroundColor: Colors.white,
+                      ),
                       icon: const Icon(Icons.add),
                       label: const Text('Ajouter'),
                     ),

@@ -29,6 +29,76 @@ class GroupSettingsScreen extends ConsumerStatefulWidget {
 class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
   bool _generating = false;
 
+  Future<void> _editGroupInfo(BuildContext context, String groupId, String currentName, String? currentDescription) async {
+    final nameController = TextEditingController(text: currentName);
+    final descController = TextEditingController(text: currentDescription ?? '');
+    final formKey = GlobalKey<FormState>();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Modifier le groupe'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Nom'),
+                maxLength: 30,
+                textCapitalization: TextCapitalization.sentences,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Champ requis';
+                  if (v.trim().length > 30) return '30 caractères maximum';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: descController,
+                decoration: const InputDecoration(labelText: 'Description (optionnel)'),
+                textCapitalization: TextCapitalization.sentences,
+                maxLength: 150,
+                maxLines: 2,
+                validator: (v) {
+                  if (v != null && v.trim().length > 150) return '150 caractères maximum';
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) Navigator.pop(context, true);
+            },
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(groupsRepositoryProvider).updateGroupInfo(
+        groupId,
+        name: nameController.text.trim(),
+        description: descController.text.trim().isEmpty ? null : descController.text.trim(),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+      }
+    }
+  }
+
   Future<void> _generateCode(String groupId) async {
     setState(() => _generating = true);
     try {
@@ -114,6 +184,17 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                         ],
                       ),
                     ),
+                    if (isOwner)
+                      IconButton(
+                        onPressed: () => _editGroupInfo(
+                          context,
+                          group.id,
+                          group.name,
+                          group.description,
+                        ),
+                        icon: const Icon(Icons.edit_outlined, size: 20),
+                        color: AppColors.textSecondary,
+                      ),
                   ],
                 ),
               ),

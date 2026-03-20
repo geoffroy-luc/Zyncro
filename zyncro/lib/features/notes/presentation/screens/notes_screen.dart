@@ -168,6 +168,10 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
                           onPressed: () => _openEditor(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2BB8A5),
+                            foregroundColor: Colors.white,
+                          ),
                           icon: const Icon(Icons.add),
                           label: const Text('Créer une note'),
                         ),

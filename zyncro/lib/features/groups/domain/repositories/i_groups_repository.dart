@@ -18,4 +18,5 @@ abstract interface class IGroupsRepository {
   Future<void> transferOwnership(String groupId, String currentOwnerId, String newOwnerId);
   Future<void> deleteGroup(String groupId, String? inviteCode);
   Future<String> generateInviteCode(String groupId);
+  Future<void> updateGroupInfo(String groupId, {required String name, String? description});
 }
