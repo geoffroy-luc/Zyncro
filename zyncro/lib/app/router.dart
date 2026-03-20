@@ -116,7 +116,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class _AppShell extends StatelessWidget {
+class _AppShell extends ConsumerWidget {
   final StatefulNavigationShell shell;
 
   const _AppShell({required this.shell});
@@ -137,10 +137,140 @@ class _AppShell extends StatelessWidget {
     ),
   ];
 
+  static const _tabGradients = [
+    [Color(0xFF9B59B6), Color(0xFF7D3C98)], // Accueil - violet
+    [Color(0xFF4F7CFF), Color(0xFF315FEA)], // Calendrier - bleu
+    [Color(0xFF2BB8A5), Color(0xFF1A9B88)], // Notes - vert
+    [Color(0xFFFFB86B), Color(0xFFF5A855)], // Dépenses - orange
+    [Color(0xFFE85D75), Color(0xFFC94060)], // Chat - rose
+  ];
+
+  static const _tabTitles = [
+    'Accueil',
+    'Calendrier',
+    'Notes',
+    'Dépenses',
+    'Chat',
+  ];
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final group = ref.watch(selectedGroupProvider);
+    final topPad = MediaQuery.of(context).padding.top;
+    final idx = shell.currentIndex;
+    final gradientColors = _tabGradients[idx];
+    final tabTitle = _tabTitles[idx];
+
     return Scaffold(
-      body: shell,
+      backgroundColor: const Color(0xFFF7F9FC),
+      body: Column(
+        children: [
+          // ── Top bar gradient ──────────────────────────────────────
+          Container(
+            padding: EdgeInsets.fromLTRB(24, topPad + 16, 24, 20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: gradientColors,
+              ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
+              ),
+            ),
+              child: Row(
+              children: [
+                // Retour vers Mes espaces
+                GestureDetector(
+                  onTap: () async {
+                    await ref
+                        .read(selectedGroupIdProvider.notifier)
+                        .select(null);
+                    if (context.mounted) context.go('/groups');
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Emoji du groupe
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      group?.emoji ?? '🏠',
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Nom + titre onglet
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        group?.name ?? '',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        tabTitle,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Paramètres
+                GestureDetector(
+                  onTap: () => context.push('/group-settings'),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.settings_outlined,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            ),
+          Expanded(child: shell),
+        ],
+      ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
