@@ -15,12 +15,6 @@ import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../notes/presentation/providers/notes_provider.dart';
 import '../../../notes/presentation/screens/note_editor_screen.dart';
 
-String _greeting() {
-  final h = DateTime.now().hour;
-  if (h < 12) return 'Bonjour';
-  if (h < 18) return 'Bon après-midi';
-  return 'Bonsoir';
-}
 
 bool _isToday(DateTime dt) {
   final now = DateTime.now();
@@ -94,9 +88,6 @@ class DashboardScreen extends ConsumerWidget {
     final myBalance =
         currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
     final pendingCount = allExpenses.where((e) => !e.settled).length;
-
-    // Événements aujourd'hui
-    final todayEvents = allEvents.where((e) => _isToday(e.startDate)).length;
 
     // Derniers messages (activité récente)
     final recentMessages = allMessages.take(3).toList();
@@ -215,43 +206,7 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  // Carte de résumé
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.2)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${_greeting()} 👋',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          todayEvents == 0 && pendingCount == 0
-                              ? 'Aucun événement ni dépense en attente aujourd\'hui.'
-                              : [
-                                  if (todayEvents > 0)
-                                    '$todayEvents événement${todayEvents > 1 ? 's' : ''} aujourd\'hui',
-                                  if (pendingCount > 0)
-                                    '$pendingCount dépense${pendingCount > 1 ? 's' : ''} en attente',
-                                ].join(' • '),
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 15),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
               ),
             ),
 
