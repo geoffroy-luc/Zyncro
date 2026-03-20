@@ -1044,6 +1044,7 @@ class _MessageBubble extends StatelessWidget {
       try {
         final data = jsonDecode(message.content) as Map<String, dynamic>;
         return _AudioPlayerWidget(
+          key: ValueKey(message.id),
           url: data['url'] as String? ?? '',
           durationSeconds: (data['duration'] as num?)?.toInt() ?? 0,
           isMe: isMe,
@@ -1554,6 +1555,7 @@ class _AudioPlayerWidget extends StatefulWidget {
   final bool isMe;
 
   const _AudioPlayerWidget({
+    super.key,
     required this.url,
     required this.durationSeconds,
     required this.isMe,
@@ -1565,6 +1567,8 @@ class _AudioPlayerWidget extends StatefulWidget {
 
 class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
   late final AudioPlayer _player;
+  double _speed = 1.0;
+  double _lastTapDx = 0;
 
   @override
   void initState() {
@@ -1585,6 +1589,19 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$m:$s';
+  }
+
+  void _seekTo(double dx, double width) {
+    final total = _player.duration;
+    if (total == null || total.inMilliseconds == 0) return;
+    final ratio = (dx / width).clamp(0.0, 1.0);
+    _player.seek(Duration(milliseconds: (total.inMilliseconds * ratio).round()));
+  }
+
+  void _toggleSpeed() {
+    final next = _speed == 1.0 ? 2.0 : 1.0;
+    setState(() => _speed = next);
+    _player.setSpeed(next);
   }
 
   @override
@@ -1662,24 +1679,96 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 3,
-                          backgroundColor: fgFaded,
-                          valueColor: AlwaysStoppedAnimation(fg),
-                        ),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            // onTap consomme l'événement → empêche l'affichage
+                            // du timestamp par le parent
+                            onTap: () =>
+                                _seekTo(_lastTapDx, constraints.maxWidth),
+                            onTapDown: (d) {
+                              _lastTapDx = d.localPosition.dx;
+                            },
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  minHeight: 6,
+                                  backgroundColor: fgFaded,
+                                  valueColor: AlwaysStoppedAnimation(fg),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${_fmt(position)} / ${_fmt(total)}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: widget.isMe
-                              ? Colors.white.withValues(alpha: 0.8)
-                              : AppColors.textSecondary,
-                        ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            '${_fmt(position)} / ${_fmt(total)}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: widget.isMe
+                                  ? Colors.white.withValues(alpha: 0.8)
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          const Spacer(),
+                          // ── -5s ──
+                          GestureDetector(
+                            onTap: () {
+                              final t = position - const Duration(seconds: 5);
+                              _player.seek(
+                                  t < Duration.zero ? Duration.zero : t);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(Icons.replay_5,
+                                  size: 24, color: fg),
+                            ),
+                          ),
+                          // ── +5s ──
+                          GestureDetector(
+                            onTap: () {
+                              final t = position + const Duration(seconds: 5);
+                              _player.seek(t > total ? total : t);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(Icons.forward_5,
+                                  size: 24, color: fg),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          // ── vitesse ──
+                          GestureDetector(
+                            onTap: _toggleSpeed,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: widget.isMe
+                                    ? Colors.white.withValues(alpha: 0.25)
+                                    : const Color(0xFF4F7CFF)
+                                        .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                _speed == 1.0 ? '1×' : '2×',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: fg,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

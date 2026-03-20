@@ -160,11 +160,16 @@ class MessagesRepository implements IMessagesRepository {
     final ref = _col(groupId).doc();
     final storageRef = FirebaseStorage.instance
         .ref('audio/$groupId/${ref.id}.m4a');
-    final bytes = await File(filePath).readAsBytes();
-    await storageRef.putData(
-      bytes,
+    final snapshot = await storageRef.putFile(
+      File(filePath),
       SettableMetadata(contentType: 'audio/m4a'),
     );
+    if (snapshot.state != TaskState.success) {
+      throw FirebaseException(
+        plugin: 'firebase_storage',
+        message: 'Upload failed with state: ${snapshot.state}',
+      );
+    }
     final url = await storageRef.getDownloadURL();
 
     final content = jsonEncode({'url': url, 'duration': durationSeconds});
