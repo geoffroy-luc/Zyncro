@@ -123,8 +123,15 @@ export const onNewMessage = onDocumentCreated(
 
     if (tokens.length === 0) return;
 
-    const content: string = message.content ?? "";
-    const preview = content.length > 80 ? content.substring(0, 80) + "…" : content;
+    let preview: string;
+    if (message.type === "audio") {
+      preview = "a envoyé un message vocal 🎤";
+    } else if (message.type === "poll") {
+      preview = "a créé un sondage 📊";
+    } else {
+      const content: string = message.content ?? "";
+      preview = content.length > 80 ? content.substring(0, 80) + "…" : content;
+    }
 
     await sendNotif(
       tokens,
