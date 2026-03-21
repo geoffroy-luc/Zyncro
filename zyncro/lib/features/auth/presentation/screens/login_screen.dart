@@ -56,6 +56,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _signInWithApple() async {
+    _startLoading(_LoadingType.apple);
+    try {
+      await ref.read(authRepositoryProvider).signInWithApple();
+    } on FirebaseAuthException catch (e) {
+      if (e.code != 'sign-in-cancelled') _setError('Connexion Apple échouée.');
+    } catch (_) {
+      _setError('Connexion Apple échouée.');
+    } finally {
+      _stopLoading();
+    }
+  }
+
   Future<void> _resetPassword() async {
     final email = _emailController.text.trim();
     if (email.isEmpty || !email.contains('@')) {
@@ -267,6 +280,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 12),
 
+              // ── Apple ──────────────────────────────────────────────
+              OutlinedButton.icon(
+                onPressed: _loading ? null : _signInWithApple,
+                icon: _loadingType == _LoadingType.apple
+                    ? const _Spinner(color: AppColors.primary)
+                    : const _AppleIcon(),
+                label: const Text('Continuer avec Apple'),
+              ),
+              const SizedBox(height: 12),
+
               // ── Anonyme ───────────────────────────────────────────
               OutlinedButton.icon(
                 onPressed: _loading ? null : _showGuestPseudoSheet,
@@ -294,7 +317,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-enum _LoadingType { email, google, anonymous }
+enum _LoadingType { email, google, apple, anonymous }
 
 class _Spinner extends StatelessWidget {
   final Color color;
@@ -401,6 +424,19 @@ class _GuestPseudoSheetState extends State<_GuestPseudoSheet> {
     if (_formKey.currentState!.validate()) {
       widget.onConfirm(_controller.text.trim());
     }
+  }
+}
+
+class _AppleIcon extends StatelessWidget {
+  const _AppleIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 20,
+      height: 20,
+      child: Icon(Icons.apple, size: 20, color: Colors.black),
+    );
   }
 }
 

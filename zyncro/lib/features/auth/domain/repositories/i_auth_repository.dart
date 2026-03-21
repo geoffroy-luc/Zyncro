@@ -10,6 +10,7 @@ abstract interface class IAuthRepository {
     String displayName,
   );
   Future<User> signInWithGoogle();
+  Future<User> signInWithApple();
   Future<User> signInAnonymously(String displayName);
   Future<void> signOut();
   Future<void> resetPassword(String email);
