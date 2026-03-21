@@ -1563,18 +1563,28 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
   late final AudioPlayer _player;
   double _speed = 1.0;
   double _lastTapDx = 0;
+  bool _urlLoaded = false;
+  bool _isDisposed = false;
 
   @override
   void initState() {
     super.initState();
     _player = AudioPlayer();
-    if (widget.url.isNotEmpty) {
-      _player.setUrl(widget.url);
+  }
+
+  Future<void> _ensureUrlLoaded() async {
+    if (_isDisposed || _urlLoaded || widget.url.isEmpty) return;
+    _urlLoaded = true;
+    try {
+      await _player.setUrl(widget.url);
+    } catch (_) {
+      if (!_isDisposed) _urlLoaded = false;
     }
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
     _player.dispose();
     super.dispose();
   }
@@ -1636,10 +1646,13 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
                           if (isPlaying) {
                             await _player.pause();
                           } else {
+                            await _ensureUrlLoaded();
+                            if (!mounted) return;
                             if (_player.processingState ==
                                 ProcessingState.completed) {
                               await _player.seek(Duration.zero);
                             }
+                            if (!mounted) return;
                             await _player.play();
                           }
                         },
