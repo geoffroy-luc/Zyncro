@@ -1,4 +1,5 @@
 import '../../../../shared/models/event.dart';
+import '../../../../shared/models/recurrence_rule.dart';
 
 abstract interface class IEventsRepository {
   Stream<List<Event>> watchEvents(String groupId);
@@ -11,6 +12,7 @@ abstract interface class IEventsRepository {
     String? location,
     required String userId,
     String? color,
+    RecurrenceRule? recurrence,
   });
   Future<void> updateEvent(String groupId, Event event);
   Future<void> deleteEvent(String groupId, String eventId);

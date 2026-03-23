@@ -128,7 +128,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final eventsAsync = ref.watch(eventsProvider);
+    final eventsAsync = ref.watch(expandedEventsProvider);
     final allEvents = eventsAsync.asData?.value ?? [];
     final monthEvents = _eventsForMonth(allEvents);
     final today = DateTime.now();
@@ -533,12 +533,24 @@ class _EventCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(event.title,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      )),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(event.title,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            )),
+                      ),
+                      if (event.recurrence != null)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Icon(Icons.repeat,
+                              size: 14, color: AppColors.textSecondary),
+                        ),
+                    ],
+                  ),
                   const SizedBox(height: 6),
                   Row(children: [
                     const Icon(Icons.access_time,
@@ -627,6 +639,12 @@ class _AgendaEventCard extends ConsumerWidget {
                         fontSize: 14,
                       )),
                 ),
+                if (event.recurrence != null)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 6),
+                    child: Icon(Icons.repeat,
+                        size: 14, color: AppColors.textSecondary),
+                  ),
                 const Icon(Icons.edit_outlined,
                     size: 16, color: AppColors.textSecondary),
               ],
