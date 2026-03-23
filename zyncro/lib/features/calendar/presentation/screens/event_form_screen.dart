@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/reminder_service.dart';
 import '../../../../shared/models/event.dart';
+import '../../../../shared/models/recurrence_rule.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
@@ -30,6 +33,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   TimeOfDay? _endTime;
   bool _saving = false;
   String? _selectedColor;
+  int? _reminderMinutes; // null = aucun rappel
+  RecurrenceRule? _recurrence;
 
   static const _colorPalette = [
     '#4F7CFF',
@@ -61,11 +66,18 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         _endDate = _startDate;
         _endTime = TimeOfDay(hour: _startTime.hour + 1, minute: _startTime.minute);
       }
+      _loadReminder(e.id);
+      _recurrence = e.recurrence;
     } else {
       _startDate = widget.initialDate ?? DateTime.now();
       _endDate = _startDate;
       _endTime = TimeOfDay(hour: _startTime.hour + 1, minute: _startTime.minute);
     }
+  }
+
+  Future<void> _loadReminder(String eventId) async {
+    final minutes = await ReminderService.getReminderMinutes(eventId);
+    if (mounted) setState(() => _reminderMinutes = minutes);
   }
 
   @override
@@ -139,6 +151,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       if (groupId == null) return;
       try {
         await ref.read(eventsRepositoryProvider).deleteEvent(groupId, widget.event!.id);
+        await ReminderService.cancelReminder(widget.event!.id);
         final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
         if (user != null) {
           ref.read(messagesRepositoryProvider).sendSystemMessage(
@@ -192,20 +205,21 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     try {
       final isCreating = widget.event == null;
       if (!isCreating) {
-        await repo.updateEvent(
-          groupId,
-          widget.event!.copyWith(
-            title: title,
-            description: description,
-            startDate: startDt,
-            endDate: endDt,
-            location: location,
-            color: _selectedColor,
-            updatedBy: user.uid,
-          ),
+        final updated = widget.event!.copyWith(
+          title: title,
+          description: description,
+          startDate: startDt,
+          endDate: endDt,
+          location: location,
+          color: _selectedColor,
+          updatedBy: user.uid,
+          recurrence: _recurrence,
+          clearRecurrence: _recurrence == null,
         );
+        await repo.updateEvent(groupId, updated);
+        await ReminderService.scheduleReminder(updated, _reminderMinutes);
       } else {
-        await repo.createEvent(
+        final created = await repo.createEvent(
           groupId: groupId,
           title: title,
           description: description,
@@ -214,7 +228,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           location: location,
           userId: user.uid,
           color: _selectedColor,
+          recurrence: _recurrence,
         );
+        await ReminderService.scheduleReminder(created, _reminderMinutes);
       }
       final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
       final action = isCreating ? 'a créé un événement' : 'a modifié l\'événement';
@@ -233,6 +249,444 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  // ── Récurrence ────────────────────────────────────────────────────────────
+
+  Future<void> _showRecurrencePicker() async {
+    RecurrenceFrequency? selectedFreq = _recurrence?.frequency;
+    RecurrenceEndType endType = _recurrence?.endType ?? RecurrenceEndType.forever;
+    int countValue = _recurrence?.count ?? 4;
+    final countController = TextEditingController(text: '$countValue');
+    DateTime untilDate = _recurrence?.until ?? _startDate.add(const Duration(days: 30));
+    final untilController = TextEditingController(
+      text: DateFormat('d/M/yyyy').format(untilDate),
+    );
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSt) {
+          final frequencies = [
+            (RecurrenceFrequency.daily, 'Tous les jours'),
+            (RecurrenceFrequency.weekly, 'Toutes les semaines'),
+            (RecurrenceFrequency.monthly, 'Tous les mois'),
+            (RecurrenceFrequency.yearly, 'Tous les ans'),
+          ];
+
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                    child: Text(
+                      'Répétition',
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  // Aucune
+                  ListTile(
+                    leading: Icon(
+                      Icons.block_outlined,
+                      color: selectedFreq == null
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                    ),
+                    title: const Text('Aucune'),
+                    trailing: selectedFreq == null
+                        ? const Icon(Icons.check, color: AppColors.primary)
+                        : null,
+                    onTap: () {
+                      setSt(() => selectedFreq = null);
+                    },
+                  ),
+                  // Fréquences
+                  ...frequencies.map((f) {
+                    final (freq, label) = f;
+                    final isSelected = selectedFreq == freq;
+                    return ListTile(
+                      leading: Icon(
+                        Icons.repeat,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                      ),
+                      title: Text(label),
+                      trailing: isSelected
+                          ? const Icon(Icons.check, color: AppColors.primary)
+                          : null,
+                      onTap: () => setSt(() => selectedFreq = freq),
+                    );
+                  }),
+
+                  // Fin de récurrence (visible seulement si fréquence choisie)
+                  if (selectedFreq != null) ...[
+                    const Divider(height: 24),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
+                      child: Text(
+                        'Fin de la répétition',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    // Toujours
+                    RadioListTile<RecurrenceEndType>(
+                      value: RecurrenceEndType.forever,
+                      groupValue: endType,
+                      onChanged: (v) => setSt(() => endType = v!),
+                      title: const Text('Toujours'),
+                      activeColor: AppColors.primary,
+                    ),
+                    // Nombre de fois
+                    RadioListTile<RecurrenceEndType>(
+                      value: RecurrenceEndType.count,
+                      groupValue: endType,
+                      onChanged: (v) => setSt(() => endType = v!),
+                      activeColor: AppColors.primary,
+                      title: endType == RecurrenceEndType.count
+                          ? Row(
+                              children: [
+                                const Text('Nombre de fois :'),
+                                const SizedBox(width: 12),
+                                SizedBox(
+                                  width: 72,
+                                  child: TextField(
+                                    controller: countController,
+                                    keyboardType: TextInputType.number,
+                                    textAlign: TextAlign.center,
+                                    maxLength: 3,
+                                    decoration: const InputDecoration(
+                                      counterText: '',
+                                      isDense: true,
+                                      border: OutlineInputBorder(),
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 8),
+                                    ),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                    onChanged: (v) {
+                                      final n = int.tryParse(v);
+                                      if (n != null && n >= 1 && n <= 999) {
+                                        setSt(() => countValue = n);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const Text('Nombre de fois'),
+                    ),
+                    // Jusqu'au
+                    RadioListTile<RecurrenceEndType>(
+                      value: RecurrenceEndType.until,
+                      groupValue: endType,
+                      onChanged: (v) => setSt(() => endType = v!),
+                      activeColor: AppColors.primary,
+                      title: endType == RecurrenceEndType.until
+                          ? Row(
+                              children: [
+                                const Text('Jusqu\'au :'),
+                                const SizedBox(width: 12),
+                                GestureDetector(
+                                  onTap: () async {
+                                    final picked = await showDatePicker(
+                                      context: ctx,
+                                      initialDate: untilDate,
+                                      firstDate: _startDate,
+                                      lastDate: DateTime(2100),
+                                    );
+                                    if (picked != null) {
+                                      setSt(() {
+                                        untilDate = picked;
+                                        untilController.text =
+                                            DateFormat('d/M/yyyy').format(picked);
+                                      });
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: AppColors.border),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      DateFormat('d MMM yyyy', 'fr_FR')
+                                          .format(untilDate),
+                                      style: const TextStyle(
+                                          color: AppColors.primary, fontSize: 13),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const Text('Jusqu\'au'),
+                    ),
+                  ],
+
+                  // Bouton confirmer
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          setState(() {
+                            if (selectedFreq == null) {
+                              _recurrence = null;
+                            } else {
+                              _recurrence = RecurrenceRule(
+                                frequency: selectedFreq!,
+                                endType: endType,
+                                count: endType == RecurrenceEndType.count
+                                    ? countValue
+                                    : null,
+                                until: endType == RecurrenceEndType.until
+                                    ? untilDate
+                                    : null,
+                              );
+                            }
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                        ),
+                        child: const Text('Confirmer'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRecurrenceRow() {
+    final label = _recurrence?.label ?? 'Aucune répétition';
+    return GestureDetector(
+      onTap: _showRecurrencePicker,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.repeat, size: 20, color: AppColors.textSecondary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: _recurrence != null
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right,
+                size: 20, color: AppColors.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Rappel ────────────────────────────────────────────────────────────────
+
+  String get _reminderLabel {
+    if (_reminderMinutes == null) return 'Aucun rappel';
+    if (_reminderMinutes == 0) return 'Au moment de l\'événement';
+    if (_reminderMinutes == 10) return '10 minutes avant';
+    if (_reminderMinutes == 60) return '1 heure avant';
+    if (_reminderMinutes == 1440) return '1 jour avant';
+    final m = _reminderMinutes!;
+    if (m < 60) return '$m minutes avant';
+    if (m < 1440) return '${m ~/ 60} heures avant';
+    return '${m ~/ 1440} jours avant';
+  }
+
+  Future<void> _showReminderPicker() async {
+    final presets = [
+      (null, 'Aucun rappel', Icons.notifications_off_outlined),
+      (0, 'Au moment de l\'événement', Icons.notifications_outlined),
+      (10, '10 minutes avant', Icons.schedule_outlined),
+      (60, '1 heure avant', Icons.schedule_outlined),
+      (1440, '1 jour avant', Icons.today_outlined),
+    ];
+
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+              child: Text(
+                'Rappel',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+            ...presets.map((p) {
+              final (minutes, label, icon) = p;
+              final selected = _reminderMinutes == minutes;
+              return ListTile(
+                leading: Icon(icon,
+                    color: selected ? AppColors.primary : AppColors.textSecondary),
+                title: Text(label),
+                trailing: selected
+                    ? const Icon(Icons.check, color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  setState(() => _reminderMinutes = minutes);
+                  Navigator.pop(ctx);
+                },
+              );
+            }),
+            ListTile(
+              leading: const Icon(Icons.tune_outlined,
+                  color: AppColors.textSecondary),
+              title: const Text('Personnalisé…'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showCustomReminderDialog();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showCustomReminderDialog() async {
+    int value = 30;
+    String unit = 'min';
+    final controller = TextEditingController(text: '30');
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSt) => AlertDialog(
+          title: const Text('Rappel personnalisé'),
+          content: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onChanged: (v) => value = int.tryParse(v) ?? value,
+                ),
+              ),
+              const SizedBox(width: 12),
+              DropdownButton<String>(
+                value: unit,
+                items: const [
+                  DropdownMenuItem(value: 'min', child: Text('min')),
+                  DropdownMenuItem(value: 'h', child: Text('h')),
+                  DropdownMenuItem(value: 'j', child: Text('j')),
+                ],
+                onChanged: (v) {
+                  if (v != null) setSt(() => unit = v);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Annuler'),
+            ),
+            TextButton(
+              onPressed: () {
+                final n = int.tryParse(controller.text) ?? 0;
+                final minutes = switch (unit) {
+                  'h' => n * 60,
+                  'j' => n * 1440,
+                  _ => n,
+                };
+                Navigator.pop(ctx, minutes);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result != null && result > 0) {
+      setState(() => _reminderMinutes = result);
+    }
+  }
+
+  Widget _buildReminderRow() {
+    return GestureDetector(
+      onTap: _showReminderPicker,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.notifications_outlined,
+                size: 20, color: AppColors.textSecondary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _reminderLabel,
+                style: TextStyle(
+                  color: _reminderMinutes != null
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right,
+                size: 20, color: AppColors.textSecondary),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _dateTimeRow({
@@ -432,6 +886,28 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                   isStart: false,
                 ),
               ],
+              const SizedBox(height: 24),
+              Text(
+                'Répétition',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildRecurrenceRow(),
+              const SizedBox(height: 24),
+              Text(
+                'Rappel',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildReminderRow(),
             ],
           ),
         ),

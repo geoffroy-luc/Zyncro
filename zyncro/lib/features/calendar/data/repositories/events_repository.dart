@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/repositories/i_events_repository.dart';
 import '../../../../shared/models/event.dart';
+import '../../../../shared/models/recurrence_rule.dart';
 
 class EventsRepository implements IEventsRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -33,6 +34,7 @@ class EventsRepository implements IEventsRepository {
     String? location,
     required String userId,
     String? color,
+    RecurrenceRule? recurrence,
   }) async {
     final ref = _col(groupId).doc();
     final event = Event(
@@ -46,6 +48,7 @@ class EventsRepository implements IEventsRepository {
       createdBy: userId,
       createdAt: DateTime.now(),
       color: color,
+      recurrence: recurrence,
     );
     await ref.set(event.toMap());
     return event;

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'recurrence_rule.dart';
 
 class Event {
   final String id;
@@ -13,6 +14,7 @@ class Event {
   final DateTime createdAt;
   final String? color;
   final String? updatedBy;
+  final RecurrenceRule? recurrence;
 
   const Event({
     required this.id,
@@ -27,6 +29,7 @@ class Event {
     required this.createdAt,
     this.color,
     this.updatedBy,
+    this.recurrence,
   });
 
   factory Event.fromMap(String id, Map<String, dynamic> map) {
@@ -45,6 +48,9 @@ class Event {
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       color: map['color'] as String?,
       updatedBy: map['updatedBy'] as String?,
+      recurrence: map['recurrence'] != null
+          ? RecurrenceRule.fromMap(map['recurrence'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -61,6 +67,7 @@ class Event {
       'createdAt': Timestamp.fromDate(createdAt),
       if (color != null) 'color': color,
       if (updatedBy != null) 'updatedBy': updatedBy,
+      if (recurrence != null) 'recurrence': recurrence!.toMap(),
     };
   }
 
@@ -72,6 +79,8 @@ class Event {
     String? location,
     String? color,
     String? updatedBy,
+    RecurrenceRule? recurrence,
+    bool clearRecurrence = false,
   }) {
     return Event(
       id: id,
@@ -86,6 +95,7 @@ class Event {
       createdAt: createdAt,
       color: color ?? this.color,
       updatedBy: updatedBy ?? this.updatedBy,
+      recurrence: clearRecurrence ? null : recurrence ?? this.recurrence,
     );
   }
 }
