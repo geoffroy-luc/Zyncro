@@ -115,7 +115,7 @@ class _ReimbursementFormScreenState
         userId: user.uid,
       );
 
-      final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+      final userName = nameByUid[user.uid] ?? user.displayName ?? user.email ?? 'Quelqu\'un';
       ref.read(messagesRepositoryProvider).sendSystemMessage(
         groupId: groupId,
         userId: user.uid,

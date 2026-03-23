@@ -29,6 +29,64 @@ class GroupSettingsScreen extends ConsumerStatefulWidget {
 class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
   bool _generating = false;
 
+  Future<void> _editMyPseudo(BuildContext context, String groupId, String currentPseudo) async {
+    final controller = TextEditingController(text: currentPseudo);
+    final formKey = GlobalKey<FormState>();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Mon pseudo dans ce groupe'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            decoration: const InputDecoration(labelText: 'Pseudo'),
+            maxLength: 30,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'Champ requis';
+              if (v.trim().length > 30) return '30 caractères maximum';
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) Navigator.pop(context, true);
+            },
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    final newPseudo = controller.text.trim();
+    if (newPseudo == currentPseudo) return;
+
+    final user = ref.read(authStateProvider).asData?.value;
+    if (user == null) return;
+
+    try {
+      await ref.read(groupsRepositoryProvider).updateMemberDisplayName(
+        groupId,
+        user.uid,
+        newPseudo,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+      }
+    }
+  }
+
   Future<void> _editGroupInfo(BuildContext context, String groupId, String currentName, String? currentDescription) async {
     final nameController = TextEditingController(text: currentName);
     final descController = TextEditingController(text: currentDescription ?? '');
@@ -326,7 +384,13 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                               : AppColors.textSecondary,
                         ),
                       ),
-                      trailing: isOwner && !isCurrentUser && !member.isOwner
+                      trailing: isCurrentUser
+                          ? IconButton(
+                              icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.textSecondary),
+                              tooltip: 'Changer mon pseudo',
+                              onPressed: () => _editMyPseudo(context, group.id, member.displayName),
+                            )
+                          : isOwner && !member.isOwner
                           ? PopupMenuButton<String>(
                               icon: const Icon(
                                 Icons.more_vert,
@@ -492,7 +556,10 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
         currentUser.uid,
         newOwner.uid,
       );
-      final ownerName = currentUser.displayName ?? currentUser.email ?? 'Quelqu\'un';
+      final ownerName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+          currentUser.displayName ??
+          currentUser.email ??
+          'Quelqu\'un';
       ref.read(messagesRepositoryProvider).sendSystemMessage(
         groupId: groupId,
         userId: currentUser.uid,
@@ -540,7 +607,10 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
     final currentUser = ref.read(authStateProvider).asData?.value;
     await ref.read(groupsRepositoryProvider).removeMember(groupId, member.uid);
     if (currentUser != null) {
-      final ownerName = currentUser.displayName ?? currentUser.email ?? 'Quelqu\'un';
+      final ownerName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+          currentUser.displayName ??
+          currentUser.email ??
+          'Quelqu\'un';
       ref.read(messagesRepositoryProvider).sendSystemMessage(
         groupId: groupId,
         userId: currentUser.uid,
@@ -582,7 +652,10 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
     final user = ref.read(authStateProvider).asData?.value;
-    final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
+    final userName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+        user?.displayName ??
+        user?.email ??
+        'Quelqu\'un';
 
     try {
       // Message inclus dans le même batch que le leave → atomique
