@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/services/notification_service.dart';
@@ -40,7 +39,9 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<User> signInWithGoogle() async {
     final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) throw FirebaseAuthException(code: 'sign-in-cancelled');
+    if (googleUser == null) {
+      throw FirebaseAuthException(code: 'sign-in-cancelled');
+    }
     final googleAuth = await googleUser.authentication;
     final credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
