@@ -4,6 +4,7 @@ import '../../data/repositories/groups_repository.dart';
 import '../../domain/repositories/i_groups_repository.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../shared/models/group.dart';
+import '../../../../shared/models/group_member.dart';
 
 final groupsRepositoryProvider = Provider<IGroupsRepository>(
   (_) => GroupsRepository(),
@@ -79,4 +80,22 @@ final selectedGroupProvider = Provider<Group?>((ref) {
   } catch (_) {
     return null;
   }
+});
+
+/// Retourne le GroupMember de l'utilisateur courant dans le groupe sélectionné.
+/// Permet d'accéder au pseudo groupe-spécifique (displayName) de l'utilisateur.
+final currentMemberProvider = StreamProvider<GroupMember?>((ref) {
+  final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
+  final userId = ref.watch(authStateProvider).asData?.value?.uid;
+  if (groupId == null || userId == null) return Stream.value(null);
+  return ref
+      .watch(groupsRepositoryProvider)
+      .watchMembers(groupId)
+      .map((members) {
+        try {
+          return members.firstWhere((m) => m.uid == userId);
+        } catch (_) {
+          return null;
+        }
+      });
 });

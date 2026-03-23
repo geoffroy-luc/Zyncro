@@ -160,7 +160,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ),
         );
       }
-      final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+      final userName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+          user.displayName ??
+          user.email ??
+          'Quelqu\'un';
       final action = isCreating ? 'a créé une note' : 'a modifié la note';
       ref.read(messagesRepositoryProvider).sendSystemMessage(
         groupId: groupId,
@@ -209,7 +212,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             .deleteNote(groupId, widget.note!.id);
         final user = ref.read(authStateProvider).asData?.value;
         if (user != null) {
-          final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+          final userName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+          user.displayName ??
+          user.email ??
+          'Quelqu\'un';
           ref.read(messagesRepositoryProvider).sendSystemMessage(
             groupId: groupId,
             userId: user.uid,
@@ -231,6 +237,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(currentMemberProvider); // garde le provider actif pour ref.read() dans les méthodes async
     final isEditing = widget.note != null;
     final accentColor = _hexToColor(_selectedColor);
 

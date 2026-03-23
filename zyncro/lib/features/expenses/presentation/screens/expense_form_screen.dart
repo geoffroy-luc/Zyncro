@@ -240,10 +240,14 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
       }
       final title = _titleController.text.trim();
       final effectivePaidByUid = _paidByUid ?? user.uid;
+      final currentMemberName = members
+          .where((m) => m.uid == user.uid)
+          .map((m) => m.displayName)
+          .firstOrNull;
       final effectivePaidByName = effectivePaidByUid == user.uid
-          ? (user.displayName ?? user.email ?? _paidByName ?? 'Moi')
+          ? (currentMemberName ?? user.displayName ?? _paidByName ?? 'Moi')
           : (_paidByName ?? 'Membre');
-      final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+      final userName = currentMemberName ?? user.displayName ?? user.email ?? 'Quelqu\'un';
 
       if (widget.expense != null) {
         final updated = widget.expense!.copyWith(

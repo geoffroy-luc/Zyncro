@@ -61,7 +61,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     repo.setTyping(
       groupId: groupId,
       userId: user.uid,
-      userName: user.displayName ?? user.email ?? 'Anonyme',
+      userName: ref.read(currentMemberProvider).asData?.value?.displayName ??
+          user.displayName ??
+          user.email ??
+          'Anonyme',
     );
 
     _typingTimer?.cancel();
@@ -120,7 +123,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           .sendMessage(
             groupId: groupId,
             senderId: user.uid,
-            senderName: user.displayName ?? user.email ?? 'Anonyme',
+            senderName: ref.read(currentMemberProvider).asData?.value?.displayName ??
+                user.displayName ??
+                user.email ??
+                'Anonyme',
             content: text,
             replyToId: reply?.id,
             replyToSenderName: reply?.senderName,
@@ -428,7 +434,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     await ref.read(messagesRepositoryProvider).sendPoll(
           groupId: groupId,
           senderId: user.uid,
-          senderName: user.displayName ?? user.email ?? 'Anonyme',
+          senderName: ref.read(currentMemberProvider).asData?.value?.displayName ??
+              user.displayName ??
+              user.email ??
+              'Anonyme',
           question: result['question'] as String,
           options: List<String>.from(result['options'] as List),
           multipleChoice: result['multipleChoice'] as bool? ?? false,
@@ -513,7 +522,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       await ref.read(messagesRepositoryProvider).sendAudio(
             groupId: groupId,
             senderId: user.uid,
-            senderName: user.displayName ?? user.email ?? 'Anonyme',
+            senderName: ref.read(currentMemberProvider).asData?.value?.displayName ??
+                user.displayName ??
+                user.email ??
+                'Anonyme',
             filePath: path,
             durationSeconds: duration.inSeconds,
           );
@@ -542,6 +554,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final currentUid = ref.watch(
       authStateProvider.select((s) => s.value?.uid),
     );
+    ref.watch(currentMemberProvider); // garde le provider actif pour ref.read() dans les méthodes async
     final messagesAsync = ref.watch(messagesProvider);
 
     if (currentUid == null) {

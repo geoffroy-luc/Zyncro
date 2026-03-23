@@ -232,7 +232,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         );
         await ReminderService.scheduleReminder(created, _reminderMinutes);
       }
-      final userName = user.displayName ?? user.email ?? 'Quelqu\'un';
+      final userName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+          user.displayName ??
+          user.email ??
+          'Quelqu\'un';
       final action = isCreating ? 'a créé un événement' : 'a modifié l\'événement';
       ref.read(messagesRepositoryProvider).sendSystemMessage(
         groupId: groupId,
@@ -765,6 +768,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(currentMemberProvider); // garde le provider actif pour ref.read() dans les méthodes async
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
