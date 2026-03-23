@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -283,14 +285,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 12),
 
               // ── Apple ──────────────────────────────────────────────
-              OutlinedButton.icon(
-                onPressed: _loading ? null : _signInWithApple,
-                icon: _loadingType == _LoadingType.apple
-                    ? const _Spinner(color: AppColors.primary)
-                    : const _AppleIcon(),
-                label: const Text('Continuer avec Apple'),
-              ),
-              const SizedBox(height: 12),
+              if (Platform.isIOS) ...[
+                OutlinedButton.icon(
+                  onPressed: _loading ? null : _signInWithApple,
+                  icon: _loadingType == _LoadingType.apple
+                      ? const _Spinner(color: AppColors.primary)
+                      : const _AppleIcon(),
+                  label: const Text('Continuer avec Apple'),
+                ),
+                const SizedBox(height: 12),
+              ],
 
               // ── Anonyme ───────────────────────────────────────────
               OutlinedButton.icon(
