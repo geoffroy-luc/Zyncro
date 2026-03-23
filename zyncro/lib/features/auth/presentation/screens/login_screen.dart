@@ -61,8 +61,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref.read(authRepositoryProvider).signInWithApple();
     } on FirebaseAuthException catch (e) {
+      debugPrint('Apple sign-in FirebaseAuthException: ${e.code} - ${e.message}');
       if (e.code != 'sign-in-cancelled') _setError('Connexion Apple échouée.');
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Apple sign-in error: $e');
       _setError('Connexion Apple échouée.');
     } finally {
       _stopLoading();

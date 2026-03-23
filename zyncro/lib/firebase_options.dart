@@ -25,15 +25,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -55,14 +49,14 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCFUAlfIcAjUEpcpm4wravllu1qLCS2BGQ',
-    appId: '1:1010364828673:ios:a17e6a988445c784de8400',
+    apiKey: 'AIzaSyDvEM2ciqOurCc7yWmAW7jiSbN64jOqMDE',
+    appId: '1:1010364828673:ios:66d3ded615f612a5de8400',
     messagingSenderId: '1010364828673',
     projectId: 'zyncro-f5fdd',
     storageBucket: 'zyncro-f5fdd.firebasestorage.app',
-    androidClientId: '1010364828673-k9lojka7iuma77g152hhceoem2216vuo.apps.googleusercontent.com',
-    iosClientId: '1010364828673-8v4bp0cr6dtatbmqi0drm0qf1e9nil5n.apps.googleusercontent.com',
-    iosBundleId: 'com.example.zyncro',
+    androidClientId: '1010364828673-ih2fcmdvkc7o4mesm1s8uj1na6a1p5b2.apps.googleusercontent.com',
+    iosClientId: '1010364828673-hf0fivaoor45ssecejupc9flmm30gre2.apps.googleusercontent.com',
+    iosBundleId: 'com.zyncro.app',
   );
 
   static const FirebaseOptions web = FirebaseOptions(
@@ -73,6 +67,27 @@ class DefaultFirebaseOptions {
     authDomain: 'zyncro-f5fdd.firebaseapp.com',
     storageBucket: 'zyncro-f5fdd.firebasestorage.app',
     measurementId: 'G-2HLBMQ0NC2',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyCFUAlfIcAjUEpcpm4wravllu1qLCS2BGQ',
+    appId: '1:1010364828673:ios:a17e6a988445c784de8400',
+    messagingSenderId: '1010364828673',
+    projectId: 'zyncro-f5fdd',
+    storageBucket: 'zyncro-f5fdd.firebasestorage.app',
+    androidClientId: '1010364828673-ih2fcmdvkc7o4mesm1s8uj1na6a1p5b2.apps.googleusercontent.com',
+    iosClientId: '1010364828673-8v4bp0cr6dtatbmqi0drm0qf1e9nil5n.apps.googleusercontent.com',
+    iosBundleId: 'com.example.zyncro',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyAmfKVwX1ubPW3fVinZ8iw8to5YngCs-yw',
+    appId: '1:1010364828673:web:b386b7eed9e7ab72de8400',
+    messagingSenderId: '1010364828673',
+    projectId: 'zyncro-f5fdd',
+    authDomain: 'zyncro-f5fdd.firebaseapp.com',
+    storageBucket: 'zyncro-f5fdd.firebasestorage.app',
+    measurementId: 'G-0EFRN83KE0',
   );
 
 }

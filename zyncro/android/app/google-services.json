@@ -28,7 +28,73 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBtLH4l1mvFxg4chEXshVNPHH0CQw9W3hA"
+          "current_key": "AIzaSyC8Y1dXaW5OkpZiVdNSsFXPG7qQQEN9vFA"
+        },
+        {
+          "current_key": "AIzaSyAk-KQ9zpeoN0dU_Z2bD0mE3ONki3PHJ-Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1010364828673-j808ev17nqjd9inhjd32rd9uhjvrplve.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1010364828673-8v4bp0cr6dtatbmqi0drm0qf1e9nil5n.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.zyncro"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1010364828673:android:685c818f84739ea4de8400",
+        "android_client_info": {
+          "package_name": "com.zyncro.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1010364828673-ih2fcmdvkc7o4mesm1s8uj1na6a1p5b2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zyncro.app",
+            "certificate_hash": "b4efbd08fcaf2e4b22bff34f7f721b3f91886a5d"
+          }
+        },
+        {
+          "client_id": "1010364828673-lephdfimeqbhgu0jllcel5laotlfbbfq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zyncro.app",
+            "certificate_hash": "b5fc378e18a436461bbb2c75dd206435565b8023"
+          }
+        },
+        {
+          "client_id": "1010364828673-p5bg55l35hgf3alde4dco7oniv319kso.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zyncro.app",
+            "certificate_hash": "cd72d7eb72fdd24460417ba90ef6d39868e5560f"
+          }
+        },
+        {
+          "client_id": "1010364828673-j808ev17nqjd9inhjd32rd9uhjvrplve.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8Y1dXaW5OkpZiVdNSsFXPG7qQQEN9vFA"
+        },
+        {
+          "current_key": "AIzaSyAk-KQ9zpeoN0dU_Z2bD0mE3ONki3PHJ-Y"
         }
       ],
       "services": {

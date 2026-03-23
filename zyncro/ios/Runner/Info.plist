@@ -58,7 +58,7 @@
 		</dict>
 	</array>
 	<key>GIDClientID</key>
-	<string>1010364828673-8v4bp0cr6dtatbmqi0drm0qf1e9nil5n.apps.googleusercontent.com</string>
+	<string>1010364828673-hf0fivaoor45ssecejupc9flmm30gre2.apps.googleusercontent.com</string>
 	
 	<key>CFBundleURLTypes</key>
 	<array>
@@ -67,7 +67,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.1010364828673-8v4bp0cr6dtatbmqi0drm0qf1e9nil5n</string>
+				<string>com.googleusercontent.apps.1010364828673-hf0fivaoor45ssecejupc9flmm30gre2</string>
 			</array>
 		</dict>
 	</array>
