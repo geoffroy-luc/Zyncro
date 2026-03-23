@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/services/notification_service.dart';
@@ -46,6 +47,15 @@ class AuthRepository implements IAuthRepository {
       idToken: googleAuth.idToken,
     );
     final result = await _auth.signInWithCredential(credential);
+    return result.user!;
+  }
+
+  @override
+  Future<User> signInWithApple() async {
+    final provider = AppleAuthProvider()
+      ..addScope('email')
+      ..addScope('name');
+    final result = await _auth.signInWithProvider(provider);
     return result.user!;
   }
 
