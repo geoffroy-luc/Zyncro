@@ -39,13 +39,24 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<User> signInWithGoogle() async {
     final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) throw FirebaseAuthException(code: 'sign-in-cancelled');
+    if (googleUser == null) {
+      throw FirebaseAuthException(code: 'sign-in-cancelled');
+    }
     final googleAuth = await googleUser.authentication;
     final credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
     final result = await _auth.signInWithCredential(credential);
+    return result.user!;
+  }
+
+  @override
+  Future<User> signInWithApple() async {
+    final provider = AppleAuthProvider()
+      ..addScope('email')
+      ..addScope('name');
+    final result = await _auth.signInWithProvider(provider);
     return result.user!;
   }
 
