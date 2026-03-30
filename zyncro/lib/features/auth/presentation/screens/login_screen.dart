@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,6 +53,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (e.code != 'sign-in-cancelled') _setError('Connexion Google échouée.');
     } catch (_) {
       _setError('Connexion Google échouée.');
+    } finally {
+      _stopLoading();
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    _startLoading(_LoadingType.apple);
+    try {
+      await ref.read(authRepositoryProvider).signInWithApple();
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Apple sign-in FirebaseAuthException: ${e.code} - ${e.message}');
+      if (e.code != 'sign-in-cancelled') _setError('Connexion Apple échouée.');
+    } catch (e) {
+      debugPrint('Apple sign-in error: $e');
+      _setError('Connexion Apple échouée.');
     } finally {
       _stopLoading();
     }
@@ -267,6 +284,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 12),
 
+              // ── Apple ──────────────────────────────────────────────
+              if (Platform.isIOS) ...[
+                OutlinedButton.icon(
+                  onPressed: _loading ? null : _signInWithApple,
+                  icon: _loadingType == _LoadingType.apple
+                      ? const _Spinner(color: AppColors.primary)
+                      : const _AppleIcon(),
+                  label: const Text('Continuer avec Apple'),
+                ),
+                const SizedBox(height: 12),
+              ],
+
               // ── Anonyme ───────────────────────────────────────────
               OutlinedButton.icon(
                 onPressed: _loading ? null : _showGuestPseudoSheet,
@@ -294,7 +323,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-enum _LoadingType { email, google, anonymous }
+enum _LoadingType { email, google, apple, anonymous }
 
 class _Spinner extends StatelessWidget {
   final Color color;
@@ -401,6 +430,19 @@ class _GuestPseudoSheetState extends State<_GuestPseudoSheet> {
     if (_formKey.currentState!.validate()) {
       widget.onConfirm(_controller.text.trim());
     }
+  }
+}
+
+class _AppleIcon extends StatelessWidget {
+  const _AppleIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 20,
+      height: 20,
+      child: Icon(Icons.apple, size: 20, color: Colors.black),
+    );
   }
 }
 
