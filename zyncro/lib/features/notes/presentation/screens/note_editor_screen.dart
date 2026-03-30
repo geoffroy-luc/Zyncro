@@ -87,6 +87,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     });
   }
 
+  void _reorderChecklistItem(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex--;
+      final item = _checklist.removeAt(oldIndex);
+      final ctrl = _itemControllers.removeAt(oldIndex);
+      final focus = _itemFocusNodes.removeAt(oldIndex);
+      _checklist.insert(newIndex, item);
+      _itemControllers.insert(newIndex, ctrl);
+      _itemFocusNodes.insert(newIndex, focus);
+    });
+  }
+
   void _toggleChecklistItem(int index, bool done) {
     setState(() {
       _checklist[index] = _checklist[index].copyWith(done: done);
@@ -386,61 +398,75 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               // Checklist items
               if (_isChecklist) ...[
                 const SizedBox(height: 16),
-                ..._checklist.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final item = entry.value;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: item.done,
-                          onChanged: (v) =>
-                              _toggleChecklistItem(i, v ?? false),
-                          activeColor: accentColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            controller: _itemControllers[i],
-                            focusNode: _itemFocusNodes[i],
-                            decoration: InputDecoration(
-                              hintText: 'Élément ${i + 1}…',
-                              hintStyle: const TextStyle(
-                                  color: AppColors.textSecondary),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
+                ReorderableListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _checklist.length,
+                  onReorder: _reorderChecklistItem,
+                  itemBuilder: (context, i) {
+                    final item = _checklist[i];
+                    return Padding(
+                      key: ValueKey(i),
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          ReorderableDragStartListener(
+                            index: i,
+                            child: const Icon(
+                              Icons.drag_handle,
+                              size: 20,
+                              color: AppColors.textSecondary,
                             ),
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: item.done
-                                  ? AppColors.textSecondary
-                                  : AppColors.textPrimary,
-                              decoration: item.done
-                                  ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
-                              height: 1.6,
-                            ),
-                            maxLines: null,
-                            textCapitalization: TextCapitalization.sentences,
-                            onSubmitted: (_) => _addChecklistItem(),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close,
-                              size: 18, color: AppColors.textSecondary),
-                          onPressed: () => _removeChecklistItem(i),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+                          Checkbox(
+                            value: item.done,
+                            onChanged: (v) =>
+                                _toggleChecklistItem(i, v ?? false),
+                            activeColor: accentColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              controller: _itemControllers[i],
+                              focusNode: _itemFocusNodes[i],
+                              decoration: InputDecoration(
+                                hintText: 'Élément ${i + 1}…',
+                                hintStyle: const TextStyle(
+                                    color: AppColors.textSecondary),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: item.done
+                                    ? AppColors.textSecondary
+                                    : AppColors.textPrimary,
+                                decoration: item.done
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none,
+                                height: 1.6,
+                              ),
+                              maxLines: null,
+                              textCapitalization: TextCapitalization.sentences,
+                              onSubmitted: (_) => _addChecklistItem(),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close,
+                                size: 18, color: AppColors.textSecondary),
+                            onPressed: () => _removeChecklistItem(i),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
                 TextButton.icon(
                   onPressed: _addChecklistItem,
                   icon: const Icon(Icons.add, size: 18),
