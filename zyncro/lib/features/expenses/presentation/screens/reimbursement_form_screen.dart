@@ -9,17 +9,6 @@ import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/expenses_provider.dart';
 
-Color _memberColor(String uid) {
-  const colors = [
-    Color(0xFF2BB8A5),
-    Color(0xFF4F7CFF),
-    Color(0xFFFFB86B),
-    Color(0xFFE85D75),
-    Color(0xFF9B59B6),
-    Color(0xFF27AE60),
-  ];
-  return colors[uid.codeUnits.fold(0, (a, b) => a + b) % colors.length];
-}
 
 class ReimbursementFormScreen extends ConsumerStatefulWidget {
   final String? initialToUid;
@@ -241,7 +230,7 @@ class _ReimbursementFormScreenState
                 runSpacing: 10,
                 children: others.map((m) {
                   final isSelected = _toUid == m.uid;
-                  final color = _memberColor(m.uid);
+                  final color = avatarColorForUid(m.uid);
                   return GestureDetector(
                     onTap: () => setState(() => _toUid = m.uid),
                     child: AnimatedContainer(

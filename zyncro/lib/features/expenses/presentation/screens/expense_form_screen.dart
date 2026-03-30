@@ -10,17 +10,6 @@ import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/expenses_provider.dart';
 
-Color _memberColor(String uid) {
-  const colors = [
-    Color(0xFF2BB8A5),
-    Color(0xFF4F7CFF),
-    Color(0xFFFFB86B),
-    Color(0xFFE85D75),
-    Color(0xFF9B59B6),
-    Color(0xFF27AE60),
-  ];
-  return colors[uid.codeUnits.fold(0, (a, b) => a + b) % colors.length];
-}
 
 const _categories = [
   ('Alimentation', Icons.restaurant_outlined, Color(0xFF2BB8A5)),
@@ -515,7 +504,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                 runSpacing: 10,
                 children: members.map((m) {
                   final isSelected = _paidByUid == m.uid;
-                  final color = _memberColor(m.uid);
+                  final color = avatarColorForUid(m.uid);
                   final label = _memberLabel(m, currentUid);
                   return GestureDetector(
                     onTap: () => setState(() {
@@ -586,7 +575,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                 runSpacing: 10,
                 children: members.map((m) {
                   final isSelected = _selectedMemberUids.contains(m.uid);
-                  final color = _memberColor(m.uid);
+                  final color = avatarColorForUid(m.uid);
                   final label = _memberLabel(m, currentUid);
                   return GestureDetector(
                     onTap: () {

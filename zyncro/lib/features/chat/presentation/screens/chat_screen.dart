@@ -1140,17 +1140,6 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
-  Color _avatarColor(String uid) {
-    final colors = [
-      const Color(0xFFE85D75),
-      const Color(0xFF2BB8A5),
-      const Color(0xFFFFB86B),
-      const Color(0xFFE85D75),
-      const Color(0xFF9B59B6),
-      const Color(0xFF27AE60),
-    ];
-    return colors[uid.hashCode.abs() % colors.length];
-  }
 
 
   String _formatTime(DateTime dt) => DateFormat('HH:mm').format(dt);
@@ -1273,7 +1262,7 @@ class _MessageBubble extends StatelessWidget {
     }
 
     // ── Message reçu ────────────────────────────────────────────────
-    final avatarColor = _avatarColor(message.senderId ?? '');
+    final avatarColor = avatarColorForUid(message.senderId ?? '');
 
     final radius = BorderRadius.only(
       topLeft: Radius.circular(isLastInGroup ? 16 : 4),
@@ -1392,6 +1381,7 @@ class _SeenByRow extends StatelessWidget {
               showPhoto: m.showProfilePhoto,
               displayName: m.displayName,
               radius: 7,
+              color: avatarColorForUid(m.uid),
             ),
           ),
         ),
