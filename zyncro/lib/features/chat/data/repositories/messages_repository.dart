@@ -233,6 +233,24 @@ class MessagesRepository implements IMessagesRepository {
   }
 
   @override
+  Future<void> markAsRead({
+    required String groupId,
+    required String userId,
+    required String messageId,
+  }) async {
+    try {
+      await _db
+          .collection('groups')
+          .doc(groupId)
+          .collection('members')
+          .doc(userId)
+          .update({'lastReadMessageId': messageId});
+    } on FirebaseException {
+      // Silencieux — non bloquant
+    }
+  }
+
+  @override
   Future<void> toggleReaction({
     required String groupId,
     required String messageId,

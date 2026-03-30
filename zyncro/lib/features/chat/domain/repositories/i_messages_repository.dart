@@ -83,4 +83,11 @@ abstract interface class IMessagesRepository {
     required bool hasReacted,
     bool exclusive = true,
   });
+
+  /// Enregistre le dernier message lu par l'utilisateur dans ce groupe.
+  Future<void> markAsRead({
+    required String groupId,
+    required String userId,
+    required String messageId,
+  });
 }

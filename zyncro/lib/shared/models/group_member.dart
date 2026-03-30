@@ -7,6 +7,7 @@ class GroupMember {
   final DateTime? joinedAt;
   final String? photoUrl;
   final bool showProfilePhoto;
+  final String? lastReadMessageId;
 
   const GroupMember({
     required this.uid,
@@ -15,6 +16,7 @@ class GroupMember {
     this.joinedAt,
     this.photoUrl,
     this.showProfilePhoto = true,
+    this.lastReadMessageId,
   });
 
   bool get isOwner => role == 'owner';
@@ -29,6 +31,7 @@ class GroupMember {
           : null,
       photoUrl: map['photoUrl'] as String?,
       showProfilePhoto: map['showProfilePhoto'] as bool? ?? true,
+      lastReadMessageId: map['lastReadMessageId'] as String?,
     );
   }
 }

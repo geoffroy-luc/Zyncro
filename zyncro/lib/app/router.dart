@@ -14,6 +14,7 @@ import '../features/groups/presentation/screens/group_selection_screen.dart';
 import '../features/groups/presentation/screens/group_settings_screen.dart';
 import '../features/notes/presentation/screens/notes_screen.dart';
 import '../core/constants/app_colors.dart';
+import '../features/chat/presentation/providers/messages_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final notifier = ValueNotifier<int>(0);
@@ -161,6 +162,12 @@ class _AppShell extends ConsumerWidget {
     final gradientColors = _tabGradients[idx];
     final tabTitle = _tabTitles[idx];
 
+    // Synchronise l'état "chat actif" avec l'onglet courant (gère le cas
+    // où l'app s'ouvre directement sur le chat via une notification).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(isChatTabActiveProvider.notifier).setActive(idx == 4);
+    });
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       body: Column(
@@ -290,10 +297,15 @@ class _AppShell extends ConsumerWidget {
                     final item = _navItems[i];
                     final isActive = shell.currentIndex == i;
                     return GestureDetector(
-                      onTap: () => shell.goBranch(
-                        i,
-                        initialLocation: i == shell.currentIndex,
-                      ),
+                      onTap: () {
+                        ref
+                            .read(isChatTabActiveProvider.notifier)
+                            .setActive(i == 4);
+                        shell.goBranch(
+                          i,
+                          initialLocation: i == shell.currentIndex,
+                        );
+                      },
                       behavior: HitTestBehavior.opaque,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
