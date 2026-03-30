@@ -1232,7 +1232,7 @@ class _MessageBubble extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 46, bottom: 2),
             child: Text(
-              message.senderName ?? '',
+              member?.displayName ?? message.senderName ?? '',
               style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 11,
@@ -1251,7 +1251,7 @@ class _MessageBubble extends StatelessWidget {
                 child: UserAvatar(
                   photoUrl: member?.photoUrl,
                   showPhoto: member?.showProfilePhoto ?? true,
-                  displayName: message.senderName ?? '?',
+                  displayName: member?.displayName ?? message.senderName ?? '?',
                   radius: 15,
                   color: avatarColor,
                 ),
