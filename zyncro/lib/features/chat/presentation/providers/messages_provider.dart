@@ -15,6 +15,17 @@ final messagesProvider = StreamProvider<List<Message>>((ref) {
   return ref.watch(messagesRepositoryProvider).watchMessages(groupId);
 });
 
+/// True uniquement quand l'utilisateur est sur l'onglet Chat.
+class ChatTabActiveNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setActive(bool value) => state = value;
+}
+
+final isChatTabActiveProvider =
+    NotifierProvider<ChatTabActiveNotifier, bool>(ChatTabActiveNotifier.new);
+
 final typingProvider = StreamProvider<List<String>>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
   final currentUserId = ref.watch(authStateProvider).asData?.value?.uid;

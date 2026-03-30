@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
+/// Returns a deterministic colour for a given user [uid].
+/// The same uid always maps to the same colour, regardless of the screen.
+Color avatarColorForUid(String uid) {
+  const colors = [
+    Color(0xFF4F7CFF), // Blue
+    Color(0xFF2BB8A5), // Teal
+    Color(0xFFFFB86B), // Orange
+    Color(0xFFE85D75), // Pink
+    Color(0xFF9B59B6), // Purple
+    Color(0xFF27AE60), // Green
+  ];
+  return colors[uid.hashCode.abs() % colors.length];
+}
+
 /// Circular avatar : shows [photoUrl] when available and [showPhoto] is true,
 /// otherwise shows the first 2 chars of [displayName] as initials.
 ///

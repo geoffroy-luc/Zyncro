@@ -364,7 +364,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                         showPhoto: member.showProfilePhoto,
                         displayName: member.displayName,
                         radius: 20,
-                        color: _avatarColor(member.uid),
+                        color: avatarColorForUid(member.uid),
                       ),
                       title: Text(
                         member.displayName +
@@ -673,19 +673,6 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
     }
   }
 
-  Color _avatarColor(String uid) {
-    const colors = [
-      Color(0xFF6366F1),
-      Color(0xFF8B5CF6),
-      Color(0xFFEC4899),
-      Color(0xFFEF4444),
-      Color(0xFFF97316),
-      Color(0xFF10B981),
-      Color(0xFF14B8A6),
-      Color(0xFF3B82F6),
-    ];
-    return colors[uid.hashCode.abs() % colors.length];
-  }
 }
 
 // ── Section widget ────────────────────────────────────────────────────────────

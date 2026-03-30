@@ -561,6 +561,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final messagesAsync = ref.watch(messagesProvider);
     final members = ref.watch(expenseMembersProvider).asData?.value ?? <GroupMember>[];
 
+    // Marque le dernier message comme lu quand un nouveau message arrive
+    // (uniquement si le chat est actif).
+    ref.listen(messagesProvider, (_, next) {
+      if (!ref.read(isChatTabActiveProvider)) return;
+      final msgs = next.asData?.value;
+      if (msgs == null || msgs.isEmpty) return;
+      final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+      final userId = ref.read(authStateProvider).asData?.value?.uid;
+      if (groupId == null || userId == null) return;
+      ref.read(messagesRepositoryProvider).markAsRead(
+            groupId: groupId,
+            userId: userId,
+            messageId: msgs.first.id,
+          );
+    });
+
+    // Marque le dernier message comme lu dès qu'on arrive sur l'onglet chat
+    // (navigation depuis la nav bar ou ouverture via notification).
+    ref.listen(isChatTabActiveProvider, (_, isActive) {
+      if (!isActive) return;
+      final msgs = ref.read(messagesProvider).asData?.value;
+      if (msgs == null || msgs.isEmpty) return;
+      final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+      final userId = ref.read(authStateProvider).asData?.value?.uid;
+      if (groupId == null || userId == null) return;
+      ref.read(messagesRepositoryProvider).markAsRead(
+            groupId: groupId,
+            userId: userId,
+            messageId: msgs.first.id,
+          );
+    });
+
     if (currentUid == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -585,6 +617,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   );
                 }
+
+                // messageId → membres (hors soi-même) qui ont lu jusqu'à ce message
+                final seenByMessage = <String, List<GroupMember>>{};
+                for (final member in members) {
+                  if (member.uid == currentUid) continue;
+                  final rid = member.lastReadMessageId;
+                  if (rid == null) continue;
+                  seenByMessage.putIfAbsent(rid, () => []).add(member);
+                }
+
                 return ListView.builder(
                   controller: _scrollController,
                   reverse: true,
@@ -607,39 +649,54 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         olderMsg == null || !_isSameGroup(olderMsg, msg);
 
                     final isPoll = msg.type == MessageType.poll;
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        bottom: isFirstInGroup ? 10 : 2,
-                      ),
-                      child: _SwipeToReply(
-                        isMe: isMe,
-                        onReply: msg.type != MessageType.system && !isPoll
-                            ? () => setState(() => _replyingTo = msg)
-                            : null,
-                        child: _MessageBubble(
-                          message: msg,
-                          isMe: isMe,
-                          currentUserId: currentUid,
-                          showTimestamp: _visibleTimestamps.contains(msg.id),
-                          showAvatar: !isMe && isFirstInGroup,
-                          showSenderName: !isMe && isLastInGroup,
-                          isFirstInGroup: isFirstInGroup,
-                          isLastInGroup: isLastInGroup,
-                          member: members.where((m) => m.uid == msg.senderId).firstOrNull,
-                          onTap: msg.type != MessageType.system && !isPoll
-                              ? () => _toggleTimestamp(msg.id)
-                              : null,
-                          onDoubleTap: msg.type != MessageType.system && !isPoll
-                              ? () => _onDoubleTap(msg)
-                              : null,
-                          onLongPress: msg.type != MessageType.system
-                              ? () => _onMessageLongPress(msg, isMe)
-                              : null,
-                          onVote: isPoll
-                              ? (i) => _votePoll(msg, i)
-                              : null,
+                    final seenBy = seenByMessage[msg.id] ?? [];
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(
+                            bottom: seenBy.isEmpty && isFirstInGroup ? 10 : 2,
+                          ),
+                          child: _SwipeToReply(
+                            isMe: isMe,
+                            onReply: msg.type != MessageType.system && !isPoll
+                                ? () => setState(() => _replyingTo = msg)
+                                : null,
+                            child: _MessageBubble(
+                              message: msg,
+                              isMe: isMe,
+                              currentUserId: currentUid,
+                              showTimestamp: _visibleTimestamps.contains(msg.id),
+                              showAvatar: !isMe && isFirstInGroup,
+                              showSenderName: !isMe && isLastInGroup,
+                              isFirstInGroup: isFirstInGroup,
+                              isLastInGroup: isLastInGroup,
+                              member: members.where((m) => m.uid == msg.senderId).firstOrNull,
+                              onTap: msg.type != MessageType.system && !isPoll
+                                  ? () => _toggleTimestamp(msg.id)
+                                  : null,
+                              onDoubleTap: msg.type != MessageType.system && !isPoll
+                                  ? () => _onDoubleTap(msg)
+                                  : null,
+                              onLongPress: msg.type != MessageType.system
+                                  ? () => _onMessageLongPress(msg, isMe)
+                                  : null,
+                              onVote: isPoll
+                                  ? (idx) => _votePoll(msg, idx)
+                                  : null,
+                            ),
+                          ),
                         ),
-                      ),
+                        if (seenBy.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(
+                              bottom: isFirstInGroup ? 10 : 2,
+                              right: 4,
+                            ),
+                            child: _SeenByRow(members: seenBy),
+                          ),
+                      ],
                     );
                   },
                 );
@@ -1083,17 +1140,6 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
-  Color _avatarColor(String uid) {
-    final colors = [
-      const Color(0xFFE85D75),
-      const Color(0xFF2BB8A5),
-      const Color(0xFFFFB86B),
-      const Color(0xFFE85D75),
-      const Color(0xFF9B59B6),
-      const Color(0xFF27AE60),
-    ];
-    return colors[uid.hashCode.abs() % colors.length];
-  }
 
 
   String _formatTime(DateTime dt) => DateFormat('HH:mm').format(dt);
@@ -1216,7 +1262,7 @@ class _MessageBubble extends StatelessWidget {
     }
 
     // ── Message reçu ────────────────────────────────────────────────
-    final avatarColor = _avatarColor(message.senderId ?? '');
+    final avatarColor = avatarColorForUid(message.senderId ?? '');
 
     final radius = BorderRadius.only(
       topLeft: Radius.circular(isLastInGroup ? 16 : 4),
@@ -1306,6 +1352,50 @@ class _MessageBubble extends StatelessWidget {
             ),
           ],
         ),
+      ],
+    );
+  }
+}
+
+// ── Seen-by row (petites PP sous le dernier message lu) ─────────────────────
+class _SeenByRow extends StatelessWidget {
+  final List<GroupMember> members;
+
+  const _SeenByRow({required this.members});
+
+  static const int _maxVisible = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = members.take(_maxVisible).toList();
+    final overflow = members.length - _maxVisible;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ...visible.map(
+          (m) => Padding(
+            padding: const EdgeInsets.only(left: 2),
+            child: UserAvatar(
+              photoUrl: m.photoUrl,
+              showPhoto: m.showProfilePhoto,
+              displayName: m.displayName,
+              radius: 7,
+              color: avatarColorForUid(m.uid),
+            ),
+          ),
+        ),
+        if (overflow > 0)
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              '+$overflow',
+              style: const TextStyle(
+                fontSize: 10,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
       ],
     );
   }

@@ -450,6 +450,7 @@ class _EquilibreTab extends StatelessWidget {
                                 showPhoto: member?.showProfilePhoto ?? true,
                                 displayName: name,
                                 radius: 20,
+                                color: avatarColorForUid(entry.key),
                               ),
                               const SizedBox(width: 12),
                               Expanded(

@@ -32,16 +32,6 @@ String _timeAgo(DateTime dt) {
   return 'Il y a ${diff.inDays} j';
 }
 
-const _avatarColors = [
-  Color(0xFF4F7CFF),
-  Color(0xFF2BB8A5),
-  Color(0xFFFFB86B),
-  Color(0xFFE85D75),
-  Color(0xFF9B59B6),
-];
-
-Color _avatarColor(String uid) =>
-    _avatarColors[uid.hashCode.abs() % _avatarColors.length];
 
 
 class DashboardScreen extends ConsumerWidget {
@@ -631,7 +621,7 @@ class _MessageRow extends StatelessWidget {
           showPhoto: member?.showProfilePhoto ?? true,
           displayName: isMe ? 'Vous' : resolvedName,
           radius: 18,
-          color: _avatarColor(message.senderId ?? ''),
+          color: avatarColorForUid(message.senderId ?? ''),
         ),
         const SizedBox(width: 10),
         Expanded(
