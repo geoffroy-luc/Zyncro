@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/expense.dart';
+import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
@@ -241,9 +242,6 @@ class _ReimbursementFormScreenState
                 children: others.map((m) {
                   final isSelected = _toUid == m.uid;
                   final color = _memberColor(m.uid);
-                  final initials = m.displayName.isNotEmpty
-                      ? m.displayName[0].toUpperCase()
-                      : '?';
                   return GestureDetector(
                     onTap: () => setState(() => _toUid = m.uid),
                     child: AnimatedContainer(
@@ -263,18 +261,12 @@ class _ReimbursementFormScreenState
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircleAvatar(
+                          UserAvatar(
+                            photoUrl: m.photoUrl,
+                            showPhoto: m.showProfilePhoto,
+                            displayName: m.displayName,
                             radius: 18,
-                            backgroundColor:
-                                color.withValues(alpha: isSelected ? 0.2 : 0.1),
-                            child: Text(
-                              initials,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: color,
-                              ),
-                            ),
+                            color: color,
                           ),
                           const SizedBox(width: 10),
                           Text(

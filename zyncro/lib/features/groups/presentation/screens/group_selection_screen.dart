@@ -299,6 +299,9 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
     if (user == null) return;
     try {
       final freshUser = ref.read(authRepositoryProvider).currentUser ?? user;
+      final userDoc = ref.read(userDocProvider).asData?.value;
+      final effectivePhotoUrl = userDoc?['photoUrl'] as String? ?? freshUser.photoURL;
+      final showPhoto = userDoc?['showProfilePhoto'] as bool? ?? true;
       final group = await ref.read(groupsRepositoryProvider).createGroup(
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim().isNotEmpty
@@ -307,6 +310,8 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
         emoji: _selectedEmoji,
         userId: user.uid,
         displayName: freshUser.displayName ?? user.email ?? 'Membre',
+        photoUrl: showPhoto ? effectivePhotoUrl : null,
+        showProfilePhoto: showPhoto,
       );
       if (mounted) {
         await ref.read(selectedGroupIdProvider.notifier).select(group.id);
@@ -471,10 +476,15 @@ class _JoinGroupSheetState extends ConsumerState<_JoinGroupSheet> {
 
     try {
       final freshUser = ref.read(authRepositoryProvider).currentUser ?? user;
+      final userDoc = ref.read(userDocProvider).asData?.value;
+      final effectivePhotoUrl = userDoc?['photoUrl'] as String? ?? freshUser.photoURL;
+      final showPhoto = userDoc?['showProfilePhoto'] as bool? ?? true;
       final group = await ref.read(groupsRepositoryProvider).joinGroupByCode(
         code,
         user.uid,
         freshUser.displayName ?? user.email ?? 'Membre',
+        photoUrl: showPhoto ? effectivePhotoUrl : null,
+        showProfilePhoto: showPhoto,
       );
 
       if (!mounted) return;

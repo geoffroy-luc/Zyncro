@@ -3,6 +3,7 @@ class AppUser {
   final String email;
   final String? displayName;
   final String? photoUrl;
+  final bool showProfilePhoto;
   final List<String> groupIds;
 
   const AppUser({
@@ -10,6 +11,7 @@ class AppUser {
     required this.email,
     this.displayName,
     this.photoUrl,
+    this.showProfilePhoto = true,
     this.groupIds = const [],
   });
 
@@ -19,6 +21,7 @@ class AppUser {
       email: map['email'] as String,
       displayName: map['displayName'] as String?,
       photoUrl: map['photoUrl'] as String?,
+      showProfilePhoto: map['showProfilePhoto'] as bool? ?? true,
       groupIds: List<String>.from(map['groupIds'] ?? []),
     );
   }
@@ -28,6 +31,7 @@ class AppUser {
       'email': email,
       'displayName': displayName,
       'photoUrl': photoUrl,
+      'showProfilePhoto': showProfilePhoto,
       'groupIds': groupIds,
     };
   }

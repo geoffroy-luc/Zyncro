@@ -9,8 +9,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../shared/models/group_member.dart';
 import '../../../../shared/models/message.dart';
+import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../expenses/presentation/providers/expenses_provider.dart';
 import '../../domain/repositories/i_messages_repository.dart';
 import '../providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
@@ -556,6 +559,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
     ref.watch(currentMemberProvider); // garde le provider actif pour ref.read() dans les méthodes async
     final messagesAsync = ref.watch(messagesProvider);
+    final members = ref.watch(expenseMembersProvider).asData?.value ?? <GroupMember>[];
 
     if (currentUid == null) {
       return const Scaffold(
@@ -621,6 +625,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           showSenderName: !isMe && isLastInGroup,
                           isFirstInGroup: isFirstInGroup,
                           isLastInGroup: isLastInGroup,
+                          member: members.where((m) => m.uid == msg.senderId).firstOrNull,
                           onTap: msg.type != MessageType.system && !isPoll
                               ? () => _toggleTimestamp(msg.id)
                               : null,
@@ -1026,6 +1031,7 @@ class _MessageBubble extends StatelessWidget {
   final bool showSenderName;
   final bool isFirstInGroup;
   final bool isLastInGroup;
+  final GroupMember? member;
   final VoidCallback? onTap;
   final VoidCallback? onDoubleTap;
   final VoidCallback? onLongPress;
@@ -1039,6 +1045,7 @@ class _MessageBubble extends StatelessWidget {
     required this.showSenderName,
     required this.isFirstInGroup,
     required this.isLastInGroup,
+    this.member,
     this.currentUserId,
     this.onTap,
     this.onDoubleTap,
@@ -1088,12 +1095,6 @@ class _MessageBubble extends StatelessWidget {
     return colors[uid.hashCode.abs() % colors.length];
   }
 
-  String _initials(String? name) {
-    if (name == null || name.isEmpty) return '?';
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    return name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase();
-  }
 
   String _formatTime(DateTime dt) => DateFormat('HH:mm').format(dt);
 
@@ -1245,23 +1246,14 @@ class _MessageBubble extends StatelessWidget {
           children: [
             // Avatar ou placeholder pour maintenir l'alignement
             if (showAvatar)
-              Container(
-                width: 30,
-                height: 30,
-                margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: UserAvatar(
+                  photoUrl: member?.photoUrl,
+                  showPhoto: member?.showProfilePhoto ?? true,
+                  displayName: message.senderName ?? '?',
+                  radius: 15,
                   color: avatarColor,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    _initials(message.senderName),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
                 ),
               )
             else

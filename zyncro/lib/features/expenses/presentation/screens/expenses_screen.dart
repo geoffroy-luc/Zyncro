@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/expense.dart';
+import '../../../../shared/models/group_member.dart';
+import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/expenses_provider.dart';
 import 'expense_form_screen.dart';
@@ -187,6 +189,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   balances: balances,
                   nameByUid: nameByUid,
                   currentUid: currentUid,
+                  members: members,
                 ),
               ],
             ),
@@ -318,12 +321,14 @@ class _EquilibreTab extends StatelessWidget {
   final Map<String, double> balances;
   final Map<String, String> nameByUid;
   final String? currentUid;
+  final List<GroupMember> members;
 
   const _EquilibreTab({
     required this.myBalance,
     required this.balances,
     required this.nameByUid,
     required this.currentUid,
+    required this.members,
   });
 
   String _name(String uid) {
@@ -435,42 +440,16 @@ class _EquilibreTab extends StatelessWidget {
                       children: balances.entries.map((entry) {
                         final isPos = entry.value >= 0;
                         final name = _name(entry.key);
-                        final initials = name.length >= 2
-                            ? name.substring(0, 2).toUpperCase()
-                            : name.toUpperCase();
+                        final member = members.where((m) => m.uid == entry.key).firstOrNull;
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Row(
                             children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: isPos
-                                        ? const [
-                                            Color(0xFF2BB8A5),
-                                            Color(0xFF1E9B8A),
-                                          ]
-                                        : const [
-                                            Color(0xFF6B7280),
-                                            Color(0xFF4B5563),
-                                          ],
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    initials,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
+                              UserAvatar(
+                                photoUrl: member?.photoUrl,
+                                showPhoto: member?.showProfilePhoto ?? true,
+                                displayName: name,
+                                radius: 20,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
