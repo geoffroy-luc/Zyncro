@@ -186,6 +186,49 @@ class MessagesRepository implements IMessagesRepository {
   }
 
   @override
+  Future<void> sendMedia({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required String filePath,
+    required String mimeType,
+    String? replyToId,
+    String? replyToSenderName,
+    String? replyToContent,
+  }) async {
+    final isVideo = mimeType.startsWith('video/');
+    final ext = filePath.split('.').last;
+    final ref = _col(groupId).doc();
+    final storageRef = FirebaseStorage.instance
+        .ref('media/$groupId/${ref.id}.$ext');
+    final snapshot = await storageRef.putFile(
+      File(filePath),
+      SettableMetadata(contentType: mimeType),
+    );
+    if (snapshot.state != TaskState.success) {
+      throw FirebaseException(
+        plugin: 'firebase_storage',
+        message: 'Upload failed with state: ${snapshot.state}',
+      );
+    }
+    final url = await storageRef.getDownloadURL();
+    final content = jsonEncode({'url': url, 'mimeType': mimeType});
+    final message = Message(
+      id: ref.id,
+      groupId: groupId,
+      senderId: senderId,
+      senderName: senderName,
+      content: content,
+      type: isVideo ? MessageType.file : MessageType.image,
+      timestamp: DateTime.now(),
+      replyToId: replyToId,
+      replyToSenderName: replyToSenderName,
+      replyToContent: replyToContent,
+    );
+    await ref.set(message.toMap());
+  }
+
+  @override
   Future<void> sendPoll({
     required String groupId,
     required String senderId,
