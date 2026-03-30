@@ -141,9 +141,17 @@ export const onNewMessage = onDocumentCreated(
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Récupère le displayName Firebase Auth d'un utilisateur. */
-async function getDisplayName(uid: string): Promise<string> {
+/** Récupère le pseudo du membre dans le groupe (displayName du sous-doc members).
+ *  Fallback sur le displayName Firebase Auth si le doc membre est introuvable. */
+async function getMemberPseudo(
+  db: admin.firestore.Firestore,
+  groupId: string,
+  uid: string
+): Promise<string> {
   try {
+    const memberDoc = await db.doc(`groups/${groupId}/members/${uid}`).get();
+    const pseudo = memberDoc.data()?.displayName;
+    if (pseudo) return pseudo;
     const user = await admin.auth().getUser(uid);
     return user.displayName ?? "Quelqu'un";
   } catch {
@@ -227,7 +235,7 @@ export const onExpenseUpdated = onDocumentUpdated(
     ]);
 
     const actorName = after.updatedBy
-      ? await getDisplayName(after.updatedBy)
+      ? await getMemberPseudo(db, groupId, after.updatedBy)
       : (after.paidByName ?? "Quelqu'un");
     await sendNotif(tokens, groupName, `${actorName} a modifié une dépense`, groupId, "expenses");
   }
@@ -245,7 +253,7 @@ export const onEventCreated = onDocumentCreated(
     const createdBy: string = data.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
       getGroupTokens(db, groupId, createdBy),
-      data.creatorName ? Promise.resolve(data.creatorName) : getDisplayName(createdBy),
+      data.creatorName ? Promise.resolve(data.creatorName) : getMemberPseudo(db, groupId, createdBy),
     ]);
     await sendNotif(tokens, groupName, `${name} a créé un événement`, groupId, "calendar");
   }
@@ -261,9 +269,7 @@ export const onEventUpdated = onDocumentUpdated(
     const actorUid: string = after.updatedBy ?? after.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
       getGroupTokens(db, groupId, actorUid),
-      actorUid === after.createdBy
-        ? Promise.resolve(after.creatorName ?? null).then((n) => n ?? getDisplayName(actorUid))
-        : getDisplayName(actorUid),
+      getMemberPseudo(db, groupId, actorUid),
     ]);
     await sendNotif(tokens, groupName, `${name} a modifié un événement`, groupId, "calendar");
   }
@@ -279,7 +285,7 @@ export const onEventDeleted = onDocumentDeleted(
     const createdBy: string = before.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
       getGroupTokens(db, groupId),
-      before.creatorName ? Promise.resolve(before.creatorName) : getDisplayName(createdBy),
+      before.creatorName ? Promise.resolve(before.creatorName) : getMemberPseudo(db, groupId, createdBy),
     ]);
     await sendNotif(tokens, groupName, `${name} a supprimé un événement`, groupId, "calendar");
   }
@@ -297,7 +303,7 @@ export const onNoteCreated = onDocumentCreated(
     const createdBy: string = data.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
       getGroupTokens(db, groupId, createdBy),
-      getDisplayName(createdBy),
+      getMemberPseudo(db, groupId, createdBy),
     ]);
     await sendNotif(tokens, groupName, `${name} a créé une note`, groupId, "notes");
   }
@@ -319,7 +325,7 @@ export const onNoteUpdated = onDocumentUpdated(
     const actorUid: string = after.updatedBy ?? after.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
       getGroupTokens(db, groupId, actorUid),
-      getDisplayName(actorUid),
+      getMemberPseudo(db, groupId, actorUid),
     ]);
     await sendNotif(tokens, groupName, `${name} a modifié une note`, groupId, "notes");
   }
@@ -335,7 +341,7 @@ export const onNoteDeleted = onDocumentDeleted(
     const createdBy: string = before.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
       getGroupTokens(db, groupId),
-      getDisplayName(createdBy),
+      getMemberPseudo(db, groupId, createdBy),
     ]);
     await sendNotif(tokens, groupName, `${name} a supprimé une note`, groupId, "notes");
   }

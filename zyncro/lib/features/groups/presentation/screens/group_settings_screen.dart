@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/group_member.dart';
+import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
 import '../providers/groups_provider.dart';
@@ -358,17 +359,12 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                   children: members.map((member) {
                     final isCurrentUser = member.uid == currentUser?.uid;
                     return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: _avatarColor(member.uid),
-                        child: Text(
-                          member.displayName.isNotEmpty
-                              ? member.displayName[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                      leading: UserAvatar(
+                        photoUrl: member.photoUrl,
+                        showPhoto: member.showProfilePhoto,
+                        displayName: member.displayName,
+                        radius: 20,
+                        color: _avatarColor(member.uid),
                       ),
                       title: Text(
                         member.displayName +

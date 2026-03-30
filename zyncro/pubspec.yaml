@@ -51,6 +51,7 @@ dependencies:
   timezone: ^0.10.0
   flutter_timezone: ^5.0.2
   firebase_app_check: ^0.4.1+5
+  image_picker: ^1.1.2
   record: ^5.2.0
   just_audio: ^0.9.40
   path_provider: ^2.1.5

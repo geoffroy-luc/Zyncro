@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Profile photos ─────────────────────────────────────────────────────
+    // Any authenticated user can read (needed to display avatars).
+    // Only the owner can write/delete their own photo.
+    match /profile_photos/{filename} {
+      allow read: if request.auth != null;
+      allow write, delete: if request.auth != null
+        && filename == request.auth.uid + '.jpg';
+    }
+
+  }
+}

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/expense.dart';
 import '../../../../shared/models/group_member.dart';
+import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
@@ -516,8 +517,6 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   final isSelected = _paidByUid == m.uid;
                   final color = _memberColor(m.uid);
                   final label = _memberLabel(m, currentUid);
-                  final initials =
-                      label.isNotEmpty ? label[0].toUpperCase() : '?';
                   return GestureDetector(
                     onTap: () => setState(() {
                       _paidByUid = m.uid;
@@ -540,18 +539,12 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircleAvatar(
+                          UserAvatar(
+                            photoUrl: m.photoUrl,
+                            showPhoto: m.showProfilePhoto,
+                            displayName: m.displayName,
                             radius: 14,
-                            backgroundColor:
-                                color.withValues(alpha: isSelected ? 0.2 : 0.1),
-                            child: Text(
-                              initials,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: color,
-                              ),
-                            ),
+                            color: color,
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -595,9 +588,6 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   final isSelected = _selectedMemberUids.contains(m.uid);
                   final color = _memberColor(m.uid);
                   final label = _memberLabel(m, currentUid);
-                  final initials = label.isNotEmpty
-                      ? label[0].toUpperCase()
-                      : '?';
                   return GestureDetector(
                     onTap: () {
                       setState(() {
@@ -639,18 +629,12 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircleAvatar(
+                          UserAvatar(
+                            photoUrl: m.photoUrl,
+                            showPhoto: m.showProfilePhoto,
+                            displayName: m.displayName,
                             radius: 14,
-                            backgroundColor: color.withValues(
-                                alpha: isSelected ? 0.2 : 0.1),
-                            child: Text(
-                              initials,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: color,
-                              ),
-                            ),
+                            color: color,
                           ),
                           const SizedBox(width: 8),
                           Text(

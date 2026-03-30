@@ -9,9 +9,23 @@ abstract interface class IGroupsRepository {
     String? emoji,
     required String userId,
     required String displayName,
+    String? photoUrl,
+    bool showProfilePhoto,
   });
-  Future<void> joinGroup(String groupId, String userId, String displayName);
-  Future<Group?> joinGroupByCode(String code, String userId, String displayName);
+  Future<void> joinGroup(
+    String groupId,
+    String userId,
+    String displayName, {
+    String? photoUrl,
+    bool showProfilePhoto,
+  });
+  Future<Group?> joinGroupByCode(
+    String code,
+    String userId,
+    String displayName, {
+    String? photoUrl,
+    bool showProfilePhoto,
+  });
   Stream<List<GroupMember>> watchMembers(String groupId);
   Future<void> removeMember(String groupId, String userId);
   Future<void> leaveGroup(String groupId, String userId, {String? systemMessage});

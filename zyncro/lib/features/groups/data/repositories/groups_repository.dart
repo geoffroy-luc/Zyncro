@@ -29,6 +29,8 @@ class GroupsRepository implements IGroupsRepository {
     String? emoji,
     required String userId,
     required String displayName,
+    String? photoUrl,
+    bool showProfilePhoto = true,
   }) async {
     final code = Group.generateInviteCode();
     final groupRef = _db.collection('groups').doc();
@@ -52,9 +54,10 @@ class GroupsRepository implements IGroupsRepository {
         'displayName': displayName,
         'role': 'owner',
         'joinedAt': FieldValue.serverTimestamp(),
+        'photoUrl': photoUrl,
+        'showProfilePhoto': showProfilePhoto,
       },
     );
-    // Code → groupId mapping for join-by-code flow
     batch.set(
       _db.collection('invite_codes').doc(code),
       {'groupId': groupRef.id},
@@ -68,8 +71,10 @@ class GroupsRepository implements IGroupsRepository {
   Future<void> joinGroup(
     String groupId,
     String userId,
-    String displayName,
-  ) async {
+    String displayName, {
+    String? photoUrl,
+    bool showProfilePhoto = true,
+  }) async {
     final groupRef = _db.collection('groups').doc(groupId);
     final batch = _db.batch();
     batch.update(groupRef, {
@@ -82,6 +87,8 @@ class GroupsRepository implements IGroupsRepository {
         'displayName': displayName,
         'role': 'member',
         'joinedAt': FieldValue.serverTimestamp(),
+        'photoUrl': photoUrl,
+        'showProfilePhoto': showProfilePhoto,
       },
     );
     await batch.commit();
@@ -91,8 +98,10 @@ class GroupsRepository implements IGroupsRepository {
   Future<Group?> joinGroupByCode(
     String code,
     String userId,
-    String displayName,
-  ) async {
+    String displayName, {
+    String? photoUrl,
+    bool showProfilePhoto = true,
+  }) async {
     final codeDoc = await _db
         .collection('invite_codes')
         .doc(code.toUpperCase().trim())
@@ -101,12 +110,14 @@ class GroupsRepository implements IGroupsRepository {
 
     final groupId = codeDoc.data()!['groupId'] as String;
 
-    // Join first (idempotent: arrayUnion + member doc overwrite).
-    // We intentionally skip reading the group doc before joining because
-    // the user is not yet a member and the read rule would deny it.
-    await joinGroup(groupId, userId, displayName);
+    await joinGroup(
+      groupId,
+      userId,
+      displayName,
+      photoUrl: photoUrl,
+      showProfilePhoto: showProfilePhoto,
+    );
 
-    // Now we're a member — read is allowed.
     final updated = await _db.collection('groups').doc(groupId).get();
     if (!updated.exists) return null;
     return Group.fromMap(updated.id, updated.data()!);
@@ -204,6 +215,19 @@ class GroupsRepository implements IGroupsRepository {
   }
 
   @override
+  Future<String> generateInviteCode(String groupId) async {
+    final code = Group.generateInviteCode();
+    final batch = _db.batch();
+    batch.update(_db.collection('groups').doc(groupId), {'inviteCode': code});
+    batch.set(
+      _db.collection('invite_codes').doc(code),
+      {'groupId': groupId},
+    );
+    await batch.commit();
+    return code;
+  }
+
+  @override
   Future<void> updateMemberDisplayName(
     String groupId,
     String userId,
@@ -215,18 +239,5 @@ class GroupsRepository implements IGroupsRepository {
         .collection('members')
         .doc(userId)
         .update({'displayName': displayName});
-  }
-
-  @override
-  Future<String> generateInviteCode(String groupId) async {
-    final code = Group.generateInviteCode();
-    final batch = _db.batch();
-    batch.update(_db.collection('groups').doc(groupId), {'inviteCode': code});
-    batch.set(
-      _db.collection('invite_codes').doc(code),
-      {'groupId': groupId},
-    );
-    await batch.commit();
-    return code;
   }
 }

@@ -47,6 +47,10 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Zyncro utilise le microphone pour envoyer des messages audio.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Zyncro accède à ta galerie pour choisir une photo de profil.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Zyncro utilise l'appareil photo pour prendre une photo de profil.</string>
 	<key>GIDClientID</key>
 	<string>1010364828673-hf0fivaoor45ssecejupc9flmm30gre2.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>

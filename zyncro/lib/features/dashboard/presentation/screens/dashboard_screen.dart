@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../shared/models/group_member.dart';
+import '../../../../shared/widgets/user_avatar.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/message.dart';
 import '../../../../shared/models/note.dart';
@@ -41,12 +43,6 @@ const _avatarColors = [
 Color _avatarColor(String uid) =>
     _avatarColors[uid.hashCode.abs() % _avatarColors.length];
 
-String _initials(String? name) {
-  if (name == null || name.isEmpty) return '?';
-  final parts = name.trim().split(' ');
-  if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-  return name.substring(0, name.length >= 2 ? 2 : 1).toUpperCase();
-}
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -228,7 +224,8 @@ class DashboardScreen extends ConsumerWidget {
                                         child: _MessageRow(
                                             message: m,
                                             isMe: m.senderId == currentUid,
-                                            memberNames: memberNames),
+                                            memberNames: memberNames,
+                                            members: members),
                                       ))
                                   .toList(),
                             ),
@@ -613,30 +610,28 @@ class _MessageRow extends StatelessWidget {
   final Message message;
   final bool isMe;
   final Map<String, String> memberNames;
-  const _MessageRow({required this.message, required this.isMe, required this.memberNames});
+  final List<GroupMember> members;
+  const _MessageRow({
+    required this.message,
+    required this.isMe,
+    required this.memberNames,
+    required this.members,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final color = _avatarColor(message.senderId ?? '');
     final resolvedName = isMe ? 'Vous' : (memberNames[message.senderId] ?? message.senderName ?? '?');
     final name = resolvedName;
+    final member = members.where((m) => m.uid == message.senderId).firstOrNull;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          child: Center(
-            child: Text(
-              _initials(isMe ? 'Moi' : resolvedName),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
+        UserAvatar(
+          photoUrl: member?.photoUrl,
+          showPhoto: member?.showProfilePhoto ?? true,
+          displayName: isMe ? 'Vous' : resolvedName,
+          radius: 18,
+          color: _avatarColor(message.senderId ?? ''),
         ),
         const SizedBox(width: 10),
         Expanded(

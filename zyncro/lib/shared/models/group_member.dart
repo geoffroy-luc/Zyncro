@@ -5,12 +5,16 @@ class GroupMember {
   final String displayName;
   final String role; // 'owner' | 'member'
   final DateTime? joinedAt;
+  final String? photoUrl;
+  final bool showProfilePhoto;
 
   const GroupMember({
     required this.uid,
     required this.displayName,
     required this.role,
     this.joinedAt,
+    this.photoUrl,
+    this.showProfilePhoto = true,
   });
 
   bool get isOwner => role == 'owner';
@@ -23,6 +27,8 @@ class GroupMember {
       joinedAt: map['joinedAt'] != null
           ? (map['joinedAt'] as Timestamp).toDate()
           : null,
+      photoUrl: map['photoUrl'] as String?,
+      showProfilePhoto: map['showProfilePhoto'] as bool? ?? true,
     );
   }
 }
