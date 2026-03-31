@@ -4,13 +4,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/services/notification_service.dart';
 import '../core/theme/app_theme.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
+import '../features/chat/presentation/providers/messages_provider.dart';
 import 'router.dart';
 
-class ZyncroApp extends ConsumerWidget {
+class ZyncroApp extends ConsumerStatefulWidget {
   const ZyncroApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ZyncroApp> createState() => _ZyncroAppState();
+}
+
+class _ZyncroAppState extends ConsumerState<ZyncroApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final inForeground = state == AppLifecycleState.resumed;
+    ref.read(appInForegroundProvider.notifier).setForeground(inForeground);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     // Initialize FCM when the user is authenticated

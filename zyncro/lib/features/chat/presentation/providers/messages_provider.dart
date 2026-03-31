@@ -26,6 +26,17 @@ class ChatTabActiveNotifier extends Notifier<bool> {
 final isChatTabActiveProvider =
     NotifierProvider<ChatTabActiveNotifier, bool>(ChatTabActiveNotifier.new);
 
+/// True quand l'app est au premier plan (foreground).
+class AppInForegroundNotifier extends Notifier<bool> {
+  @override
+  bool build() => true;
+
+  void setForeground(bool value) => state = value;
+}
+
+final appInForegroundProvider =
+    NotifierProvider<AppInForegroundNotifier, bool>(AppInForegroundNotifier.new);
+
 final typingProvider = StreamProvider<List<String>>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
   final currentUserId = ref.watch(authStateProvider).asData?.value?.uid;

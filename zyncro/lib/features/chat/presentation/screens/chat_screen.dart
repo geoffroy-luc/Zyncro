@@ -705,9 +705,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final members = ref.watch(expenseMembersProvider).asData?.value ?? <GroupMember>[];
 
     // Marque le dernier message comme lu quand un nouveau message arrive
-    // (uniquement si le chat est actif).
+    // (uniquement si le chat est actif ET l'app est au premier plan).
     ref.listen(messagesProvider, (_, next) {
       if (!ref.read(isChatTabActiveProvider)) return;
+      if (!ref.read(appInForegroundProvider)) return;
       final msgs = next.asData?.value;
       if (msgs == null || msgs.isEmpty) return;
       final groupId = ref.read(selectedGroupIdProvider).asData?.value;
@@ -724,6 +725,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // (navigation depuis la nav bar ou ouverture via notification).
     ref.listen(isChatTabActiveProvider, (_, isActive) {
       if (!isActive) return;
+      final msgs = ref.read(messagesProvider).asData?.value;
+      if (msgs == null || msgs.isEmpty) return;
+      final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+      final userId = ref.read(authStateProvider).asData?.value?.uid;
+      if (groupId == null || userId == null) return;
+      ref.read(messagesRepositoryProvider).markAsRead(
+            groupId: groupId,
+            userId: userId,
+            messageId: msgs.first.id,
+          );
+    });
+
+    // Marque le dernier message comme lu quand l'app revient au premier plan
+    // avec le chat déjà actif (isChatTabActive ne change pas dans ce cas).
+    ref.listen(appInForegroundProvider, (_, inForeground) {
+      if (!inForeground) return;
+      if (!ref.read(isChatTabActiveProvider)) return;
       final msgs = ref.read(messagesProvider).asData?.value;
       if (msgs == null || msgs.isEmpty) return;
       final groupId = ref.read(selectedGroupIdProvider).asData?.value;
