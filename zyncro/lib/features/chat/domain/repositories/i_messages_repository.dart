@@ -54,6 +54,18 @@ abstract interface class IMessagesRepository {
     required int durationSeconds,
   });
 
+  /// Envoie une photo ou une vidéo dans le groupe.
+  Future<void> sendMedia({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required String filePath,
+    required String mimeType,
+    String? replyToId,
+    String? replyToSenderName,
+    String? replyToContent,
+  });
+
   /// Envoie un sondage dans le groupe.
   Future<void> sendPoll({
     required String groupId,

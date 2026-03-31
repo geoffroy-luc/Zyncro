@@ -102,6 +102,7 @@ exports.onNewMessage = (0, firestore_1.onDocumentCreated)("groups/{groupId}/mess
         if (token)
             tokens.push(token);
     }));
+    console.log(`[onNewMessage] type="${message.type}" tokens=${tokens.length}`);
     if (tokens.length === 0)
         return;
     const senderName = (_f = message.senderName) !== null && _f !== void 0 ? _f : "Quelqu'un";
@@ -112,6 +113,12 @@ exports.onNewMessage = (0, firestore_1.onDocumentCreated)("groups/{groupId}/mess
     else if (message.type === "poll") {
         body = `${senderName} a créé un sondage 📊`;
     }
+    else if (message.type === "image") {
+        body = `${senderName} a envoyé une photo 📷`;
+    }
+    else if (message.type === "file") {
+        body = `${senderName} a envoyé une vidéo 🎥`;
+    }
     else {
         const content = (_g = message.content) !== null && _g !== void 0 ? _g : "";
         const preview = content.length > 80 ? content.substring(0, 80) + "…" : content;
@@ -120,14 +127,19 @@ exports.onNewMessage = (0, firestore_1.onDocumentCreated)("groups/{groupId}/mess
     await sendNotif(tokens, groupName, body, groupId, "chat");
 });
 // ── Helpers ──────────────────────────────────────────────────────────────────
-/** Récupère le displayName Firebase Auth d'un utilisateur. */
-async function getDisplayName(uid) {
-    var _a;
+/** Récupère le pseudo du membre dans le groupe (displayName du sous-doc members).
+ *  Fallback sur le displayName Firebase Auth si le doc membre est introuvable. */
+async function getMemberPseudo(db, groupId, uid) {
+    var _a, _b;
     try {
+        const memberDoc = await db.doc(`groups/${groupId}/members/${uid}`).get();
+        const pseudo = (_a = memberDoc.data()) === null || _a === void 0 ? void 0 : _a.displayName;
+        if (pseudo)
+            return pseudo;
         const user = await admin.auth().getUser(uid);
-        return (_a = user.displayName) !== null && _a !== void 0 ? _a : "Quelqu'un";
+        return (_b = user.displayName) !== null && _b !== void 0 ? _b : "Quelqu'un";
     }
-    catch (_b) {
+    catch (_c) {
         return "Quelqu'un";
     }
 }
@@ -191,7 +203,7 @@ exports.onExpenseUpdated = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/
         getGroupName(db, groupId),
     ]);
     const actorName = after.updatedBy
-        ? await getDisplayName(after.updatedBy)
+        ? await getMemberPseudo(db, groupId, after.updatedBy)
         : ((_e = after.paidByName) !== null && _e !== void 0 ? _e : "Quelqu'un");
     await sendNotif(tokens, groupName, `${actorName} a modifié une dépense`, groupId, "expenses");
 });
@@ -206,12 +218,12 @@ exports.onEventCreated = (0, firestore_1.onDocumentCreated)("groups/{groupId}/ev
     const createdBy = data.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
         getGroupTokens(db, groupId, createdBy),
-        data.creatorName ? Promise.resolve(data.creatorName) : getDisplayName(createdBy),
+        data.creatorName ? Promise.resolve(data.creatorName) : getMemberPseudo(db, groupId, createdBy),
     ]);
     await sendNotif(tokens, groupName, `${name} a créé un événement`, groupId, "calendar");
 });
 exports.onEventUpdated = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/events/{eventId}", async (event) => {
-    var _a, _b, _c;
+    var _a, _b;
     const after = (_a = event.data) === null || _a === void 0 ? void 0 : _a.after.data();
     if (!after)
         return;
@@ -220,9 +232,7 @@ exports.onEventUpdated = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/ev
     const actorUid = (_b = after.updatedBy) !== null && _b !== void 0 ? _b : after.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
         getGroupTokens(db, groupId, actorUid),
-        actorUid === after.createdBy
-            ? Promise.resolve((_c = after.creatorName) !== null && _c !== void 0 ? _c : null).then((n) => n !== null && n !== void 0 ? n : getDisplayName(actorUid))
-            : getDisplayName(actorUid),
+        getMemberPseudo(db, groupId, actorUid),
     ]);
     await sendNotif(tokens, groupName, `${name} a modifié un événement`, groupId, "calendar");
 });
@@ -236,7 +246,7 @@ exports.onEventDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}/ev
     const createdBy = before.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
         getGroupTokens(db, groupId),
-        before.creatorName ? Promise.resolve(before.creatorName) : getDisplayName(createdBy),
+        before.creatorName ? Promise.resolve(before.creatorName) : getMemberPseudo(db, groupId, createdBy),
     ]);
     await sendNotif(tokens, groupName, `${name} a supprimé un événement`, groupId, "calendar");
 });
@@ -251,7 +261,7 @@ exports.onNoteCreated = (0, firestore_1.onDocumentCreated)("groups/{groupId}/not
     const createdBy = data.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
         getGroupTokens(db, groupId, createdBy),
-        getDisplayName(createdBy),
+        getMemberPseudo(db, groupId, createdBy),
     ]);
     await sendNotif(tokens, groupName, `${name} a créé une note`, groupId, "notes");
 });
@@ -270,7 +280,7 @@ exports.onNoteUpdated = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/not
     const actorUid = (_c = after.updatedBy) !== null && _c !== void 0 ? _c : after.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
         getGroupTokens(db, groupId, actorUid),
-        getDisplayName(actorUid),
+        getMemberPseudo(db, groupId, actorUid),
     ]);
     await sendNotif(tokens, groupName, `${name} a modifié une note`, groupId, "notes");
 });
@@ -284,7 +294,7 @@ exports.onNoteDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}/not
     const createdBy = before.createdBy;
     const [{ tokens, groupName }, name] = await Promise.all([
         getGroupTokens(db, groupId),
-        getDisplayName(createdBy),
+        getMemberPseudo(db, groupId, createdBy),
     ]);
     await sendNotif(tokens, groupName, `${name} a supprimé une note`, groupId, "notes");
 });

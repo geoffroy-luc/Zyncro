@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +20,7 @@ import '../../../expenses/presentation/providers/expenses_provider.dart';
 import '../../domain/repositories/i_messages_repository.dart';
 import '../providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
+import 'media_viewer_screen.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -36,6 +40,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _recorder = AudioRecorder();
   bool _isRecording = false;
   bool _isUploading = false;
+  bool _isUploadingMedia = false;
   Duration _recordingDuration = Duration.zero;
   Timer? _recordingTimer;
 
@@ -244,6 +249,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 title: const Text('Modifier le sondage'),
                 onTap: () => Navigator.of(ctx).pop('edit_poll'),
               ),
+            if (message.type == MessageType.image ||
+                message.type == MessageType.file)
+              ListTile(
+                leading: const Icon(Icons.download_outlined),
+                title: const Text('Télécharger'),
+                onTap: () => Navigator.of(ctx).pop('download'),
+              ),
             if (isMe)
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
@@ -285,9 +297,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       await _editPoll(message);
       return;
     }
+    if (action == 'download') {
+      await _downloadMedia(message);
+      return;
+    }
     if (action == 'delete') {
       await _deleteMessage(message);
     }
+  }
+
+  Future<void> _downloadMedia(Message message) async {
+    try {
+      final data = jsonDecode(message.content) as Map<String, dynamic>;
+      final url = data['url'] as String? ?? '';
+      if (url.isEmpty) return;
+      if (message.type == MessageType.image) {
+        await MediaDownloader.downloadImage(context, url);
+      } else if (message.type == MessageType.file) {
+        await MediaDownloader.downloadVideo(context, url);
+      }
+    } catch (_) {}
   }
 
   Future<void> _editMessage(Message message) async {
@@ -546,6 +575,120 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     } finally {
       if (mounted) setState(() => _isUploading = false);
+    }
+  }
+
+  Future<void> _pickAndSendMedia() async {
+    final picker = ImagePicker();
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Photo depuis la galerie'),
+              onTap: () => Navigator.of(ctx).pop('gallery_photo'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.video_library_outlined),
+              title: const Text('Vidéo depuis la galerie'),
+              onTap: () => Navigator.of(ctx).pop('gallery_video'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Prendre une photo'),
+              onTap: () => Navigator.of(ctx).pop('camera'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam_outlined),
+              title: const Text('Enregistrer une vidéo'),
+              onTap: () => Navigator.of(ctx).pop('video'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+
+    XFile? file;
+    String mimeType;
+    if (choice == 'gallery_photo') {
+      file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 100);
+      if (file == null) return;
+      mimeType = 'image/jpeg';
+    } else if (choice == 'gallery_video') {
+      file = await picker.pickVideo(source: ImageSource.gallery);
+      if (file == null) return;
+      mimeType = 'video/mp4';
+    } else if (choice == 'camera') {
+      file = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+      mimeType = 'image/jpeg';
+    } else {
+      file = await picker.pickVideo(source: ImageSource.camera);
+      mimeType = 'video/mp4';
+    }
+    if (file == null || !mounted) return;
+
+    final user = ref.read(authStateProvider).asData?.value;
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (user == null || groupId == null) return;
+
+    final reply = _replyingTo;
+    setState(() {
+      _isUploadingMedia = true;
+      _replyingTo = null;
+    });
+
+    try {
+      // Compression pour les images uniquement
+      String uploadPath = file.path;
+      if (mimeType.startsWith('image/')) {
+        final dir = await getTemporaryDirectory();
+        final targetPath = '${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final compressed = await FlutterImageCompress.compressAndGetFile(
+          file.path,
+          targetPath,
+          quality: 85,
+          minWidth: 1920,
+          minHeight: 1920,
+          keepExif: false,
+        );
+        if (compressed != null) {
+          uploadPath = compressed.path;
+          mimeType = 'image/jpeg';
+        }
+      }
+
+      await ref.read(messagesRepositoryProvider).sendMedia(
+            groupId: groupId,
+            senderId: user.uid,
+            senderName: ref.read(currentMemberProvider).asData?.value?.displayName ??
+                user.displayName ??
+                user.email ??
+                'Anonyme',
+            filePath: uploadPath,
+            mimeType: mimeType,
+            replyToId: reply?.id,
+            replyToSenderName: reply?.senderName,
+            replyToContent: reply?.content,
+          );
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur envoi média : $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isUploadingMedia = false);
     }
   }
 
@@ -876,6 +1019,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   ),
                 ),
+                GestureDetector(
+                  onTap: _isUploadingMedia ? null : _pickAndSendMedia,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    margin: const EdgeInsets.only(right: 8, bottom: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F9FC),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: _isUploadingMedia
+                        ? const Padding(
+                            padding: EdgeInsets.all(10),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.textSecondary,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.image_outlined,
+                            color: AppColors.textSecondary,
+                            size: 18,
+                          ),
+                  ),
+                ),
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -1110,7 +1279,7 @@ class _MessageBubble extends StatelessWidget {
     this.onVote,
   });
 
-  Widget _messageContent(bool isMe) {
+  Widget _messageContent(BuildContext context, bool isMe) {
     if (message.type == MessageType.audio) {
       try {
         final data = jsonDecode(message.content) as Map<String, dynamic>;
@@ -1123,6 +1292,84 @@ class _MessageBubble extends StatelessWidget {
       } catch (_) {
         return Text(
           '🎵 Audio',
+          style: TextStyle(
+            color: isMe ? Colors.white : AppColors.textPrimary,
+            fontSize: 14,
+          ),
+        );
+      }
+    }
+    if (message.type == MessageType.image) {
+      try {
+        final data = jsonDecode(message.content) as Map<String, dynamic>;
+        final url = data['url'] as String? ?? '';
+        return GestureDetector(
+          onTap: () => Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute(builder: (_) => ImageViewerScreen(
+              url: url,
+              senderName: message.senderName,
+              sentAt: message.timestamp,
+            )),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              url,
+              width: 220,
+              fit: BoxFit.cover,
+              loadingBuilder: (_, child, progress) => progress == null
+                  ? child
+                  : SizedBox(
+                      width: 220,
+                      height: 160,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          value: progress.expectedTotalBytes != null
+                              ? progress.cumulativeBytesLoaded /
+                                  progress.expectedTotalBytes!
+                              : null,
+                          color: isMe ? Colors.white : const Color(0xFFE85D75),
+                          strokeWidth: 2,
+                        ),
+                      ),
+                    ),
+              errorBuilder: (_, __, ___) => Text(
+                '🖼️ Image',
+                style: TextStyle(
+                  color: isMe ? Colors.white : AppColors.textPrimary,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        );
+      } catch (_) {
+        return Text(
+          '🖼️ Image',
+          style: TextStyle(
+            color: isMe ? Colors.white : AppColors.textPrimary,
+            fontSize: 14,
+          ),
+        );
+      }
+    }
+    if (message.type == MessageType.file) {
+      try {
+        final data = jsonDecode(message.content) as Map<String, dynamic>;
+        final url = data['url'] as String? ?? '';
+        return GestureDetector(
+          onTap: () => Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute(builder: (_) => VideoViewerScreen(
+              url: url,
+              senderName: message.senderName,
+              sentAt: message.timestamp,
+            )),
+          ),
+          child: _VideoThumbnail(key: ValueKey(message.id), url: url),
+        );
+      } catch (_) {
+        return Text(
+          '🎥 Vidéo',
           style: TextStyle(
             color: isMe ? Colors.white : AppColors.textPrimary,
             fontSize: 14,
@@ -1203,6 +1450,8 @@ class _MessageBubble extends StatelessWidget {
           )
         : null;
 
+    final isMedia = message.type == MessageType.image || message.type == MessageType.file;
+
     if (isMe) {
       // Border radius selon position dans le groupe
       final radius = BorderRadius.only(
@@ -1222,13 +1471,17 @@ class _MessageBubble extends StatelessWidget {
             onLongPress: onLongPress,
             child: Container(
               constraints: const BoxConstraints(maxWidth: 280),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: isMedia
+                  ? EdgeInsets.zero
+                  : const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFE85D75), Color(0xFFC94060)],
-                ),
+                gradient: isMedia
+                    ? null
+                    : const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFE85D75), Color(0xFFC94060)],
+                      ),
                 borderRadius: radius,
                 boxShadow: const [
                   BoxShadow(
@@ -1248,7 +1501,7 @@ class _MessageBubble extends StatelessWidget {
                       content: message.replyToContent!,
                       isMe: true,
                     ),
-                  _messageContent(true),
+                  _messageContent(context, true),
                 ],
               ),
             ),
@@ -1313,14 +1566,16 @@ class _MessageBubble extends StatelessWidget {
                   onLongPress: onLongPress,
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 260),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
+                    padding: isMedia
+                        ? EdgeInsets.zero
+                        : const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: radius,
-                      border: Border.all(color: AppColors.border),
+                      border: isMedia ? null : Border.all(color: AppColors.border),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x0A000000),
@@ -1339,7 +1594,7 @@ class _MessageBubble extends StatelessWidget {
                             content: message.replyToContent!,
                             isMe: false,
                           ),
-                        _messageContent(false),
+                        _messageContent(context, false),
                       ],
                     ),
                   ),
@@ -1353,6 +1608,69 @@ class _MessageBubble extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+// ── Vignette vidéo (premier frame) ──────────────────────────────────────────
+
+class _VideoThumbnail extends StatefulWidget {
+  final String url;
+  const _VideoThumbnail({super.key, required this.url});
+
+  @override
+  State<_VideoThumbnail> createState() => _VideoThumbnailState();
+}
+
+class _VideoThumbnailState extends State<_VideoThumbnail> {
+  late VideoPlayerController _controller;
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
+      ..initialize().then((_) {
+        if (mounted) {
+          _controller.seekTo(Duration.zero);
+          setState(() => _ready = true);
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: 220,
+        height: 130,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (_ready)
+              FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _controller.value.size.width,
+                  height: _controller.value.size.height,
+                  child: VideoPlayer(_controller),
+                ),
+              )
+            else
+              const ColoredBox(color: Color(0xFF1A1A1A)),
+            const Center(
+              child: Icon(Icons.play_circle_fill, size: 48, color: Colors.white70),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

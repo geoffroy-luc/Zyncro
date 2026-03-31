@@ -121,6 +121,7 @@ export const onNewMessage = onDocumentCreated(
         })
     );
 
+    console.log(`[onNewMessage] type="${message.type}" tokens=${tokens.length}`);
     if (tokens.length === 0) return;
 
     const senderName: string = message.senderName ?? "Quelqu'un";
@@ -129,6 +130,10 @@ export const onNewMessage = onDocumentCreated(
       body = `${senderName} a envoyé un message vocal 🎤`;
     } else if (message.type === "poll") {
       body = `${senderName} a créé un sondage 📊`;
+    } else if (message.type === "image") {
+      body = `${senderName} a envoyé une photo 📷`;
+    } else if (message.type === "file") {
+      body = `${senderName} a envoyé une vidéo 🎥`;
     } else {
       const content: string = message.content ?? "";
       const preview = content.length > 80 ? content.substring(0, 80) + "…" : content;
