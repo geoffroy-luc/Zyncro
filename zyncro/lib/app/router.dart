@@ -16,8 +16,13 @@ import '../features/notes/presentation/screens/notes_screen.dart';
 import '../core/constants/app_colors.dart';
 import '../features/chat/presentation/providers/messages_provider.dart';
 
+final rootNavigatorKeyProvider = Provider<GlobalKey<NavigatorState>>(
+  (ref) => GlobalKey<NavigatorState>(),
+);
+
 final routerProvider = Provider<GoRouter>((ref) {
   final notifier = ValueNotifier<int>(0);
+  final navigatorKey = ref.read(rootNavigatorKeyProvider);
 
   ref.listen(authStateProvider, (_, __) => notifier.value++);
   ref.listen(selectedGroupIdProvider, (_, __) => notifier.value++);
@@ -25,6 +30,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(notifier.dispose);
 
   return GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: '/login',
     refreshListenable: notifier,
     redirect: (context, state) {
