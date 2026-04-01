@@ -45,6 +45,11 @@
 # Keep Parcelable
 -keep class * implements android.os.Parcelable { *; }
 
+# Gson TypeToken - required for flutter_local_notifications (R8 strips generic signatures)
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+-keepattributes RuntimeVisibleAnnotations,AnnotationDefault
+
 # Keep Serializable
 -keepclassmembers class * implements java.io.Serializable {
     static final long serialVersionUID;
