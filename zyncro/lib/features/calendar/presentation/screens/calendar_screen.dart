@@ -298,9 +298,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                 .where((e) => _eventOnDay(e, cellDate))
                                 .toList();
                             return GestureDetector(
+                              behavior: HitTestBehavior.opaque,
                               onTap: () => setState(() {
-                                _selectedDay =
-                                    isSelected ? null : cellDate;
+                                _selectedDay = cellDate;
                               }),
                               child: Container(
                                 decoration: isSelected
