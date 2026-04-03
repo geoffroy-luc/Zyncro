@@ -52,5 +52,4 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.zyncro.app
           releaseFiles: zyncro/build/app/outputs/bundle/release/app-release.aab
-          track: production
-          status: draft
+          track: internal
