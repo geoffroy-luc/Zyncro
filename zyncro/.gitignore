@@ -48,6 +48,9 @@ android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 lib/firebase_options.dart
 
+# Android signing (sensitive keys)
+android/key.properties
+
 windows/
 linux/
 macos/
