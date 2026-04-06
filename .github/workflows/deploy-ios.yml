@@ -47,6 +47,10 @@ jobs:
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
           echo "PROFILE_UUID=$UUID" >> $GITHUB_ENV
 
+      - name: Create GoogleService-Info.plist
+        run: |
+          echo "${{ secrets.IOS_GOOGLE_SERVICES_PLIST_BASE64 }}" | base64 --decode > zyncro/ios/Runner/GoogleService-Info.plist
+
       - name: Build iOS (no codesign)
         run: flutter build ios --release --no-codesign --build-number=$(( ${{ github.run_number }} + 100 ))
         working-directory: zyncro
