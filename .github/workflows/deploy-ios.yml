@@ -47,9 +47,18 @@ jobs:
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
           echo "PROFILE_UUID=$UUID" >> $GITHUB_ENV
 
-      - name: Generate ExportOptions.plist
+      - name: Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign --build-number=$(( ${{ github.run_number }} + 100 ))
+        working-directory: zyncro
+
+      - name: Archive and export IPA
+        env:
+          API_KEY_BASE64: ${{ secrets.APPSTORE_API_KEY_P8_BASE64 }}
+          API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
         run: |
-          cat > zyncro/ios/ExportOptions.plist << EOF
+          # Generate ExportOptions.plist
+          cat > $RUNNER_TEMP/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -61,35 +70,34 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>com.zyncro.app</key>
-              <string>${{ env.PROFILE_UUID }}</string>
+              <string>$PROFILE_UUID</string>
             </dict>
           </dict>
           </plist>
           EOF
 
-      - name: Set manual signing in Xcode project
-        run: |
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \"\";/PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_UUID\";/g" ios/Runner.xcodeproj/project.pbxproj
-        working-directory: zyncro
+          # Archive
+          xcodebuild archive \
+            -workspace zyncro/ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/Runner.xcarchive \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
+            DEVELOPMENT_TEAM=ST97HKUKXU \
+            -allowProvisioningUpdates
 
-      - name: Build iOS
-        run: |
-          flutter build ipa --release \
-            --build-number=$(( ${{ github.run_number }} + 100 )) \
-            --export-options-plist=ios/ExportOptions.plist
-        working-directory: zyncro
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/Runner.xcarchive \
+            -exportPath $RUNNER_TEMP/ipa \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist
 
-      - name: Upload to TestFlight
-        env:
-          API_KEY_BASE64: ${{ secrets.APPSTORE_API_KEY_P8_BASE64 }}
-          API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-        run: |
+          # Upload to TestFlight
           mkdir -p ~/.appstoreconnect/private_keys
           echo "$API_KEY_BASE64" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_$API_KEY_ID.p8
           xcrun altool --upload-app \
             --type ios \
-            --file zyncro/build/ios/ipa/*.ipa \
+            --file $RUNNER_TEMP/ipa/*.ipa \
             --apiKey $API_KEY_ID \
             --apiIssuer $ISSUER_ID
