@@ -43,10 +43,15 @@ jobs:
           PP_PATH=$RUNNER_TEMP/profile.mobileprovision
           echo "$PROFILE_BASE64" | base64 --decode > $PP_PATH
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+          UUID=$(security cms -D -i $PP_PATH | plutil -extract UUID raw -)
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+          echo "PROFILE_UUID=$UUID" >> $GITHUB_ENV
 
       - name: Build iOS
-        run: flutter build ipa --release --build-number=$(( ${{ github.run_number }} + 100 ))
+        run: |
+          flutter build ipa --release \
+            --build-number=$(( ${{ github.run_number }} + 100 )) \
+            --export-options-plist=ios/ExportOptions.plist
         working-directory: zyncro
 
       - name: Upload to TestFlight
