@@ -67,6 +67,12 @@ jobs:
           </plist>
           EOF
 
+      - name: Set manual signing in Xcode project
+        run: |
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \"\";/PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_UUID\";/g" ios/Runner.xcodeproj/project.pbxproj
+        working-directory: zyncro
+
       - name: Build iOS
         run: |
           flutter build ipa --release \
