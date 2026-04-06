@@ -50,6 +50,7 @@ jobs:
       - name: Create GoogleService-Info.plist
         run: |
           echo "${{ secrets.IOS_GOOGLE_SERVICES_PLIST_BASE64 }}" | base64 --decode > zyncro/ios/Runner/GoogleService-Info.plist
+          echo "${{ secrets.IOS_GOOGLE_SERVICES_PLIST_BASE64 }}" | base64 --decode > zyncro/ios/GoogleService-Info.plist
 
       - name: Build iOS (no codesign)
         run: flutter build ios --release --no-codesign --build-number=$(( ${{ github.run_number }} + 100 ))
