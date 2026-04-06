@@ -87,10 +87,24 @@ jobs:
             -scheme Runner \
             -configuration Release \
             -archivePath $RUNNER_TEMP/Runner.xcarchive \
+            -destination "generic/platform=iOS" \
             CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
             DEVELOPMENT_TEAM=ST97HKUKXU \
-            -allowProvisioningUpdates
+            2>&1 | grep -E "error:|warning: The iOS deploy|ARCHIVE|signing" | tail -30 || true
+
+          # Re-run without filter to get exit code
+          xcodebuild archive \
+            -workspace zyncro/ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/Runner.xcarchive \
+            -destination "generic/platform=iOS" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
+            DEVELOPMENT_TEAM=ST97HKUKXU
 
           # Export IPA
           xcodebuild -exportArchive \
