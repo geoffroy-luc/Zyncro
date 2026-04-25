@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/expense.dart';
 import '../../../../shared/models/group_member.dart';
+import '../../../../shared/models/recurrence_rule.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
@@ -44,6 +46,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
   bool _recalculating = false;
   String? _paidByUid;
   String? _paidByName;
+  RecurrenceRule? _recurrence;
 
   @override
   void initState() {
@@ -58,6 +61,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
       _selectedMemberUids = e.splitWith.toSet();
       _splitType = e.splitType;
       _selectedCategory = e.category;
+      _recurrence = e.recurrence;
     }
   }
 
@@ -205,6 +209,218 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     return {for (final e in pcts.entries) e.key: total * e.value / 100};
   }
 
+  Future<void> _showRecurrencePicker() async {
+    RecurrenceFrequency? selectedFreq = _recurrence?.frequency;
+    RecurrenceEndType endType = _recurrence?.endType ?? RecurrenceEndType.forever;
+    int countValue = _recurrence?.count ?? 4;
+    final countController = TextEditingController(text: '$countValue');
+    DateTime untilDate = _recurrence?.until ?? _date.add(const Duration(days: 30));
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSt) {
+          final frequencies = [
+            (RecurrenceFrequency.daily, 'Tous les jours'),
+            (RecurrenceFrequency.weekly, 'Toutes les semaines'),
+            (RecurrenceFrequency.monthly, 'Tous les mois'),
+            (RecurrenceFrequency.yearly, 'Tous les ans'),
+          ];
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                    child: Text('Répétition',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600)),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.block_outlined,
+                        color: selectedFreq == null ? AppColors.primary : AppColors.textSecondary),
+                    title: const Text('Aucune'),
+                    trailing: selectedFreq == null
+                        ? const Icon(Icons.check, color: AppColors.primary) : null,
+                    onTap: () => setSt(() => selectedFreq = null),
+                  ),
+                  ...frequencies.map((f) {
+                    final (freq, label) = f;
+                    final isSelected = selectedFreq == freq;
+                    return ListTile(
+                      leading: Icon(Icons.repeat,
+                          color: isSelected ? AppColors.primary : AppColors.textSecondary),
+                      title: Text(label),
+                      trailing: isSelected
+                          ? const Icon(Icons.check, color: AppColors.primary) : null,
+                      onTap: () => setSt(() => selectedFreq = freq),
+                    );
+                  }),
+                  if (selectedFreq != null) ...[
+                    const Divider(height: 24),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
+                      child: Text('Fin de la répétition',
+                          style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500)),
+                    ),
+                    RadioListTile<RecurrenceEndType>(
+                      value: RecurrenceEndType.forever,
+                      groupValue: endType,
+                      onChanged: (v) => setSt(() => endType = v!),
+                      title: const Text('Toujours'),
+                      activeColor: AppColors.primary,
+                    ),
+                    RadioListTile<RecurrenceEndType>(
+                      value: RecurrenceEndType.count,
+                      groupValue: endType,
+                      onChanged: (v) => setSt(() => endType = v!),
+                      activeColor: AppColors.primary,
+                      title: endType == RecurrenceEndType.count
+                          ? Row(children: [
+                              const Text('Nombre de fois :'),
+                              const SizedBox(width: 12),
+                              SizedBox(
+                                width: 72,
+                                child: TextField(
+                                  controller: countController,
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  maxLength: 3,
+                                  decoration: const InputDecoration(
+                                    counterText: '',
+                                    isDense: true,
+                                    border: OutlineInputBorder(),
+                                    contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 8),
+                                  ),
+                                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                  onChanged: (v) {
+                                    final n = int.tryParse(v);
+                                    if (n != null && n >= 1 && n <= 999) {
+                                      setSt(() => countValue = n);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ])
+                          : const Text('Nombre de fois'),
+                    ),
+                    RadioListTile<RecurrenceEndType>(
+                      value: RecurrenceEndType.until,
+                      groupValue: endType,
+                      onChanged: (v) => setSt(() => endType = v!),
+                      activeColor: AppColors.primary,
+                      title: endType == RecurrenceEndType.until
+                          ? Row(children: [
+                              const Text('Jusqu\'au :'),
+                              const SizedBox(width: 12),
+                              GestureDetector(
+                                onTap: () async {
+                                  final picked = await showDatePicker(
+                                    context: ctx,
+                                    initialDate: untilDate,
+                                    firstDate: _date,
+                                    lastDate: DateTime(2100),
+                                  );
+                                  if (picked != null) {
+                                    setSt(() {
+                                      untilDate = picked;
+                                    });
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: AppColors.border),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    DateFormat('d MMM yyyy', 'fr_FR').format(untilDate),
+                                    style: const TextStyle(
+                                        color: AppColors.primary, fontSize: 13),
+                                  ),
+                                ),
+                              ),
+                            ])
+                          : const Text('Jusqu\'au'),
+                    ),
+                  ],
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          setState(() {
+                            if (selectedFreq == null) {
+                              _recurrence = null;
+                            } else {
+                              _recurrence = RecurrenceRule(
+                                frequency: selectedFreq!,
+                                endType: endType,
+                                count: endType == RecurrenceEndType.count ? countValue : null,
+                                until: endType == RecurrenceEndType.until ? untilDate : null,
+                              );
+                            }
+                          });
+                          Navigator.pop(ctx);
+                        },
+                        style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                        child: const Text('Confirmer'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRecurrenceRow() {
+    final label = _recurrence?.label ?? 'Aucune répétition';
+    return GestureDetector(
+      onTap: _showRecurrencePicker,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.repeat, size: 20, color: AppColors.textSecondary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: _recurrence != null ? AppColors.textPrimary : AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right, size: 20, color: AppColors.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -251,6 +467,8 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           category: _selectedCategory,
           date: _date,
           updatedBy: user.uid,
+          recurrence: _recurrence,
+          clearRecurrence: _recurrence == null,
         );
         await ref.read(expensesRepositoryProvider).updateExpense(groupId, updated);
         ref.read(messagesRepositoryProvider).sendSystemMessage(
@@ -274,6 +492,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           category: _selectedCategory,
           date: _date,
           userId: user.uid,
+          recurrence: _recurrence,
         );
         ref.read(messagesRepositoryProvider).sendSystemMessage(
           groupId: groupId,
@@ -436,13 +655,14 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                 ),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                onChanged: (_) {
-                  if (_splitType == SplitType.equal) return;
-                  final total = _parseDouble(_amountController.text) ?? 0;
-                  if (total > 0 && selectedMembers.isNotEmpty) {
-                    _fillDefaults(selectedMembers, total);
+                onChanged: (_) => setState(() {
+                  if (_splitType != SplitType.equal) {
+                    final total = _parseDouble(_amountController.text) ?? 0;
+                    if (total > 0 && selectedMembers.isNotEmpty) {
+                      _fillDefaults(selectedMembers, total);
+                    }
                   }
-                },
+                }),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Champ requis';
                   final p = _parseDouble(v);
@@ -690,28 +910,110 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   ),
                 ],
               ),
-              if (_splitType != SplitType.equal) ...[
-                const SizedBox(height: 14),
-                ...selectedMembers.map((m) {
-                  final ctrl = _splitType == SplitType.amount
-                      ? _amountSplitControllers[m.uid]!
-                      : _percentageSplitControllers[m.uid]!;
-                  final suffix = _splitType == SplitType.amount ? '€' : '%';
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: TextField(
-                      controller: ctrl,
-                      decoration: InputDecoration(
-                        labelText: '${_memberLabel(m, currentUid)} ($suffix)',
-                        prefixIcon: const Icon(Icons.tune),
-                      ),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      onChanged: (v) => _recalculateFrom(m.uid, v),
-                    ),
+              Builder(builder: (_) {
+                final total = _parseDouble(_amountController.text) ?? 0;
+                final n = selectedMembers.length;
+                if (_splitType == SplitType.equal && total > 0 && n > 0) {
+                  final share = total / n;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 14),
+                      ...selectedMembers.map((m) {
+                        final color = avatarColorForUid(m.uid);
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              UserAvatar(
+                                photoUrl: m.photoUrl,
+                                showPhoto: m.showProfilePhoto,
+                                displayName: m.displayName,
+                                radius: 14,
+                                color: color,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  _memberLabel(m, currentUid),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '${share.toStringAsFixed(2)} €',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: color,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
                   );
-                }),
-              ],
+                }
+                if (_splitType != SplitType.equal) {
+                  return Column(
+                    children: [
+                      const SizedBox(height: 14),
+                      ...selectedMembers.map((m) {
+                        final ctrl = _splitType == SplitType.amount
+                            ? _amountSplitControllers[m.uid]!
+                            : _percentageSplitControllers[m.uid]!;
+                        final suffix = _splitType == SplitType.amount ? '€' : '%';
+                        final color = avatarColorForUid(m.uid);
+                        // Montant réel calculé pour le mode pourcentage
+                        String? realAmount;
+                        if (_splitType == SplitType.percentage && total > 0) {
+                          final pct = _parseDouble(ctrl.text) ?? 0;
+                          realAmount = '${(total * pct / 100).toStringAsFixed(2)} €';
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: TextField(
+                            controller: ctrl,
+                            decoration: InputDecoration(
+                              labelText: '${_memberLabel(m, currentUid)} ($suffix)',
+                              prefixIcon: const Icon(Icons.tune),
+                              suffixText: realAmount,
+                              suffixStyle: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: color,
+                              ),
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            onChanged: (v) {
+                              _recalculateFrom(m.uid, v);
+                              setState(() {});
+                            },
+                          ),
+                        );
+                      }),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
+              const SizedBox(height: 24),
+
+              // Répétition
+              const Text(
+                'Répétition',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildRecurrenceRow(),
               const SizedBox(height: 24),
 
               // Catégorie

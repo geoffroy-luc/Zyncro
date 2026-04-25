@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'recurrence_rule.dart';
 
 enum ExpenseType { expense, reimbursement }
 
@@ -21,6 +22,7 @@ class Expense {
   final SplitType splitType;
   final Map<String, double>? splitAmounts;
   final String? updatedBy;
+  final RecurrenceRule? recurrence;
 
   const Expense({
     required this.id,
@@ -39,6 +41,7 @@ class Expense {
     this.splitType = SplitType.equal,
     this.splitAmounts,
     this.updatedBy,
+    this.recurrence,
   });
 
   factory Expense.fromMap(String id, Map<String, dynamic> map) {
@@ -69,6 +72,9 @@ class Expense {
               ),
             ),
       updatedBy: map['updatedBy'] as String?,
+      recurrence: map['recurrence'] != null
+          ? RecurrenceRule.fromMap(map['recurrence'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -89,6 +95,7 @@ class Expense {
       'splitType': splitType.name,
       if (splitAmounts != null) 'splitAmounts': splitAmounts,
       if (updatedBy != null) 'updatedBy': updatedBy,
+      if (recurrence != null) 'recurrence': recurrence!.toMap(),
     };
   }
 
@@ -105,6 +112,8 @@ class Expense {
     SplitType? splitType,
     Map<String, double>? splitAmounts,
     String? updatedBy,
+    RecurrenceRule? recurrence,
+    bool clearRecurrence = false,
   }) {
     return Expense(
       id: id,
@@ -123,6 +132,7 @@ class Expense {
       splitType: splitType ?? this.splitType,
       splitAmounts: splitAmounts ?? this.splitAmounts,
       updatedBy: updatedBy ?? this.updatedBy,
+      recurrence: clearRecurrence ? null : recurrence ?? this.recurrence,
     );
   }
 
