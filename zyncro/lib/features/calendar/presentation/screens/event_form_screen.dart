@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/reminder_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/recurrence_rule.dart';
+import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
@@ -35,6 +36,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   String? _selectedColor;
   int? _reminderMinutes; // null = aucun rappel
   RecurrenceRule? _recurrence;
+  Set<String> _selectedParticipantIds = {};
 
   static const _colorPalette = [
     '#4F7CFF',
@@ -68,6 +70,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       }
       _loadReminder(e.id);
       _recurrence = e.recurrence;
+      _selectedParticipantIds = e.participantIds.toSet();
     } else {
       _startDate = widget.initialDate ?? DateTime.now();
       _endDate = _startDate;
@@ -215,6 +218,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           updatedBy: user.uid,
           recurrence: _recurrence,
           clearRecurrence: _recurrence == null,
+          participantIds: _selectedParticipantIds.toList(),
         );
         await repo.updateEvent(groupId, updated);
         await ReminderService.scheduleReminder(updated, _reminderMinutes);
@@ -229,6 +233,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           userId: user.uid,
           color: _selectedColor,
           recurrence: _recurrence,
+          participantIds: _selectedParticipantIds.toList(),
         );
         await ReminderService.scheduleReminder(created, _reminderMinutes);
       }
@@ -891,6 +896,82 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 ),
               ],
               const SizedBox(height: 24),
+              // Participants
+              Builder(builder: (context) {
+                final members = ref.watch(groupMembersProvider).asData?.value ?? [];
+                final currentUid = ref.watch(authStateProvider).asData?.value?.uid;
+                if (members.isEmpty) return const SizedBox.shrink();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Participants',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: members.map((m) {
+                        final isSelected = _selectedParticipantIds.contains(m.uid);
+                        final color = avatarColorForUid(m.uid);
+                        final label = m.uid == currentUid ? 'Vous' : m.displayName;
+                        return GestureDetector(
+                          onTap: () => setState(() {
+                            if (isSelected) {
+                              _selectedParticipantIds.remove(m.uid);
+                            } else {
+                              _selectedParticipantIds.add(m.uid);
+                            }
+                          }),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isSelected ? color.withValues(alpha: 0.10) : Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected ? color : AppColors.border,
+                                width: isSelected ? 1.5 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                UserAvatar(
+                                  photoUrl: m.photoUrl,
+                                  showPhoto: m.showProfilePhoto,
+                                  displayName: m.displayName,
+                                  radius: 14,
+                                  color: color,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  label,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                    color: isSelected ? color : AppColors.textPrimary,
+                                  ),
+                                ),
+                                if (isSelected) ...[
+                                  const SizedBox(width: 6),
+                                  Icon(Icons.check_circle_rounded, size: 14, color: color),
+                                ],
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                );
+              }),
               Text(
                 'Répétition',
                 style: const TextStyle(

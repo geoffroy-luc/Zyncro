@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -9,6 +10,7 @@ import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:flutter/services.dart';
+import 'package:pasteboard/pasteboard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -235,6 +237,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               title: const Text('Répondre'),
               onTap: () => Navigator.of(ctx).pop('reply'),
             ),
+            if (message.type == MessageType.text)
+              ListTile(
+                leading: const Icon(Icons.content_copy_outlined),
+                title: const Text('Copier'),
+                onTap: () => Navigator.of(ctx).pop('copy'),
+              ),
             if (isMe &&
                 message.type != MessageType.poll &&
                 message.type != MessageType.audio)
@@ -272,6 +280,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (!mounted || action == null) return;
 
+    if (action == 'copy') {
+      await Clipboard.setData(ClipboardData(text: message.content));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Message copié'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
     if (action == 'reply') {
       setState(() => _replyingTo = message);
       return;
@@ -578,6 +598,71 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  Future<void> _pasteAndSendImage() async {
+    final imageBytes = await Pasteboard.image;
+    if (imageBytes == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Aucune image dans le presse-papier')),
+        );
+      }
+      return;
+    }
+
+    final user = ref.read(authStateProvider).asData?.value;
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (user == null || groupId == null) return;
+
+    final reply = _replyingTo;
+    setState(() {
+      _isUploadingMedia = true;
+      _replyingTo = null;
+    });
+
+    try {
+      final dir = await getTemporaryDirectory();
+      final rawPath = '${dir.path}/paste_${DateTime.now().millisecondsSinceEpoch}.png';
+      final rawFile = await File(rawPath).writeAsBytes(imageBytes);
+
+      final targetPath = '${dir.path}/paste_compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final compressed = await FlutterImageCompress.compressAndGetFile(
+        rawFile.path,
+        targetPath,
+        quality: 85,
+        minWidth: 1920,
+        minHeight: 1920,
+        keepExif: false,
+      );
+      final uploadPath = compressed?.path ?? rawFile.path;
+
+      await ref.read(messagesRepositoryProvider).sendMedia(
+            groupId: groupId,
+            senderId: user.uid,
+            senderName: ref.read(currentMemberProvider).asData?.value?.displayName ??
+                user.displayName ??
+                user.email ??
+                'Anonyme',
+            filePath: uploadPath,
+            mimeType: 'image/jpeg',
+            replyToId: reply?.id,
+            replyToSenderName: reply?.senderName,
+            replyToContent: reply?.content,
+          );
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(0,
+            duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur collage image : $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingMedia = false);
+    }
+  }
+
   Future<void> _pickAndSendMedia() async {
     final picker = ImagePicker();
     final choice = await showModalBottomSheet<String>(
@@ -587,6 +672,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            ListTile(
+              leading: const Icon(Icons.content_paste_outlined),
+              title: const Text('Coller une image'),
+              onTap: () => Navigator.of(ctx).pop('paste'),
+            ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
               title: const Text('Photo depuis la galerie'),
@@ -612,6 +702,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
     );
     if (choice == null || !mounted) return;
+
+    if (choice == 'paste') {
+      await _pasteAndSendImage();
+      return;
+    }
 
     XFile? file;
     String mimeType;

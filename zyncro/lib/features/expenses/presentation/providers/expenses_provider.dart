@@ -3,6 +3,7 @@ import '../../data/repositories/expenses_repository.dart';
 import '../../domain/repositories/i_expenses_repository.dart';
 import '../../../../shared/models/expense.dart';
 import '../../../../shared/models/group_member.dart';
+import '../../../../shared/utils/recurrence_utils.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 
 final expensesRepositoryProvider = Provider<IExpensesRepository>(
@@ -12,7 +13,10 @@ final expensesRepositoryProvider = Provider<IExpensesRepository>(
 final expensesProvider = StreamProvider<List<Expense>>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
   if (groupId == null) return Stream.value([]);
-  return ref.watch(expensesRepositoryProvider).watchExpenses(groupId);
+  return ref
+      .watch(expensesRepositoryProvider)
+      .watchExpenses(groupId)
+      .map(expandExpenses);
 });
 
 final expenseMembersProvider = StreamProvider<List<GroupMember>>((ref) {

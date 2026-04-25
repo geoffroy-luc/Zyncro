@@ -35,6 +35,7 @@ class EventsRepository implements IEventsRepository {
     required String userId,
     String? color,
     RecurrenceRule? recurrence,
+    List<String> participantIds = const [],
   }) async {
     final ref = _col(groupId).doc();
     final event = Event(
@@ -49,6 +50,7 @@ class EventsRepository implements IEventsRepository {
       createdAt: DateTime.now(),
       color: color,
       recurrence: recurrence,
+      participantIds: participantIds,
     );
     await ref.set(event.toMap());
     return event;

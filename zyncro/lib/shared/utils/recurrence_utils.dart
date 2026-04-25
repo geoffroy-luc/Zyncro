@@ -1,4 +1,5 @@
 import '../models/event.dart';
+import '../models/expense.dart';
 import '../models/recurrence_rule.dart';
 
 /// Expands recurring events into individual instances within the given window.
@@ -80,4 +81,59 @@ DateTime _advance(DateTime date, RecurrenceFrequency frequency) {
     RecurrenceFrequency.yearly =>
       DateTime(date.year + 1, date.month, date.day, date.hour, date.minute),
   };
+}
+
+/// Expands recurring expenses into individual instances up to today.
+/// Non-recurring expenses are returned as-is.
+List<Expense> expandExpenses(List<Expense> baseExpenses) {
+  final now = DateTime.now();
+  final result = <Expense>[];
+  for (final expense in baseExpenses) {
+    if (expense.recurrence == null) {
+      result.add(expense);
+    } else {
+      result.addAll(_expandRecurringExpense(expense, now));
+    }
+  }
+  result.sort((a, b) => b.date.compareTo(a.date));
+  return result;
+}
+
+List<Expense> _expandRecurringExpense(Expense base, DateTime now) {
+  final rule = base.recurrence!;
+  final instances = <Expense>[];
+  DateTime current = base.date;
+  int idx = 0;
+  const maxInstances = 500;
+
+  while (idx < maxInstances) {
+    if (rule.endType == RecurrenceEndType.count && idx >= rule.count!) break;
+    if (rule.endType == RecurrenceEndType.until && current.isAfter(rule.until!)) break;
+    if (current.isAfter(now)) break;
+
+    instances.add(Expense(
+      id: idx == 0 ? base.id : '${base.id}_$idx',
+      groupId: base.groupId,
+      title: base.title,
+      amount: base.amount,
+      paidBy: base.paidBy,
+      paidByName: base.paidByName,
+      splitWith: base.splitWith,
+      settled: base.settled,
+      category: base.category,
+      date: current,
+      createdBy: base.createdBy,
+      createdAt: base.createdAt,
+      expenseType: base.expenseType,
+      splitType: base.splitType,
+      splitAmounts: base.splitAmounts,
+      updatedBy: base.updatedBy,
+      recurrence: base.recurrence,
+    ));
+
+    idx++;
+    current = _advance(current, rule.frequency);
+  }
+
+  return instances;
 }

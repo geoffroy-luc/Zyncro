@@ -69,8 +69,6 @@ class DashboardScreen extends ConsumerWidget {
         allExpenses.fold(0.0, (s, e) => s + e.amount);
     final myBalance =
         currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
-    final pendingCount = allExpenses.where((e) => !e.settled).length;
-
     // Derniers messages (activité récente)
     final recentMessages = allMessages.take(3).toList();
 
@@ -174,15 +172,6 @@ class DashboardScreen extends ConsumerWidget {
                                 valueColor: myBalance >= 0
                                     ? const Color(0xFF2BB8A5)
                                     : AppColors.error,
-                              ),
-                              const Divider(
-                                  height: 1, color: AppColors.border),
-                              _ExpenseRow(
-                                label: 'En attente',
-                                value: '$pendingCount',
-                                valueColor: pendingCount > 0
-                                    ? AppColors.accent
-                                    : AppColors.textPrimary,
                               ),
                               const SizedBox(height: 4),
                             ],

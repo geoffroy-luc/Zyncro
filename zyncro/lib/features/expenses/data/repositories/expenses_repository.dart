@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/repositories/i_expenses_repository.dart';
 import '../../../../shared/models/expense.dart';
+import '../../../../shared/models/recurrence_rule.dart';
 
 class ExpensesRepository implements IExpensesRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -38,6 +39,7 @@ class ExpensesRepository implements IExpensesRepository {
     String? category,
     required DateTime date,
     required String userId,
+    RecurrenceRule? recurrence,
   }) async {
     final ref = _col(groupId).doc();
     final expense = Expense(
@@ -56,6 +58,7 @@ class ExpensesRepository implements IExpensesRepository {
       expenseType: expenseType,
       splitType: splitType,
       splitAmounts: splitAmounts,
+      recurrence: recurrence,
     );
     await ref.set(expense.toMap());
     return expense;

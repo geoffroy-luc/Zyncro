@@ -13,6 +13,7 @@ abstract interface class IEventsRepository {
     required String userId,
     String? color,
     RecurrenceRule? recurrence,
+    List<String> participantIds = const [],
   });
   Future<void> updateEvent(String groupId, Event event);
   Future<void> deleteEvent(String groupId, String eventId);

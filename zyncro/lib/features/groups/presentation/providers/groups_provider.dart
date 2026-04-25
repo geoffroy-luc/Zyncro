@@ -82,6 +82,13 @@ final selectedGroupProvider = Provider<Group?>((ref) {
   }
 });
 
+/// Retourne tous les membres du groupe sélectionné.
+final groupMembersProvider = StreamProvider<List<GroupMember>>((ref) {
+  final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
+  if (groupId == null) return Stream.value([]);
+  return ref.watch(groupsRepositoryProvider).watchMembers(groupId);
+});
+
 /// Retourne le GroupMember de l'utilisateur courant dans le groupe sélectionné.
 /// Permet d'accéder au pseudo groupe-spécifique (displayName) de l'utilisateur.
 final currentMemberProvider = StreamProvider<GroupMember?>((ref) {

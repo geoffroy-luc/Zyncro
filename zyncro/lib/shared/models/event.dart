@@ -15,6 +15,7 @@ class Event {
   final String? color;
   final String? updatedBy;
   final RecurrenceRule? recurrence;
+  final List<String> participantIds;
 
   const Event({
     required this.id,
@@ -30,6 +31,7 @@ class Event {
     this.color,
     this.updatedBy,
     this.recurrence,
+    this.participantIds = const [],
   });
 
   factory Event.fromMap(String id, Map<String, dynamic> map) {
@@ -51,6 +53,7 @@ class Event {
       recurrence: map['recurrence'] != null
           ? RecurrenceRule.fromMap(map['recurrence'] as Map<String, dynamic>)
           : null,
+      participantIds: List<String>.from(map['participantIds'] ?? []),
     );
   }
 
@@ -68,6 +71,7 @@ class Event {
       if (color != null) 'color': color,
       if (updatedBy != null) 'updatedBy': updatedBy,
       if (recurrence != null) 'recurrence': recurrence!.toMap(),
+      'participantIds': participantIds,
     };
   }
 
@@ -81,6 +85,7 @@ class Event {
     String? updatedBy,
     RecurrenceRule? recurrence,
     bool clearRecurrence = false,
+    List<String>? participantIds,
   }) {
     return Event(
       id: id,
@@ -96,6 +101,7 @@ class Event {
       color: color ?? this.color,
       updatedBy: updatedBy ?? this.updatedBy,
       recurrence: clearRecurrence ? null : recurrence ?? this.recurrence,
+      participantIds: participantIds ?? this.participantIds,
     );
   }
 }
