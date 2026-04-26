@@ -52,10 +52,10 @@ jobs:
           echo "${{ secrets.IOS_GOOGLE_SERVICES_PLIST_BASE64 }}" | base64 --decode > zyncro/ios/Runner/GoogleService-Info.plist
           echo "${{ secrets.IOS_GOOGLE_SERVICES_PLIST_BASE64 }}" | base64 --decode > zyncro/ios/GoogleService-Info.plist
 
-      - name: Update CocoaPods repo and install pods
+      - name: Install pods (force fresh resolution)
         run: |
           cd ios
-          pod repo update
+          rm -f Podfile.lock
           pod install --repo-update
         working-directory: zyncro
 
