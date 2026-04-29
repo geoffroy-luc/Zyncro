@@ -6,6 +6,7 @@ import '../core/services/update_service.dart';
 import '../core/theme/app_theme.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/chat/presentation/providers/messages_provider.dart';
+import '../features/groups/presentation/providers/groups_provider.dart';
 import 'router.dart';
 
 class ZyncroApp extends ConsumerStatefulWidget {
@@ -76,6 +77,9 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final inForeground = state == AppLifecycleState.resumed;
     ref.read(appInForegroundProvider.notifier).setForeground(inForeground);
+    if (inForeground) {
+      NotificationService.dismissAllNotifications();
+    }
   }
 
   @override
@@ -87,6 +91,13 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
       final user = next.asData?.value;
       if (user != null) {
         NotificationService.initialize(user.uid, ref);
+      }
+    });
+
+    // Dismiss OS notifications when a group is opened
+    ref.listen(selectedGroupIdProvider, (_, next) {
+      if (next.asData?.value != null) {
+        NotificationService.dismissAllNotifications();
       }
     });
 
