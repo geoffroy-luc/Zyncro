@@ -30,15 +30,25 @@ class GroupSelectionScreen extends ConsumerWidget {
       body: groupsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Erreur: $e')),
-        data: (groups) => _GroupList(
-          groups: groups,
-          onGroupTap: (group) async {
-            await ref.read(selectedGroupIdProvider.notifier).select(group.id);
-            if (context.mounted) context.go('/home');
-          },
-          onCreateTap: () => _showCreateSheet(context, ref),
-          onJoinTap: () => _showJoinSheet(context, ref),
-        ),
+        data: (_) {
+          final groups = ref.watch(orderedGroupsProvider);
+          return _GroupList(
+            groups: groups,
+            onGroupTap: (group) async {
+              await ref.read(selectedGroupIdProvider.notifier).select(group.id);
+              if (context.mounted) context.go('/home');
+            },
+            onCreateTap: () => _showCreateSheet(context, ref),
+            onJoinTap: () => _showJoinSheet(context, ref),
+            onReorder: (oldIndex, newIndex) {
+              var ids = groups.map((g) => g.id).toList();
+              if (newIndex > oldIndex) newIndex--;
+              final moved = ids.removeAt(oldIndex);
+              ids.insert(newIndex, moved);
+              ref.read(groupOrderProvider.notifier).reorder(ids);
+            },
+          );
+        },
       ),
     );
   }
@@ -69,24 +79,45 @@ class _GroupList extends StatelessWidget {
   final ValueChanged<Group> onGroupTap;
   final VoidCallback onCreateTap;
   final VoidCallback onJoinTap;
+  final void Function(int oldIndex, int newIndex) onReorder;
 
   const _GroupList({
     required this.groups,
     required this.onGroupTap,
     required this.onCreateTap,
     required this.onJoinTap,
+    required this.onReorder,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
+    if (groups.isEmpty) {
+      return ListView(
+        padding: const EdgeInsets.all(16),
+        children: [_EmptyHint(onCreateTap: onCreateTap, onJoinTap: onJoinTap)],
+      );
+    }
+
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      children: [
-        if (groups.isEmpty)
-          _EmptyHint(onCreateTap: onCreateTap, onJoinTap: onJoinTap)
-        else ...[
-          ...groups.map(
-            (group) => _GroupTile(group: group, onTap: () => onGroupTap(group)),
+      child: Column(
+        children: [
+          ReorderableListView(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
+            onReorder: onReorder,
+            children: [
+              for (var i = 0; i < groups.length; i++)
+                ReorderableDelayedDragStartListener(
+                  key: ValueKey(groups[i].id),
+                  index: i,
+                  child: _GroupTile(
+                    group: groups[i],
+                    onTap: () => onGroupTap(groups[i]),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 8),
           Row(
@@ -109,7 +140,7 @@ class _GroupList extends StatelessWidget {
             ],
           ),
         ],
-      ],
+      ),
     );
   }
 }
