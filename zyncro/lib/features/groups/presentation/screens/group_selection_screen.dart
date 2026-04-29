@@ -107,6 +107,10 @@ class _GroupList extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             buildDefaultDragHandles: false,
             onReorder: onReorder,
+            proxyDecorator: (child, index, animation) => Material(
+              color: Colors.transparent,
+              child: child,
+            ),
             children: [
               for (var i = 0; i < groups.length; i++)
                 ReorderableDelayedDragStartListener(
