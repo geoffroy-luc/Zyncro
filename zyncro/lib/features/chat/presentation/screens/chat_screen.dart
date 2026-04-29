@@ -9,6 +9,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +24,8 @@ import '../../domain/repositories/i_messages_repository.dart';
 import '../providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import 'media_viewer_screen.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -1392,6 +1395,21 @@ class _MessageBubble extends StatelessWidget {
     this.onVote,
   });
 
+  static final _urlRegex = RegExp(r'https?://[^\s]+', caseSensitive: false);
+
+  static String _cleanUrl(String url) =>
+      url.replaceAll(RegExp(r'[.,;:!?)\]>]+$'), '');
+
+  static Future<void> _openUrl(String raw) async {
+    final url = _cleanUrl(raw);
+    final uri = Uri.tryParse(url);
+    if (uri != null) {
+      try {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (_) {}
+    }
+  }
+
   Widget _messageContent(BuildContext context, bool isMe) {
     if (message.type == MessageType.audio) {
       try {
@@ -1490,17 +1508,26 @@ class _MessageBubble extends StatelessWidget {
         );
       }
     }
-    return Text(
-      message.content,
-      style: TextStyle(
-        color: isMe ? Colors.white : AppColors.textPrimary,
-        fontSize: 14,
-        height: 1.4,
-      ),
+    final urls = _urlRegex
+        .allMatches(message.content)
+        .map((m) => _cleanUrl(m.group(0)!))
+        .where((u) => u.isNotEmpty)
+        .toList();
+
+    final textWidget = _LinkedText(text: message.content, isMe: isMe);
+
+    if (urls.isEmpty) return textWidget;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        textWidget,
+        const SizedBox(height: 8),
+        _LinkPreviewWidget(url: urls.first, isMe: isMe),
+      ],
     );
   }
-
-
 
   String _formatTime(DateTime dt) => DateFormat('HH:mm').format(dt);
 
@@ -1723,6 +1750,307 @@ class _MessageBubble extends StatelessWidget {
       ],
     );
   }
+}
+
+// ── Texte avec liens cliquables ──────────────────────────────────────────────
+
+class _LinkedText extends StatefulWidget {
+  final String text;
+  final bool isMe;
+
+  const _LinkedText({required this.text, required this.isMe});
+
+  @override
+  State<_LinkedText> createState() => _LinkedTextState();
+}
+
+class _LinkedTextState extends State<_LinkedText> {
+  final List<TapGestureRecognizer> _recognizers = [];
+
+  @override
+  void dispose() {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+
+    final text = widget.text;
+    final isMe = widget.isMe;
+    final matches = _MessageBubble._urlRegex.allMatches(text).toList();
+    final textColor = isMe ? Colors.white : AppColors.textPrimary;
+    final linkColor = isMe ? Colors.white : const Color(0xFF1D6AE5);
+    final textStyle = TextStyle(color: textColor, fontSize: 14, height: 1.4);
+
+    if (matches.isEmpty) {
+      return Text(text, style: textStyle);
+    }
+
+    final spans = <TextSpan>[];
+    int lastEnd = 0;
+
+    for (final match in matches) {
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(
+          text: text.substring(lastEnd, match.start),
+          style: textStyle,
+        ));
+      }
+      final url = _MessageBubble._cleanUrl(match.group(0)!);
+      final recognizer = TapGestureRecognizer()
+        ..onTap = () => _MessageBubble._openUrl(url);
+      _recognizers.add(recognizer);
+      spans.add(TextSpan(
+        text: url,
+        style: textStyle.copyWith(
+          color: linkColor,
+          decoration: TextDecoration.underline,
+          decorationColor: linkColor,
+        ),
+        recognizer: recognizer,
+      ));
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(lastEnd),
+        style: textStyle,
+      ));
+    }
+
+    return RichText(text: TextSpan(children: spans));
+  }
+}
+
+// ── Prévisualisation de lien ─────────────────────────────────────────────────
+
+class _LinkPreviewWidget extends StatefulWidget {
+  final String url;
+  final bool isMe;
+
+  const _LinkPreviewWidget({required this.url, required this.isMe});
+
+  @override
+  State<_LinkPreviewWidget> createState() => _LinkPreviewWidgetState();
+}
+
+class _LinkPreviewWidgetState extends State<_LinkPreviewWidget> {
+  _LinkMeta? _meta;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMeta();
+  }
+
+  Future<void> _fetchMeta() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse(widget.url),
+            headers: {'User-Agent': 'Mozilla/5.0 (compatible; Zyncro/1.0)'},
+          )
+          .timeout(const Duration(seconds: 6));
+
+      if (response.statusCode == 200) {
+        final body = response.body;
+        final meta = _LinkMeta(
+          title: _ogTag(body, 'og:title') ?? _htmlTitle(body),
+          description:
+              _ogTag(body, 'og:description') ?? _metaTag(body, 'description'),
+          imageUrl: _ogTag(body, 'og:image'),
+          siteName: _ogTag(body, 'og:site_name') ??
+              Uri.parse(widget.url).host.replaceFirst('www.', ''),
+        );
+        if (mounted) setState(() { _meta = meta; _loading = false; });
+      } else {
+        if (mounted) setState(() => _loading = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String? _ogTag(String html, String property) {
+    final r1 = RegExp(
+      'property=["\']${RegExp.escape(property)}["\'][^>]*content=["\']([^"\']*)["\']',
+      caseSensitive: false,
+    );
+    final r2 = RegExp(
+      'content=["\']([^"\']*)["\'][^>]*property=["\']${RegExp.escape(property)}["\']',
+      caseSensitive: false,
+    );
+    return (r1.firstMatch(html) ?? r2.firstMatch(html))?.group(1)?.trim();
+  }
+
+  String? _metaTag(String html, String name) {
+    final r1 = RegExp(
+      'name=["\']${RegExp.escape(name)}["\'][^>]*content=["\']([^"\']*)["\']',
+      caseSensitive: false,
+    );
+    final r2 = RegExp(
+      'content=["\']([^"\']*)["\'][^>]*name=["\']${RegExp.escape(name)}["\']',
+      caseSensitive: false,
+    );
+    return (r1.firstMatch(html) ?? r2.firstMatch(html))?.group(1)?.trim();
+  }
+
+  String? _htmlTitle(String html) =>
+      RegExp(r'<title[^>]*>([^<]+)</title>', caseSensitive: false)
+          .firstMatch(html)
+          ?.group(1)
+          ?.trim();
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) return _buildLoading();
+    final meta = _meta;
+    if (meta == null ||
+        (meta.title == null &&
+            meta.description == null &&
+            meta.imageUrl == null)) {
+      return const SizedBox.shrink();
+    }
+    return _buildCard(meta);
+  }
+
+  Widget _buildLoading() {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: widget.isMe
+            ? Colors.white.withValues(alpha: 0.15)
+            : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: widget.isMe ? Colors.white54 : const Color(0xFFE85D75),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard(_LinkMeta meta) {
+    final isMe = widget.isMe;
+    final borderColor =
+        isMe ? Colors.white.withValues(alpha: 0.6) : const Color(0xFFE85D75);
+    final bgColor = isMe
+        ? Colors.white.withValues(alpha: 0.18)
+        : const Color(0xFFF3F4F6);
+    final titleColor = isMe ? Colors.white : AppColors.textPrimary;
+    final subColor = isMe ? Colors.white70 : AppColors.textSecondary;
+
+    return GestureDetector(
+      onTap: () async {
+        final uri = Uri.tryParse(widget.url);
+        if (uri != null) {
+          try {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } catch (_) {}
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border(
+            left: BorderSide(color: borderColor, width: 3),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (meta.imageUrl != null)
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(5),
+                  topRight: Radius.circular(8),
+                ),
+                child: Image.network(
+                  meta.imageUrl!,
+                  width: double.infinity,
+                  height: 120,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (meta.siteName != null)
+                    Text(
+                      meta.siteName!,
+                      style: TextStyle(
+                        color: subColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  if (meta.title != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      meta.title!,
+                      style: TextStyle(
+                        color: titleColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (meta.description != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      meta.description!,
+                      style: TextStyle(color: subColor, fontSize: 11),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LinkMeta {
+  final String? title;
+  final String? description;
+  final String? imageUrl;
+  final String? siteName;
+
+  const _LinkMeta({
+    this.title,
+    this.description,
+    this.imageUrl,
+    this.siteName,
+  });
 }
 
 // ── Vignette vidéo (premier frame) ──────────────────────────────────────────
