@@ -287,10 +287,35 @@ class MessagesRepository implements IMessagesRepository {
           .doc(groupId)
           .collection('members')
           .doc(userId)
-          .update({'lastReadMessageId': messageId});
+          .update({
+            'lastReadMessageId': messageId,
+            'lastReadAt': FieldValue.serverTimestamp(),
+          });
     } on FirebaseException {
       // Silencieux — non bloquant
     }
+  }
+
+  @override
+  Stream<int> watchUnreadCount({
+    required String groupId,
+    required String userId,
+  }) {
+    return _db
+        .collection('groups')
+        .doc(groupId)
+        .collection('members')
+        .doc(userId)
+        .snapshots()
+        .asyncExpand((memberSnap) {
+          if (!memberSnap.exists) return Stream.value(0);
+          final ts = memberSnap.data()?['lastReadAt'] as Timestamp?;
+          if (ts == null) return Stream.value(0);
+          return _col(groupId)
+              .where('timestamp', isGreaterThan: ts)
+              .snapshots()
+              .map((snap) => snap.docs.length);
+        });
   }
 
   @override

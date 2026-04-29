@@ -102,4 +102,10 @@ abstract interface class IMessagesRepository {
     required String userId,
     required String messageId,
   });
+
+  /// Stream du nombre de messages non lus pour l'utilisateur dans un groupe.
+  Stream<int> watchUnreadCount({
+    required String groupId,
+    required String userId,
+  });
 }

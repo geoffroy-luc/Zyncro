@@ -37,6 +37,16 @@ class AppInForegroundNotifier extends Notifier<bool> {
 final appInForegroundProvider =
     NotifierProvider<AppInForegroundNotifier, bool>(AppInForegroundNotifier.new);
 
+/// Nombre de messages non lus pour l'utilisateur courant dans un groupe donné.
+final unreadCountProvider = StreamProvider.family<int, String>((ref, groupId) {
+  final userId = ref.watch(authStateProvider).asData?.value?.uid;
+  if (userId == null) return Stream.value(0);
+  return ref.watch(messagesRepositoryProvider).watchUnreadCount(
+    groupId: groupId,
+    userId: userId,
+  );
+});
+
 final typingProvider = StreamProvider<List<String>>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
   final currentUserId = ref.watch(authStateProvider).asData?.value?.uid;

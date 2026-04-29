@@ -149,15 +149,17 @@ class _GroupList extends StatelessWidget {
   }
 }
 
-class _GroupTile extends StatelessWidget {
+class _GroupTile extends ConsumerWidget {
   final Group group;
   final VoidCallback onTap;
 
   const _GroupTile({required this.group, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final unreadCount =
+        ref.watch(unreadCountProvider(group.id)).asData?.value ?? 0;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -234,6 +236,29 @@ class _GroupTile extends StatelessWidget {
                     ),
                   ),
                 ),
+              if (unreadCount > 0) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  constraints: const BoxConstraints(minWidth: 22),
+                  child: Text(
+                    unreadCount > 99 ? '99+' : '$unreadCount',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
               const SizedBox(width: 4),
               const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             ],
