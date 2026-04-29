@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/router.dart';
 import '../../features/groups/presentation/providers/groups_provider.dart';
@@ -124,6 +127,16 @@ class NotificationService {
       );
     } on FirebaseException {
       // Règles Firestore non configurées pour la collection users — on ignore.
+    }
+  }
+
+  /// Dismisses all app notifications from the OS notification tray.
+  static Future<void> dismissAllNotifications() async {
+    if (Platform.isAndroid) {
+      await FlutterLocalNotificationsPlugin().cancelAll();
+    } else if (Platform.isIOS) {
+      const channel = MethodChannel('com.zyncro.app/notifications');
+      await channel.invokeMethod<void>('dismissAllNotifications');
     }
   }
 

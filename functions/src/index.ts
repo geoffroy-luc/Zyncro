@@ -35,8 +35,15 @@ export const onGroupDeleted = onDocumentDeleted(
             body: "Le groupe a été supprimé.",
           },
           data: { groupId },
-          android: { priority: "high" },
-          apns: { payload: { aps: { sound: "default" } } },
+          android: {
+            priority: "high",
+            collapseKey: groupId,
+            notification: { tag: groupId },
+          },
+          apns: {
+            headers: { "apns-collapse-id": groupId },
+            payload: { aps: { sound: "default", threadId: groupId } },
+          },
         });
       }
     }
@@ -83,8 +90,15 @@ export const onMemberRemoved = onDocumentDeleted(
         body: "Tu as été retiré du groupe.",
       },
       data: { groupId },
-      android: { priority: "high" },
-      apns: { payload: { aps: { sound: "default" } } },
+      android: {
+        priority: "high",
+        collapseKey: groupId,
+        notification: { tag: groupId },
+      },
+      apns: {
+        headers: { "apns-collapse-id": groupId },
+        payload: { aps: { sound: "default", threadId: groupId } },
+      },
     });
   }
 );
@@ -210,8 +224,15 @@ async function sendNotif(
     tokens,
     notification: { title: groupName, body },
     data: { groupId, screen },
-    android: { priority: "high" },
-    apns: { payload: { aps: { sound: "default" } } },
+    android: {
+      priority: "high",
+      collapseKey: groupId,
+      notification: { tag: groupId },
+    },
+    apns: {
+      headers: { "apns-collapse-id": groupId },
+      payload: { aps: { sound: "default", threadId: groupId } },
+    },
   });
 }
 
