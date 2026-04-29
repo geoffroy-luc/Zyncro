@@ -89,6 +89,44 @@ final groupMembersProvider = StreamProvider<List<GroupMember>>((ref) {
   return ref.watch(groupsRepositoryProvider).watchMembers(groupId);
 });
 
+const _kGroupOrderKey = 'group_order';
+
+class GroupOrderNotifier extends AsyncNotifier<List<String>> {
+  @override
+  Future<List<String>> build() async {
+    final user = ref.watch(authStateProvider).asData?.value;
+    if (user == null) return [];
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList('${_kGroupOrderKey}_${user.uid}') ?? [];
+  }
+
+  Future<void> reorder(List<String> ids) async {
+    final user = ref.read(authStateProvider).asData?.value;
+    if (user == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('${_kGroupOrderKey}_${user.uid}', ids);
+    state = AsyncData(ids);
+  }
+}
+
+final groupOrderProvider =
+    AsyncNotifierProvider<GroupOrderNotifier, List<String>>(
+      GroupOrderNotifier.new,
+    );
+
+/// Groupes triés selon la préférence locale de l'utilisateur.
+final orderedGroupsProvider = Provider<List<Group>>((ref) {
+  final groups = ref.watch(userGroupsProvider).asData?.value ?? [];
+  final order = ref.watch(groupOrderProvider).asData?.value ?? [];
+  if (order.isEmpty) return groups;
+  final orderMap = {for (var i = 0; i < order.length; i++) order[i]: i};
+  return [...groups]..sort((a, b) {
+    final aIdx = orderMap[a.id] ?? groups.length;
+    final bIdx = orderMap[b.id] ?? groups.length;
+    return aIdx.compareTo(bIdx);
+  });
+});
+
 /// Retourne le GroupMember de l'utilisateur courant dans le groupe sélectionné.
 /// Permet d'accéder au pseudo groupe-spécifique (displayName) de l'utilisateur.
 final currentMemberProvider = StreamProvider<GroupMember?>((ref) {
