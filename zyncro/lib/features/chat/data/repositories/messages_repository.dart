@@ -280,6 +280,7 @@ class MessagesRepository implements IMessagesRepository {
     required String groupId,
     required String userId,
     required String messageId,
+    required DateTime messageTimestamp,
   }) async {
     try {
       await _db
@@ -289,8 +290,25 @@ class MessagesRepository implements IMessagesRepository {
           .doc(userId)
           .update({
             'lastReadMessageId': messageId,
-            'lastReadAt': FieldValue.serverTimestamp(),
+            'lastReadAt': Timestamp.fromDate(messageTimestamp),
           });
+    } on FirebaseException {
+      // Silencieux — non bloquant
+    }
+  }
+
+  @override
+  Future<void> markGroupAsRead({
+    required String groupId,
+    required String userId,
+  }) async {
+    try {
+      await _db
+          .collection('groups')
+          .doc(groupId)
+          .collection('members')
+          .doc(userId)
+          .update({'lastReadAt': Timestamp.now()});
     } on FirebaseException {
       // Silencieux — non bloquant
     }

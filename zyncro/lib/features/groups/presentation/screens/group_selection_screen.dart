@@ -35,6 +35,13 @@ class GroupSelectionScreen extends ConsumerWidget {
           return _GroupList(
             groups: groups,
             onGroupTap: (group) async {
+              final userId = ref.read(authStateProvider).asData?.value?.uid;
+              if (userId != null) {
+                ref.read(messagesRepositoryProvider).markGroupAsRead(
+                  groupId: group.id,
+                  userId: userId,
+                );
+              }
               await ref.read(selectedGroupIdProvider.notifier).select(group.id);
               if (context.mounted) context.go('/home');
             },
@@ -170,19 +177,50 @@ class _GroupTile extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(
-                    group.emoji ?? group.name[0].toUpperCase(),
-                    style: const TextStyle(fontSize: 22),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        group.emoji ?? group.name[0].toUpperCase(),
+                        style: const TextStyle(fontSize: 22),
+                      ),
+                    ),
                   ),
-                ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      top: -6,
+                      right: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 20),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : '$unreadCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -236,29 +274,6 @@ class _GroupTile extends ConsumerWidget {
                     ),
                   ),
                 ),
-              if (unreadCount > 0) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  constraints: const BoxConstraints(minWidth: 22),
-                  child: Text(
-                    unreadCount > 99 ? '99+' : '$unreadCount',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
               const SizedBox(width: 4),
               const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             ],
