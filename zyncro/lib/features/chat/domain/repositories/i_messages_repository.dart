@@ -101,5 +101,18 @@ abstract interface class IMessagesRepository {
     required String groupId,
     required String userId,
     required String messageId,
+    required DateTime messageTimestamp,
+  });
+
+  /// Stream du nombre de messages non lus pour l'utilisateur dans un groupe.
+  Stream<int> watchUnreadCount({
+    required String groupId,
+    required String userId,
+  });
+
+  /// Marque le groupe comme lu à l'instant courant (ouverture du groupe).
+  Future<void> markGroupAsRead({
+    required String groupId,
+    required String userId,
   });
 }

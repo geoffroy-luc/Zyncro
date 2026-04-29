@@ -816,6 +816,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             groupId: groupId,
             userId: userId,
             messageId: msgs.first.id,
+            messageTimestamp: msgs.first.timestamp,
           );
     });
 
@@ -832,6 +833,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             groupId: groupId,
             userId: userId,
             messageId: msgs.first.id,
+            messageTimestamp: msgs.first.timestamp,
           );
     });
 
@@ -849,6 +851,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             groupId: groupId,
             userId: userId,
             messageId: msgs.first.id,
+            messageTimestamp: msgs.first.timestamp,
           );
     });
 
