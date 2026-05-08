@@ -33,6 +33,8 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
   Future<void> _editMyPseudo(BuildContext context, String groupId, String currentPseudo) async {
     final controller = TextEditingController(text: currentPseudo);
     final formKey = GlobalKey<FormState>();
+    final currentUser = ref.read(authStateProvider).asData?.value;
+    final members = ref.read(membersProvider).asData?.value ?? [];
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -49,6 +51,12 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Champ requis';
               if (v.trim().length > 30) return '30 caractères maximum';
+              final trimmed = v.trim().toLowerCase();
+              final isDuplicate = members.any((m) =>
+                m.uid != currentUser?.uid &&
+                m.displayName.toLowerCase() == trimmed,
+              );
+              if (isDuplicate) return 'Ce pseudo est déjà utilisé dans ce groupe';
               return null;
             },
           ),
@@ -83,7 +91,9 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        );
       }
     }
   }
