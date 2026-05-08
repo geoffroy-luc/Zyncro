@@ -16,6 +16,12 @@ final messagesProvider = StreamProvider<List<Message>>((ref) {
   return ref.watch(messagesRepositoryProvider).watchMessages(groupId);
 });
 
+final mediaMessagesProvider = StreamProvider<List<Message>>((ref) {
+  final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
+  if (groupId == null) return Stream.value([]);
+  return ref.watch(messagesRepositoryProvider).watchMediaMessages(groupId);
+});
+
 /// True uniquement quand l'utilisateur est sur l'onglet Chat.
 class ChatTabActiveNotifier extends Notifier<bool> {
   @override

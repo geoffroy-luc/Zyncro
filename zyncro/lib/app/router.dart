@@ -15,6 +15,7 @@ import '../features/groups/presentation/screens/group_settings_screen.dart';
 import '../features/notes/presentation/screens/notes_screen.dart';
 import '../core/constants/app_colors.dart';
 import '../features/chat/presentation/providers/messages_provider.dart';
+import '../features/chat/presentation/screens/media_gallery_screen.dart';
 
 final rootNavigatorKeyProvider = Provider<GlobalKey<NavigatorState>>(
   (ref) => GlobalKey<NavigatorState>(),
@@ -79,6 +80,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/group-settings',
         builder: (_, __) => const GroupSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/media-gallery',
+        builder: (_, __) => const MediaGalleryScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => _AppShell(shell: shell),

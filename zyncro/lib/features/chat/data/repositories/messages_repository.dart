@@ -33,6 +33,24 @@ class MessagesRepository implements IMessagesRepository {
   }
 
   @override
+  Stream<List<Message>> watchMediaMessages(String groupId) {
+    return _col(groupId)
+        .where('type', whereIn: ['image', 'file'])
+        .snapshots()
+        .map((snap) {
+          final msgs = snap.docs
+              .map((doc) => Message.fromMap(doc.id, doc.data()))
+              .toList();
+          msgs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          return msgs;
+        })
+        .handleError(
+          (_) {},
+          test: (e) => e is FirebaseException && e.code == 'permission-denied',
+        );
+  }
+
+  @override
   Future<void> setTyping({
     required String groupId,
     required String userId,

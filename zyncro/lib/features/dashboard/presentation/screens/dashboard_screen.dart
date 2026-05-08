@@ -7,11 +7,14 @@ import '../../../../shared/widgets/user_avatar.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/message.dart';
 import '../../../../shared/models/note.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../calendar/presentation/providers/events_provider.dart';
 import '../../../calendar/presentation/screens/event_form_screen.dart';
 import '../../../expenses/presentation/providers/expenses_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
+import '../../../chat/presentation/screens/media_gallery_screen.dart';
 import '../../../notes/presentation/providers/notes_provider.dart';
 import '../../../notes/presentation/screens/note_editor_screen.dart';
 
@@ -71,6 +74,10 @@ class DashboardScreen extends ConsumerWidget {
         currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
     // Derniers messages (activité récente)
     final recentMessages = allMessages.take(3).toList();
+
+    // Médias partagés
+    final allMedia = ref.watch(mediaMessagesProvider).asData?.value ?? [];
+    final previewMedia = allMedia.take(6).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
@@ -215,6 +222,63 @@ class DashboardScreen extends ConsumerWidget {
                     const SizedBox(height: 20),
                   ] else
                     const SizedBox(height: 8),
+
+                  // Médias partagés
+                  if (previewMedia.isNotEmpty) ...[
+                    _Card(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE85D75).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(Icons.photo_library_outlined,
+                                      size: 16, color: Color(0xFFE85D75)),
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Médias partagés',
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                const Spacer(),
+                                TextButton(
+                                  onPressed: () => context.push('/media-gallery'),
+                                  child: const Text('Voir tout',
+                                      style: TextStyle(fontSize: 13)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Divider(height: 1, color: AppColors.border),
+                          SizedBox(
+                            height: 88,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              itemCount: previewMedia.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 8),
+                              itemBuilder: (_, i) =>
+                                  MediaPreviewTile(message: previewMedia[i]),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
 
                   // Actions rapides
                   const Text(
