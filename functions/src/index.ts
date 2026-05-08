@@ -373,6 +373,61 @@ export const onNoteDeleted = onDocumentDeleted(
   }
 );
 
+export const onMessageReaction = onDocumentUpdated(
+  "groups/{groupId}/messages/{messageId}",
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+
+    const beforeReactions: Record<string, string[]> = before.reactions ?? {};
+    const afterReactions: Record<string, string[]> = after.reactions ?? {};
+
+    // Trouver le premier emoji qui a un nouvel UID ajouté
+    let newEmoji: string | null = null;
+    let reactorUid: string | null = null;
+
+    for (const [emoji, uids] of Object.entries(afterReactions)) {
+      const beforeUids: string[] = beforeReactions[emoji] ?? [];
+      const added = (uids as string[]).filter((uid) => !beforeUids.includes(uid));
+      if (added.length > 0) {
+        newEmoji = emoji;
+        reactorUid = added[0];
+        break;
+      }
+    }
+
+    // Pas de nouvelle réaction (ex: suppression)
+    if (!newEmoji || !reactorUid) return;
+
+    const recipientUid: string = after.senderId;
+    if (!recipientUid) return;
+
+    // Pas de notif si on réagit à son propre message
+    if (reactorUid === recipientUid) return;
+
+    const { groupId } = event.params;
+    const db = admin.firestore();
+
+    const [recipientDoc, reactorName, groupName] = await Promise.all([
+      db.doc(`users/${recipientUid}`).get(),
+      getMemberPseudo(db, groupId, reactorUid),
+      getGroupName(db, groupId),
+    ]);
+
+    const token = recipientDoc.data()?.fcmToken;
+    if (!token) return;
+
+    await sendNotif(
+      [token],
+      groupName,
+      `${reactorName} a réagi à ton message avec ${newEmoji}`,
+      groupId,
+      "chat"
+    );
+  }
+);
+
 export const onNewExpense = onDocumentCreated(
   "groups/{groupId}/expenses/{expenseId}",
   async (event) => {

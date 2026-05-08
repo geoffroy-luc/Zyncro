@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onNewExpense = exports.onNoteDeleted = exports.onNoteUpdated = exports.onNoteCreated = exports.onEventDeleted = exports.onEventUpdated = exports.onEventCreated = exports.onExpenseUpdated = exports.onNewMessage = exports.onMemberRemoved = exports.onGroupDeleted = void 0;
+exports.onNewExpense = exports.onMessageReaction = exports.onNoteDeleted = exports.onNoteUpdated = exports.onNoteCreated = exports.onEventDeleted = exports.onEventUpdated = exports.onEventCreated = exports.onExpenseUpdated = exports.onNewMessage = exports.onMemberRemoved = exports.onGroupDeleted = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-functions/v2/firestore");
 admin.initializeApp();
@@ -32,8 +32,15 @@ exports.onGroupDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}", 
                     body: "Le groupe a été supprimé.",
                 },
                 data: { groupId },
-                android: { priority: "high" },
-                apns: { payload: { aps: { sound: "default" } } },
+                android: {
+                    priority: "high",
+                    collapseKey: groupId,
+                    notification: { tag: groupId },
+                },
+                apns: {
+                    headers: { "apns-collapse-id": groupId },
+                    payload: { aps: { sound: "default", threadId: groupId } },
+                },
             });
         }
     }
@@ -71,8 +78,15 @@ exports.onMemberRemoved = (0, firestore_1.onDocumentDeleted)("groups/{groupId}/m
             body: "Tu as été retiré du groupe.",
         },
         data: { groupId },
-        android: { priority: "high" },
-        apns: { payload: { aps: { sound: "default" } } },
+        android: {
+            priority: "high",
+            collapseKey: groupId,
+            notification: { tag: groupId },
+        },
+        apns: {
+            headers: { "apns-collapse-id": groupId },
+            payload: { aps: { sound: "default", threadId: groupId } },
+        },
     });
 });
 exports.onNewMessage = (0, firestore_1.onDocumentCreated)("groups/{groupId}/messages/{messageId}", async (event) => {
@@ -177,8 +191,15 @@ async function sendNotif(tokens, groupName, body, groupId, screen) {
         tokens,
         notification: { title: groupName, body },
         data: { groupId, screen },
-        android: { priority: "high" },
-        apns: { payload: { aps: { sound: "default" } } },
+        android: {
+            priority: "high",
+            collapseKey: groupId,
+            notification: { tag: groupId },
+        },
+        apns: {
+            headers: { "apns-collapse-id": groupId },
+            payload: { aps: { sound: "default", threadId: groupId } },
+        },
     });
 }
 exports.onExpenseUpdated = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/expenses/{expenseId}", async (event) => {
@@ -297,6 +318,47 @@ exports.onNoteDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}/not
         getMemberPseudo(db, groupId, createdBy),
     ]);
     await sendNotif(tokens, groupName, `${name} a supprimé une note`, groupId, "notes");
+});
+exports.onMessageReaction = (0, firestore_1.onDocumentUpdated)("groups/{groupId}/messages/{messageId}", async (event) => {
+    var _a, _b, _c, _d, _e, _f;
+    const before = (_a = event.data) === null || _a === void 0 ? void 0 : _a.before.data();
+    const after = (_b = event.data) === null || _b === void 0 ? void 0 : _b.after.data();
+    if (!before || !after)
+        return;
+    const beforeReactions = (_c = before.reactions) !== null && _c !== void 0 ? _c : {};
+    const afterReactions = (_d = after.reactions) !== null && _d !== void 0 ? _d : {};
+    // Trouver le premier emoji qui a un nouvel UID ajouté
+    let newEmoji = null;
+    let reactorUid = null;
+    for (const [emoji, uids] of Object.entries(afterReactions)) {
+        const beforeUids = (_e = beforeReactions[emoji]) !== null && _e !== void 0 ? _e : [];
+        const added = uids.filter((uid) => !beforeUids.includes(uid));
+        if (added.length > 0) {
+            newEmoji = emoji;
+            reactorUid = added[0];
+            break;
+        }
+    }
+    // Pas de nouvelle réaction (ex: suppression)
+    if (!newEmoji || !reactorUid)
+        return;
+    const recipientUid = after.senderId;
+    if (!recipientUid)
+        return;
+    // Pas de notif si on réagit à son propre message
+    if (reactorUid === recipientUid)
+        return;
+    const { groupId } = event.params;
+    const db = admin.firestore();
+    const [recipientDoc, reactorName, groupName] = await Promise.all([
+        db.doc(`users/${recipientUid}`).get(),
+        getMemberPseudo(db, groupId, reactorUid),
+        getGroupName(db, groupId),
+    ]);
+    const token = (_f = recipientDoc.data()) === null || _f === void 0 ? void 0 : _f.fcmToken;
+    if (!token)
+        return;
+    await sendNotif([token], groupName, `${reactorName} a réagi à ton message avec ${newEmoji}`, groupId, "chat");
 });
 exports.onNewExpense = (0, firestore_1.onDocumentCreated)("groups/{groupId}/expenses/{expenseId}", async (event) => {
     var _a, _b, _c, _d;
