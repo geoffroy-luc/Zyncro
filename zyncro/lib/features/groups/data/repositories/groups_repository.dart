@@ -233,11 +233,15 @@ class GroupsRepository implements IGroupsRepository {
     String userId,
     String displayName,
   ) async {
-    await _db
-        .collection('groups')
-        .doc(groupId)
-        .collection('members')
-        .doc(userId)
-        .update({'displayName': displayName});
+    final membersRef = _db.collection('groups').doc(groupId).collection('members');
+    final snapshot = await membersRef.get();
+    final conflict = snapshot.docs.any((doc) =>
+      doc.id != userId &&
+      (doc.data()['displayName'] as String?)?.toLowerCase() == displayName.toLowerCase(),
+    );
+    if (conflict) {
+      throw Exception('Ce pseudo est déjà utilisé dans ce groupe.');
+    }
+    await membersRef.doc(userId).update({'displayName': displayName});
   }
 }
