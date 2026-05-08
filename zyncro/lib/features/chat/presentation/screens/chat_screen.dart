@@ -935,6 +935,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               isFirstInGroup: isFirstInGroup,
                               isLastInGroup: isLastInGroup,
                               member: members.where((m) => m.uid == msg.senderId).firstOrNull,
+                              members: members,
                               onTap: msg.type != MessageType.system && !isPoll
                                   ? () => _toggleTimestamp(msg.id)
                                   : null,
@@ -1376,6 +1377,7 @@ class _MessageBubble extends StatelessWidget {
   final bool isFirstInGroup;
   final bool isLastInGroup;
   final GroupMember? member;
+  final List<GroupMember> members;
   final VoidCallback? onTap;
   final VoidCallback? onDoubleTap;
   final VoidCallback? onLongPress;
@@ -1390,6 +1392,7 @@ class _MessageBubble extends StatelessWidget {
     required this.isFirstInGroup,
     required this.isLastInGroup,
     this.member,
+    this.members = const [],
     this.currentUserId,
     this.onTap,
     this.onDoubleTap,
@@ -1573,6 +1576,7 @@ class _MessageBubble extends StatelessWidget {
         ? _ReactionsRow(
             reactions: message.reactions,
             currentUserId: currentUserId,
+            members: members,
           )
         : null;
 
@@ -2165,8 +2169,94 @@ class _SeenByRow extends StatelessWidget {
 class _ReactionsRow extends StatelessWidget {
   final Map<String, List<String>> reactions;
   final String? currentUserId;
+  final List<GroupMember> members;
 
-  const _ReactionsRow({required this.reactions, this.currentUserId});
+  const _ReactionsRow({
+    required this.reactions,
+    this.currentUserId,
+    this.members = const [],
+  });
+
+  void _showReactionDetails(BuildContext context) {
+    final entries = reactions.entries.where((e) => e.value.isNotEmpty).toList();
+    final nameByUid = {for (final m in members) m.uid: m.displayName};
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Réactions',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...entries.map((e) {
+              final emoji = e.key;
+              final uids = e.value;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(emoji, style: const TextStyle(fontSize: 18)),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${uids.length}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  ...uids.map((uid) {
+                    final name = uid == currentUserId
+                        ? 'Vous'
+                        : (nameByUid[uid] ?? uid);
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 8, bottom: 4),
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 12),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2181,35 +2271,38 @@ class _ReactionsRow extends StatelessWidget {
         final users = e.value;
         final isMine = currentUserId != null && users.contains(currentUserId);
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: isMine
-                ? const Color(0xFFE85D75).withValues(alpha: 0.15)
-                : const Color(0xFFF0F2F5),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
+        return GestureDetector(
+          onTap: () => _showReactionDetails(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
               color: isMine
-                  ? const Color(0xFFE85D75).withValues(alpha: 0.4)
-                  : AppColors.border,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 14)),
-              const SizedBox(width: 3),
-              Text(
-                '${users.length}',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isMine
-                      ? const Color(0xFFC94060)
-                      : AppColors.textSecondary,
-                ),
+                  ? const Color(0xFFE85D75).withValues(alpha: 0.15)
+                  : const Color(0xFFF0F2F5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isMine
+                    ? const Color(0xFFE85D75).withValues(alpha: 0.4)
+                    : AppColors.border,
               ),
-            ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 14)),
+                const SizedBox(width: 3),
+                Text(
+                  '${users.length}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isMine
+                        ? const Color(0xFFC94060)
+                        : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       }).toList(),
