@@ -31,12 +31,25 @@ class UpdateService {
       final packageInfo = await PackageInfo.fromPlatform();
       final current = packageInfo.version;
 
-      final minimumVersion = (data['minimum_version'] as String?) ?? '0.0.0';
-      final latestVersion = (data['latest_version'] as String?) ?? current;
+      final fallbackMinimum = (data['minimum_version'] as String?) ?? '0.0.0';
+      final fallbackLatest = (data['latest_version'] as String?) ?? current;
       final androidUrl = (data['android_url'] as String?) ?? '';
       final iosUrl = (data['ios_url'] as String?) ?? '';
 
-      final storeUrl = Platform.isIOS ? iosUrl : androidUrl;
+      final String minimumVersion;
+      final String latestVersion;
+      final String storeUrl;
+
+      if (Platform.isIOS) {
+        minimumVersion = (data['ios_minimum_version'] as String?) ?? fallbackMinimum;
+        latestVersion = (data['ios_latest_version'] as String?) ?? fallbackLatest;
+        storeUrl = iosUrl;
+      } else {
+        minimumVersion = (data['android_minimum_version'] as String?) ?? fallbackMinimum;
+        latestVersion = (data['android_latest_version'] as String?) ?? fallbackLatest;
+        storeUrl = androidUrl;
+      }
+
       final isMandatory = _compare(current, minimumVersion) < 0;
       final hasUpdate = _compare(current, latestVersion) < 0;
 
