@@ -13,10 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Select Xcode 26
+      - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '26'
+          xcode-version: 'latest-stable'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -57,7 +57,7 @@ jobs:
           echo "${{ secrets.IOS_GOOGLE_SERVICES_PLIST_BASE64 }}" | base64 --decode > zyncro/ios/Runner/GoogleService-Info.plist
           echo "${{ secrets.IOS_GOOGLE_SERVICES_PLIST_BASE64 }}" | base64 --decode > zyncro/ios/GoogleService-Info.plist
 
-      - name: Install pods (force fresh resolution)
+      - name: Install pods
         run: |
           cd ios
           rm -f Podfile.lock
@@ -68,13 +68,24 @@ jobs:
         run: flutter build ios --release --no-codesign --build-number=$(( ${{ github.run_number }} + 100 ))
         working-directory: zyncro
 
-      - name: Archive and export IPA
-        env:
-          API_KEY_BASE64: ${{ secrets.APPSTORE_API_KEY_P8_BASE64 }}
-          API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+      - name: Archive
         run: |
-          # Generate ExportOptions.plist
+          set -o pipefail
+          xcodebuild archive \
+            -workspace zyncro/ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/Runner.xcarchive \
+            -destination "generic/platform=iOS" \
+            -quiet \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
+            DEVELOPMENT_TEAM=ST97HKUKXU \
+          | grep -E "^(error:|warning:|Archive succeeded|BUILD)" || true
+
+      - name: Export IPA
+        run: |
           cat > $RUNNER_TEMP/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -93,42 +104,23 @@ jobs:
           </plist>
           EOF
 
-          # Archive
-          xcodebuild archive \
-            -workspace zyncro/ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath $RUNNER_TEMP/Runner.xcarchive \
-            -destination "generic/platform=iOS" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
-            DEVELOPMENT_TEAM=ST97HKUKXU \
-            2>&1 | grep -E "error:|warning: The iOS deploy|ARCHIVE|signing" | tail -30 || true
-
-          # Re-run without filter to get exit code
-          xcodebuild archive \
-            -workspace zyncro/ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath $RUNNER_TEMP/Runner.xcarchive \
-            -destination "generic/platform=iOS" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
-            DEVELOPMENT_TEAM=ST97HKUKXU
-
-          # Export IPA
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/Runner.xcarchive \
             -exportPath $RUNNER_TEMP/ipa \
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist
 
-          # Upload to TestFlight
+      - name: Upload to TestFlight
+        env:
+          API_KEY_BASE64: ${{ secrets.APPSTORE_API_KEY_P8_BASE64 }}
+          API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
           mkdir -p ~/.appstoreconnect/private_keys
           echo "$API_KEY_BASE64" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_$API_KEY_ID.p8
+
           xcrun altool --upload-app \
             --type ios \
             --file $RUNNER_TEMP/ipa/*.ipa \
             --apiKey $API_KEY_ID \
-            --apiIssuer $ISSUER_ID
+            --apiIssuer $ISSUER_ID \
+            --show-progress
