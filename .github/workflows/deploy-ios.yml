@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'
+      - '!v*-android'
+  workflow_dispatch:
 
 jobs:
   deploy:
