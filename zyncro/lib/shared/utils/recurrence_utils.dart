@@ -112,7 +112,8 @@ List<Expense> _expandRecurringExpense(Expense base, DateTime now) {
     if (current.isAfter(now)) break;
 
     instances.add(Expense(
-      id: idx == 0 ? base.id : '${base.id}_$idx',
+      id: '${base.id}_$idx',
+      baseExpenseId: base.id,
       groupId: base.groupId,
       title: base.title,
       amount: base.amount,
