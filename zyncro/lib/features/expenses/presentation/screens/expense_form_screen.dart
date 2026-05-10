@@ -540,7 +540,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
       try {
         await ref
             .read(expensesRepositoryProvider)
-            .deleteExpense(groupId, widget.expense!.id);
+            .deleteExpense(groupId, widget.expense!.firestoreId);
         final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
         if (user != null) {
           ref.read(messagesRepositoryProvider).sendSystemMessage(

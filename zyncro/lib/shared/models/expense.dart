@@ -7,6 +7,9 @@ enum SplitType { equal, amount, percentage }
 
 class Expense {
   final String id;
+  // For recurring instances only: the actual Firestore document ID (base.id).
+  // Use firestoreId for all Firestore operations.
+  final String? baseExpenseId;
   final String groupId;
   final String title;
   final double amount;
@@ -24,8 +27,11 @@ class Expense {
   final String? updatedBy;
   final RecurrenceRule? recurrence;
 
+  String get firestoreId => baseExpenseId ?? id;
+
   const Expense({
     required this.id,
+    this.baseExpenseId,
     required this.groupId,
     required this.title,
     required this.amount,
@@ -117,6 +123,7 @@ class Expense {
   }) {
     return Expense(
       id: id,
+      baseExpenseId: baseExpenseId,
       groupId: groupId,
       title: title ?? this.title,
       amount: amount ?? this.amount,

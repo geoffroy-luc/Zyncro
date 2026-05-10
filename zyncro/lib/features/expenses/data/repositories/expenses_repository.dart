@@ -66,7 +66,7 @@ class ExpensesRepository implements IExpensesRepository {
 
   @override
   Future<void> updateExpense(String groupId, Expense expense) async {
-    await _col(groupId).doc(expense.id).update(expense.toMap());
+    await _col(groupId).doc(expense.firestoreId).update(expense.toMap());
   }
 
   @override
