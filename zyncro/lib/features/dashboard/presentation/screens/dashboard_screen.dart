@@ -75,9 +75,8 @@ class DashboardScreen extends ConsumerWidget {
     // Derniers messages (activité récente)
     final recentMessages = allMessages.take(3).toList();
 
-    // Médias partagés
-    final allMedia = ref.watch(mediaMessagesProvider).asData?.value ?? [];
-    final previewMedia = allMedia.take(6).toList();
+    // Médias partagés — dérivés des messages déjà chargés, zéro subscription supplémentaire
+    final previewMedia = ref.watch(dashboardMediaProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),

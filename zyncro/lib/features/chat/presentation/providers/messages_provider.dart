@@ -44,9 +44,19 @@ class AppInForegroundNotifier extends Notifier<bool> {
 final appInForegroundProvider =
     NotifierProvider<AppInForegroundNotifier, bool>(AppInForegroundNotifier.new);
 
+/// Derniers médias partagés dans le groupe courant, dérivés des messages déjà
+/// chargés — aucune subscription Firestore supplémentaire.
+final dashboardMediaProvider = Provider<List<Message>>((ref) {
+  final messages = ref.watch(messagesProvider).asData?.value ?? [];
+  return messages
+      .where((m) => m.type == MessageType.image || m.type == MessageType.file)
+      .take(6)
+      .toList();
+});
+
 /// Stream du lastReadAt de l'utilisateur courant pour un groupe donné.
 final _memberLastReadAtProvider =
-    StreamProvider.family<DateTime?, String>((ref, groupId) {
+    StreamProvider.autoDispose.family<DateTime?, String>((ref, groupId) {
   final userId = ref.watch(authStateProvider).asData?.value?.uid;
   if (userId == null) return Stream.value(null);
   return FirebaseFirestore.instance
@@ -62,7 +72,7 @@ final _memberLastReadAtProvider =
 });
 
 /// Nombre de messages non lus pour l'utilisateur courant dans un groupe donné.
-final unreadCountProvider = StreamProvider.family<int, String>((ref, groupId) {
+final unreadCountProvider = StreamProvider.autoDispose.family<int, String>((ref, groupId) {
   final lastReadAt =
       ref.watch(_memberLastReadAtProvider(groupId)).asData?.value;
   if (lastReadAt == null) return Stream.value(0);

@@ -68,7 +68,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         _endDate = _startDate;
         _endTime = TimeOfDay(hour: _startTime.hour + 1, minute: _startTime.minute);
       }
-      _loadReminder(e.id);
+      _loadReminder(e.firestoreId);
       _recurrence = e.recurrence;
       _selectedParticipantIds = e.participantIds.toSet();
     } else {
@@ -153,8 +153,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       final groupId = ref.read(selectedGroupIdProvider).asData?.value;
       if (groupId == null) return;
       try {
-        await ref.read(eventsRepositoryProvider).deleteEvent(groupId, widget.event!.id);
-        await ReminderService.cancelReminder(widget.event!.id);
+        await ref.read(eventsRepositoryProvider).deleteEvent(groupId, widget.event!.firestoreId);
+        await ReminderService.cancelReminder(widget.event!.firestoreId);
         final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
         if (user != null) {
           ref.read(messagesRepositoryProvider).sendSystemMessage(

@@ -3,6 +3,9 @@ import 'recurrence_rule.dart';
 
 class Event {
   final String id;
+  // For recurring instances only: the actual Firestore document ID (base.id).
+  // Use firestoreId for all Firestore operations.
+  final String? baseEventId;
   final String groupId;
   final String title;
   final String? description;
@@ -17,8 +20,11 @@ class Event {
   final RecurrenceRule? recurrence;
   final List<String> participantIds;
 
+  String get firestoreId => baseEventId ?? id;
+
   const Event({
     required this.id,
+    this.baseEventId,
     required this.groupId,
     required this.title,
     this.description,
@@ -89,6 +95,7 @@ class Event {
   }) {
     return Event(
       id: id,
+      baseEventId: baseEventId,
       groupId: groupId,
       title: title ?? this.title,
       description: description ?? this.description,

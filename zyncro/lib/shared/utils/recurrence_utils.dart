@@ -49,7 +49,8 @@ List<Event> _expandRecurring(Event base, DateTime rangeStart, DateTime rangeEnd)
         (eventDuration != null &&
             current.add(eventDuration).isAfter(rangeStart))) {
       instances.add(Event(
-        id: base.id,
+        id: '${base.id}_$occurrenceIndex',
+        baseEventId: base.id,
         groupId: base.groupId,
         title: base.title,
         description: base.description,
@@ -76,11 +77,25 @@ DateTime _advance(DateTime date, RecurrenceFrequency frequency) {
   return switch (frequency) {
     RecurrenceFrequency.daily => date.add(const Duration(days: 1)),
     RecurrenceFrequency.weekly => date.add(const Duration(days: 7)),
-    RecurrenceFrequency.monthly =>
-      DateTime(date.year, date.month + 1, date.day, date.hour, date.minute),
-    RecurrenceFrequency.yearly =>
-      DateTime(date.year + 1, date.month, date.day, date.hour, date.minute),
+    RecurrenceFrequency.monthly => _addMonths(date, 1),
+    RecurrenceFrequency.yearly => _addMonths(date, 12),
   };
+}
+
+// Adds [months] to [date], clamping the day to the last valid day of the
+// target month (e.g. Jan 31 + 1 month → Feb 28/29, not Mar 2/3).
+DateTime _addMonths(DateTime date, int months) {
+  // DateTime normalises month overflow (e.g. month=13 → next January).
+  final first = DateTime(date.year, date.month + months, 1);
+  // day=0 of the following month == last day of [first]'s month.
+  final lastDay = DateTime(first.year, first.month + 1, 0).day;
+  return DateTime(
+    first.year,
+    first.month,
+    date.day.clamp(1, lastDay),
+    date.hour,
+    date.minute,
+  );
 }
 
 /// Expands recurring expenses into individual instances up to today.

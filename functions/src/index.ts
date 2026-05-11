@@ -21,9 +21,13 @@ export const onGroupDeleted = onDocumentDeleted(
       const tokens: string[] = [];
       await Promise.all(
         memberIds.map(async (uid) => {
-          const userDoc = await db.doc(`users/${uid}`).get();
-          const token = userDoc.data()?.fcmToken;
-          if (token) tokens.push(token);
+          try {
+            const userDoc = await db.doc(`users/${uid}`).get();
+            const token = userDoc.data()?.fcmToken;
+            if (token) tokens.push(token);
+          } catch {
+            // skip — user doc missing or permission denied
+          }
         })
       );
 
@@ -75,8 +79,13 @@ export const onMemberRemoved = onDocumentDeleted(
     const db = admin.firestore();
 
     // Token FCM du membre retiré
-    const userDoc = await db.doc(`users/${userId}`).get();
-    const token = userDoc.data()?.fcmToken;
+    let token: string | undefined;
+    try {
+      const userDoc = await db.doc(`users/${userId}`).get();
+      token = userDoc.data()?.fcmToken;
+    } catch {
+      return;
+    }
     if (!token) return;
 
     // Nom du groupe
@@ -129,9 +138,13 @@ export const onNewMessage = onDocumentCreated(
       memberIds
         .filter((uid) => uid !== message.senderId)
         .map(async (uid) => {
-          const userDoc = await admin.firestore().doc(`users/${uid}`).get();
-          const token = userDoc.data()?.fcmToken;
-          if (token) tokens.push(token);
+          try {
+            const userDoc = await admin.firestore().doc(`users/${uid}`).get();
+            const token = userDoc.data()?.fcmToken;
+            if (token) tokens.push(token);
+          } catch {
+            // skip — user doc missing or permission denied
+          }
         })
     );
 
@@ -188,16 +201,18 @@ async function getGroupTokens(
   const groupDoc = await db.doc(`groups/${groupId}`).get();
   const groupName: string = groupDoc.data()?.name ?? "";
   const memberIds: string[] = groupDoc.data()?.memberIds ?? [];
-  const tokens: string[] = [];
-  await Promise.all(
+  const tokens = (await Promise.all(
     memberIds
       .filter((uid) => uid !== excludeUid)
       .map(async (uid) => {
-        const userDoc = await db.doc(`users/${uid}`).get();
-        const token = userDoc.data()?.fcmToken;
-        if (token) tokens.push(token);
+        try {
+          const userDoc = await db.doc(`users/${uid}`).get();
+          return userDoc.data()?.fcmToken as string | undefined;
+        } catch {
+          return undefined;
+        }
       })
-  );
+  )).filter((t): t is string => !!t);
   return { tokens, groupName };
 }
 
@@ -206,8 +221,12 @@ async function getGroupName(
   db: admin.firestore.Firestore,
   groupId: string
 ): Promise<string> {
-  const groupDoc = await db.doc(`groups/${groupId}`).get();
-  return groupDoc.data()?.name ?? "";
+  try {
+    const groupDoc = await db.doc(`groups/${groupId}`).get();
+    return groupDoc.data()?.name ?? "";
+  } catch {
+    return "";
+  }
 }
 
 /** Envoie une notification multicast si la liste de tokens est non vide.
@@ -220,20 +239,24 @@ async function sendNotif(
   screen: string
 ): Promise<void> {
   if (tokens.length === 0) return;
-  await admin.messaging().sendEachForMulticast({
-    tokens,
-    notification: { title: groupName, body },
-    data: { groupId, screen },
-    android: {
-      priority: "high",
-      collapseKey: groupId,
-      notification: { tag: groupId },
-    },
-    apns: {
-      headers: { "apns-collapse-id": groupId },
-      payload: { aps: { sound: "default", threadId: groupId } },
-    },
-  });
+  try {
+    await admin.messaging().sendEachForMulticast({
+      tokens,
+      notification: { title: groupName, body },
+      data: { groupId, screen },
+      android: {
+        priority: "high",
+        collapseKey: groupId,
+        notification: { tag: groupId },
+      },
+      apns: {
+        headers: { "apns-collapse-id": groupId },
+        payload: { aps: { sound: "default", threadId: groupId } },
+      },
+    });
+  } catch (e) {
+    console.error("[sendNotif] FCM error:", e);
+  }
 }
 
 export const onExpenseUpdated = onDocumentUpdated(
@@ -253,8 +276,12 @@ export const onExpenseUpdated = onDocumentUpdated(
     const [tokens, groupName] = await Promise.all([
       Promise.all(
         recipients.map(async (uid: string) => {
-          const userDoc = await db.doc(`users/${uid}`).get();
-          return userDoc.data()?.fcmToken as string | undefined;
+          try {
+            const userDoc = await db.doc(`users/${uid}`).get();
+            return userDoc.data()?.fcmToken as string | undefined;
+          } catch {
+            return undefined;
+          }
         })
       ).then((ts) => ts.filter((t): t is string => !!t)),
       getGroupName(db, groupId),
@@ -446,8 +473,12 @@ export const onNewExpense = onDocumentCreated(
     const [tokens, groupName] = await Promise.all([
       Promise.all(
         recipients.map(async (uid) => {
-          const userDoc = await db.doc(`users/${uid}`).get();
-          return userDoc.data()?.fcmToken as string | undefined;
+          try {
+            const userDoc = await db.doc(`users/${uid}`).get();
+            return userDoc.data()?.fcmToken as string | undefined;
+          } catch {
+            return undefined;
+          }
         })
       ).then((ts) => ts.filter((t): t is string => !!t)),
       getGroupName(db, groupId),
