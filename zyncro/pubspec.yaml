@@ -64,6 +64,7 @@ dependencies:
   pasteboard: ^0.5.0
   flutter_localizations:
     sdk: flutter
+  photo_manager: ^3.9.0
 
 dev_dependencies:
   flutter_test:

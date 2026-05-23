@@ -247,6 +247,56 @@ class MessagesRepository implements IMessagesRepository {
   }
 
   @override
+  Future<void> sendMultipleMedia({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required List<({String filePath, String mimeType})> medias,
+    String? replyToId,
+    String? replyToSenderName,
+    String? replyToContent,
+  }) async {
+    final ref = _col(groupId).doc();
+    final results = await Future.wait(
+      medias.asMap().entries.map((entry) async {
+        final index = entry.key;
+        final media = entry.value;
+        final ext = media.filePath.split('.').last;
+        final storageRef = FirebaseStorage.instance
+            .ref('media/$groupId/${ref.id}_$index.$ext');
+        final snapshot = await storageRef.putFile(
+          File(media.filePath),
+          SettableMetadata(contentType: media.mimeType),
+        );
+        if (snapshot.state != TaskState.success) {
+          throw FirebaseException(
+            plugin: 'firebase_storage',
+            message: 'Upload failed with state: ${snapshot.state}',
+          );
+        }
+        final url = await storageRef.getDownloadURL();
+        return {'url': url, 'mimeType': media.mimeType};
+      }),
+    );
+
+    final hasVideo = medias.any((m) => m.mimeType.startsWith('video/'));
+    final content = jsonEncode({'medias': results});
+    final message = Message(
+      id: ref.id,
+      groupId: groupId,
+      senderId: senderId,
+      senderName: senderName,
+      content: content,
+      type: hasVideo ? MessageType.file : MessageType.image,
+      timestamp: DateTime.now(),
+      replyToId: replyToId,
+      replyToSenderName: replyToSenderName,
+      replyToContent: replyToContent,
+    );
+    await ref.set(message.toMap());
+  }
+
+  @override
   Future<void> sendPoll({
     required String groupId,
     required String senderId,

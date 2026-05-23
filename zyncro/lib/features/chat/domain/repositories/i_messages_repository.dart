@@ -67,6 +67,17 @@ abstract interface class IMessagesRepository {
     String? replyToContent,
   });
 
+  /// Envoie plusieurs médias (jusqu'à 10) en un seul message album.
+  Future<void> sendMultipleMedia({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required List<({String filePath, String mimeType})> medias,
+    String? replyToId,
+    String? replyToSenderName,
+    String? replyToContent,
+  });
+
   /// Envoie un sondage dans le groupe.
   Future<void> sendPoll({
     required String groupId,
