@@ -1004,7 +1004,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           ),
                         ),
                         Text(
-                          _replyingTo!.content,
+                          _replyingTo!.type == MessageType.image
+                              ? 'Photo'
+                              : _replyingTo!.type == MessageType.file
+                                  ? 'Fichier'
+                                  : _replyingTo!.type == MessageType.audio
+                                      ? 'Audio'
+                                      : _replyingTo!.type == MessageType.poll
+                                          ? 'Sondage'
+                                          : _replyingTo!.content,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -2323,6 +2331,12 @@ class _ReplyPreview extends StatelessWidget {
     this.senderName,
   });
 
+  String _formatReplyContent(String c) {
+    if (c.startsWith('http')) return 'Photo / Vidéo';
+    if (c.startsWith('{')) return 'Sondage';
+    return c;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -2357,7 +2371,7 @@ class _ReplyPreview extends StatelessWidget {
               ),
             ),
           Text(
-            content,
+            _formatReplyContent(content),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

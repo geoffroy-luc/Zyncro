@@ -697,7 +697,15 @@ class _MessageRow extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                message.content,
+                message.type == MessageType.image
+                    ? 'a envoyé une photo'
+                    : message.type == MessageType.file
+                        ? 'a envoyé un fichier'
+                        : message.type == MessageType.audio
+                            ? 'a envoyé un audio'
+                            : message.type == MessageType.poll
+                                ? 'a créé un sondage'
+                                : message.content,
                 style: const TextStyle(
                     color: AppColors.textSecondary, fontSize: 13),
                 maxLines: 1,
