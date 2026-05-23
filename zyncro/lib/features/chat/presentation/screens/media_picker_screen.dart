@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -120,10 +121,14 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
   }
 
   Future<void> _presentLimitedPicker() async {
-    await PhotoManager.presentLimited();
-    // Recharger après que l'utilisateur a modifié sa sélection
-    setState(() { _loading = true; _assets = []; _selected.clear(); });
-    await _init();
+    if (Platform.isIOS) {
+      await PhotoManager.presentLimited();
+      // Recharger après que l'utilisateur a modifié sa sélection
+      setState(() { _loading = true; _assets = []; _selected.clear(); });
+      await _init();
+    } else {
+      await PhotoManager.openSetting();
+    }
   }
 
   void _toggle(AssetEntity asset) {
@@ -262,27 +267,29 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                             const SizedBox(width: 8),
                             GestureDetector(
                               onTap: _presentLimitedPicker,
-                              child: const Text(
-                                'Modifier',
-                                style: TextStyle(
+                              child: Text(
+                                Platform.isIOS ? 'Modifier' : 'Réglages',
+                                style: const TextStyle(
                                   color: Color(0xFFE85D75),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            GestureDetector(
-                              onTap: PhotoManager.openSetting,
-                              child: const Text(
-                                'Tout autoriser',
-                                style: TextStyle(
-                                  color: Color(0xFFE85D75),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
+                            if (Platform.isIOS) ...[
+                              const SizedBox(width: 12),
+                              GestureDetector(
+                                onTap: PhotoManager.openSetting,
+                                child: const Text(
+                                  'Tout autoriser',
+                                  style: TextStyle(
+                                    color: Color(0xFFE85D75),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                       ),
