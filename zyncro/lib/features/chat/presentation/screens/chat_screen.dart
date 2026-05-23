@@ -23,6 +23,7 @@ import '../../../expenses/presentation/providers/expenses_provider.dart';
 import '../../domain/repositories/i_messages_repository.dart';
 import '../providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
+import 'media_picker_screen.dart';
 import 'media_viewer_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -666,7 +667,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  Future<void> _pickAndSendMedia() async {
+Future<void> _pickAndSendMedia() async {
     final picker = ImagePicker();
     final choice = await showModalBottomSheet<String>(
       context: context,
@@ -682,13 +683,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Photo depuis la galerie'),
-              onTap: () => Navigator.of(ctx).pop('gallery_photo'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.video_library_outlined),
-              title: const Text('Vidéo depuis la galerie'),
-              onTap: () => Navigator.of(ctx).pop('gallery_video'),
+              title: const Text('Sélectionner depuis la galerie'),
+              subtitle: const Text('Photos et vidéos · jusqu\'à 10'),
+              onTap: () => Navigator.of(ctx).pop('gallery'),
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
@@ -711,80 +708,119 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       return;
     }
 
-    XFile? file;
-    String mimeType;
-    if (choice == 'gallery_photo') {
-      file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 100);
-      if (file == null) return;
-      mimeType = 'image/jpeg';
-    } else if (choice == 'gallery_video') {
-      file = await picker.pickVideo(source: ImageSource.gallery);
-      if (file == null) return;
-      mimeType = 'video/mp4';
-    } else if (choice == 'camera') {
-      file = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
-      mimeType = 'image/jpeg';
-    } else {
-      file = await picker.pickVideo(source: ImageSource.camera);
-      mimeType = 'video/mp4';
-    }
-    if (file == null || !mounted) return;
-
     final user = ref.read(authStateProvider).asData?.value;
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (user == null || groupId == null) return;
-
+    final senderName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+        user.displayName ??
+        user.email ??
+        'Anonyme';
     final reply = _replyingTo;
-    setState(() {
-      _isUploadingMedia = true;
-      _replyingTo = null;
-    });
 
-    try {
-      // Compression pour les images uniquement
-      String uploadPath = file.path;
-      if (mimeType.startsWith('image/')) {
+    if (choice == 'gallery') {
+      final picked = await Navigator.of(context, rootNavigator: true).push<MediaPickerResult>(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => const MediaPickerScreen(maxCount: 10),
+        ),
+      );
+      if (picked == null || picked.isEmpty || !mounted) return;
+
+      setState(() { _isUploadingMedia = true; _replyingTo = null; });
+      try {
         final dir = await getTemporaryDirectory();
-        final targetPath = '${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final compressed = await FlutterImageCompress.compressAndGetFile(
-          file.path,
-          targetPath,
-          quality: 85,
-          minWidth: 1920,
-          minHeight: 1920,
-          keepExif: false,
+        final ts = DateTime.now().millisecondsSinceEpoch;
+        final compressed = await Future.wait(
+          picked.asMap().entries.map((e) async {
+            final index = e.key;
+            final media = e.value;
+            if (media.mimeType.startsWith('image/')) {
+              final targetPath = '${dir.path}/compressed_${ts}_$index.jpg';
+              final result = await FlutterImageCompress.compressAndGetFile(
+                media.path, targetPath,
+                quality: 85, minWidth: 1920, minHeight: 1920, keepExif: false,
+              );
+              return (filePath: result?.path ?? media.path, mimeType: 'image/jpeg');
+            }
+            return (filePath: media.path, mimeType: media.mimeType);
+          }),
         );
-        if (compressed != null) {
-          uploadPath = compressed.path;
-          mimeType = 'image/jpeg';
-        }
-      }
 
-      await ref.read(messagesRepositoryProvider).sendMedia(
+        if (picked.length == 1) {
+          await ref.read(messagesRepositoryProvider).sendMedia(
             groupId: groupId,
             senderId: user.uid,
-            senderName: ref.read(currentMemberProvider).asData?.value?.displayName ??
-                user.displayName ??
-                user.email ??
-                'Anonyme',
-            filePath: uploadPath,
-            mimeType: mimeType,
+            senderName: senderName,
+            filePath: compressed.first.filePath,
+            mimeType: compressed.first.mimeType,
             replyToId: reply?.id,
             replyToSenderName: reply?.senderName,
             replyToContent: reply?.content,
           );
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+        } else {
+          await ref.read(messagesRepositoryProvider).sendMultipleMedia(
+            groupId: groupId,
+            senderId: user.uid,
+            senderName: senderName,
+            medias: compressed,
+            replyToId: reply?.id,
+            replyToSenderName: reply?.senderName,
+            replyToContent: reply?.content,
+          );
+        }
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur envoi média : $e')));
+      } finally {
+        if (mounted) setState(() => _isUploadingMedia = false);
+      }
+      return;
+    }
+
+    // Caméra — toujours un seul fichier
+    XFile? file;
+    String mimeType;
+    if (choice == 'camera') {
+      file = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+      if (file == null || !mounted) return;
+      mimeType = 'image/jpeg';
+    } else {
+      file = await picker.pickVideo(source: ImageSource.camera);
+      if (file == null || !mounted) return;
+      mimeType = 'video/mp4';
+    }
+
+    setState(() { _isUploadingMedia = true; _replyingTo = null; });
+    try {
+      String uploadPath = file.path;
+      if (mimeType.startsWith('image/')) {
+        final dir = await getTemporaryDirectory();
+        final targetPath = '${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final result = await FlutterImageCompress.compressAndGetFile(
+          file.path, targetPath,
+          quality: 85, minWidth: 1920, minHeight: 1920, keepExif: false,
         );
+        if (result != null) { uploadPath = result.path; mimeType = 'image/jpeg'; }
+      }
+      await ref.read(messagesRepositoryProvider).sendMedia(
+        groupId: groupId,
+        senderId: user.uid,
+        senderName: senderName,
+        filePath: uploadPath,
+        mimeType: mimeType,
+        replyToId: reply?.id,
+        replyToSenderName: reply?.senderName,
+        replyToContent: reply?.content,
+      );
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur envoi média : $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur envoi média : $e')));
     } finally {
       if (mounted) setState(() => _isUploadingMedia = false);
     }
@@ -1443,10 +1479,36 @@ class _MessageBubble extends StatelessWidget {
         );
       }
     }
-    if (message.type == MessageType.image) {
+    if (message.type == MessageType.image || message.type == MessageType.file) {
       try {
         final data = jsonDecode(message.content) as Map<String, dynamic>;
+        // Album multi-médias
+        if (data.containsKey('medias')) {
+          final medias = (data['medias'] as List<dynamic>)
+              .map((e) => e as Map<String, dynamic>)
+              .toList();
+          return _MediaAlbumBubble(
+            medias: medias,
+            isMe: isMe,
+            senderName: message.senderName,
+            sentAt: message.timestamp,
+          );
+        }
+        // Média unique (rétrocompatibilité)
         final url = data['url'] as String? ?? '';
+        final mimeType = (data['mimeType'] as String?) ?? '';
+        if (mimeType.startsWith('video/') || message.type == MessageType.file) {
+          return GestureDetector(
+            onTap: () => Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute(builder: (_) => VideoViewerScreen(
+                url: url,
+                senderName: message.senderName,
+                sentAt: message.timestamp,
+              )),
+            ),
+            child: _VideoThumbnail(key: ValueKey(message.id), url: url),
+          );
+        }
         return GestureDetector(
           onTap: () => Navigator.of(context, rootNavigator: true).push(
             MaterialPageRoute(builder: (_) => ImageViewerScreen(
@@ -1489,31 +1551,7 @@ class _MessageBubble extends StatelessWidget {
         );
       } catch (_) {
         return Text(
-          '🖼️ Image',
-          style: TextStyle(
-            color: isMe ? Colors.white : AppColors.textPrimary,
-            fontSize: 14,
-          ),
-        );
-      }
-    }
-    if (message.type == MessageType.file) {
-      try {
-        final data = jsonDecode(message.content) as Map<String, dynamic>;
-        final url = data['url'] as String? ?? '';
-        return GestureDetector(
-          onTap: () => Navigator.of(context, rootNavigator: true).push(
-            MaterialPageRoute(builder: (_) => VideoViewerScreen(
-              url: url,
-              senderName: message.senderName,
-              sentAt: message.timestamp,
-            )),
-          ),
-          child: _VideoThumbnail(key: ValueKey(message.id), url: url),
-        );
-      } catch (_) {
-        return Text(
-          '🎥 Vidéo',
+          '🖼️ Média',
           style: TextStyle(
             color: isMe ? Colors.white : AppColors.textPrimary,
             fontSize: 14,
@@ -2123,6 +2161,159 @@ class _VideoThumbnailState extends State<_VideoThumbnail> {
             const Center(
               child: Icon(Icons.play_circle_fill, size: 48, color: Colors.white70),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Album multi-médias style Instagram ───────────────────────────────────────
+class _MediaAlbumBubble extends StatelessWidget {
+  final List<Map<String, dynamic>> medias;
+  final bool isMe;
+  final String? senderName;
+  final DateTime sentAt;
+
+  const _MediaAlbumBubble({
+    required this.medias,
+    required this.isMe,
+    this.senderName,
+    required this.sentAt,
+  });
+
+  static const double _w = 220;
+  static const double _h = 165;
+
+  Widget _topThumbnail(BuildContext context) {
+    final item = medias.first;
+    final url = item['url'] as String? ?? '';
+    final mimeType = (item['mimeType'] as String?) ?? '';
+    if (mimeType.startsWith('video/')) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Container(color: Colors.black87),
+          const Center(
+            child: Icon(Icons.play_circle_outline, color: Colors.white70, size: 48),
+          ),
+        ],
+      );
+    }
+    return Image.network(
+      url,
+      width: _w,
+      height: _h,
+      fit: BoxFit.cover,
+      loadingBuilder: (_, child, progress) => progress == null
+          ? child
+          : Center(
+              child: CircularProgressIndicator(
+                value: progress.expectedTotalBytes != null
+                    ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                    : null,
+                color: isMe ? Colors.white : const Color(0xFFE85D75),
+                strokeWidth: 2,
+              ),
+            ),
+      errorBuilder: (_, __, ___) => Container(
+        color: Colors.grey[300],
+        child: const Icon(Icons.broken_image, color: Colors.grey),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final total = medias.length;
+    return GestureDetector(
+      onTap: () => Navigator.of(context, rootNavigator: true).push(
+        MaterialPageRoute(
+          builder: (_) => AlbumSwipeViewer(
+            medias: medias,
+            initialIndex: 0,
+            senderName: senderName,
+            sentAt: sentAt,
+          ),
+        ),
+      ),
+      child: SizedBox(
+        width: _w + 10,
+        height: _h + 10,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Carte du dessous (3ème) — fond neutre légèrement décalé
+            if (total >= 3)
+              Positioned(
+                top: 8,
+                left: 6,
+                child: Transform.rotate(
+                  angle: 0.08,
+                  child: Container(
+                    width: _w,
+                    height: _h,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            // Carte du milieu (2ème) — fond légèrement décalé
+            if (total >= 2)
+              Positioned(
+                top: 4,
+                left: 3,
+                child: Transform.rotate(
+                  angle: 0.04,
+                  child: Container(
+                    width: _w,
+                    height: _h,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            // Carte principale (1ère) — thumbnail réel
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: _w,
+                height: _h,
+                child: _topThumbnail(context),
+              ),
+            ),
+            // Badge compteur
+            if (total > 1)
+              Positioned(
+                bottom: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.65),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.photo_library_outlined, color: Colors.white, size: 12),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$total',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),
