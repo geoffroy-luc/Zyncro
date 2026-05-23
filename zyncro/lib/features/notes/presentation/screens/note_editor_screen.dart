@@ -391,7 +391,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     alignLabelWithHint: true,
                   ),
                   textCapitalization: TextCapitalization.sentences,
-                  maxLines: 4,
+                  maxLines: null,
                 ),
               ],
 
