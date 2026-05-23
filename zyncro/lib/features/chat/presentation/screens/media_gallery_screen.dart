@@ -56,8 +56,10 @@ class MediaGalleryScreen extends ConsumerWidget {
               mainAxisSpacing: 2,
             ),
             itemCount: messages.length,
-            itemBuilder: (context, index) =>
-                _MediaTile(message: messages[index]),
+            itemBuilder: (context, index) => _MediaTile(
+              messages: messages,
+              index: index,
+            ),
           );
         },
       ),
@@ -66,11 +68,13 @@ class MediaGalleryScreen extends ConsumerWidget {
 }
 
 class _MediaTile extends StatelessWidget {
-  final Message message;
-  const _MediaTile({required this.message});
+  final List<Message> messages;
+  final int index;
+  const _MediaTile({required this.messages, required this.index});
 
   @override
   Widget build(BuildContext context) {
+    final message = messages[index];
     final Map<String, dynamic> data;
     try {
       data = jsonDecode(message.content) as Map<String, dynamic>;
@@ -78,29 +82,15 @@ class _MediaTile extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final url = data['url'] as String? ?? '';
-    final mimeType = (data['mimeType'] as String?) ?? '';
-    final isVideo = mimeType.startsWith('video/');
+    final isVideo = ((data['mimeType'] as String?) ?? '').startsWith('video/');
 
     return GestureDetector(
-      onTap: () {
-        if (isVideo) {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => VideoViewerScreen(
-              url: url,
-              senderName: message.senderName,
-              sentAt: message.timestamp,
-            ),
-          ));
-        } else {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ImageViewerScreen(
-              url: url,
-              senderName: message.senderName,
-              sentAt: message.timestamp,
-            ),
-          ));
-        }
-      },
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => MediaSwipeViewer(
+          messages: messages,
+          initialIndex: index,
+        ),
+      )),
       child: isVideo ? _VideoThumb(url: url) : _ImageThumb(url: url),
     );
   }
