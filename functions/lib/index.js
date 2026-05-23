@@ -39,11 +39,8 @@ exports.onGroupDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}", 
                 data: { groupId },
                 android: {
                     priority: "high",
-                    collapseKey: groupId,
-                    notification: { tag: groupId },
                 },
                 apns: {
-                    headers: { "apns-collapse-id": groupId },
                     payload: { aps: { sound: "default", threadId: groupId } },
                 },
             });
@@ -91,11 +88,8 @@ exports.onMemberRemoved = (0, firestore_1.onDocumentDeleted)("groups/{groupId}/m
         data: { groupId },
         android: {
             priority: "high",
-            collapseKey: groupId,
-            notification: { tag: groupId },
         },
         apns: {
-            headers: { "apns-collapse-id": groupId },
             payload: { aps: { sound: "default", threadId: groupId } },
         },
     });
@@ -217,11 +211,8 @@ async function sendNotif(tokens, groupName, body, groupId, screen) {
             data: { groupId, screen },
             android: {
                 priority: "high",
-                collapseKey: groupId,
-                notification: { tag: groupId },
             },
             apns: {
-                headers: { "apns-collapse-id": groupId },
                 payload: { aps: { sound: "default", threadId: groupId } },
             },
         });

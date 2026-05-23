@@ -41,11 +41,8 @@ export const onGroupDeleted = onDocumentDeleted(
           data: { groupId },
           android: {
             priority: "high",
-            collapseKey: groupId,
-            notification: { tag: groupId },
           },
           apns: {
-            headers: { "apns-collapse-id": groupId },
             payload: { aps: { sound: "default", threadId: groupId } },
           },
         });
@@ -101,11 +98,8 @@ export const onMemberRemoved = onDocumentDeleted(
       data: { groupId },
       android: {
         priority: "high",
-        collapseKey: groupId,
-        notification: { tag: groupId },
       },
       apns: {
-        headers: { "apns-collapse-id": groupId },
         payload: { aps: { sound: "default", threadId: groupId } },
       },
     });
@@ -246,11 +240,8 @@ async function sendNotif(
       data: { groupId, screen },
       android: {
         priority: "high",
-        collapseKey: groupId,
-        notification: { tag: groupId },
       },
       apns: {
-        headers: { "apns-collapse-id": groupId },
         payload: { aps: { sound: "default", threadId: groupId } },
       },
     });
