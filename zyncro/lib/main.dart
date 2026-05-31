@@ -24,6 +24,7 @@ void main() async {
   final tzInfo = await FlutterTimezone.getLocalTimezone();
   tz_lib.setLocalLocation(tz_lib.getLocation(tzInfo.identifier));
   await ReminderService.initialize();
+  await NotificationService.createNotificationChannel();
   NotificationService.registerBackgroundHandler();
   runApp(const ProviderScope(child: ZyncroApp()));
 }

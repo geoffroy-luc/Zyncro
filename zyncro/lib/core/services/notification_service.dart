@@ -31,6 +31,7 @@ final foregroundMessageProvider =
     );
 
 class NotificationService {
+  static const _channelId = 'zyncro_high_importance';
   static final _messaging = FirebaseMessaging.instance;
   static final _db = FirebaseFirestore.instance;
 
@@ -38,6 +39,22 @@ class NotificationService {
   static StreamSubscription<String>? _tokenRefreshSub;
   static StreamSubscription<RemoteMessage>? _foregroundSub;
   static StreamSubscription<RemoteMessage>? _openedAppSub;
+
+  /// Creates the high-importance Android notification channel so FCM shows heads-up banners.
+  /// Call once before runApp(), after Firebase.initializeApp().
+  static Future<void> createNotificationChannel() async {
+    if (!Platform.isAndroid) return;
+    const channel = AndroidNotificationChannel(
+      _channelId,
+      'Notifications Zyncro',
+      description: 'Notifications de messages et d\'activité',
+      importance: Importance.high,
+    );
+    await FlutterLocalNotificationsPlugin()
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+  }
 
   /// Call once after Firebase.initializeApp() — before runApp().
   static void registerBackgroundHandler() {
