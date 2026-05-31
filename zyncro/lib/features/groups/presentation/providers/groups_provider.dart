@@ -26,9 +26,6 @@ class SelectedGroupIdNotifier extends AsyncNotifier<String?> {
     // Pas connecté → aucun groupe
     if (user == null) return null;
 
-    // Surveille la liste des groupes pour détecter la suppression du groupe sélectionné
-    final groups = ref.watch(userGroupsProvider).asData?.value;
-
     final prefs = await SharedPreferences.getInstance();
     final storedUid = prefs.getString(_kGroupUserKey);
 
@@ -41,12 +38,23 @@ class SelectedGroupIdNotifier extends AsyncNotifier<String?> {
 
     final storedId = prefs.getString(_kGroupIdKey);
 
-    // Si la liste est chargée et que le groupe n'existe plus → on le désélectionne
-    if (storedId != null && groups != null && !groups.any((g) => g.id == storedId)) {
+    // Vérifie une fois si le groupe stocké existe toujours
+    final initialGroups = ref.read(userGroupsProvider).asData?.value;
+    if (storedId != null && initialGroups != null && !initialGroups.any((g) => g.id == storedId)) {
       await prefs.remove(_kGroupIdKey);
       await prefs.remove(_kGroupUserKey);
       return null;
     }
+
+    // Écoute les changements de groupes uniquement pour détecter une suppression,
+    // sans reconstruire le notifier à chaque émission (évite les rebuild en cascade).
+    ref.listen(userGroupsProvider, (_, next) {
+      final groups = next.asData?.value;
+      final currentId = state.asData?.value;
+      if (currentId != null && groups != null && !groups.any((g) => g.id == currentId)) {
+        select(null);
+      }
+    });
 
     return storedId;
   }
