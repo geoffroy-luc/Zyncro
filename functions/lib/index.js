@@ -35,7 +35,7 @@ exports.onGroupDeleted = (0, firestore_1.onDocumentDeleted)("groups/{groupId}", 
                 android: {
                     priority: "high",
                     collapseKey: groupId,
-                    notification: { tag: groupId, channelId: "zyncro_high_importance" },
+                    notification: { channelId: "zyncro_high_importance" },
                 },
                 apns: {
                     headers: { "apns-collapse-id": groupId },
@@ -194,7 +194,7 @@ async function sendNotif(tokens, groupName, body, groupId, screen) {
         android: {
             priority: "high",
             collapseKey: groupId,
-            notification: { tag: groupId, channelId: "zyncro_high_importance" },
+            notification: { channelId: "zyncro_high_importance" },
         },
         apns: {
             headers: { "apns-collapse-id": groupId },

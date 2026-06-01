@@ -48,7 +48,7 @@ class DashboardScreen extends ConsumerWidget {
     final allNotes = ref.watch(notesProvider).asData?.value ?? [];
     final allExpenses = ref.watch(expensesProvider).asData?.value ?? [];
     final balances = ref.watch(balancesProvider);
-    final allMessages = ref.watch(messagesProvider).asData?.value ?? [];
+    final allMessages = ref.watch(chatMessagesProvider).asData?.value.messages ?? [];
     final members = ref.watch(expenseMembersProvider).asData?.value ?? [];
     final memberNames = {for (final m in members) m.uid: m.displayName};
 

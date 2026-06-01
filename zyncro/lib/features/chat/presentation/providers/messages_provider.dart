@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/messages_repository.dart';
@@ -10,11 +12,118 @@ final messagesRepositoryProvider = Provider<IMessagesRepository>(
   (_) => MessagesRepository(),
 );
 
-final messagesProvider = StreamProvider<List<Message>>((ref) {
-  final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
-  if (groupId == null) return Stream.value([]);
-  return ref.watch(messagesRepositoryProvider).watchMessages(groupId);
-});
+// ── Pagination state ─────────────────────────────────────────────────────────
+
+class ChatMessagesState {
+  final List<Message> messages;
+  final bool hasMore;
+  final bool loadingMore;
+
+  const ChatMessagesState({
+    required this.messages,
+    this.hasMore = true,
+    this.loadingMore = false,
+  });
+
+  ChatMessagesState copyWith({
+    List<Message>? messages,
+    bool? hasMore,
+    bool? loadingMore,
+  }) => ChatMessagesState(
+    messages: messages ?? this.messages,
+    hasMore: hasMore ?? this.hasMore,
+    loadingMore: loadingMore ?? this.loadingMore,
+  );
+}
+
+class ChatMessagesNotifier extends AsyncNotifier<ChatMessagesState> {
+  List<Message> _live = [];
+  List<Message> _older = [];
+  bool _hasMore = true;
+  bool _loadingMore = false;
+
+  @override
+  Future<ChatMessagesState> build() async {
+    final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
+
+    _live = [];
+    _older = [];
+    _hasMore = true;
+    _loadingMore = false;
+
+    if (groupId == null) {
+      return const ChatMessagesState(messages: [], hasMore: false);
+    }
+
+    final repo = ref.read(messagesRepositoryProvider);
+    final completer = Completer<List<Message>>();
+
+    final sub = repo.watchMessages(groupId).listen(
+      (msgs) {
+        _live = msgs;
+        if (msgs.length < 50) _hasMore = false;
+        if (!completer.isCompleted) {
+          completer.complete(msgs);
+        } else {
+          state = AsyncData(_buildState());
+        }
+      },
+      onError: (Object e, StackTrace st) {
+        if (!completer.isCompleted) {
+          completer.completeError(e, st);
+        } else {
+          state = AsyncError(e, st);
+        }
+      },
+    );
+
+    ref.onDispose(sub.cancel);
+
+    await completer.future;
+    return _buildState();
+  }
+
+  ChatMessagesState _buildState() {
+    final liveIds = _live.map((m) => m.id).toSet();
+    return ChatMessagesState(
+      messages: [
+        ..._live,
+        ..._older.where((m) => !liveIds.contains(m.id)),
+      ],
+      hasMore: _hasMore,
+      loadingMore: _loadingMore,
+    );
+  }
+
+  Future<void> loadMore() async {
+    if (_loadingMore || !_hasMore) return;
+    final current = state.value;
+    if (current == null || current.messages.isEmpty) return;
+
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+
+    _loadingMore = true;
+    state = AsyncData(current.copyWith(loadingMore: true));
+
+    try {
+      final oldest = current.messages.last.timestamp;
+      final batch = await ref
+          .read(messagesRepositoryProvider)
+          .fetchMessagesBefore(groupId, oldest);
+      _older = [..._older, ...batch];
+      if (batch.length < 50) _hasMore = false;
+    } finally {
+      _loadingMore = false;
+      state = AsyncData(_buildState());
+    }
+  }
+}
+
+final chatMessagesProvider =
+    AsyncNotifierProvider<ChatMessagesNotifier, ChatMessagesState>(
+  ChatMessagesNotifier.new,
+);
 
 final mediaMessagesProvider = StreamProvider<List<Message>>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider).asData?.value;

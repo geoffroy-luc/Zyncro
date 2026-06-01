@@ -38,7 +38,7 @@ export const onGroupDeleted = onDocumentDeleted(
           android: {
             priority: "high",
             collapseKey: groupId,
-            notification: { tag: groupId, channelId: "zyncro_high_importance" },
+            notification: { channelId: "zyncro_high_importance" },
           },
           apns: {
             headers: { "apns-collapse-id": groupId },
@@ -227,7 +227,7 @@ async function sendNotif(
     android: {
       priority: "high",
       collapseKey: groupId,
-      notification: { tag: groupId, channelId: "zyncro_high_importance" },
+      notification: { channelId: "zyncro_high_importance" },
     },
     apns: {
       headers: { "apns-collapse-id": groupId },

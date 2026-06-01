@@ -59,6 +59,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
     _controller.addListener(_onTextChanged);
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final pos = _scrollController.position;
+    if (pos.pixels >= pos.maxScrollExtent - 300) {
+      ref.read(chatMessagesProvider.notifier).loadMore();
+    }
   }
 
   void _onTextChanged() {
@@ -101,6 +110,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _clearTyping();
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -830,20 +840,20 @@ Future<void> _pickAndSendMedia() async {
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).viewInsets.bottom;
     // .value renvoie le dernier UID connu même si le provider repasse
-    // brièvement en AsyncLoading (ex: rebuild déclenché par messagesProvider)
+    // brièvement en AsyncLoading (ex: rebuild déclenché par chatMessagesProvider)
     final currentUid = ref.watch(
       authStateProvider.select((s) => s.value?.uid),
     );
     ref.watch(currentMemberProvider); // garde le provider actif pour ref.read() dans les méthodes async
-    final messagesAsync = ref.watch(messagesProvider);
+    final chatAsync = ref.watch(chatMessagesProvider);
     final members = ref.watch(expenseMembersProvider).asData?.value ?? <GroupMember>[];
 
     // Marque le dernier message comme lu quand un nouveau message arrive
     // (uniquement si le chat est actif ET l'app est au premier plan).
-    ref.listen(messagesProvider, (_, next) {
+    ref.listen(chatMessagesProvider, (_, next) {
       if (!ref.read(isChatTabActiveProvider)) return;
       if (!ref.read(appInForegroundProvider)) return;
-      final msgs = next.asData?.value;
+      final msgs = next.asData?.value.messages;
       if (msgs == null || msgs.isEmpty) return;
       final groupId = ref.read(selectedGroupIdProvider).asData?.value;
       final userId = ref.read(authStateProvider).asData?.value?.uid;
@@ -860,7 +870,7 @@ Future<void> _pickAndSendMedia() async {
     // (navigation depuis la nav bar ou ouverture via notification).
     ref.listen(isChatTabActiveProvider, (_, isActive) {
       if (!isActive) return;
-      final msgs = ref.read(messagesProvider).asData?.value;
+      final msgs = ref.read(chatMessagesProvider).asData?.value.messages;
       if (msgs == null || msgs.isEmpty) return;
       final groupId = ref.read(selectedGroupIdProvider).asData?.value;
       final userId = ref.read(authStateProvider).asData?.value?.uid;
@@ -878,7 +888,7 @@ Future<void> _pickAndSendMedia() async {
     ref.listen(appInForegroundProvider, (_, inForeground) {
       if (!inForeground) return;
       if (!ref.read(isChatTabActiveProvider)) return;
-      final msgs = ref.read(messagesProvider).asData?.value;
+      final msgs = ref.read(chatMessagesProvider).asData?.value.messages;
       if (msgs == null || msgs.isEmpty) return;
       final groupId = ref.read(selectedGroupIdProvider).asData?.value;
       final userId = ref.read(authStateProvider).asData?.value?.uid;
@@ -903,10 +913,11 @@ Future<void> _pickAndSendMedia() async {
         children: [
           // ── Messages ────────────────────────────────────────────────
           Expanded(
-            child: messagesAsync.when(
+            child: chatAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('Erreur: $e')),
-              data: (messages) {
+              data: (chatState) {
+                final messages = chatState.messages;
                 if (messages.isEmpty) {
                   return const Center(
                     child: Text(
@@ -932,8 +943,20 @@ Future<void> _pickAndSendMedia() async {
                     horizontal: 16,
                     vertical: 20,
                   ),
-                  itemCount: messages.length,
+                  itemCount: messages.length + (chatState.loadingMore ? 1 : 0),
                   itemBuilder: (_, i) {
+                    if (i == messages.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFFE85D75),
+                          ),
+                        ),
+                      );
+                    }
+
                     final msg = messages[i];
                     final isMe = msg.senderId == currentUid;
 
