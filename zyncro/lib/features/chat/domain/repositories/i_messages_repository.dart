@@ -2,6 +2,7 @@ import '../../../../shared/models/message.dart';
 
 abstract interface class IMessagesRepository {
   Stream<List<Message>> watchMessages(String groupId);
+  Future<List<Message>> fetchMessagesBefore(String groupId, DateTime before, {int limit = 50});
   Stream<List<Message>> watchMediaMessages(String groupId);
   Future<void> sendMessage({
     required String groupId,

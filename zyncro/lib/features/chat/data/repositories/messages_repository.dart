@@ -19,7 +19,7 @@ class MessagesRepository implements IMessagesRepository {
   Stream<List<Message>> watchMessages(String groupId) {
     return _col(groupId)
         .orderBy('timestamp', descending: true)
-        .limit(100)
+        .limit(50)
         .snapshots()
         .map(
           (snap) => snap.docs
@@ -30,6 +30,22 @@ class MessagesRepository implements IMessagesRepository {
           (_) {},
           test: (e) => e is FirebaseException && e.code == 'permission-denied',
         );
+  }
+
+  @override
+  Future<List<Message>> fetchMessagesBefore(
+    String groupId,
+    DateTime before, {
+    int limit = 50,
+  }) async {
+    final snap = await _col(groupId)
+        .orderBy('timestamp', descending: true)
+        .where('timestamp', isLessThan: Timestamp.fromDate(before))
+        .limit(limit)
+        .get();
+    return snap.docs
+        .map((doc) => Message.fromMap(doc.id, doc.data()))
+        .toList();
   }
 
   @override
