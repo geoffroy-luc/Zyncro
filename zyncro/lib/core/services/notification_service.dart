@@ -77,6 +77,7 @@ class NotificationService {
 
     // Save initial token
     final token = await _messaging.getToken();
+    debugPrint('[FCM] token=$token');
     if (token != null) await _saveToken(userId, token);
 
     // Refresh token — stocké pour pouvoir l'annuler au logout
@@ -142,8 +143,9 @@ class NotificationService {
         {'fcmToken': token, 'updatedAt': FieldValue.serverTimestamp()},
         SetOptions(merge: true),
       );
-    } on FirebaseException {
-      // Règles Firestore non configurées pour la collection users — on ignore.
+      debugPrint('[FCM] token saved for $userId');
+    } on FirebaseException catch (e) {
+      debugPrint('[FCM] token save FAILED: ${e.code} — ${e.message}');
     }
   }
 
@@ -244,9 +246,7 @@ class _NotificationBannerState extends ConsumerState<NotificationBanner> {
       );
     }
 
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(snackBar);
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
