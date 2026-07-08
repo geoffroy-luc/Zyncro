@@ -6,14 +6,21 @@ import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/profile_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/calendar/presentation/screens/calendar_screen.dart';
+import '../features/calendar/presentation/screens/calendar_settings_screen.dart';
 import '../features/chat/presentation/screens/chat_screen.dart';
+import '../features/chat/presentation/screens/chat_settings_screen.dart';
 import '../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../features/dashboard/presentation/screens/home_settings_screen.dart';
 import '../features/expenses/presentation/screens/expenses_screen.dart';
+import '../features/expenses/presentation/screens/expenses_settings_screen.dart';
 import '../features/groups/presentation/providers/groups_provider.dart';
+import '../features/groups/presentation/providers/tab_settings_provider.dart';
 import '../features/groups/presentation/screens/group_selection_screen.dart';
 import '../features/groups/presentation/screens/group_settings_screen.dart';
 import '../features/notes/presentation/screens/notes_screen.dart';
+import '../features/notes/presentation/screens/notes_settings_screen.dart';
 import '../core/constants/app_colors.dart';
+import '../shared/models/tab_settings.dart';
 import '../features/chat/presentation/providers/messages_provider.dart';
 import '../features/chat/presentation/screens/media_gallery_screen.dart';
 
@@ -85,6 +92,26 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/media-gallery',
         builder: (_, __) => const MediaGalleryScreen(),
       ),
+      GoRoute(
+        path: '/settings/home',
+        builder: (_, __) => const HomeSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/calendar',
+        builder: (_, __) => const CalendarSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/notes',
+        builder: (_, __) => const NotesSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/expenses',
+        builder: (_, __) => const ExpensesSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/chat',
+        builder: (_, __) => const ChatSettingsScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => _AppShell(shell: shell),
         branches: [
@@ -128,6 +155,53 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
+// ── Default tab gradients ────────────────────────────────────────────────────
+
+const _defaultTabGradients = [
+  [Color(0xFF9B59B6), Color(0xFF7D3C98)], // Accueil - violet
+  [Color(0xFF4F7CFF), Color(0xFF315FEA)], // Calendrier - bleu
+  [Color(0xFF2BB8A5), Color(0xFF1A9B88)], // Notes - vert
+  [Color(0xFFFFB86B), Color(0xFFF5A855)], // Dépenses - orange
+  [Color(0xFFE85D75), Color(0xFFC94060)], // Chat - rose
+];
+
+Color _darken(Color color) {
+  final hsl = HSLColor.fromColor(color);
+  return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
+}
+
+List<Color> _gradientForTab(int idx, TabSettings settings) {
+  final hex = switch (idx) {
+    0 => settings.homeThemeColor,
+    1 => settings.calendarThemeColor,
+    2 => settings.notesThemeColor,
+    3 => settings.expensesThemeColor,
+    4 => settings.chatThemeColor,
+    _ => null,
+  };
+  if (hex == null) return _defaultTabGradients[idx];
+  final base = Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
+  return [base, _darken(base)];
+}
+
+const _settingsRoutes = [
+  '/settings/home',
+  '/settings/calendar',
+  '/settings/notes',
+  '/settings/expenses',
+  '/settings/chat',
+];
+
+const _tabTitles = [
+  'Accueil',
+  'Calendrier',
+  'Notes',
+  'Dépenses',
+  'Chat',
+];
+
+// ── App shell ────────────────────────────────────────────────────────────────
+
 class _AppShell extends ConsumerWidget {
   final StatefulNavigationShell shell;
 
@@ -149,28 +223,14 @@ class _AppShell extends ConsumerWidget {
     ),
   ];
 
-  static const _tabGradients = [
-    [Color(0xFF9B59B6), Color(0xFF7D3C98)], // Accueil - violet
-    [Color(0xFF4F7CFF), Color(0xFF315FEA)], // Calendrier - bleu
-    [Color(0xFF2BB8A5), Color(0xFF1A9B88)], // Notes - vert
-    [Color(0xFFFFB86B), Color(0xFFF5A855)], // Dépenses - orange
-    [Color(0xFFE85D75), Color(0xFFC94060)], // Chat - rose
-  ];
-
-  static const _tabTitles = [
-    'Accueil',
-    'Calendrier',
-    'Notes',
-    'Dépenses',
-    'Chat',
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final group = ref.watch(selectedGroupProvider);
+    final settings =
+        ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
     final topPad = MediaQuery.of(context).padding.top;
     final idx = shell.currentIndex;
-    final gradientColors = _tabGradients[idx];
+    final gradientColors = _gradientForTab(idx, settings);
     final tabTitle = _tabTitles[idx];
 
     // Synchronise l'état "chat actif" avec l'onglet courant (gère le cas
@@ -178,6 +238,9 @@ class _AppShell extends ConsumerWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(isChatTabActiveProvider.notifier).setActive(idx == 4);
     });
+
+    // Photo du groupe — lue depuis le modèle Group (visible partout)
+    final groupPhotoUrl = group?.photoUrl;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
@@ -197,7 +260,7 @@ class _AppShell extends ConsumerWidget {
                 bottomRight: Radius.circular(28),
               ),
             ),
-              child: Row(
+            child: Row(
               children: [
                 // Retour vers Mes espaces
                 GestureDetector(
@@ -222,7 +285,7 @@ class _AppShell extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Emoji du groupe
+                // Emoji / photo du groupe
                 Container(
                   width: 40,
                   height: 40,
@@ -234,12 +297,25 @@ class _AppShell extends ConsumerWidget {
                       width: 2,
                     ),
                   ),
-                  child: Center(
-                    child: Text(
-                      group?.emoji ?? '🏠',
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                  ),
+                  child: groupPhotoUrl != null
+                      ? ClipOval(
+                          child: Image.network(
+                            groupPhotoUrl,
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Center(
+                          child: Text(
+                            group?.emoji?.isNotEmpty == true
+                                ? group!.emoji!
+                                : (group?.name.isNotEmpty == true
+                                    ? group!.name[0].toUpperCase()
+                                    : ''),
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                        ),
                 ),
                 const SizedBox(width: 10),
                 // Nom + titre onglet
@@ -266,9 +342,9 @@ class _AppShell extends ConsumerWidget {
                     ],
                   ),
                 ),
-                // Paramètres
+                // Paramètres (onglet-spécifiques)
                 GestureDetector(
-                  onTap: () => context.push('/group-settings'),
+                  onTap: () => context.push(_settingsRoutes[idx]),
                   child: Container(
                     width: 40,
                     height: 40,
@@ -285,7 +361,7 @@ class _AppShell extends ConsumerWidget {
                 ),
               ],
             ),
-            ),
+          ),
           Expanded(child: shell),
         ],
       ),
@@ -365,5 +441,6 @@ class _NavItem {
   final IconData icon;
   final IconData activeIcon;
   final String label;
+
   const _NavItem(this.icon, this.activeIcon, this.label);
 }

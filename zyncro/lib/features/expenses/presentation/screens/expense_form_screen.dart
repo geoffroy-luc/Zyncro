@@ -10,6 +10,7 @@ import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
+import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../providers/expenses_provider.dart';
 
 
@@ -566,6 +567,8 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
   Widget build(BuildContext context) {
     final members = ref.watch(expenseMembersProvider).asData?.value ?? [];
     final currentUid = ref.watch(authStateProvider).asData?.value?.uid;
+    final customCategories =
+        ref.watch(tabSettingsProvider).asData?.value.expensesCustomCategories ?? [];
     _ensureSplitControllers(members);
 
     // Initialise la sélection avec tous les membres au premier chargement
@@ -1029,50 +1032,96 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: _categories.map((cat) {
-                  final (label, icon, color) = cat;
-                  final selected = _selectedCategory == label;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedCategory = label),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? color.withValues(alpha: 0.12)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: selected ? color : AppColors.border,
-                          width: selected ? 1.5 : 1,
+                children: [
+                  ..._categories.map((cat) {
+                    final (label, icon, color) = cat;
+                    final selected = _selectedCategory == label;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedCategory = label),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? color.withValues(alpha: 0.12)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: selected ? color : AppColors.border,
+                            width: selected ? 1.5 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(icon,
+                                size: 16,
+                                color: selected
+                                    ? color
+                                    : AppColors.textSecondary),
+                            const SizedBox(width: 6),
+                            Text(
+                              label,
+                              style: TextStyle(
+                                color: selected
+                                    ? color
+                                    : AppColors.textSecondary,
+                                fontSize: 13,
+                                fontWeight: selected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(icon,
-                              size: 16,
-                              color: selected
-                                  ? color
-                                  : AppColors.textSecondary),
-                          const SizedBox(width: 6),
-                          Text(
-                            label,
-                            style: TextStyle(
-                              color: selected
-                                  ? color
-                                  : AppColors.textSecondary,
-                              fontSize: 13,
-                              fontWeight: selected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                            ),
+                    );
+                  }),
+                  ...customCategories.map((label) {
+                    final selected = _selectedCategory == label;
+                    const color = AppColors.primary;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedCategory = label),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? color.withValues(alpha: 0.12)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: selected ? color : AppColors.border,
+                            width: selected ? 1.5 : 1,
                           ),
-                        ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.label_outline,
+                                size: 16,
+                                color: selected
+                                    ? color
+                                    : AppColors.textSecondary),
+                            const SizedBox(width: 6),
+                            Text(
+                              label,
+                              style: TextStyle(
+                                color: selected
+                                    ? color
+                                    : AppColors.textSecondary,
+                                fontSize: 13,
+                                fontWeight: selected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }),
+                ],
               ),
 
               if (_splitError != null) ...[

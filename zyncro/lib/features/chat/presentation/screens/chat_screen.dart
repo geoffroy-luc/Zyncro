@@ -23,6 +23,8 @@ import '../../../expenses/presentation/providers/expenses_provider.dart';
 import '../../domain/repositories/i_messages_repository.dart';
 import '../providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
+import '../../../groups/presentation/providers/tab_settings_provider.dart';
+import '../../../../shared/models/tab_settings.dart';
 import 'media_picker_screen.dart';
 import 'media_viewer_screen.dart';
 import 'package:http/http.dart' as http;
@@ -44,6 +46,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final Set<String> _visibleTimestamps = {};
   Message? _replyingTo;
   Message? _editingMessage;
+  String _search = '';
+  bool _showSearch = false;
 
   final Map<String, GlobalKey> _messageKeys = {};
   String? _highlightedMessageId;
@@ -985,17 +989,104 @@ Future<void> _pickAndSendMedia() async {
       );
     }
 
+    final chatSettings =
+        ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final bgType = chatSettings.chatBackgroundType;
+    final bgValue = chatSettings.chatBackgroundValue;
+
+    Widget buildBackground(Widget child) {
+      if (bgType == 'image' && bgValue != null) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(bgValue, fit: BoxFit.cover),
+            child,
+          ],
+        );
+      }
+      return child;
+    }
+
+    final bgColor = bgType == 'color' && bgValue != null
+        ? Color(int.parse('FF${bgValue.replaceAll('#', '')}', radix: 16))
+        : const Color(0xFFF7F9FC);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
-      body: Column(
+      backgroundColor: bgColor,
+      body: buildBackground(Column(
         children: [
+          // ── Search bar (optionnelle) ─────────────────────────────────
+          if (_showSearch)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            child: Icon(Icons.search,
+                                color: AppColors.textSecondary, size: 18),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              autofocus: true,
+                              onChanged: (v) => setState(() => _search = v),
+                              decoration: const InputDecoration(
+                                hintText: 'Rechercher dans le chat...',
+                                hintStyle: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 14),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                contentPadding:
+                                    EdgeInsets.symmetric(vertical: 10),
+                                filled: false,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _showSearch = false;
+                      _search = '';
+                    }),
+                    child: const Icon(Icons.close,
+                        color: AppColors.textSecondary, size: 20),
+                  ),
+                ],
+              ),
+            ),
           // ── Messages ────────────────────────────────────────────────
           Expanded(
             child: chatAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('Erreur: $e')),
               data: (chatState) {
-                final messages = chatState.messages;
+                final allMessages = chatState.messages;
+                final messages = _search.isEmpty
+                    ? allMessages
+                    : allMessages.where((m) {
+                        final q = _search.toLowerCase();
+                        final textContent = m.type == MessageType.text
+                            ? m.content.toLowerCase()
+                            : '';
+                        return textContent.contains(q) ||
+                            (m.senderName?.toLowerCase().contains(q) ?? false);
+                      }).toList();
                 if (messages.isEmpty) {
                   return const Center(
                     child: Text(
@@ -1326,6 +1417,35 @@ Future<void> _pickAndSendMedia() async {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 GestureDetector(
+                  onTap: () => setState(() {
+                    _showSearch = !_showSearch;
+                    if (!_showSearch) _search = '';
+                  }),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    margin: const EdgeInsets.only(right: 8, bottom: 2),
+                    decoration: BoxDecoration(
+                      color: _showSearch
+                          ? AppColors.primary.withValues(alpha: 0.1)
+                          : const Color(0xFFF7F9FC),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _showSearch
+                            ? AppColors.primary
+                            : AppColors.border,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.search,
+                      color: _showSearch
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                      size: 18,
+                    ),
+                  ),
+                ),
+                GestureDetector(
                   onTap: _showCreatePoll,
                   child: Container(
                     width: 40,
@@ -1480,7 +1600,7 @@ Future<void> _pickAndSendMedia() async {
             ),
           ),
         ],
-      ),
+      )),
     );
   }
 }

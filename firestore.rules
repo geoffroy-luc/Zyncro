@@ -110,6 +110,12 @@ service cloud.firestore {
       match /notes/{noteId} {
         allow read, write: if isGroupMember(groupId);
       }
+
+      // ── Tab settings ──────────────────────────────────────────────────────
+      match /config/{configId} {
+        allow read:  if isGroupMember(groupId);
+        allow write: if isGroupMember(groupId);
+      }
     }
   }
 }

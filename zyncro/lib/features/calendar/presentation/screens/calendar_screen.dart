@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/event.dart';
+import '../../../../shared/models/tab_settings.dart';
+import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../providers/events_provider.dart';
 import 'event_form_screen.dart';
 
@@ -30,6 +32,7 @@ class CalendarScreen extends ConsumerStatefulWidget {
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   _ViewMode _viewMode = _ViewMode.month;
+  String _search = '';
   DateTime _displayedMonth =
       DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? _selectedDay;
@@ -126,10 +129,41 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return widgets;
   }
 
+  List<Event> _applyFilters(
+    List<Event> events,
+    CalendarFilters filters,
+    String search,
+  ) {
+    var result = events;
+    if (search.isNotEmpty) {
+      final q = search.toLowerCase();
+      result = result.where((e) =>
+          e.title.toLowerCase().contains(q) ||
+          (e.location?.toLowerCase().contains(q) ?? false)).toList();
+    }
+    if (filters.participantIds.isNotEmpty) {
+      result = result.where((e) =>
+          e.participantIds.any((id) => filters.participantIds.contains(id))).toList();
+    }
+    if (filters.recurrenceOnly) {
+      result = result.where((e) => e.recurrence != null).toList();
+    }
+    if (filters.category != null) {
+      result = result.where((e) => e.color == filters.category).toList();
+    }
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final tabSettings =
+        ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final calFilters = tabSettings.calendarFilters;
+    final displayMode = tabSettings.calendarDisplayMode;
+
     final eventsAsync = ref.watch(expandedEventsProvider);
-    final allEvents = eventsAsync.asData?.value ?? [];
+    final rawEvents = eventsAsync.asData?.value ?? [];
+    final allEvents = _applyFilters(rawEvents, calFilters, _search);
     final monthEvents = _eventsForMonth(allEvents);
     final today = DateTime.now();
 
@@ -205,7 +239,60 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  // Search bar
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F9FC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 14),
+                          child: Icon(Icons.search,
+                              color: AppColors.textSecondary, size: 20),
+                        ),
+                        Expanded(
+                          child: TextField(
+                            onChanged: (v) => setState(() => _search = v),
+                            decoration: const InputDecoration(
+                              hintText: 'Rechercher...',
+                              hintStyle: TextStyle(
+                                  color: AppColors.textSecondary, fontSize: 14),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding:
+                                  EdgeInsets.symmetric(vertical: 12),
+                              filled: false,
+                            ),
+                          ),
+                        ),
+                        if (calFilters.isEmpty)
+                          const SizedBox(width: 14)
+                        else
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Filtres actifs',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 11),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   // Toggle vue
                   Container(
                     padding: const EdgeInsets.all(4),
@@ -352,22 +439,37 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                     if (dayEvents.isNotEmpty)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 2),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: dayEvents.take(3).map((e) =>
-                                            Container(
-                                              width: 4,
-                                              height: 4,
-                                              margin: const EdgeInsets.symmetric(horizontal: 1),
-                                              decoration: BoxDecoration(
-                                                color: isToday
-                                                    ? Colors.white
-                                                    : _eventColor(e),
-                                                shape: BoxShape.circle,
+                                        child: displayMode == 'band'
+                                            ? Column(
+                                                children: dayEvents.take(2).map((e) =>
+                                                  Container(
+                                                    height: 3,
+                                                    margin: const EdgeInsets.only(bottom: 1),
+                                                    decoration: BoxDecoration(
+                                                      color: isToday
+                                                          ? Colors.white.withValues(alpha: 0.8)
+                                                          : _eventColor(e),
+                                                      borderRadius: BorderRadius.circular(2),
+                                                    ),
+                                                  ),
+                                                ).toList(),
+                                              )
+                                            : Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: dayEvents.take(3).map((e) =>
+                                                  Container(
+                                                    width: 4,
+                                                    height: 4,
+                                                    margin: const EdgeInsets.symmetric(horizontal: 1),
+                                                    decoration: BoxDecoration(
+                                                      color: isToday
+                                                          ? Colors.white
+                                                          : _eventColor(e),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                                ).toList(),
                                               ),
-                                            ),
-                                          ).toList(),
-                                        ),
                                       ),
                                   ],
                                 ),
