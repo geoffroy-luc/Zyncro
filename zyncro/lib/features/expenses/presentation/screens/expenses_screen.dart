@@ -165,7 +165,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
-      body: Column(
+      body: SafeArea(
+        top: true,
+        child: Column(
         children: [
           // ── Tab bar ──────────────────────────────────────────────
           Container(
@@ -254,6 +256,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             ),
           ),
         ],
+        ),
       ),
     );
   }

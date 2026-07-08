@@ -87,7 +87,9 @@ class DashboardScreen extends ConsumerWidget {
     final themeColor = Theme.of(context).colorScheme.primary;
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        top: true,
+        child: SingleChildScrollView(
         child: Column(
           children: [
             // ── Contenu ──────────────────────────────────────────────
@@ -337,6 +339,7 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
+      ), // SafeArea
     );
   }
 }

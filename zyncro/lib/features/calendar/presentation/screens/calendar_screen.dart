@@ -196,7 +196,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         shape: const CircleBorder(side: BorderSide(color: Colors.white24, width: 2)),
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: CustomScrollView(
+      body: SafeArea(
+        top: true,
+        child: CustomScrollView(
         slivers: [
           // ── Header ──────────────────────────────────────────────────
           SliverToBoxAdapter(
@@ -553,6 +555,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

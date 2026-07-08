@@ -243,203 +243,218 @@ class _AppShell extends ConsumerWidget {
     // Photo du groupe — lue depuis le modèle Group (visible partout)
     final groupPhotoUrl = group?.photoUrl;
 
+    // Hauteur totale du top bar : padding haut + contenu (40px) + padding bas
+    final topBarHeight = topPad + 76.0;
+
     return Theme(
       data: Theme.of(context).copyWith(
         colorScheme: Theme.of(context).colorScheme.copyWith(primary: primaryColor),
       ),
       child: Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
-      body: Column(
-        children: [
-          // ── Top bar gradient ──────────────────────────────────────
-          Container(
-            padding: EdgeInsets.fromLTRB(24, topPad + 16, 24, 20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: gradientColors,
+        backgroundColor: const Color(0xFFF7F9FC),
+        body: Stack(
+          children: [
+            // Shell remplit toute la hauteur — son fond s'étend dans les coins du top bar
+            MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                padding: MediaQuery.of(context).padding.copyWith(
+                  top: topBarHeight,
+                ),
               ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(28),
-                bottomRight: Radius.circular(28),
+              child: shell,
+            ),
+            // Top bar overlay avec coins arrondis
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(24, topPad + 16, 24, 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: gradientColors,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Retour vers Mes espaces
+                    GestureDetector(
+                      onTap: () async {
+                        await ref
+                            .read(selectedGroupIdProvider.notifier)
+                            .select(null);
+                        if (context.mounted) context.go('/groups');
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Emoji / photo du groupe
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: groupPhotoUrl != null
+                          ? ClipOval(
+                              child: Image.network(
+                                groupPhotoUrl,
+                                width: 40,
+                                height: 40,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Center(
+                              child: Text(
+                                group?.emoji?.isNotEmpty == true
+                                    ? group!.emoji!
+                                    : (group?.name.isNotEmpty == true
+                                        ? group!.name[0].toUpperCase()
+                                        : ''),
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                            ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Nom + titre onglet
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            group?.name ?? '',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            tabTitle,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Paramètres (onglet-spécifiques)
+                    GestureDetector(
+                      onTap: () => context.push(_settingsRoutes[idx]),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.settings_outlined,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            child: Row(
+          ],
+        ),
+        bottomNavigationBar: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: AppColors.border)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Retour vers Mes espaces
-                GestureDetector(
-                  onTap: () async {
-                    await ref
-                        .read(selectedGroupIdProvider.notifier)
-                        .select(null);
-                    if (context.mounted) context.go('/groups');
-                  },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Emoji / photo du groupe
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      width: 2,
-                    ),
-                  ),
-                  child: groupPhotoUrl != null
-                      ? ClipOval(
-                          child: Image.network(
-                            groupPhotoUrl,
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: List.generate(_navItems.length, (i) {
+                      final item = _navItems[i];
+                      final isActive = shell.currentIndex == i;
+                      return GestureDetector(
+                        onTap: () {
+                          ref
+                              .read(isChatTabActiveProvider.notifier)
+                              .setActive(i == 4);
+                          shell.goBranch(
+                            i,
+                            initialLocation: i == shell.currentIndex,
+                          );
+                        },
+                        behavior: HitTestBehavior.opaque,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
                           ),
-                        )
-                      : Center(
-                          child: Text(
-                            group?.emoji?.isNotEmpty == true
-                                ? group!.emoji!
-                                : (group?.name.isNotEmpty == true
-                                    ? group!.name[0].toUpperCase()
-                                    : ''),
-                            style: const TextStyle(fontSize: 20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isActive ? item.activeIcon : item.icon,
+                                size: 24,
+                                color: isActive
+                                    ? primaryColor
+                                    : AppColors.textSecondary,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                item.label,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: isActive
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                  color: isActive
+                                      ? primaryColor
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                ),
-                const SizedBox(width: 10),
-                // Nom + titre onglet
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        group?.name ?? '',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        tabTitle,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Paramètres (onglet-spécifiques)
-                GestureDetector(
-                  onTap: () => context.push(_settingsRoutes[idx]),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.settings_outlined,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                      );
+                    }),
                   ),
                 ),
               ],
             ),
           ),
-          Expanded(child: shell),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: AppColors.border)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Nav items ───────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(_navItems.length, (i) {
-                    final item = _navItems[i];
-                    final isActive = shell.currentIndex == i;
-                    return GestureDetector(
-                      onTap: () {
-                        ref
-                            .read(isChatTabActiveProvider.notifier)
-                            .setActive(i == 4);
-                        shell.goBranch(
-                          i,
-                          initialLocation: i == shell.currentIndex,
-                        );
-                      },
-                      behavior: HitTestBehavior.opaque,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isActive ? item.activeIcon : item.icon,
-                              size: 24,
-                              color: isActive
-                                  ? primaryColor
-                                  : AppColors.textSecondary,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              item.label,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: isActive
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                                color: isActive
-                                    ? primaryColor
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
-    ), // Scaffold
-    ); // Theme
+    );
   }
 }
 

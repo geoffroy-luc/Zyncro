@@ -1018,7 +1018,9 @@ Future<void> _pickAndSendMedia() async {
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: buildBackground(Column(
+      body: buildBackground(SafeArea(
+        top: true,
+        child: Column(
         children: [
           // ── Search bar (optionnelle) ─────────────────────────────────
           if (_showSearch)
@@ -1605,7 +1607,7 @@ Future<void> _pickAndSendMedia() async {
             ),
           ),
         ],
-      )),
+      ))),
     );
   }
 }

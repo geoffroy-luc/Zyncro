@@ -71,7 +71,9 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
         ),
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: notesAsync.when(
+      body: SafeArea(
+        top: true,
+        child: notesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Erreur: $e')),
         data: (allNotes) {
@@ -251,6 +253,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
             ],
           );
         },
+        ),
       ),
     );
   }
