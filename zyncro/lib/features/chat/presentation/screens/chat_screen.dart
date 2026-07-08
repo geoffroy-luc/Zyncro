@@ -43,6 +43,67 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final Set<String> _visibleTimestamps = {};
   Message? _replyingTo;
 
+  final Map<String, GlobalKey> _messageKeys = {};
+  String? _highlightedMessageId;
+
+  GlobalKey _keyForMessage(String id) =>
+      _messageKeys.putIfAbsent(id, () => GlobalKey());
+
+  void _scrollToMessage(String? id, List<Message> messages) {
+    if (id == null) return;
+    final index = messages.indexWhere((m) => m.id == id);
+    if (index == -1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Message introuvable'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    final key = _keyForMessage(id);
+
+    void highlight() {
+      if (!mounted) return;
+      setState(() => _highlightedMessageId = id);
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) setState(() => _highlightedMessageId = null);
+      });
+    }
+
+    if (key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+        alignment: 0.5,
+      ).then((_) => highlight());
+    } else {
+      final estimated = _scrollController.position.maxScrollExtent *
+          (index / messages.length);
+      _scrollController
+          .animateTo(
+            estimated,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOut,
+          )
+          .then((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (key.currentContext != null) {
+            Scrollable.ensureVisible(
+              key.currentContext!,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              alignment: 0.5,
+            ).then((_) => highlight());
+          } else {
+            highlight();
+          }
+        });
+      });
+    }
+  }
+
   final _recorder = AudioRecorder();
   bool _isRecording = false;
   bool _isUploading = false;
@@ -973,40 +1034,53 @@ Future<void> _pickAndSendMedia() async {
                     final seenBy = seenByMessage[msg.id] ?? [];
 
                     return Column(
+                      key: _keyForMessage(msg.id),
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Padding(
                           padding: EdgeInsets.only(
                             bottom: seenBy.isEmpty && isFirstInGroup ? 10 : 2,
                           ),
-                          child: _SwipeToReply(
-                            isMe: isMe,
-                            onReply: msg.type != MessageType.system && !isPoll
-                                ? () => setState(() => _replyingTo = msg)
-                                : null,
-                            child: _MessageBubble(
-                              message: msg,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            decoration: BoxDecoration(
+                              color: _highlightedMessageId == msg.id
+                                  ? const Color(0x22E85D75)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: _SwipeToReply(
                               isMe: isMe,
-                              currentUserId: currentUid,
-                              showTimestamp: _visibleTimestamps.contains(msg.id),
-                              showAvatar: !isMe && isFirstInGroup,
-                              showSenderName: !isMe && isLastInGroup,
-                              isFirstInGroup: isFirstInGroup,
-                              isLastInGroup: isLastInGroup,
-                              member: members.where((m) => m.uid == msg.senderId).firstOrNull,
-                              members: members,
-                              onTap: msg.type != MessageType.system && !isPoll
-                                  ? () => _toggleTimestamp(msg.id)
+                              onReply: msg.type != MessageType.system && !isPoll
+                                  ? () => setState(() => _replyingTo = msg)
                                   : null,
-                              onDoubleTap: msg.type != MessageType.system && !isPoll
-                                  ? () => _onDoubleTap(msg)
-                                  : null,
-                              onLongPress: msg.type != MessageType.system
-                                  ? () => _onMessageLongPress(msg, isMe)
-                                  : null,
-                              onVote: isPoll
-                                  ? (idx) => _votePoll(msg, idx)
-                                  : null,
+                              child: _MessageBubble(
+                                message: msg,
+                                isMe: isMe,
+                                currentUserId: currentUid,
+                                showTimestamp: _visibleTimestamps.contains(msg.id),
+                                showAvatar: !isMe && isFirstInGroup,
+                                showSenderName: !isMe && isLastInGroup,
+                                isFirstInGroup: isFirstInGroup,
+                                isLastInGroup: isLastInGroup,
+                                member: members.where((m) => m.uid == msg.senderId).firstOrNull,
+                                members: members,
+                                onTap: msg.type != MessageType.system && !isPoll
+                                    ? () => _toggleTimestamp(msg.id)
+                                    : null,
+                                onDoubleTap: msg.type != MessageType.system && !isPoll
+                                    ? () => _onDoubleTap(msg)
+                                    : null,
+                                onLongPress: msg.type != MessageType.system
+                                    ? () => _onMessageLongPress(msg, isMe)
+                                    : null,
+                                onVote: isPoll
+                                    ? (idx) => _votePoll(msg, idx)
+                                    : null,
+                                onReplyPreviewTap: msg.replyToId != null
+                                    ? () => _scrollToMessage(msg.replyToId, messages)
+                                    : null,
+                              ),
                             ),
                           ),
                         ),
@@ -1449,6 +1523,7 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onDoubleTap;
   final VoidCallback? onLongPress;
   final void Function(int)? onVote;
+  final VoidCallback? onReplyPreviewTap;
 
   const _MessageBubble({
     required this.message,
@@ -1465,6 +1540,7 @@ class _MessageBubble extends StatelessWidget {
     this.onDoubleTap,
     this.onLongPress,
     this.onVote,
+    this.onReplyPreviewTap,
   });
 
   static final _urlRegex = RegExp(r'https?://[^\s]+', caseSensitive: false);
@@ -1715,6 +1791,7 @@ class _MessageBubble extends StatelessWidget {
                       senderName: message.replyToSenderName,
                       content: message.replyToContent!,
                       isMe: true,
+                      onTap: onReplyPreviewTap,
                     ),
                   _messageContent(context, true),
                 ],
@@ -1808,6 +1885,7 @@ class _MessageBubble extends StatelessWidget {
                             senderName: message.replyToSenderName,
                             content: message.replyToContent!,
                             isMe: false,
+                            onTap: onReplyPreviewTap,
                           ),
                         _messageContent(context, false),
                       ],
@@ -2538,11 +2616,13 @@ class _ReplyPreview extends StatelessWidget {
   final String? senderName;
   final String content;
   final bool isMe;
+  final VoidCallback? onTap;
 
   const _ReplyPreview({
     required this.content,
     required this.isMe,
     this.senderName,
+    this.onTap,
   });
 
   String _formatReplyContent(String c) {
@@ -2553,7 +2633,9 @@ class _ReplyPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -2597,6 +2679,7 @@ class _ReplyPreview extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
