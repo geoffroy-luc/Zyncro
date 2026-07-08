@@ -158,7 +158,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const ExpenseFormScreen()),
               ),
-              backgroundColor: const Color(0xFFFFB86B).withValues(alpha: 0.85),
+              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
               shape: const CircleBorder(
                 side: BorderSide(color: Colors.white24, width: 2),
               ),
@@ -172,10 +172,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             color: Colors.white,
             child: TabBar(
               controller: _tabController,
-              indicatorColor: const Color(0xFFFFB86B),
+              indicatorColor: Theme.of(context).colorScheme.primary,
               indicatorWeight: 3,
               dividerColor: AppColors.border,
-              labelColor: const Color(0xFFFFB86B),
+              labelColor: Theme.of(context).colorScheme.primary,
               unselectedLabelColor: AppColors.textSecondary,
               labelStyle: const TextStyle(
                 fontWeight: FontWeight.w600,
@@ -339,10 +339,6 @@ class _DepensesTab extends ConsumerWidget {
                         MaterialPageRoute(
                           builder: (_) => const ExpenseFormScreen(),
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFB86B),
-                        foregroundColor: Colors.white,
                       ),
                       icon: const Icon(Icons.add),
                       label: const Text('Ajouter'),

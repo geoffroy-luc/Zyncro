@@ -19,6 +19,11 @@ import '../../../notes/presentation/providers/notes_provider.dart';
 import '../../../notes/presentation/screens/note_editor_screen.dart';
 
 
+Color _darken(Color color) {
+  final hsl = HSLColor.fromColor(color);
+  return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
+}
+
 bool _isToday(DateTime dt) {
   final now = DateTime.now();
   return dt.year == now.year && dt.month == now.month && dt.day == now.day;
@@ -79,6 +84,7 @@ class DashboardScreen extends ConsumerWidget {
     final allMedia = ref.watch(mediaMessagesProvider).asData?.value ?? [];
     final previewMedia = allMedia.take(6).toList();
 
+    final themeColor = Theme.of(context).colorScheme.primary;
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       body: SingleChildScrollView(
@@ -94,9 +100,9 @@ class DashboardScreen extends ConsumerWidget {
                   _Card(
                     child: Column(
                       children: [
-                        const _CardHeader(
+                        _CardHeader(
                           icon: Icons.calendar_today,
-                          iconColor: AppColors.primary,
+                          iconColor: themeColor,
                           title: 'Prochains événements',
                         ),
                         Padding(
@@ -194,9 +200,9 @@ class DashboardScreen extends ConsumerWidget {
                     _Card(
                       child: Column(
                         children: [
-                          const _CardHeader(
+                          _CardHeader(
                             icon: Icons.chat_bubble_outline,
-                            iconColor: AppColors.primary,
+                            iconColor: themeColor,
                             title: 'Activité récente',
                           ),
                           Padding(
@@ -294,10 +300,10 @@ class DashboardScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: _QuickActionButton(
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                            colors: [themeColor, _darken(themeColor)],
                           ),
                           icon: Icons.calendar_today,
                           label: 'Ajouter un événement',
@@ -310,10 +316,10 @@ class DashboardScreen extends ConsumerWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _QuickActionButton(
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [Color(0xFF2BB8A5), Color(0xFF1E9B8A)],
+                            colors: [themeColor.withValues(alpha: 0.75), _darken(themeColor)],
                           ),
                           icon: Icons.sticky_note_2_outlined,
                           label: 'Nouvelle note',

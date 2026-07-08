@@ -231,6 +231,7 @@ class _AppShell extends ConsumerWidget {
     final topPad = MediaQuery.of(context).padding.top;
     final idx = shell.currentIndex;
     final gradientColors = _gradientForTab(idx, settings);
+    final primaryColor = gradientColors.first;
     final tabTitle = _tabTitles[idx];
 
     // Synchronise l'état "chat actif" avec l'onglet courant (gère le cas
@@ -242,7 +243,11 @@ class _AppShell extends ConsumerWidget {
     // Photo du groupe — lue depuis le modèle Group (visible partout)
     final groupPhotoUrl = group?.photoUrl;
 
-    return Scaffold(
+    return Theme(
+      data: Theme.of(context).copyWith(
+        colorScheme: Theme.of(context).colorScheme.copyWith(primary: primaryColor),
+      ),
+      child: Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       body: Column(
         children: [
@@ -406,7 +411,7 @@ class _AppShell extends ConsumerWidget {
                               isActive ? item.activeIcon : item.icon,
                               size: 24,
                               color: isActive
-                                  ? AppColors.primary
+                                  ? primaryColor
                                   : AppColors.textSecondary,
                             ),
                             const SizedBox(height: 4),
@@ -418,7 +423,7 @@ class _AppShell extends ConsumerWidget {
                                     ? FontWeight.w600
                                     : FontWeight.w400,
                                 color: isActive
-                                    ? AppColors.primary
+                                    ? primaryColor
                                     : AppColors.textSecondary,
                               ),
                             ),
@@ -433,7 +438,8 @@ class _AppShell extends ConsumerWidget {
           ),
         ),
       ),
-    );
+    ), // Scaffold
+    ); // Theme
   }
 }
 

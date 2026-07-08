@@ -10,6 +10,11 @@ import 'event_form_screen.dart';
 
 const _defaultEventColor = Color(0xFF4F7CFF);
 
+Color _darken(Color color) {
+  final hsl = HSLColor.fromColor(color);
+  return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
+}
+
 Color _eventColor(Event e) {
   if (e.color == null) return _defaultEventColor;
   try {
@@ -63,7 +68,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             e.startDate.month == _displayedMonth.month;
       }).toList();
 
-  List<Widget> _buildAgendaSections(List<Event> events) {
+  List<Widget> _buildAgendaSections(List<Event> events, Color primaryColor) {
     final Map<DateTime, List<Event>> grouped = {};
     for (final e in events) {
       final day =
@@ -94,8 +99,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 gradient: isToday
-                    ? const LinearGradient(
-                        colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)])
+                    ? LinearGradient(
+                        colors: [primaryColor, _darken(primaryColor)])
                     : null,
                 color: isToday
                     ? null
@@ -160,6 +165,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
     final calFilters = tabSettings.calendarFilters;
     final displayMode = tabSettings.calendarDisplayMode;
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     final eventsAsync = ref.watch(expandedEventsProvider);
     final rawEvents = eventsAsync.asData?.value ?? [];
@@ -186,7 +192,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             builder: (_) => EventFormScreen(initialDate: _selectedDay ?? today),
           ),
         ),
-        backgroundColor: const Color(0xFF4F7CFF).withValues(alpha: 0.85),
+        backgroundColor: primaryColor.withValues(alpha: 0.85),
         shape: const CircleBorder(side: BorderSide(color: Colors.white24, width: 2)),
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -279,12 +285,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: AppColors.primary,
+                                color: primaryColor,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(
+                              child: const Text(
                                 'Filtres actifs',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     color: Colors.white, fontSize: 11),
                               ),
                             ),
@@ -392,31 +398,31 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               child: Container(
                                 decoration: isSelected
                                     ? BoxDecoration(
-                                        color: AppColors.primary
+                                        color: primaryColor
                                             .withValues(alpha: 0.12),
                                         borderRadius:
                                             BorderRadius.circular(8),
                                         border: Border.all(
-                                            color: AppColors.primary,
+                                            color: primaryColor,
                                             width: 1.5),
                                       )
                                     : isToday
                                         ? BoxDecoration(
-                                            gradient: const LinearGradient(
+                                            gradient: LinearGradient(
                                               begin: Alignment.topLeft,
                                               end: Alignment.bottomRight,
                                               colors: [
-                                                Color(0xFF4F7CFF),
-                                                Color(0xFF315FEA)
+                                                primaryColor,
+                                                _darken(primaryColor),
                                               ],
                                             ),
                                             borderRadius:
                                                 BorderRadius.circular(8),
-                                            boxShadow: const [
+                                            boxShadow: [
                                               BoxShadow(
-                                                  color: Color(0x334F7CFF),
+                                                  color: primaryColor.withValues(alpha: 0.2),
                                                   blurRadius: 6,
-                                                  offset: Offset(0, 2))
+                                                  offset: const Offset(0, 2))
                                             ],
                                           )
                                         : null,
@@ -430,7 +436,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                         color: isToday
                                             ? Colors.white
                                             : isSelected
-                                                ? AppColors.primary
+                                                ? primaryColor
                                                 : AppColors.textPrimary,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
@@ -535,7 +541,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     ),
                   )
                 else if (_viewMode == _ViewMode.agenda)
-                  ..._buildAgendaSections(visibleEvents)
+                  ..._buildAgendaSections(visibleEvents, primaryColor)
                 else
                   ...visibleEvents.map((e) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -582,8 +588,9 @@ class _ToggleButton extends StatelessWidget {
           child: Center(
             child: Text(label,
                 style: TextStyle(
-                  color:
-                      active ? AppColors.primary : AppColors.textSecondary,
+                  color: active
+                      ? Theme.of(context).colorScheme.primary
+                      : AppColors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 )),
