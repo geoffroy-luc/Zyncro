@@ -38,10 +38,12 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  final _inputFocusNode = FocusNode();
   bool _sending = false;
   Timer? _typingTimer;
   final Set<String> _visibleTimestamps = {};
   Message? _replyingTo;
+  Message? _editingMessage;
 
   final Map<String, GlobalKey> _messageKeys = {};
   String? _highlightedMessageId;
@@ -171,6 +173,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _clearTyping();
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
+    _inputFocusNode.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -190,6 +193,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final text = _controller.text.trim();
     if (text.isEmpty || _sending) return;
 
+    // ── Edit mode ─────────────────────────────────────────────────────
+    if (_editingMessage != null) {
+      final message = _editingMessage!;
+      final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+      if (groupId == null) return;
+
+      setState(() {
+        _editingMessage = null;
+        _sending = true;
+      });
+      _controller.clear();
+
+      try {
+        if (text != message.content) {
+          await ref.read(messagesRepositoryProvider).editMessage(
+                groupId: groupId,
+                messageId: message.id,
+                content: text,
+              );
+        }
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Impossible de modifier le message.')),
+        );
+      } finally {
+        if (mounted) setState(() => _sending = false);
+      }
+      return;
+    }
+
+    // ── Normal send ───────────────────────────────────────────────────
     final user = ref.read(authStateProvider).asData?.value;
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (user == null || groupId == null) return;
@@ -385,7 +420,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       return;
     }
     if (action == 'edit') {
-      await _editMessage(message);
+      _editMessage(message);
       return;
     }
     if (action == 'edit_poll') {
@@ -414,34 +449,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } catch (_) {}
   }
 
-  Future<void> _editMessage(Message message) async {
-    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
-    if (groupId == null) return;
-
-    final newText = await showDialog<String>(
-      context: context,
-      builder: (ctx) => _EditMessageDialog(initialText: message.content),
-    );
-
-    final updated = newText?.trim();
-    if (updated == null || updated.isEmpty || updated == message.content) {
-      return;
-    }
-
-    try {
-      await ref
-          .read(messagesRepositoryProvider)
-          .editMessage(
-            groupId: groupId,
-            messageId: message.id,
-            content: updated,
-          );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Impossible de modifier le message.')),
+  void _editMessage(Message message) {
+    setState(() {
+      _editingMessage = message;
+      _replyingTo = null;
+      _controller.text = message.content;
+      _controller.selection = TextSelection.fromPosition(
+        TextPosition(offset: message.content.length),
       );
-    }
+    });
+    _inputFocusNode.requestFocus();
   }
 
   Future<void> _editPoll(Message message) async {
@@ -1065,6 +1082,9 @@ Future<void> _pickAndSendMedia() async {
                                 isLastInGroup: isLastInGroup,
                                 member: members.where((m) => m.uid == msg.senderId).firstOrNull,
                                 members: members,
+                                resolvedReplyContent: msg.replyToId != null
+                                    ? messages.where((m) => m.id == msg.replyToId).firstOrNull?.content
+                                    : null,
                                 onTap: msg.type != MessageType.system && !isPoll
                                     ? () => _toggleTimestamp(msg.id)
                                     : null,
@@ -1104,6 +1124,49 @@ Future<void> _pickAndSendMedia() async {
           _TypingIndicator(
             typingUsers: ref.watch(typingProvider).asData?.value ?? [],
           ),
+
+          // ── Edit bar ────────────────────────────────────────────────
+          if (_editingMessage != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: AppColors.border)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 3,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE85D75),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Modifier le message',
+                      style: const TextStyle(
+                        color: Color(0xFFE85D75),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    color: AppColors.textSecondary,
+                    onPressed: () => setState(() {
+                      _editingMessage = null;
+                      _controller.clear();
+                    }),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
 
           // ── Reply bar ───────────────────────────────────────────────
           if (_replyingTo != null)
@@ -1319,6 +1382,7 @@ Future<void> _pickAndSendMedia() async {
                     ),
                     child: TextField(
                       controller: _controller,
+                      focusNode: _inputFocusNode,
                       decoration: const InputDecoration(
                         hintText: 'Écrire un message...',
                         hintStyle: TextStyle(
@@ -1421,58 +1485,6 @@ Future<void> _pickAndSendMedia() async {
   }
 }
 
-class _EditMessageDialog extends StatefulWidget {
-  final String initialText;
-
-  const _EditMessageDialog({required this.initialText});
-
-  @override
-  State<_EditMessageDialog> createState() => _EditMessageDialogState();
-}
-
-class _EditMessageDialogState extends State<_EditMessageDialog> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialText);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Modifier le message'),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        minLines: 1,
-        maxLines: 6,
-        decoration: const InputDecoration(
-          hintText: 'Votre message',
-          border: OutlineInputBorder(),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Annuler'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
-          child: const Text('Enregistrer'),
-        ),
-      ],
-    );
-  }
-}
-
 class _TypingIndicator extends StatelessWidget {
   final List<String> typingUsers;
 
@@ -1519,6 +1531,7 @@ class _MessageBubble extends StatelessWidget {
   final bool isLastInGroup;
   final GroupMember? member;
   final List<GroupMember> members;
+  final String? resolvedReplyContent;
   final VoidCallback? onTap;
   final VoidCallback? onDoubleTap;
   final VoidCallback? onLongPress;
@@ -1536,6 +1549,7 @@ class _MessageBubble extends StatelessWidget {
     this.member,
     this.members = const [],
     this.currentUserId,
+    this.resolvedReplyContent,
     this.onTap,
     this.onDoubleTap,
     this.onLongPress,
@@ -1789,7 +1803,7 @@ class _MessageBubble extends StatelessWidget {
                   if (message.replyToContent != null)
                     _ReplyPreview(
                       senderName: message.replyToSenderName,
-                      content: message.replyToContent!,
+                      content: resolvedReplyContent ?? message.replyToContent!,
                       isMe: true,
                       onTap: onReplyPreviewTap,
                     ),
@@ -1883,7 +1897,7 @@ class _MessageBubble extends StatelessWidget {
                         if (message.replyToContent != null)
                           _ReplyPreview(
                             senderName: message.replyToSenderName,
-                            content: message.replyToContent!,
+                            content: resolvedReplyContent ?? message.replyToContent!,
                             isMe: false,
                             onTap: onReplyPreviewTap,
                           ),
