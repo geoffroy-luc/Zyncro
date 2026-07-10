@@ -108,9 +108,9 @@ class DashboardScreen extends ConsumerWidget {
     final previewMedia = allMedia.take(6).toList();
 
     final tabSettings = ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final homeColor = _colorForTab(0, tabSettings);
     final calendarColor = _colorForTab(1, tabSettings);
     final notesColor = _colorForTab(2, tabSettings);
-    final chatColor = _colorForTab(4, tabSettings);
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       body: SafeArea(
@@ -130,7 +130,7 @@ class DashboardScreen extends ConsumerWidget {
                       children: [
                         _CardHeader(
                           icon: Icons.calendar_today,
-                          iconColor: calendarColor,
+                          iconColor: homeColor,
                           title: 'Prochains événements',
                         ),
                         Padding(
@@ -169,9 +169,9 @@ class DashboardScreen extends ConsumerWidget {
                   _Card(
                     child: Column(
                       children: [
-                        const _CardHeader(
+                        _CardHeader(
                           icon: Icons.trending_up,
-                          iconColor: AppColors.accent,
+                          iconColor: homeColor,
                           title: 'Résumé des dépenses',
                         ),
                         Padding(
@@ -230,7 +230,7 @@ class DashboardScreen extends ConsumerWidget {
                         children: [
                           _CardHeader(
                             icon: Icons.chat_bubble_outline,
-                            iconColor: chatColor,
+                            iconColor: homeColor,
                             title: 'Activité récente',
                           ),
                           Padding(
@@ -270,11 +270,11 @@ class DashboardScreen extends ConsumerWidget {
                                   width: 32,
                                   height: 32,
                                   decoration: BoxDecoration(
-                                    color: chatColor.withValues(alpha: 0.1),
+                                    color: homeColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Icon(Icons.photo_library_outlined,
-                                      size: 16, color: chatColor),
+                                      size: 16, color: homeColor),
                                 ),
                                 const SizedBox(width: 8),
                                 const Text(
