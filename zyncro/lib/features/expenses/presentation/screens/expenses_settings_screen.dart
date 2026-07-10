@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/expense_categories.dart';
+import '../../../../shared/models/expense_category.dart';
 import '../../../../shared/models/tab_settings.dart';
+import '../../../../shared/widgets/category_editor_sheet.dart';
 import '../../../../shared/widgets/color_picker_row.dart';
 import '../../../../shared/widgets/settings_widgets.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
@@ -34,43 +37,27 @@ class _ExpensesSettingsScreenState
     await ref.read(tabSettingsRepositoryProvider).updateSettings(groupId, next);
   }
 
-  Future<void> _addCategory(TabSettings settings) async {
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Nouvelle catégorie'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(
-            hintText: 'Ex : Santé, Éducation...',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Ajouter'),
-          ),
-        ],
-      ),
-    );
-    if (result == null || result.isEmpty) return;
-    final updated = [...settings.expensesCustomCategories, result];
-    await _update(settings.copyWith(expensesCustomCategories: updated));
+  Future<void> _openCategoryEditor(
+    TabSettings settings, {
+    ExpenseCategory? existing,
+  }) async {
+    final result = await showCategoryEditor(context, initial: existing);
+    if (result == null) return;
+    final categories = [...settings.expensesCategories];
+    if (existing != null) {
+      final index = categories.indexOf(existing);
+      if (index != -1) categories[index] = result;
+    } else {
+      categories.add(result);
+    }
+    await _update(settings.copyWith(expensesCategories: categories));
   }
 
-  Future<void> _deleteCategory(TabSettings settings, String cat) async {
-    final updated = settings.expensesCustomCategories
+  Future<void> _deleteCategory(TabSettings settings, ExpenseCategory cat) async {
+    final updated = settings.expensesCategories
         .where((c) => c != cat)
         .toList();
-    await _update(settings.copyWith(expensesCustomCategories: updated));
+    await _update(settings.copyWith(expensesCategories: updated));
   }
 
   @override
@@ -102,6 +89,7 @@ class _ExpensesSettingsScreenState
         ),
       ),
       body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
           SettingsSection(
             title: 'Apparence',
@@ -159,43 +147,43 @@ class _ExpensesSettingsScreenState
             ],
           ),
           SettingsSection(
-            title: 'Catégories personnalisées',
+            title: 'Catégories',
             children: [
-              if (settings.expensesCustomCategories.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 12, 20, 16),
-                  child: Text(
-                    'Aucune catégorie personnalisée.',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                )
-              else
-                ...settings.expensesCustomCategories.map(
-                  (cat) => Column(
-                    children: [
-                      ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
+              for (final cat in settings.expensesCategories)
+                Column(
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                      ),
+                      onTap: () =>
+                          _openCategoryEditor(settings, existing: cat),
+                      leading: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: hexToColor(cat.colorHex).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        title: Text(cat),
-                        trailing: IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            color: AppColors.error,
-                            size: 20,
-                          ),
-                          onPressed: () => _deleteCategory(settings, cat),
+                        child: Icon(
+                          iconForKey(cat.iconKey),
+                          size: 18,
+                          color: hexToColor(cat.colorHex),
                         ),
                       ),
-                      if (cat != settings.expensesCustomCategories.last)
-                        const SettingsDivider(),
-                    ],
-                  ),
+                      title: Text(cat.name),
+                      trailing: IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: AppColors.error,
+                          size: 20,
+                        ),
+                        onPressed: () => _deleteCategory(settings, cat),
+                      ),
+                    ),
+                    const SettingsDivider(),
+                  ],
                 ),
-              const SettingsDivider(),
               SettingsTile(
                 title: 'Ajouter une catégorie',
                 trailing: const Icon(
@@ -204,7 +192,7 @@ class _ExpensesSettingsScreenState
                   size: 20,
                 ),
                 showChevron: false,
-                onTap: () => _addCategory(settings),
+                onTap: () => _openCategoryEditor(settings),
               ),
             ],
           ),

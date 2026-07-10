@@ -2,24 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/note.dart';
+import '../../../../shared/models/tab_settings.dart';
+import '../../../../shared/widgets/color_picker_row.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
+import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../providers/notes_provider.dart';
-
-const _colorPalette = [
-  '#4F7CFF',
-  '#2BB8A5',
-  '#FF6B6B',
-  '#FFA940',
-  '#7B61FF',
-  '#52C41A',
-  '#FF85C2',
-  '#1890FF',
-];
-
-Color _hexToColor(String hex) =>
-    Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   final Note? note; // null = création
@@ -49,7 +38,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     _titleController = TextEditingController(text: widget.note?.title ?? '');
     _contentController = TextEditingController(text: widget.note?.content ?? '');
     _isPinned = widget.note?.isPinned ?? false;
-    _selectedColor = widget.note?.color ?? _colorPalette.first;
+    _selectedColor = widget.note?.color ?? AppColors.itemPalette.first;
     _isChecklist = widget.note?.isChecklist ?? false;
     _checklist = List<ChecklistItem>.from(widget.note?.checklist ?? []);
     _syncChecklistControllers();
@@ -247,11 +236,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }
   }
 
+  Future<void> _addCustomColor(String hex) async {
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+    final settings = ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    await ref.read(tabSettingsRepositoryProvider).updateSettings(
+      groupId,
+      settings.copyWith(customColors: [...settings.customColors, hex]),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(currentMemberProvider); // garde le provider actif pour ref.read() dans les méthodes async
     final isEditing = widget.note != null;
-    final accentColor = _hexToColor(_selectedColor);
+    final tabSettings = ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final accentColor = hexToColor(_selectedColor);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -309,40 +309,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              Row(
-                children: _colorPalette.map((hex) {
-                  final color = _hexToColor(hex);
-                  final isSelected = _selectedColor == hex;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedColor = hex),
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      margin: const EdgeInsets.only(right: 10),
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: isSelected
-                            ? Border.all(
-                                color: AppColors.textPrimary, width: 2.5)
-                            : null,
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: color.withValues(alpha: 0.5),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                )
-                              ]
-                            : null,
-                      ),
-                      child: isSelected
-                          ? const Icon(Icons.check,
-                              color: Colors.white, size: 16)
-                          : null,
-                    ),
-                  );
-                }).toList(),
+              ColorPickerRow(
+                basePalette: AppColors.itemPalette,
+                selected: _selectedColor,
+                extraColors: tabSettings.customColors,
+                onSelect: (hex) => setState(() => _selectedColor = hex),
+                onAddColor: _addCustomColor,
               ),
               const SizedBox(height: 24),
 

@@ -133,6 +133,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
         ),
       ),
       body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
           SettingsSection(
             title: 'Apparence',

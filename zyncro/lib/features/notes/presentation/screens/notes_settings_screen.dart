@@ -45,6 +45,7 @@ class NotesSettingsScreen extends ConsumerWidget {
         ),
       ),
       body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
           SettingsSection(
             title: 'Apparence',

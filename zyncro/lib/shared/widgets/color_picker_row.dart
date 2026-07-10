@@ -325,9 +325,10 @@ class ColorPickerRow extends StatelessWidget {
   final String? selected;
   final List<String> extraColors;
   final ValueChanged<String> onSelect;
-
-  /// Appelé quand l'utilisateur clique "+" — reçoit le hex choisi.
   final ValueChanged<String>? onAddColor;
+
+  /// Palette de base affichée. Par défaut : AppColors.tabPalette.
+  final List<String>? basePalette;
 
   const ColorPickerRow({
     super.key,
@@ -335,11 +336,12 @@ class ColorPickerRow extends StatelessWidget {
     required this.onSelect,
     this.extraColors = const [],
     this.onAddColor,
+    this.basePalette,
   });
 
   @override
   Widget build(BuildContext context) {
-    final all = [...AppColors.tabPalette, ...extraColors];
+    final all = [...(basePalette ?? AppColors.tabPalette), ...extraColors];
     return Wrap(
       spacing: 10,
       runSpacing: 10,

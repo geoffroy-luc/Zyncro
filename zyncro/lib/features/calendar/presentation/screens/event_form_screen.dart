@@ -7,9 +7,12 @@ import '../../../../core/services/reminder_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/recurrence_rule.dart';
 import '../../../../shared/widgets/user_avatar.dart';
+import '../../../../shared/models/tab_settings.dart';
+import '../../../../shared/widgets/color_picker_row.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
+import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../providers/events_provider.dart';
 
 class EventFormScreen extends ConsumerStatefulWidget {
@@ -37,17 +40,6 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   int? _reminderMinutes; // null = aucun rappel
   RecurrenceRule? _recurrence;
   Set<String> _selectedParticipantIds = {};
-
-  static const _colorPalette = [
-    '#4F7CFF',
-    '#2BB8A5',
-    '#FF6B6B',
-    '#FFA940',
-    '#7B61FF',
-    '#52C41A',
-    '#FF85C2',
-    '#1890FF',
-  ];
 
   @override
   void initState() {
@@ -771,9 +763,20 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     );
   }
 
+  Future<void> _addCustomColor(String hex) async {
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+    final settings = ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    await ref.read(tabSettingsRepositoryProvider).updateSettings(
+      groupId,
+      settings.copyWith(customColors: [...settings.customColors, hex]),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(currentMemberProvider); // garde le provider actif pour ref.read() dans les méthodes async
+    final tabSettings = ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -843,34 +846,12 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w500)),
               const SizedBox(height: 10),
-              Row(
-                children: _colorPalette.map((hex) {
-                  final color = Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
-                  final isSelected = _selectedColor == hex;
-                  return GestureDetector(
-                    onTap: () => setState(() {
-                      _selectedColor = isSelected ? null : hex;
-                    }),
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      margin: const EdgeInsets.only(right: 10),
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: isSelected
-                            ? Border.all(color: AppColors.textPrimary, width: 2.5)
-                            : null,
-                        boxShadow: isSelected
-                            ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 6, offset: const Offset(0, 2))]
-                            : null,
-                      ),
-                      child: isSelected
-                          ? const Icon(Icons.check, color: Colors.white, size: 16)
-                          : null,
-                    ),
-                  );
-                }).toList(),
+              ColorPickerRow(
+                basePalette: AppColors.itemPalette,
+                selected: _selectedColor,
+                extraColors: tabSettings.customColors,
+                onSelect: (hex) => setState(() => _selectedColor = hex),
+                onAddColor: _addCustomColor,
               ),
               const SizedBox(height: 24),
               _dateTimeRow(

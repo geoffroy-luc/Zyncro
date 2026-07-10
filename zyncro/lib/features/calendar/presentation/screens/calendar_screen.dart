@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/event.dart';
+import '../../../../shared/models/group_member.dart';
 import '../../../../shared/models/tab_settings.dart';
+import '../../../groups/presentation/providers/groups_provider.dart';
 import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../providers/events_provider.dart';
 import 'event_form_screen.dart';
@@ -41,6 +43,136 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   DateTime _displayedMonth =
       DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? _selectedDay;
+
+  // Filtres locaux
+  List<String> _filterParticipantIds = [];
+  bool _filterRecurrenceOnly = false;
+
+  bool get _hasActiveFilters =>
+      _filterParticipantIds.isNotEmpty || _filterRecurrenceOnly;
+
+  Future<void> _showFilterSheet(
+      List<GroupMember> members, Color primaryColor) async {
+    final tempParticipants = List<String>.from(_filterParticipantIds);
+    final tempRecurrence = [_filterRecurrenceOnly];
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => Padding(
+          padding: EdgeInsets.fromLTRB(
+              24, 16, 24, MediaQuery.of(ctx).viewInsets.bottom + 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Filtres',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 17)),
+                  if (tempParticipants.isNotEmpty || tempRecurrence[0])
+                    TextButton(
+                      onPressed: () => setSheet(() {
+                        tempParticipants.clear();
+                        tempRecurrence[0] = false;
+                      }),
+                      child: const Text('Réinitialiser',
+                          style: TextStyle(color: AppColors.error)),
+                    ),
+                ],
+              ),
+              if (members.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text('Participants',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: members.map((m) {
+                    final sel = tempParticipants.contains(m.uid);
+                    return FilterChip(
+                      label: Text(m.displayName,
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: sel
+                                  ? Colors.white
+                                  : AppColors.textPrimary)),
+                      selected: sel,
+                      onSelected: (v) => setSheet(() {
+                        if (v) {
+                          tempParticipants.add(m.uid);
+                        } else {
+                          tempParticipants.remove(m.uid);
+                        }
+                      }),
+                      selectedColor: primaryColor,
+                      checkmarkColor: Colors.white,
+                      backgroundColor: AppColors.background,
+                      side: const BorderSide(color: AppColors.border),
+                      showCheckmark: false,
+                    );
+                  }).toList(),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Récurrents uniquement',
+                      style: TextStyle(fontSize: 15)),
+                  Switch(
+                    value: tempRecurrence[0],
+                    activeThumbColor: primaryColor,
+                    onChanged: (v) =>
+                        setSheet(() => tempRecurrence[0] = v),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                      backgroundColor: primaryColor),
+                  onPressed: () {
+                    setState(() {
+                      _filterParticipantIds =
+                          List<String>.from(tempParticipants);
+                      _filterRecurrenceOnly = tempRecurrence[0];
+                    });
+                    Navigator.pop(ctx);
+                  },
+                  child: const Text('Appliquer'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   void _prevMonth() => setState(() {
         _displayedMonth =
@@ -134,27 +266,24 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return widgets;
   }
 
-  List<Event> _applyFilters(
-    List<Event> events,
-    CalendarFilters filters,
-    String search,
-  ) {
+  List<Event> _applyFilters(List<Event> events, String search) {
     var result = events;
     if (search.isNotEmpty) {
       final q = search.toLowerCase();
-      result = result.where((e) =>
-          e.title.toLowerCase().contains(q) ||
-          (e.location?.toLowerCase().contains(q) ?? false)).toList();
+      result = result
+          .where((e) =>
+              e.title.toLowerCase().contains(q) ||
+              (e.location?.toLowerCase().contains(q) ?? false))
+          .toList();
     }
-    if (filters.participantIds.isNotEmpty) {
-      result = result.where((e) =>
-          e.participantIds.any((id) => filters.participantIds.contains(id))).toList();
+    if (_filterParticipantIds.isNotEmpty) {
+      result = result
+          .where((e) => e.participantIds
+              .any((id) => _filterParticipantIds.contains(id)))
+          .toList();
     }
-    if (filters.recurrenceOnly) {
+    if (_filterRecurrenceOnly) {
       result = result.where((e) => e.recurrence != null).toList();
-    }
-    if (filters.category != null) {
-      result = result.where((e) => e.color == filters.category).toList();
     }
     return result;
   }
@@ -163,13 +292,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget build(BuildContext context) {
     final tabSettings =
         ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
-    final calFilters = tabSettings.calendarFilters;
     final displayMode = tabSettings.calendarDisplayMode;
     final primaryColor = Theme.of(context).colorScheme.primary;
+    final members = ref.watch(groupMembersProvider).asData?.value ?? [];
 
     final eventsAsync = ref.watch(expandedEventsProvider);
     final rawEvents = eventsAsync.asData?.value ?? [];
-    final allEvents = _applyFilters(rawEvents, calFilters, _search);
+    final allEvents = _applyFilters(rawEvents, _search);
     final monthEvents = _eventsForMonth(allEvents);
     final today = DateTime.now();
 
@@ -278,25 +407,29 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             ),
                           ),
                         ),
-                        if (calFilters.isEmpty)
-                          const SizedBox(width: 14)
-                        else
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: primaryColor,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                'Filtres actifs',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 11),
-                              ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () =>
+                              _showFilterSheet(members, primaryColor),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            margin: const EdgeInsets.only(right: 6),
+                            decoration: BoxDecoration(
+                              color: _hasActiveFilters
+                                  ? primaryColor
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.tune_rounded,
+                              size: 18,
+                              color: _hasActiveFilters
+                                  ? Colors.white
+                                  : AppColors.textSecondary,
                             ),
                           ),
+                        ),
                       ],
                     ),
                   ),
@@ -529,6 +662,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                   TextStyle(color: AppColors.textSecondary)),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              foregroundColor: Colors.white,
+                            ),
                             onPressed: () => Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => EventFormScreen(

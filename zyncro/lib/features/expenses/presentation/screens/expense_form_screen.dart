@@ -3,9 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/expense_categories.dart';
 import '../../../../shared/models/expense.dart';
+import '../../../../shared/models/expense_category.dart';
 import '../../../../shared/models/group_member.dart';
 import '../../../../shared/models/recurrence_rule.dart';
+import '../../../../shared/models/tab_settings.dart';
+import '../../../../shared/widgets/category_editor_sheet.dart';
+import '../../../../shared/widgets/color_picker_row.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
@@ -13,15 +18,6 @@ import '../../../groups/presentation/providers/groups_provider.dart';
 import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../providers/expenses_provider.dart';
 
-
-const _categories = [
-  ('Alimentation', Icons.restaurant_outlined, Color(0xFF2BB8A5)),
-  ('Logement', Icons.home_outlined, Color(0xFF4F7CFF)),
-  ('Transport', Icons.directions_car_outlined, Color(0xFF9B59B6)),
-  ('Loisirs', Icons.sports_esports_outlined, Color(0xFFE85D75)),
-  ('Services', Icons.build_outlined, Color(0xFFFFB86B)),
-  ('Autre', Icons.category_outlined, Color(0xFF6B7280)),
-];
 
 class ExpenseFormScreen extends ConsumerStatefulWidget {
   final Expense? expense;
@@ -563,12 +559,27 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     }
   }
 
+  Future<void> _addCategory() async {
+    final result = await showCategoryEditor(context);
+    if (result == null) return;
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+    final settings =
+        ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final updated = [...settings.expensesCategories, result];
+    await ref
+        .read(tabSettingsRepositoryProvider)
+        .updateSettings(groupId, settings.copyWith(expensesCategories: updated));
+    if (!mounted) return;
+    setState(() => _selectedCategory = result.name);
+  }
+
   @override
   Widget build(BuildContext context) {
     final members = ref.watch(expenseMembersProvider).asData?.value ?? [];
     final currentUid = ref.watch(authStateProvider).asData?.value?.uid;
-    final customCategories =
-        ref.watch(tabSettingsProvider).asData?.value.expensesCustomCategories ?? [];
+    final categories = ref.watch(tabSettingsProvider).asData?.value.expensesCategories ??
+        defaultExpenseCategories;
     _ensureSplitControllers(members);
 
     // Initialise la sélection avec tous les membres au premier chargement
@@ -1033,8 +1044,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  ..._categories.map((cat) {
-                    final (label, icon, color) = cat;
+                  ...categories.map((cat) {
+                    final label = cat.name;
+                    final icon = iconForKey(cat.iconKey);
+                    final color = hexToColor(cat.colorHex);
                     final selected = _selectedCategory == label;
                     return GestureDetector(
                       onTap: () => setState(() => _selectedCategory = label),
@@ -1077,50 +1090,34 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       ),
                     );
                   }),
-                  ...customCategories.map((label) {
-                    final selected = _selectedCategory == label;
-                    const color = AppColors.primary;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedCategory = label),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? color.withValues(alpha: 0.12)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: selected ? color : AppColors.border,
-                            width: selected ? 1.5 : 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.label_outline,
-                                size: 16,
-                                color: selected
-                                    ? color
-                                    : AppColors.textSecondary),
-                            const SizedBox(width: 6),
-                            Text(
-                              label,
-                              style: TextStyle(
-                                color: selected
-                                    ? color
-                                    : AppColors.textSecondary,
-                                fontSize: 13,
-                                fontWeight: selected
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                              ),
-                            ),
-                          ],
-                        ),
+                  GestureDetector(
+                    onTap: _addCategory,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border),
                       ),
-                    );
-                  }),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add,
+                              size: 16, color: AppColors.textSecondary),
+                          SizedBox(width: 6),
+                          Text(
+                            'Nouvelle catégorie',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
 

@@ -4,22 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/expense.dart';
+import '../../../../shared/models/expense_category.dart';
 import '../../../../shared/models/group_member.dart';
+import '../../../../shared/widgets/color_picker_row.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../providers/expenses_provider.dart';
 import 'expense_form_screen.dart';
 import 'reimbursement_form_screen.dart';
-
-const _categoryColors = {
-  'Alimentation': Color(0xFF2BB8A5),
-  'Logement': Color(0xFF4F7CFF),
-  'Transport': Color(0xFF9B59B6),
-  'Loisirs': Color(0xFFE85D75),
-  'Services': Color(0xFFFFB86B),
-  'Autre': Color(0xFF6B7280),
-};
 
 const _currencySymbols = {
   'EUR': '€',
@@ -31,7 +24,12 @@ const _currencySymbols = {
   'AUD': 'A\$',
 };
 
-Color _catColor(String? cat) => _categoryColors[cat] ?? const Color(0xFF6B7280);
+Color _catColor(List<ExpenseCategory> categories, String? cat) {
+  for (final c in categories) {
+    if (c.name == cat) return hexToColor(c.colorHex);
+  }
+  return const Color(0xFF6B7280);
+}
 
 String _formatAmount(double v, {String currency = 'EUR'}) {
   final symbol = _currencySymbols[currency] ?? currency;
@@ -771,9 +769,11 @@ class _ExpenseCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currency = ref.watch(tabSettingsProvider).asData?.value.expensesCurrency ?? 'EUR';
+    final categories = ref.watch(tabSettingsProvider).asData?.value.expensesCategories ??
+        defaultExpenseCategories;
     final color = expense.expenseType == ExpenseType.reimbursement
         ? const Color(0xFF27AE60)
-        : _catColor(expense.category);
+        : _catColor(categories, expense.category);
 
     final cardContent = Container(
       decoration: BoxDecoration(

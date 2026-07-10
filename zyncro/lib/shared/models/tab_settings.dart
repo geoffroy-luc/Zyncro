@@ -1,3 +1,5 @@
+import 'expense_category.dart';
+
 class CalendarFilters {
   final List<String> participantIds;
   final bool recurrenceOnly;
@@ -53,7 +55,7 @@ class TabSettings {
   final String? chatBackgroundValue;
 
   final String expensesCurrency;
-  final List<String> expensesCustomCategories;
+  final List<ExpenseCategory> expensesCategories;
 
   final String calendarDisplayMode;
   final List<String> calendarCustomCategories;
@@ -71,7 +73,7 @@ class TabSettings {
     this.chatBackgroundType,
     this.chatBackgroundValue,
     this.expensesCurrency = 'EUR',
-    this.expensesCustomCategories = const [],
+    this.expensesCategories = defaultExpenseCategories,
     this.calendarDisplayMode = 'band',
     this.calendarCustomCategories = const [],
     this.calendarFilters = const CalendarFilters(),
@@ -91,9 +93,25 @@ class TabSettings {
       chatBackgroundType: map['chatBackgroundType'] as String?,
       chatBackgroundValue: map['chatBackgroundValue'] as String?,
       expensesCurrency: (map['expensesCurrency'] as String?) ?? 'EUR',
-      expensesCustomCategories: List<String>.from(
-        map['expensesCustomCategories'] ?? [],
-      ),
+      expensesCategories: map['expensesCategories'] != null
+          ? (map['expensesCategories'] as List)
+              .map(
+                (e) => ExpenseCategory.fromMap(
+                  Map<String, dynamic>.from(e as Map),
+                ),
+              )
+              .toList()
+          : [
+              ...defaultExpenseCategories,
+              ...List<String>.from(map['expensesCustomCategories'] ?? [])
+                  .map(
+                    (name) => ExpenseCategory(
+                      name: name,
+                      iconKey: 'label',
+                      colorHex: '#4F7CFF',
+                    ),
+                  ),
+            ],
       calendarDisplayMode: (map['calendarDisplayMode'] as String?) ?? 'band',
       calendarCustomCategories: List<String>.from(
         map['calendarCustomCategories'] ?? [],
@@ -117,7 +135,7 @@ class TabSettings {
     'chatBackgroundType': chatBackgroundType,
     'chatBackgroundValue': chatBackgroundValue,
     'expensesCurrency': expensesCurrency,
-    'expensesCustomCategories': expensesCustomCategories,
+    'expensesCategories': expensesCategories.map((c) => c.toMap()).toList(),
     'calendarDisplayMode': calendarDisplayMode,
     'calendarCustomCategories': calendarCustomCategories,
     'calendarFilters': calendarFilters.toMap(),
@@ -134,7 +152,7 @@ class TabSettings {
     String? chatBackgroundType,
     String? chatBackgroundValue,
     String? expensesCurrency,
-    List<String>? expensesCustomCategories,
+    List<ExpenseCategory>? expensesCategories,
     String? calendarDisplayMode,
     List<String>? calendarCustomCategories,
     CalendarFilters? calendarFilters,
@@ -171,8 +189,7 @@ class TabSettings {
           ? null
           : (chatBackgroundValue ?? this.chatBackgroundValue),
       expensesCurrency: expensesCurrency ?? this.expensesCurrency,
-      expensesCustomCategories:
-          expensesCustomCategories ?? this.expensesCustomCategories,
+      expensesCategories: expensesCategories ?? this.expensesCategories,
       calendarDisplayMode: calendarDisplayMode ?? this.calendarDisplayMode,
       calendarCustomCategories:
           calendarCustomCategories ?? this.calendarCustomCategories,
