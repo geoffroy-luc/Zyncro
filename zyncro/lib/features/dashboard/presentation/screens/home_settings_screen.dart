@@ -698,11 +698,14 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                 child: ColorPickerRow(
                   selected: settings.homeThemeColor,
                   extraColors: settings.customColors,
+                  hiddenBaseColors: settings.hiddenBaseColors,
                   onSelect: (hex) =>
                       _updateTabSettings(settings.copyWith(homeThemeColor: hex)),
                   onAddColor: (hex) => _updateTabSettings(
                     settings.copyWith(customColors: [...settings.customColors, hex]),
                   ),
+                  onDeleteColor: (hex) =>
+                      _updateTabSettings(settings.withColorRemoved(hex)),
                 ),
               ),
             ),

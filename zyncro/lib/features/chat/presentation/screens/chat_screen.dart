@@ -1195,6 +1195,8 @@ Future<void> _pickAndSendMedia() async {
                                 onVote: isPoll
                                     ? (idx) => _votePoll(msg, idx)
                                     : null,
+                                hasCustomBackground:
+                                    bgType != null && bgType != 'none',
                                 onReplyPreviewTap: msg.replyToId != null
                                     ? () => _scrollToMessage(msg.replyToId, messages)
                                     : null,
@@ -1664,6 +1666,7 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onLongPress;
   final void Function(int)? onVote;
   final VoidCallback? onReplyPreviewTap;
+  final bool hasCustomBackground;
 
   const _MessageBubble({
     required this.message,
@@ -1682,6 +1685,7 @@ class _MessageBubble extends StatelessWidget {
     this.onLongPress,
     this.onVote,
     this.onReplyPreviewTap,
+    this.hasCustomBackground = false,
   });
 
   static final _urlRegex = RegExp(r'https?://[^\s]+', caseSensitive: false);
@@ -1844,8 +1848,8 @@ class _MessageBubble extends StatelessWidget {
           ),
           child: Text(
             message.content,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: hasCustomBackground ? Colors.black : AppColors.textSecondary,
               fontSize: 11,
             ),
             textAlign: TextAlign.center,

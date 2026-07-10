@@ -55,11 +55,14 @@ class NotesSettingsScreen extends ConsumerWidget {
                 child: ColorPickerRow(
                   selected: settings.notesThemeColor,
                   extraColors: settings.customColors,
+                  hiddenBaseColors: settings.hiddenBaseColors,
                   onSelect: (hex) => _update(ref, settings.copyWith(notesThemeColor: hex)),
                   onAddColor: (hex) => _update(
                     ref,
                     settings.copyWith(customColors: [...settings.customColors, hex]),
                   ),
+                  onDeleteColor: (hex) =>
+                      _update(ref, settings.withColorRemoved(hex)),
                 ),
               ),
             ],

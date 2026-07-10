@@ -322,10 +322,14 @@ class _HuePainter extends CustomPainter {
 // ── ColorPickerRow widget ─────────────────────────────────────────────────────
 
 class ColorPickerRow extends StatelessWidget {
+  static const int maxColors = 20;
+
   final String? selected;
   final List<String> extraColors;
+  final List<String> hiddenBaseColors;
   final ValueChanged<String> onSelect;
   final ValueChanged<String>? onAddColor;
+  final ValueChanged<String>? onDeleteColor;
 
   /// Palette de base affichée. Par défaut : AppColors.tabPalette.
   final List<String>? basePalette;
@@ -335,13 +339,42 @@ class ColorPickerRow extends StatelessWidget {
     required this.selected,
     required this.onSelect,
     this.extraColors = const [],
+    this.hiddenBaseColors = const [],
     this.onAddColor,
+    this.onDeleteColor,
     this.basePalette,
   });
 
+  Future<void> _confirmDelete(BuildContext context, String hex) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Supprimer cette couleur ?'),
+        content: const Text(
+          'Cette couleur sera retirée de la palette.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Supprimer', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) onDeleteColor!(hex);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final all = [...(basePalette ?? AppColors.tabPalette), ...extraColors];
+    final base = (basePalette ?? AppColors.tabPalette)
+        .where((hex) => !hiddenBaseColors.contains(hex));
+    final all = [...base, ...extraColors];
+    final canAdd = onAddColor != null && all.length < maxColors;
+
     return Wrap(
       spacing: 10,
       runSpacing: 10,
@@ -350,8 +383,11 @@ class ColorPickerRow extends StatelessWidget {
               hex: hex,
               isSelected: selected == hex,
               onTap: () => onSelect(hex),
+              onLongPress: onDeleteColor != null
+                  ? () => _confirmDelete(context, hex)
+                  : null,
             )),
-        if (onAddColor != null)
+        if (canAdd)
           GestureDetector(
             onTap: () async {
               final hex = await showGroupColorPicker(context, initial: selected);
@@ -377,11 +413,13 @@ class _ColorCircle extends StatelessWidget {
   final String hex;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const _ColorCircle({
     required this.hex,
     required this.isSelected,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -389,6 +427,7 @@ class _ColorCircle extends StatelessWidget {
     final color = hexToColor(hex);
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Container(
         width: 30,
         height: 30,

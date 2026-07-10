@@ -143,11 +143,13 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                 child: ColorPickerRow(
                   selected: settings.chatThemeColor,
                   extraColors: settings.customColors,
+                  hiddenBaseColors: settings.hiddenBaseColors,
                   onSelect: (hex) =>
                       _update(settings.copyWith(chatThemeColor: hex)),
                   onAddColor: (hex) => _update(
                     settings.copyWith(customColors: [...settings.customColors, hex]),
                   ),
+                  onDeleteColor: (hex) => _update(settings.withColorRemoved(hex)),
                 ),
               ),
             ],
@@ -201,6 +203,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                   child: ColorPickerRow(
                     selected: settings.chatBackgroundValue,
                     extraColors: settings.customColors,
+                    hiddenBaseColors: settings.hiddenBaseColors,
                     onSelect: (hex) => _update(
                       settings.copyWith(
                         chatBackgroundType: 'color',
@@ -210,6 +213,8 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                     onAddColor: (hex) => _update(
                       settings.copyWith(customColors: [...settings.customColors, hex]),
                     ),
+                    onDeleteColor: (hex) =>
+                        _update(settings.withColorRemoved(hex)),
                   ),
                 ),
               ],

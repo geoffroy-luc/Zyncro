@@ -99,11 +99,13 @@ class _ExpensesSettingsScreenState
                 child: ColorPickerRow(
                   selected: settings.expensesThemeColor,
                   extraColors: settings.customColors,
+                  hiddenBaseColors: settings.hiddenBaseColors,
                   onSelect: (hex) =>
                       _update(settings.copyWith(expensesThemeColor: hex)),
                   onAddColor: (hex) => _update(
                     settings.copyWith(customColors: [...settings.customColors, hex]),
                   ),
+                  onDeleteColor: (hex) => _update(settings.withColorRemoved(hex)),
                 ),
               ),
             ],

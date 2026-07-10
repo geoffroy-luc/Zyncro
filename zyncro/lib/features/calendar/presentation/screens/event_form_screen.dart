@@ -773,6 +773,16 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     );
   }
 
+  Future<void> _deleteCustomColor(String hex) async {
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+    final settings = ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    await ref.read(tabSettingsRepositoryProvider).updateSettings(
+      groupId,
+      settings.withColorRemoved(hex),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(currentMemberProvider); // garde le provider actif pour ref.read() dans les méthodes async
@@ -850,8 +860,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 basePalette: AppColors.itemPalette,
                 selected: _selectedColor,
                 extraColors: tabSettings.customColors,
+                hiddenBaseColors: tabSettings.hiddenBaseColors,
                 onSelect: (hex) => setState(() => _selectedColor = hex),
                 onAddColor: _addCustomColor,
+                onDeleteColor: _deleteCustomColor,
               ),
               const SizedBox(height: 24),
               _dateTimeRow(

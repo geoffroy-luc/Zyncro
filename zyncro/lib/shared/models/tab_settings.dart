@@ -44,6 +44,7 @@ class CalendarFilters {
 
 class TabSettings {
   final List<String> customColors;
+  final List<String> hiddenBaseColors;
 
   final String? homeThemeColor;
   final String? calendarThemeColor;
@@ -65,6 +66,7 @@ class TabSettings {
 
   const TabSettings({
     this.customColors = const [],
+    this.hiddenBaseColors = const [],
     this.homeThemeColor,
     this.calendarThemeColor,
     this.notesThemeColor,
@@ -85,6 +87,7 @@ class TabSettings {
   factory TabSettings.fromMap(Map<String, dynamic> map) {
     return TabSettings(
       customColors: List<String>.from(map['customColors'] ?? []),
+      hiddenBaseColors: List<String>.from(map['hiddenBaseColors'] ?? []),
       homeThemeColor: map['homeThemeColor'] as String?,
       calendarThemeColor: map['calendarThemeColor'] as String?,
       notesThemeColor: map['notesThemeColor'] as String?,
@@ -127,6 +130,7 @@ class TabSettings {
 
   Map<String, dynamic> toMap() => {
     'customColors': customColors,
+    'hiddenBaseColors': hiddenBaseColors,
     'homeThemeColor': homeThemeColor,
     'calendarThemeColor': calendarThemeColor,
     'notesThemeColor': notesThemeColor,
@@ -144,6 +148,7 @@ class TabSettings {
 
   TabSettings copyWith({
     List<String>? customColors,
+    List<String>? hiddenBaseColors,
     String? homeThemeColor,
     String? calendarThemeColor,
     String? notesThemeColor,
@@ -167,6 +172,7 @@ class TabSettings {
   }) {
     return TabSettings(
       customColors: customColors ?? this.customColors,
+      hiddenBaseColors: hiddenBaseColors ?? this.hiddenBaseColors,
       homeThemeColor: clearHomeThemeColor
           ? null
           : (homeThemeColor ?? this.homeThemeColor),
@@ -198,5 +204,17 @@ class TabSettings {
           ? null
           : (homePhotoUrl ?? this.homePhotoUrl),
     );
+  }
+
+  /// Retire une couleur d'une palette : si c'est une couleur personnalisée,
+  /// elle est supprimée de [customColors] ; sinon (couleur de base), elle est
+  /// masquée via [hiddenBaseColors].
+  TabSettings withColorRemoved(String hex) {
+    if (customColors.contains(hex)) {
+      return copyWith(
+        customColors: customColors.where((c) => c != hex).toList(),
+      );
+    }
+    return copyWith(hiddenBaseColors: [...hiddenBaseColors, hex]);
   }
 }

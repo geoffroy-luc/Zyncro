@@ -62,11 +62,13 @@ class _CalendarSettingsScreenState
                 child: ColorPickerRow(
                   selected: settings.calendarThemeColor,
                   extraColors: settings.customColors,
+                  hiddenBaseColors: settings.hiddenBaseColors,
                   onSelect: (hex) =>
                       _update(settings.copyWith(calendarThemeColor: hex)),
                   onAddColor: (hex) => _update(
                     settings.copyWith(customColors: [...settings.customColors, hex]),
                   ),
+                  onDeleteColor: (hex) => _update(settings.withColorRemoved(hex)),
                 ),
               ),
             ],
