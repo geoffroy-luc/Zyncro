@@ -7,6 +7,7 @@ class Group {
   final String name;
   final String? description;
   final String? emoji;
+  final String? photoUrl;
   final List<String> memberIds;
   final String createdBy;
   final DateTime createdAt;
@@ -17,6 +18,7 @@ class Group {
     required this.name,
     this.description,
     this.emoji,
+    this.photoUrl,
     required this.memberIds,
     required this.createdBy,
     required this.createdAt,
@@ -35,6 +37,7 @@ class Group {
       name: map['name'] as String,
       description: map['description'] as String?,
       emoji: map['emoji'] as String?,
+      photoUrl: map['photoUrl'] as String?,
       memberIds: List<String>.from(map['memberIds'] ?? []),
       createdBy: map['createdBy'] as String,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
@@ -47,6 +50,7 @@ class Group {
       'name': name,
       'description': description,
       'emoji': emoji,
+      'photoUrl': photoUrl,
       'memberIds': memberIds,
       'createdBy': createdBy,
       'createdAt': Timestamp.fromDate(createdAt),

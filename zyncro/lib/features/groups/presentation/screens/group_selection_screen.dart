@@ -187,12 +187,24 @@ class _GroupTile extends ConsumerWidget {
                       color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Center(
-                      child: Text(
-                        group.emoji ?? group.name[0].toUpperCase(),
-                        style: const TextStyle(fontSize: 22),
-                      ),
-                    ),
+                    child: group.photoUrl != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              group.photoUrl!,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              group.emoji?.isNotEmpty == true
+                                  ? group.emoji!
+                                  : group.name[0].toUpperCase(),
+                              style: const TextStyle(fontSize: 22),
+                            ),
+                          ),
                   ),
                   if (unreadCount > 0)
                     Positioned(

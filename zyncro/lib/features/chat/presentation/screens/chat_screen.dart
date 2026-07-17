@@ -23,10 +23,17 @@ import '../../../expenses/presentation/providers/expenses_provider.dart';
 import '../../domain/repositories/i_messages_repository.dart';
 import '../providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
+import '../../../groups/presentation/providers/tab_settings_provider.dart';
+import '../../../../shared/models/tab_settings.dart';
 import 'media_picker_screen.dart';
 import 'media_viewer_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+
+Color _chatDark(Color c) {
+  final hsl = HSLColor.fromColor(c);
+  return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
+}
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -44,6 +51,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final Set<String> _visibleTimestamps = {};
   Message? _replyingTo;
   Message? _editingMessage;
+  String _search = '';
+  bool _showSearch = false;
 
   final Map<String, GlobalKey> _messageKeys = {};
   String? _highlightedMessageId;
@@ -321,12 +330,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       height: 48,
                       decoration: BoxDecoration(
                         color: hasReacted
-                            ? const Color(0xFFE85D75).withValues(alpha: 0.15)
+                            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
                             : const Color(0xFFF7F9FC),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: hasReacted
-                              ? const Color(0xFFE85D75)
+                              ? Theme.of(context).colorScheme.primary
                               : AppColors.border,
                         ),
                       ),
@@ -985,17 +994,106 @@ Future<void> _pickAndSendMedia() async {
       );
     }
 
+    final chatSettings =
+        ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final bgType = chatSettings.chatBackgroundType;
+    final bgValue = chatSettings.chatBackgroundValue;
+
+    Widget buildBackground(Widget child) {
+      if (bgType == 'image' && bgValue != null) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(bgValue, fit: BoxFit.cover),
+            child,
+          ],
+        );
+      }
+      return child;
+    }
+
+    final bgColor = bgType == 'color' && bgValue != null
+        ? Color(int.parse('FF${bgValue.replaceAll('#', '')}', radix: 16))
+        : const Color(0xFFF7F9FC);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
-      body: Column(
+      backgroundColor: bgColor,
+      body: buildBackground(SafeArea(
+        top: true,
+        child: Column(
         children: [
+          // ── Search bar (optionnelle) ─────────────────────────────────
+          if (_showSearch)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            child: Icon(Icons.search,
+                                color: AppColors.textSecondary, size: 18),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              autofocus: true,
+                              onChanged: (v) => setState(() => _search = v),
+                              decoration: const InputDecoration(
+                                hintText: 'Rechercher dans le chat...',
+                                hintStyle: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 14),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                contentPadding:
+                                    EdgeInsets.symmetric(vertical: 10),
+                                filled: false,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _showSearch = false;
+                      _search = '';
+                    }),
+                    child: const Icon(Icons.close,
+                        color: AppColors.textSecondary, size: 20),
+                  ),
+                ],
+              ),
+            ),
           // ── Messages ────────────────────────────────────────────────
           Expanded(
             child: chatAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('Erreur: $e')),
               data: (chatState) {
-                final messages = chatState.messages;
+                final allMessages = chatState.messages;
+                final messages = _search.isEmpty
+                    ? allMessages
+                    : allMessages.where((m) {
+                        final q = _search.toLowerCase();
+                        final textContent = m.type == MessageType.text
+                            ? m.content.toLowerCase()
+                            : '';
+                        return textContent.contains(q) ||
+                            (m.senderName?.toLowerCase().contains(q) ?? false);
+                      }).toList();
                 if (messages.isEmpty) {
                   return const Center(
                     child: Text(
@@ -1024,12 +1122,12 @@ Future<void> _pickAndSendMedia() async {
                   itemCount: messages.length + (chatState.loadingMore ? 1 : 0),
                   itemBuilder: (_, i) {
                     if (i == messages.length) {
-                      return const Center(
+                      return Center(
                         child: Padding(
-                          padding: EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(16),
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Color(0xFFE85D75),
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                       );
@@ -1062,7 +1160,7 @@ Future<void> _pickAndSendMedia() async {
                             duration: const Duration(milliseconds: 300),
                             decoration: BoxDecoration(
                               color: _highlightedMessageId == msg.id
-                                  ? const Color(0x22E85D75)
+                                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.13)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -1097,6 +1195,8 @@ Future<void> _pickAndSendMedia() async {
                                 onVote: isPoll
                                     ? (idx) => _votePoll(msg, idx)
                                     : null,
+                                hasCustomBackground:
+                                    bgType != null && bgType != 'none',
                                 onReplyPreviewTap: msg.replyToId != null
                                     ? () => _scrollToMessage(msg.replyToId, messages)
                                     : null,
@@ -1139,7 +1239,7 @@ Future<void> _pickAndSendMedia() async {
                     width: 3,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE85D75),
+                      color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1147,8 +1247,8 @@ Future<void> _pickAndSendMedia() async {
                   Expanded(
                     child: Text(
                       'Modifier le message',
-                      style: const TextStyle(
-                        color: Color(0xFFE85D75),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1182,7 +1282,7 @@ Future<void> _pickAndSendMedia() async {
                     width: 3,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE85D75),
+                      color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1193,8 +1293,8 @@ Future<void> _pickAndSendMedia() async {
                       children: [
                         Text(
                           _replyingTo!.senderName ?? '',
-                          style: const TextStyle(
-                            color: Color(0xFFE85D75),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -1297,15 +1397,15 @@ Future<void> _pickAndSendMedia() async {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [Color(0xFFE85D75), Color(0xFFC94060)],
+                              colors: [Theme.of(context).colorScheme.primary, _chatDark(Theme.of(context).colorScheme.primary)],
                             ),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFE85D75)
+                                color: Theme.of(context).colorScheme.primary
                                     .withValues(alpha: 0.25),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
@@ -1325,6 +1425,35 @@ Future<void> _pickAndSendMedia() async {
                 : Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                GestureDetector(
+                  onTap: () => setState(() {
+                    _showSearch = !_showSearch;
+                    if (!_showSearch) _search = '';
+                  }),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    margin: const EdgeInsets.only(right: 8, bottom: 2),
+                    decoration: BoxDecoration(
+                      color: _showSearch
+                          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                          : const Color(0xFFF7F9FC),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _showSearch
+                            ? Theme.of(context).colorScheme.primary
+                            : AppColors.border,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.search,
+                      color: _showSearch
+                          ? Theme.of(context).colorScheme.primary
+                          : AppColors.textSecondary,
+                      size: 18,
+                    ),
+                  ),
+                ),
                 GestureDetector(
                   onTap: _showCreatePoll,
                   child: Container(
@@ -1415,15 +1544,15 @@ Future<void> _pickAndSendMedia() async {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
+                        gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Color(0xFFE85D75), Color(0xFFC94060)],
+                          colors: [Theme.of(context).colorScheme.primary, _chatDark(Theme.of(context).colorScheme.primary)],
                         ),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFE85D75).withValues(alpha: 0.25),
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
@@ -1451,15 +1580,15 @@ Future<void> _pickAndSendMedia() async {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFFE85D75), Color(0xFFC94060)],
+                        colors: [Theme.of(context).colorScheme.primary, _chatDark(Theme.of(context).colorScheme.primary)],
                       ),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFE85D75).withValues(alpha: 0.25),
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -1480,7 +1609,7 @@ Future<void> _pickAndSendMedia() async {
             ),
           ),
         ],
-      ),
+      ))),
     );
   }
 }
@@ -1537,6 +1666,7 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onLongPress;
   final void Function(int)? onVote;
   final VoidCallback? onReplyPreviewTap;
+  final bool hasCustomBackground;
 
   const _MessageBubble({
     required this.message,
@@ -1555,6 +1685,7 @@ class _MessageBubble extends StatelessWidget {
     this.onLongPress,
     this.onVote,
     this.onReplyPreviewTap,
+    this.hasCustomBackground = false,
   });
 
   static final _urlRegex = RegExp(r'https?://[^\s]+', caseSensitive: false);
@@ -1647,7 +1778,7 @@ class _MessageBubble extends StatelessWidget {
                               ? progress.cumulativeBytesLoaded /
                                   progress.expectedTotalBytes!
                               : null,
-                          color: isMe ? Colors.white : const Color(0xFFE85D75),
+                          color: isMe ? Colors.white : Theme.of(context).colorScheme.primary,
                           strokeWidth: 2,
                         ),
                       ),
@@ -1717,8 +1848,8 @@ class _MessageBubble extends StatelessWidget {
           ),
           child: Text(
             message.content,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: hasCustomBackground ? Colors.black : AppColors.textSecondary,
               fontSize: 11,
             ),
             textAlign: TextAlign.center,
@@ -1782,10 +1913,10 @@ class _MessageBubble extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: isMedia
                     ? null
-                    : const LinearGradient(
+                    : LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFFE85D75), Color(0xFFC94060)],
+                        colors: [Theme.of(context).colorScheme.primary, _chatDark(Theme.of(context).colorScheme.primary)],
                       ),
                 borderRadius: radius,
                 boxShadow: const [
@@ -2105,7 +2236,7 @@ class _LinkPreviewWidgetState extends State<_LinkPreviewWidget> {
           height: 16,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            color: widget.isMe ? Colors.white54 : const Color(0xFFE85D75),
+            color: widget.isMe ? Colors.white54 : Theme.of(context).colorScheme.primary,
           ),
         ),
       ),
@@ -2115,7 +2246,7 @@ class _LinkPreviewWidgetState extends State<_LinkPreviewWidget> {
   Widget _buildCard(_LinkMeta meta) {
     final isMe = widget.isMe;
     final borderColor =
-        isMe ? Colors.white.withValues(alpha: 0.6) : const Color(0xFFE85D75);
+        isMe ? Colors.white.withValues(alpha: 0.6) : Theme.of(context).colorScheme.primary;
     final bgColor = isMe
         ? Colors.white.withValues(alpha: 0.18)
         : const Color(0xFFF3F4F6);
@@ -2327,7 +2458,7 @@ class _MediaAlbumBubble extends StatelessWidget {
                 value: progress.expectedTotalBytes != null
                     ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
                     : null,
-                color: isMe ? Colors.white : const Color(0xFFE85D75),
+                color: isMe ? Colors.white : Theme.of(context).colorScheme.primary,
                 strokeWidth: 2,
               ),
             ),
@@ -2591,12 +2722,12 @@ class _ReactionsRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: isMine
-                  ? const Color(0xFFE85D75).withValues(alpha: 0.15)
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
                   : const Color(0xFFF0F2F5),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isMine
-                    ? const Color(0xFFE85D75).withValues(alpha: 0.4)
+                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.4)
                     : AppColors.border,
               ),
             ),
@@ -2611,7 +2742,7 @@ class _ReactionsRow extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: isMine
-                        ? const Color(0xFFC94060)
+                        ? _chatDark(Theme.of(context).colorScheme.primary)
                         : AppColors.textSecondary,
                   ),
                 ),
@@ -2661,7 +2792,7 @@ class _ReplyPreview extends StatelessWidget {
           left: BorderSide(
             color: isMe
                 ? Colors.white.withValues(alpha: 0.7)
-                : const Color(0xFFE85D75),
+                : Theme.of(context).colorScheme.primary,
             width: 3,
           ),
         ),
@@ -2677,7 +2808,7 @@ class _ReplyPreview extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: isMe
                     ? Colors.white.withValues(alpha: 0.9)
-                    : const Color(0xFFE85D75),
+                    : Theme.of(context).colorScheme.primary,
               ),
             ),
           Text(
@@ -2798,11 +2929,11 @@ class _SwipeToReplyState extends State<_SwipeToReply>
               bottom: 0,
               child: Opacity(
                 opacity: (absX / _threshold).clamp(0.0, 1.0),
-                child: const Align(
+                child: Align(
                   alignment: Alignment.center,
                   child: Icon(
                     Icons.reply_rounded,
-                    color: Color(0xFFE85D75),
+                    color: Theme.of(context).colorScheme.primary,
                     size: 20,
                   ),
                 ),
@@ -2905,10 +3036,10 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
                 : 0.0;
 
             final fg =
-                widget.isMe ? Colors.white : const Color(0xFFE85D75);
+                widget.isMe ? Colors.white : Theme.of(context).colorScheme.primary;
             final fgFaded = widget.isMe
                 ? Colors.white.withValues(alpha: 0.35)
-                : const Color(0xFFE85D75).withValues(alpha: 0.25);
+                : Theme.of(context).colorScheme.primary.withValues(alpha: 0.25);
 
             return Row(
               mainAxisSize: MainAxisSize.min,
@@ -2936,7 +3067,7 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
                     decoration: BoxDecoration(
                       color: widget.isMe
                           ? Colors.white.withValues(alpha: 0.25)
-                          : const Color(0xFFE85D75).withValues(alpha: 0.1),
+                          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: isLoading
@@ -3035,7 +3166,7 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
                               decoration: BoxDecoration(
                                 color: widget.isMe
                                     ? Colors.white.withValues(alpha: 0.25)
-                                    : const Color(0xFFE85D75)
+                                    : Theme.of(context).colorScheme.primary
                                         .withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -3133,13 +3264,13 @@ class _PollCard extends StatelessWidget {
                   horizontal: 14,
                   vertical: 12,
                 ),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFFE85D75), Color(0xFFC94060)],
+                    colors: [Theme.of(context).colorScheme.primary, _chatDark(Theme.of(context).colorScheme.primary)],
                   ),
-                  borderRadius: BorderRadius.vertical(
+                  borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(15),
                   ),
                 ),
@@ -3213,12 +3344,12 @@ class _PollCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFFE85D75).withValues(alpha: 0.08)
+                              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
                               : const Color(0xFFF7F9FC),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFFE85D75)
+                                ? Theme.of(context).colorScheme.primary
                                 : AppColors.border,
                           ),
                         ),
@@ -3237,7 +3368,7 @@ class _PollCard extends StatelessWidget {
                                           : Icons.radio_button_unchecked),
                                   size: 15,
                                   color: isSelected
-                                      ? const Color(0xFFE85D75)
+                                      ? Theme.of(context).colorScheme.primary
                                       : AppColors.textSecondary,
                                 ),
                                 const SizedBox(width: 8),
@@ -3270,8 +3401,8 @@ class _PollCard extends StatelessWidget {
                                   backgroundColor: Colors.grey.shade200,
                                   valueColor: AlwaysStoppedAnimation(
                                     isSelected
-                                        ? const Color(0xFFE85D75)
-                                        : const Color(0xFFE85D75)
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context).colorScheme.primary
                                             .withValues(alpha: 0.35),
                                   ),
                                 ),
@@ -3383,11 +3514,11 @@ class _EditPollDialogState extends State<_EditPollDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.poll_outlined, color: Color(0xFFE85D75), size: 20),
-          SizedBox(width: 8),
-          Text('Modifier le sondage'),
+          Icon(Icons.poll_outlined, color: Theme.of(context).colorScheme.primary, size: 20),
+          const SizedBox(width: 8),
+          const Text('Modifier le sondage'),
         ],
       ),
       content: SingleChildScrollView(
@@ -3455,7 +3586,7 @@ class _EditPollDialogState extends State<_EditPollDialog> {
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Ajouter une option'),
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFE85D75),
+                  foregroundColor: Theme.of(context).colorScheme.primary,
                   padding: EdgeInsets.zero,
                 ),
               ),
@@ -3470,7 +3601,7 @@ class _EditPollDialogState extends State<_EditPollDialog> {
                 'Les participants peuvent voter pour plusieurs options',
                 style: TextStyle(fontSize: 11),
               ),
-              activeThumbColor: const Color(0xFFE85D75),
+              activeThumbColor: Theme.of(context).colorScheme.primary,
               contentPadding: EdgeInsets.zero,
               dense: true,
             ),
@@ -3580,11 +3711,11 @@ class _CreatePollDialogState extends State<_CreatePollDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.poll_outlined, color: Color(0xFFE85D75), size: 20),
-          SizedBox(width: 8),
-          Text('Créer un sondage'),
+          Icon(Icons.poll_outlined, color: Theme.of(context).colorScheme.primary, size: 20),
+          const SizedBox(width: 8),
+          const Text('Créer un sondage'),
         ],
       ),
       content: SingleChildScrollView(
@@ -3652,7 +3783,7 @@ class _CreatePollDialogState extends State<_CreatePollDialog> {
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Ajouter une option'),
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFE85D75),
+                  foregroundColor: Theme.of(context).colorScheme.primary,
                   padding: EdgeInsets.zero,
                 ),
               ),
@@ -3667,7 +3798,7 @@ class _CreatePollDialogState extends State<_CreatePollDialog> {
                 'Les participants peuvent voter pour plusieurs options',
                 style: TextStyle(fontSize: 11),
               ),
-              activeThumbColor: const Color(0xFFE85D75),
+              activeThumbColor: Theme.of(context).colorScheme.primary,
               contentPadding: EdgeInsets.zero,
               dense: true,
             ),

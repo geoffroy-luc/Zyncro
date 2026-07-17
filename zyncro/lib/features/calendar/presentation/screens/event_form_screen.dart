@@ -7,9 +7,12 @@ import '../../../../core/services/reminder_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/recurrence_rule.dart';
 import '../../../../shared/widgets/user_avatar.dart';
+import '../../../../shared/models/tab_settings.dart';
+import '../../../../shared/widgets/color_picker_row.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
+import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../providers/events_provider.dart';
 
 class EventFormScreen extends ConsumerStatefulWidget {
@@ -37,17 +40,6 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   int? _reminderMinutes; // null = aucun rappel
   RecurrenceRule? _recurrence;
   Set<String> _selectedParticipantIds = {};
-
-  static const _colorPalette = [
-    '#4F7CFF',
-    '#2BB8A5',
-    '#FF6B6B',
-    '#FFA940',
-    '#7B61FF',
-    '#52C41A',
-    '#FF85C2',
-    '#1890FF',
-  ];
 
   @override
   void initState() {
@@ -279,6 +271,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSt) {
+          final primary = Theme.of(ctx).colorScheme.primary;
           final frequencies = [
             (RecurrenceFrequency.daily, 'Tous les jours'),
             (RecurrenceFrequency.weekly, 'Toutes les semaines'),
@@ -308,12 +301,12 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                     leading: Icon(
                       Icons.block_outlined,
                       color: selectedFreq == null
-                          ? AppColors.primary
+                          ? primary
                           : AppColors.textSecondary,
                     ),
                     title: const Text('Aucune'),
                     trailing: selectedFreq == null
-                        ? const Icon(Icons.check, color: AppColors.primary)
+                        ? Icon(Icons.check, color: primary)
                         : null,
                     onTap: () {
                       setSt(() => selectedFreq = null);
@@ -327,12 +320,12 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                       leading: Icon(
                         Icons.repeat,
                         color: isSelected
-                            ? AppColors.primary
+                            ? primary
                             : AppColors.textSecondary,
                       ),
                       title: Text(label),
                       trailing: isSelected
-                          ? const Icon(Icons.check, color: AppColors.primary)
+                          ? Icon(Icons.check, color: primary)
                           : null,
                       onTap: () => setSt(() => selectedFreq = freq),
                     );
@@ -358,14 +351,14 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                       groupValue: endType,
                       onChanged: (v) => setSt(() => endType = v!),
                       title: const Text('Toujours'),
-                      activeColor: AppColors.primary,
+                      activeColor: primary,
                     ),
                     // Nombre de fois
                     RadioListTile<RecurrenceEndType>(
                       value: RecurrenceEndType.count,
                       groupValue: endType,
                       onChanged: (v) => setSt(() => endType = v!),
-                      activeColor: AppColors.primary,
+                      activeColor: primary,
                       title: endType == RecurrenceEndType.count
                           ? Row(
                               children: [
@@ -405,7 +398,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                       value: RecurrenceEndType.until,
                       groupValue: endType,
                       onChanged: (v) => setSt(() => endType = v!),
-                      activeColor: AppColors.primary,
+                      activeColor: primary,
                       title: endType == RecurrenceEndType.until
                           ? Row(
                               children: [
@@ -437,8 +430,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                                     child: Text(
                                       DateFormat('d MMM yyyy', 'fr_FR')
                                           .format(untilDate),
-                                      style: const TextStyle(
-                                          color: AppColors.primary, fontSize: 13),
+                                      style: TextStyle(
+                                          color: primary, fontSize: 13),
                                     ),
                                   ),
                                 ),
@@ -474,7 +467,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                           Navigator.pop(ctx);
                         },
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: primary,
                         ),
                         child: const Text('Confirmer'),
                       ),
@@ -569,12 +562,13 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
             ...presets.map((p) {
               final (minutes, label, icon) = p;
               final selected = _reminderMinutes == minutes;
+              final primary = Theme.of(ctx).colorScheme.primary;
               return ListTile(
                 leading: Icon(icon,
-                    color: selected ? AppColors.primary : AppColors.textSecondary),
+                    color: selected ? primary : AppColors.textSecondary),
                 title: Text(label),
                 trailing: selected
-                    ? const Icon(Icons.check, color: AppColors.primary)
+                    ? Icon(Icons.check, color: primary)
                     : null,
                 onTap: () {
                   setState(() => _reminderMinutes = minutes);
@@ -771,9 +765,30 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     );
   }
 
+  Future<void> _addCustomColor(String hex) async {
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+    final settings = ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    await ref.read(tabSettingsRepositoryProvider).updateSettings(
+      groupId,
+      settings.copyWith(customColors: [...settings.customColors, hex]),
+    );
+  }
+
+  Future<void> _deleteCustomColor(String hex) async {
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+    final settings = ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    await ref.read(tabSettingsRepositoryProvider).updateSettings(
+      groupId,
+      settings.withColorRemoved(hex),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(currentMemberProvider); // garde le provider actif pour ref.read() dans les méthodes async
+    final tabSettings = ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -843,34 +858,14 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w500)),
               const SizedBox(height: 10),
-              Row(
-                children: _colorPalette.map((hex) {
-                  final color = Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
-                  final isSelected = _selectedColor == hex;
-                  return GestureDetector(
-                    onTap: () => setState(() {
-                      _selectedColor = isSelected ? null : hex;
-                    }),
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      margin: const EdgeInsets.only(right: 10),
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: isSelected
-                            ? Border.all(color: AppColors.textPrimary, width: 2.5)
-                            : null,
-                        boxShadow: isSelected
-                            ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 6, offset: const Offset(0, 2))]
-                            : null,
-                      ),
-                      child: isSelected
-                          ? const Icon(Icons.check, color: Colors.white, size: 16)
-                          : null,
-                    ),
-                  );
-                }).toList(),
+              ColorPickerRow(
+                basePalette: AppColors.itemPalette,
+                selected: _selectedColor,
+                extraColors: tabSettings.customColors,
+                hiddenBaseColors: tabSettings.hiddenBaseColors,
+                onSelect: (hex) => setState(() => _selectedColor = hex),
+                onAddColor: _addCustomColor,
+                onDeleteColor: _deleteCustomColor,
               ),
               const SizedBox(height: 24),
               _dateTimeRow(

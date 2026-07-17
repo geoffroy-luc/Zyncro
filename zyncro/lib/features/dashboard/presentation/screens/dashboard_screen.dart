@@ -17,7 +17,35 @@ import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../chat/presentation/screens/media_gallery_screen.dart';
 import '../../../notes/presentation/providers/notes_provider.dart';
 import '../../../notes/presentation/screens/note_editor_screen.dart';
+import '../../../groups/presentation/providers/tab_settings_provider.dart';
+import '../../../../shared/models/tab_settings.dart';
 
+
+Color _darken(Color color) {
+  final hsl = HSLColor.fromColor(color);
+  return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
+}
+
+const _defaultTabColors = [
+  Color(0xFF9B59B6), // Home
+  Color(0xFF4F7CFF), // Calendrier
+  Color(0xFF2BB8A5), // Notes
+  Color(0xFFFFB86B), // Dépenses
+  Color(0xFFE85D75), // Chat
+];
+
+Color _colorForTab(int idx, TabSettings settings) {
+  final hex = switch (idx) {
+    0 => settings.homeThemeColor,
+    1 => settings.calendarThemeColor,
+    2 => settings.notesThemeColor,
+    3 => settings.expensesThemeColor,
+    4 => settings.chatThemeColor,
+    _ => null,
+  };
+  if (hex == null) return _defaultTabColors[idx];
+  return Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
+}
 
 bool _isToday(DateTime dt) {
   final now = DateTime.now();
@@ -79,9 +107,15 @@ class DashboardScreen extends ConsumerWidget {
     final allMedia = ref.watch(mediaMessagesProvider).asData?.value ?? [];
     final previewMedia = allMedia.take(6).toList();
 
+    final tabSettings = ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final homeColor = _colorForTab(0, tabSettings);
+    final calendarColor = _colorForTab(1, tabSettings);
+    final notesColor = _colorForTab(2, tabSettings);
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        top: true,
+        child: SingleChildScrollView(
         child: Column(
           children: [
             // ── Contenu ──────────────────────────────────────────────
@@ -94,9 +128,9 @@ class DashboardScreen extends ConsumerWidget {
                   _Card(
                     child: Column(
                       children: [
-                        const _CardHeader(
+                        _CardHeader(
                           icon: Icons.calendar_today,
-                          iconColor: AppColors.primary,
+                          iconColor: homeColor,
                           title: 'Prochains événements',
                         ),
                         Padding(
@@ -127,7 +161,7 @@ class DashboardScreen extends ConsumerWidget {
 
                   // Note épinglée
                   if (pinnedNote != null) ...[
-                    _PinnedNoteCard(note: pinnedNote),
+                    _PinnedNoteCard(note: pinnedNote, color: notesColor),
                     const SizedBox(height: 12),
                   ],
 
@@ -135,9 +169,9 @@ class DashboardScreen extends ConsumerWidget {
                   _Card(
                     child: Column(
                       children: [
-                        const _CardHeader(
+                        _CardHeader(
                           icon: Icons.trending_up,
-                          iconColor: AppColors.accent,
+                          iconColor: homeColor,
                           title: 'Résumé des dépenses',
                         ),
                         Padding(
@@ -194,9 +228,9 @@ class DashboardScreen extends ConsumerWidget {
                     _Card(
                       child: Column(
                         children: [
-                          const _CardHeader(
+                          _CardHeader(
                             icon: Icons.chat_bubble_outline,
-                            iconColor: AppColors.primary,
+                            iconColor: homeColor,
                             title: 'Activité récente',
                           ),
                           Padding(
@@ -236,11 +270,11 @@ class DashboardScreen extends ConsumerWidget {
                                   width: 32,
                                   height: 32,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFE85D75).withValues(alpha: 0.1),
+                                    color: homeColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Icon(Icons.photo_library_outlined,
-                                      size: 16, color: Color(0xFFE85D75)),
+                                  child: Icon(Icons.photo_library_outlined,
+                                      size: 16, color: homeColor),
                                 ),
                                 const SizedBox(width: 8),
                                 const Text(
@@ -294,10 +328,10 @@ class DashboardScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: _QuickActionButton(
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)],
+                            colors: [calendarColor, _darken(calendarColor)],
                           ),
                           icon: Icons.calendar_today,
                           label: 'Ajouter un événement',
@@ -310,10 +344,10 @@ class DashboardScreen extends ConsumerWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _QuickActionButton(
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [Color(0xFF2BB8A5), Color(0xFF1E9B8A)],
+                            colors: [notesColor, _darken(notesColor)],
                           ),
                           icon: Icons.sticky_note_2_outlined,
                           label: 'Nouvelle note',
@@ -331,6 +365,7 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
+      ), // SafeArea
     );
   }
 }
@@ -529,19 +564,20 @@ class _EventRow extends StatelessWidget {
 
 class _PinnedNoteCard extends StatelessWidget {
   final Note note;
-  const _PinnedNoteCard({required this.note});
+  final Color color;
+  const _PinnedNoteCard({required this.note, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0x0D2BB8A5), Color(0x1A2BB8A5)],
+          colors: [color.withValues(alpha: 0.05), color.withValues(alpha: 0.10)],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x332BB8A5)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
         boxShadow: const [
           BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
         ],
@@ -556,11 +592,10 @@ class _PinnedNoteCard extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: const Color(0x262BB8A5),
+                    color: color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.sticky_note_2,
-                      size: 16, color: Color(0xFF2BB8A5)),
+                  child: Icon(Icons.sticky_note_2, size: 16, color: color),
                 ),
                 const SizedBox(width: 8),
                 const Text(
@@ -576,7 +611,7 @@ class _PinnedNoteCard extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(height: 1, color: Color(0x332BB8A5)),
+          Divider(height: 1, color: color.withValues(alpha: 0.2)),
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -606,10 +641,7 @@ class _PinnedNoteCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'Modifié ${_timeAgo(note.updatedAt)}',
-                  style: const TextStyle(
-                    color: Color(0xFF2BB8A5),
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(color: color, fontSize: 11),
                 ),
               ],
             ),

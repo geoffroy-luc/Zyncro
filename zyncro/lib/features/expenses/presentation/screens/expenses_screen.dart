@@ -4,37 +4,47 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/expense.dart';
+import '../../../../shared/models/expense_category.dart';
 import '../../../../shared/models/group_member.dart';
+import '../../../../shared/widgets/color_picker_row.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../providers/expenses_provider.dart';
 import 'expense_form_screen.dart';
 import 'reimbursement_form_screen.dart';
 
-const _categoryColors = {
-  'Alimentation': Color(0xFF2BB8A5),
-  'Logement': Color(0xFF4F7CFF),
-  'Transport': Color(0xFF9B59B6),
-  'Loisirs': Color(0xFFE85D75),
-  'Services': Color(0xFFFFB86B),
-  'Autre': Color(0xFF6B7280),
+const _currencySymbols = {
+  'EUR': '€',
+  'USD': '\$',
+  'GBP': '£',
+  'CHF': 'CHF',
+  'JPY': '¥',
+  'CAD': 'CA\$',
+  'AUD': 'A\$',
 };
 
-Color _catColor(String? cat) => _categoryColors[cat] ?? const Color(0xFF6B7280);
+Color _catColor(List<ExpenseCategory> categories, String? cat) {
+  for (final c in categories) {
+    if (c.name == cat) return hexToColor(c.colorHex);
+  }
+  return const Color(0xFF6B7280);
+}
 
-String _formatAmount(double v) {
+String _formatAmount(double v, {String currency = 'EUR'}) {
+  final symbol = _currencySymbols[currency] ?? currency;
   final abs = v.abs();
   if (abs >= 1000000) {
     final m = v / 1000000;
-    return '${m.toStringAsFixed(m.truncateToDouble() == m ? 0 : 1).replaceAll('.', ',')}M €';
+    return '${m.toStringAsFixed(m.truncateToDouble() == m ? 0 : 1).replaceAll('.', ',')}M $symbol';
   }
   if (abs >= 1000) {
     final k = v / 1000;
-    return '${k.toStringAsFixed(k.truncateToDouble() == k ? 0 : 1).replaceAll('.', ',')}k €';
+    return '${k.toStringAsFixed(k.truncateToDouble() == k ? 0 : 1).replaceAll('.', ',')}k $symbol';
   }
   return NumberFormat.currency(
     locale: 'fr_FR',
-    symbol: '€',
+    symbol: symbol,
     decimalDigits: 2,
   ).format(v);
 }
@@ -94,6 +104,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   int _currentTab = 0;
+  String _search = '';
 
   @override
   void initState() {
@@ -114,7 +125,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   @override
   Widget build(BuildContext context) {
-    final expenses = ref.watch(expensesProvider).asData?.value ?? [];
+    final allExpenses = ref.watch(expensesProvider).asData?.value ?? [];
+    final expenses = _search.isEmpty
+        ? allExpenses
+        : allExpenses.where((e) {
+            final q = _search.toLowerCase();
+            return e.title.toLowerCase().contains(q) ||
+                (e.category?.toLowerCase().contains(q) ?? false) ||
+                e.paidByName.toLowerCase().contains(q);
+          }).toList();
     final balances = ref.watch(balancesProvider);
     final currentUid = ref.watch(authStateProvider).asData?.value?.uid;
     final members = ref.watch(expenseMembersProvider).asData?.value ?? [];
@@ -137,24 +156,26 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const ExpenseFormScreen()),
               ),
-              backgroundColor: const Color(0xFFFFB86B).withValues(alpha: 0.85),
+              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
               shape: const CircleBorder(
                 side: BorderSide(color: Colors.white24, width: 2),
               ),
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
-      body: Column(
+      body: SafeArea(
+        top: true,
+        child: Column(
         children: [
           // ── Tab bar ──────────────────────────────────────────────
           Container(
             color: Colors.white,
             child: TabBar(
               controller: _tabController,
-              indicatorColor: const Color(0xFFFFB86B),
+              indicatorColor: Theme.of(context).colorScheme.primary,
               indicatorWeight: 3,
               dividerColor: AppColors.border,
-              labelColor: const Color(0xFFFFB86B),
+              labelColor: Theme.of(context).colorScheme.primary,
               unselectedLabelColor: AppColors.textSecondary,
               labelStyle: const TextStyle(
                 fontWeight: FontWeight.w600,
@@ -170,6 +191,44 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               ],
             ),
           ),
+
+          // ── Search bar ──────────────────────────────────────────
+          if (_currentTab == 0)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 14),
+                      child: Icon(Icons.search,
+                          color: AppColors.textSecondary, size: 20),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        onChanged: (v) => setState(() => _search = v),
+                        decoration: const InputDecoration(
+                          hintText: 'Rechercher une dépense...',
+                          hintStyle: TextStyle(
+                              color: AppColors.textSecondary, fontSize: 14),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 12),
+                          filled: false,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           // ── Tabs ─────────────────────────────────────────────────
           Expanded(
@@ -195,6 +254,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -217,6 +277,7 @@ class _DepensesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currency = ref.watch(tabSettingsProvider).asData?.value.expensesCurrency ?? 'EUR';
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
       child: Column(
@@ -242,13 +303,13 @@ class _DepensesTab extends ConsumerWidget {
                   const SizedBox(height: 16),
                   _OverviewRow(
                     label: 'Total dépenses',
-                    value: _formatAmount(total),
+                    value: _formatAmount(total, currency: currency),
                     bold: true,
                   ),
                   const SizedBox(height: 12),
                   _OverviewRow(
                     label: 'Votre part',
-                    value: _formatAmount(myShare),
+                    value: _formatAmount(myShare, currency: currency),
                     bold: true,
                   ),
                 ],
@@ -279,10 +340,6 @@ class _DepensesTab extends ConsumerWidget {
                         MaterialPageRoute(
                           builder: (_) => const ExpenseFormScreen(),
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFB86B),
-                        foregroundColor: Colors.white,
                       ),
                       icon: const Icon(Icons.add),
                       label: const Text('Ajouter'),
@@ -316,7 +373,7 @@ class _DepensesTab extends ConsumerWidget {
 
 // ── Tab Équilibre ─────────────────────────────────────────────────────────────
 
-class _EquilibreTab extends StatelessWidget {
+class _EquilibreTab extends ConsumerWidget {
   final double myBalance;
   final Map<String, double> balances;
   final Map<String, String> nameByUid;
@@ -337,7 +394,8 @@ class _EquilibreTab extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currency = ref.watch(tabSettingsProvider).asData?.value.expensesCurrency ?? 'EUR';
     final settlements = _computeSettlements(balances);
 
     return SingleChildScrollView(
@@ -383,8 +441,8 @@ class _EquilibreTab extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   myBalance >= 0
-                      ? '+${_formatAmount(myBalance)}'
-                      : _formatAmount(myBalance),
+                      ? '+${_formatAmount(myBalance, currency: currency)}'
+                      : _formatAmount(myBalance, currency: currency),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 32,
@@ -476,7 +534,7 @@ class _EquilibreTab extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    _formatAmount(entry.value.abs()),
+                                    _formatAmount(entry.value.abs(), currency: currency),
                                     style: TextStyle(
                                       color: isPos
                                           ? const Color(0xFF2BB8A5)
@@ -547,7 +605,7 @@ class _EquilibreTab extends StatelessWidget {
                                           ),
                                           const TextSpan(text: ' doit '),
                                           TextSpan(
-                                            text: _formatAmount(s.amount),
+                                            text: _formatAmount(s.amount, currency: currency),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                               color: Color(0xFFFF6B6B),
@@ -710,9 +768,12 @@ class _ExpenseCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currency = ref.watch(tabSettingsProvider).asData?.value.expensesCurrency ?? 'EUR';
+    final categories = ref.watch(tabSettingsProvider).asData?.value.expensesCategories ??
+        defaultExpenseCategories;
     final color = expense.expenseType == ExpenseType.reimbursement
         ? const Color(0xFF27AE60)
-        : _catColor(expense.category);
+        : _catColor(categories, expense.category);
 
     final cardContent = Container(
       decoration: BoxDecoration(
@@ -814,7 +875,7 @@ class _ExpenseCard extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        _formatAmount(expense.amount),
+                        _formatAmount(expense.amount, currency: currency),
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w600,

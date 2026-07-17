@@ -3,10 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/models/event.dart';
+import '../../../../shared/models/group_member.dart';
+import '../../../../shared/models/tab_settings.dart';
+import '../../../groups/presentation/providers/groups_provider.dart';
+import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../providers/events_provider.dart';
 import 'event_form_screen.dart';
 
 const _defaultEventColor = Color(0xFF4F7CFF);
+
+Color _darken(Color color) {
+  final hsl = HSLColor.fromColor(color);
+  return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
+}
 
 Color _eventColor(Event e) {
   if (e.color == null) return _defaultEventColor;
@@ -30,9 +39,140 @@ class CalendarScreen extends ConsumerStatefulWidget {
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   _ViewMode _viewMode = _ViewMode.month;
+  String _search = '';
   DateTime _displayedMonth =
       DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? _selectedDay;
+
+  // Filtres locaux
+  List<String> _filterParticipantIds = [];
+  bool _filterRecurrenceOnly = false;
+
+  bool get _hasActiveFilters =>
+      _filterParticipantIds.isNotEmpty || _filterRecurrenceOnly;
+
+  Future<void> _showFilterSheet(
+      List<GroupMember> members, Color primaryColor) async {
+    final tempParticipants = List<String>.from(_filterParticipantIds);
+    final tempRecurrence = [_filterRecurrenceOnly];
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => Padding(
+          padding: EdgeInsets.fromLTRB(
+              24, 16, 24, MediaQuery.of(ctx).viewInsets.bottom + 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Filtres',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 17)),
+                  if (tempParticipants.isNotEmpty || tempRecurrence[0])
+                    TextButton(
+                      onPressed: () => setSheet(() {
+                        tempParticipants.clear();
+                        tempRecurrence[0] = false;
+                      }),
+                      child: const Text('Réinitialiser',
+                          style: TextStyle(color: AppColors.error)),
+                    ),
+                ],
+              ),
+              if (members.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text('Participants',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: members.map((m) {
+                    final sel = tempParticipants.contains(m.uid);
+                    return FilterChip(
+                      label: Text(m.displayName,
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: sel
+                                  ? Colors.white
+                                  : AppColors.textPrimary)),
+                      selected: sel,
+                      onSelected: (v) => setSheet(() {
+                        if (v) {
+                          tempParticipants.add(m.uid);
+                        } else {
+                          tempParticipants.remove(m.uid);
+                        }
+                      }),
+                      selectedColor: primaryColor,
+                      checkmarkColor: Colors.white,
+                      backgroundColor: AppColors.background,
+                      side: const BorderSide(color: AppColors.border),
+                      showCheckmark: false,
+                    );
+                  }).toList(),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Récurrents uniquement',
+                      style: TextStyle(fontSize: 15)),
+                  Switch(
+                    value: tempRecurrence[0],
+                    activeThumbColor: primaryColor,
+                    onChanged: (v) =>
+                        setSheet(() => tempRecurrence[0] = v),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                      backgroundColor: primaryColor),
+                  onPressed: () {
+                    setState(() {
+                      _filterParticipantIds =
+                          List<String>.from(tempParticipants);
+                      _filterRecurrenceOnly = tempRecurrence[0];
+                    });
+                    Navigator.pop(ctx);
+                  },
+                  child: const Text('Appliquer'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   void _prevMonth() => setState(() {
         _displayedMonth =
@@ -60,7 +200,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             e.startDate.month == _displayedMonth.month;
       }).toList();
 
-  List<Widget> _buildAgendaSections(List<Event> events) {
+  List<Widget> _buildAgendaSections(List<Event> events, Color primaryColor) {
     final Map<DateTime, List<Event>> grouped = {};
     for (final e in events) {
       final day =
@@ -91,8 +231,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 gradient: isToday
-                    ? const LinearGradient(
-                        colors: [Color(0xFF4F7CFF), Color(0xFF315FEA)])
+                    ? LinearGradient(
+                        colors: [primaryColor, _darken(primaryColor)])
                     : null,
                 color: isToday
                     ? null
@@ -126,10 +266,39 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return widgets;
   }
 
+  List<Event> _applyFilters(List<Event> events, String search) {
+    var result = events;
+    if (search.isNotEmpty) {
+      final q = search.toLowerCase();
+      result = result
+          .where((e) =>
+              e.title.toLowerCase().contains(q) ||
+              (e.location?.toLowerCase().contains(q) ?? false))
+          .toList();
+    }
+    if (_filterParticipantIds.isNotEmpty) {
+      result = result
+          .where((e) => e.participantIds
+              .any((id) => _filterParticipantIds.contains(id)))
+          .toList();
+    }
+    if (_filterRecurrenceOnly) {
+      result = result.where((e) => e.recurrence != null).toList();
+    }
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final tabSettings =
+        ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final displayMode = tabSettings.calendarDisplayMode;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final members = ref.watch(groupMembersProvider).asData?.value ?? [];
+
     final eventsAsync = ref.watch(expandedEventsProvider);
-    final allEvents = eventsAsync.asData?.value ?? [];
+    final rawEvents = eventsAsync.asData?.value ?? [];
+    final allEvents = _applyFilters(rawEvents, _search);
     final monthEvents = _eventsForMonth(allEvents);
     final today = DateTime.now();
 
@@ -152,11 +321,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             builder: (_) => EventFormScreen(initialDate: _selectedDay ?? today),
           ),
         ),
-        backgroundColor: const Color(0xFF4F7CFF).withValues(alpha: 0.85),
+        backgroundColor: primaryColor.withValues(alpha: 0.85),
         shape: const CircleBorder(side: BorderSide(color: Colors.white24, width: 2)),
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: CustomScrollView(
+      body: SafeArea(
+        top: true,
+        child: CustomScrollView(
         slivers: [
           // ── Header ──────────────────────────────────────────────────
           SliverToBoxAdapter(
@@ -205,7 +376,64 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  // Search bar
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F9FC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 14),
+                          child: Icon(Icons.search,
+                              color: AppColors.textSecondary, size: 20),
+                        ),
+                        Expanded(
+                          child: TextField(
+                            onChanged: (v) => setState(() => _search = v),
+                            decoration: const InputDecoration(
+                              hintText: 'Rechercher...',
+                              hintStyle: TextStyle(
+                                  color: AppColors.textSecondary, fontSize: 14),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding:
+                                  EdgeInsets.symmetric(vertical: 12),
+                              filled: false,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () =>
+                              _showFilterSheet(members, primaryColor),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            margin: const EdgeInsets.only(right: 6),
+                            decoration: BoxDecoration(
+                              color: _hasActiveFilters
+                                  ? primaryColor
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.tune_rounded,
+                              size: 18,
+                              color: _hasActiveFilters
+                                  ? Colors.white
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   // Toggle vue
                   Container(
                     padding: const EdgeInsets.all(4),
@@ -305,31 +533,31 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               child: Container(
                                 decoration: isSelected
                                     ? BoxDecoration(
-                                        color: AppColors.primary
+                                        color: primaryColor
                                             .withValues(alpha: 0.12),
                                         borderRadius:
                                             BorderRadius.circular(8),
                                         border: Border.all(
-                                            color: AppColors.primary,
+                                            color: primaryColor,
                                             width: 1.5),
                                       )
                                     : isToday
                                         ? BoxDecoration(
-                                            gradient: const LinearGradient(
+                                            gradient: LinearGradient(
                                               begin: Alignment.topLeft,
                                               end: Alignment.bottomRight,
                                               colors: [
-                                                Color(0xFF4F7CFF),
-                                                Color(0xFF315FEA)
+                                                primaryColor,
+                                                _darken(primaryColor),
                                               ],
                                             ),
                                             borderRadius:
                                                 BorderRadius.circular(8),
-                                            boxShadow: const [
+                                            boxShadow: [
                                               BoxShadow(
-                                                  color: Color(0x334F7CFF),
+                                                  color: primaryColor.withValues(alpha: 0.2),
                                                   blurRadius: 6,
-                                                  offset: Offset(0, 2))
+                                                  offset: const Offset(0, 2))
                                             ],
                                           )
                                         : null,
@@ -343,7 +571,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                         color: isToday
                                             ? Colors.white
                                             : isSelected
-                                                ? AppColors.primary
+                                                ? primaryColor
                                                 : AppColors.textPrimary,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
@@ -352,22 +580,37 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                     if (dayEvents.isNotEmpty)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 2),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: dayEvents.take(3).map((e) =>
-                                            Container(
-                                              width: 4,
-                                              height: 4,
-                                              margin: const EdgeInsets.symmetric(horizontal: 1),
-                                              decoration: BoxDecoration(
-                                                color: isToday
-                                                    ? Colors.white
-                                                    : _eventColor(e),
-                                                shape: BoxShape.circle,
+                                        child: displayMode == 'band'
+                                            ? Column(
+                                                children: dayEvents.take(2).map((e) =>
+                                                  Container(
+                                                    height: 3,
+                                                    margin: const EdgeInsets.only(bottom: 1),
+                                                    decoration: BoxDecoration(
+                                                      color: isToday
+                                                          ? Colors.white.withValues(alpha: 0.8)
+                                                          : _eventColor(e),
+                                                      borderRadius: BorderRadius.circular(2),
+                                                    ),
+                                                  ),
+                                                ).toList(),
+                                              )
+                                            : Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: dayEvents.take(3).map((e) =>
+                                                  Container(
+                                                    width: 4,
+                                                    height: 4,
+                                                    margin: const EdgeInsets.symmetric(horizontal: 1),
+                                                    decoration: BoxDecoration(
+                                                      color: isToday
+                                                          ? Colors.white
+                                                          : _eventColor(e),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                                ).toList(),
                                               ),
-                                            ),
-                                          ).toList(),
-                                        ),
                                       ),
                                   ],
                                 ),
@@ -419,6 +662,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                   TextStyle(color: AppColors.textSecondary)),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              foregroundColor: Colors.white,
+                            ),
                             onPressed: () => Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => EventFormScreen(
@@ -433,7 +680,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     ),
                   )
                 else if (_viewMode == _ViewMode.agenda)
-                  ..._buildAgendaSections(visibleEvents)
+                  ..._buildAgendaSections(visibleEvents, primaryColor)
                 else
                   ...visibleEvents.map((e) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -445,6 +692,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -480,8 +728,9 @@ class _ToggleButton extends StatelessWidget {
           child: Center(
             child: Text(label,
                 style: TextStyle(
-                  color:
-                      active ? AppColors.primary : AppColors.textSecondary,
+                  color: active
+                      ? Theme.of(context).colorScheme.primary
+                      : AppColors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 )),
