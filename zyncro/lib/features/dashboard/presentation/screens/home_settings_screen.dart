@@ -495,6 +495,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     final currentUser = ref.watch(authStateProvider).asData?.value;
     final settings =
         ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final primary = hexToColor(settings.homeThemeColor ?? '#9B59B6');
 
     if (group == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -548,7 +549,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                         width: 56,
                         height: 56,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: _loadingPhoto
@@ -651,17 +652,17 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.06),
+                                color: primary.withValues(alpha: 0.06),
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                                border: Border.all(color: primary.withValues(alpha: 0.2)),
                               ),
                               child: Text(
                                 group.inviteCode!,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 4,
-                                  color: AppColors.primary,
+                                  color: primary,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -677,7 +678,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                             },
                             icon: const Icon(Icons.copy),
                             style: IconButton.styleFrom(
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: primary,
                               foregroundColor: Colors.white,
                             ),
                           ),
@@ -738,7 +739,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           color: member.isOwner
-                              ? AppColors.primary
+                              ? primary
                               : AppColors.textSecondary,
                         ),
                       ),

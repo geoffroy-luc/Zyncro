@@ -271,6 +271,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSt) {
+          final primary = Theme.of(ctx).colorScheme.primary;
           final frequencies = [
             (RecurrenceFrequency.daily, 'Tous les jours'),
             (RecurrenceFrequency.weekly, 'Toutes les semaines'),
@@ -300,12 +301,12 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                     leading: Icon(
                       Icons.block_outlined,
                       color: selectedFreq == null
-                          ? AppColors.primary
+                          ? primary
                           : AppColors.textSecondary,
                     ),
                     title: const Text('Aucune'),
                     trailing: selectedFreq == null
-                        ? const Icon(Icons.check, color: AppColors.primary)
+                        ? Icon(Icons.check, color: primary)
                         : null,
                     onTap: () {
                       setSt(() => selectedFreq = null);
@@ -319,12 +320,12 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                       leading: Icon(
                         Icons.repeat,
                         color: isSelected
-                            ? AppColors.primary
+                            ? primary
                             : AppColors.textSecondary,
                       ),
                       title: Text(label),
                       trailing: isSelected
-                          ? const Icon(Icons.check, color: AppColors.primary)
+                          ? Icon(Icons.check, color: primary)
                           : null,
                       onTap: () => setSt(() => selectedFreq = freq),
                     );
@@ -350,14 +351,14 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                       groupValue: endType,
                       onChanged: (v) => setSt(() => endType = v!),
                       title: const Text('Toujours'),
-                      activeColor: AppColors.primary,
+                      activeColor: primary,
                     ),
                     // Nombre de fois
                     RadioListTile<RecurrenceEndType>(
                       value: RecurrenceEndType.count,
                       groupValue: endType,
                       onChanged: (v) => setSt(() => endType = v!),
-                      activeColor: AppColors.primary,
+                      activeColor: primary,
                       title: endType == RecurrenceEndType.count
                           ? Row(
                               children: [
@@ -397,7 +398,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                       value: RecurrenceEndType.until,
                       groupValue: endType,
                       onChanged: (v) => setSt(() => endType = v!),
-                      activeColor: AppColors.primary,
+                      activeColor: primary,
                       title: endType == RecurrenceEndType.until
                           ? Row(
                               children: [
@@ -429,8 +430,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                                     child: Text(
                                       DateFormat('d MMM yyyy', 'fr_FR')
                                           .format(untilDate),
-                                      style: const TextStyle(
-                                          color: AppColors.primary, fontSize: 13),
+                                      style: TextStyle(
+                                          color: primary, fontSize: 13),
                                     ),
                                   ),
                                 ),
@@ -466,7 +467,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                           Navigator.pop(ctx);
                         },
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: primary,
                         ),
                         child: const Text('Confirmer'),
                       ),
@@ -561,12 +562,13 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
             ...presets.map((p) {
               final (minutes, label, icon) = p;
               final selected = _reminderMinutes == minutes;
+              final primary = Theme.of(ctx).colorScheme.primary;
               return ListTile(
                 leading: Icon(icon,
-                    color: selected ? AppColors.primary : AppColors.textSecondary),
+                    color: selected ? primary : AppColors.textSecondary),
                 title: Text(label),
                 trailing: selected
-                    ? const Icon(Icons.check, color: AppColors.primary)
+                    ? Icon(Icons.check, color: primary)
                     : null,
                 onTap: () {
                   setState(() => _reminderMinutes = minutes);

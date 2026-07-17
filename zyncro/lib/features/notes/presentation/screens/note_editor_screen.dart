@@ -38,7 +38,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     _titleController = TextEditingController(text: widget.note?.title ?? '');
     _contentController = TextEditingController(text: widget.note?.content ?? '');
     _isPinned = widget.note?.isPinned ?? false;
-    _selectedColor = widget.note?.color ?? AppColors.itemPalette.first;
+    _selectedColor = widget.note?.color ??
+        ref.read(tabSettingsProvider).asData?.value.notesThemeColor ??
+        AppColors.itemPalette.first;
     _isChecklist = widget.note?.isChecklist ?? false;
     _checklist = List<ChecklistItem>.from(widget.note?.checklist ?? []);
     _syncChecklistControllers();

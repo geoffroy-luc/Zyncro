@@ -1160,7 +1160,7 @@ Future<void> _pickAndSendMedia() async {
                             duration: const Duration(milliseconds: 300),
                             decoration: BoxDecoration(
                               color: _highlightedMessageId == msg.id
-                                  ? const Color(0x22E85D75)
+                                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.13)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                             ),

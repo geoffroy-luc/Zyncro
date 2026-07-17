@@ -41,7 +41,11 @@ class _ExpensesSettingsScreenState
     TabSettings settings, {
     ExpenseCategory? existing,
   }) async {
-    final result = await showCategoryEditor(context, initial: existing);
+    final result = await showCategoryEditor(
+      context,
+      initial: existing,
+      accentColor: hexToColor(settings.expensesThemeColor ?? '#FFB86B'),
+    );
     if (result == null) return;
     final categories = [...settings.expensesCategories];
     if (existing != null) {
@@ -188,9 +192,9 @@ class _ExpensesSettingsScreenState
                 ),
               SettingsTile(
                 title: 'Ajouter une catégorie',
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.add_circle_outline,
-                  color: AppColors.primary,
+                  color: hexToColor(settings.expensesThemeColor ?? '#FFB86B'),
                   size: 20,
                 ),
                 showChevron: false,

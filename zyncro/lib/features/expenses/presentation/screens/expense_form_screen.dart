@@ -221,6 +221,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
       ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSt) {
+          final primary = Theme.of(ctx).colorScheme.primary;
           final frequencies = [
             (RecurrenceFrequency.daily, 'Tous les jours'),
             (RecurrenceFrequency.weekly, 'Toutes les semaines'),
@@ -242,10 +243,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   ),
                   ListTile(
                     leading: Icon(Icons.block_outlined,
-                        color: selectedFreq == null ? AppColors.primary : AppColors.textSecondary),
+                        color: selectedFreq == null ? primary : AppColors.textSecondary),
                     title: const Text('Aucune'),
                     trailing: selectedFreq == null
-                        ? const Icon(Icons.check, color: AppColors.primary) : null,
+                        ? Icon(Icons.check, color: primary) : null,
                     onTap: () => setSt(() => selectedFreq = null),
                   ),
                   ...frequencies.map((f) {
@@ -253,10 +254,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                     final isSelected = selectedFreq == freq;
                     return ListTile(
                       leading: Icon(Icons.repeat,
-                          color: isSelected ? AppColors.primary : AppColors.textSecondary),
+                          color: isSelected ? primary : AppColors.textSecondary),
                       title: Text(label),
                       trailing: isSelected
-                          ? const Icon(Icons.check, color: AppColors.primary) : null,
+                          ? Icon(Icons.check, color: primary) : null,
                       onTap: () => setSt(() => selectedFreq = freq),
                     );
                   }),
@@ -275,13 +276,13 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       groupValue: endType,
                       onChanged: (v) => setSt(() => endType = v!),
                       title: const Text('Toujours'),
-                      activeColor: AppColors.primary,
+                      activeColor: primary,
                     ),
                     RadioListTile<RecurrenceEndType>(
                       value: RecurrenceEndType.count,
                       groupValue: endType,
                       onChanged: (v) => setSt(() => endType = v!),
-                      activeColor: AppColors.primary,
+                      activeColor: primary,
                       title: endType == RecurrenceEndType.count
                           ? Row(children: [
                               const Text('Nombre de fois :'),
@@ -316,7 +317,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       value: RecurrenceEndType.until,
                       groupValue: endType,
                       onChanged: (v) => setSt(() => endType = v!),
-                      activeColor: AppColors.primary,
+                      activeColor: primary,
                       title: endType == RecurrenceEndType.until
                           ? Row(children: [
                               const Text('Jusqu\'au :'),
@@ -344,8 +345,8 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                                   ),
                                   child: Text(
                                     DateFormat('d MMM yyyy', 'fr_FR').format(untilDate),
-                                    style: const TextStyle(
-                                        color: AppColors.primary, fontSize: 13),
+                                    style: TextStyle(
+                                        color: primary, fontSize: 13),
                                   ),
                                 ),
                               ),
@@ -373,7 +374,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                           });
                           Navigator.pop(ctx);
                         },
-                        style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                        style: FilledButton.styleFrom(backgroundColor: primary),
                         child: const Text('Confirmer'),
                       ),
                     ),

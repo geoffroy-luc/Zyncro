@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/expense_categories.dart';
+import '../../core/theme/app_theme.dart';
 import '../models/expense_category.dart';
 import 'color_picker_row.dart';
 
 Future<ExpenseCategory?> showCategoryEditor(
   BuildContext context, {
   ExpenseCategory? initial,
+  Color? accentColor,
 }) {
   return showModalBottomSheet<ExpenseCategory>(
     context: context,
@@ -15,7 +17,12 @@ Future<ExpenseCategory?> showCategoryEditor(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => CategoryEditorSheet(initial: initial),
+    builder: (ctx) => accentColor == null
+        ? CategoryEditorSheet(initial: initial)
+        : Theme(
+            data: AppTheme.themed(accentColor),
+            child: CategoryEditorSheet(initial: initial),
+          ),
   );
 }
 

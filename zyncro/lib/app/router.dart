@@ -20,6 +20,7 @@ import '../features/groups/presentation/screens/group_settings_screen.dart';
 import '../features/notes/presentation/screens/notes_screen.dart';
 import '../features/notes/presentation/screens/notes_settings_screen.dart';
 import '../core/constants/app_colors.dart';
+import '../core/theme/app_theme.dart';
 import '../shared/models/tab_settings.dart';
 import '../features/chat/presentation/providers/messages_provider.dart';
 import '../features/chat/presentation/screens/media_gallery_screen.dart';
@@ -247,9 +248,7 @@ class _AppShell extends ConsumerWidget {
     final topBarHeight = topPad + 76.0;
 
     return Theme(
-      data: Theme.of(context).copyWith(
-        colorScheme: Theme.of(context).colorScheme.copyWith(primary: primaryColor),
-      ),
+      data: AppTheme.themed(primaryColor),
       child: Scaffold(
         backgroundColor: const Color(0xFFF7F9FC),
         body: Stack(
