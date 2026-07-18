@@ -81,10 +81,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/groups',
         builder: (_, __) => const GroupSelectionScreen(),
       ),
-      GoRoute(
-        path: '/profile',
-        builder: (_, __) => const ProfileScreen(),
-      ),
+      GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
       GoRoute(
         path: '/group-settings',
         builder: (_, __) => const GroupSettingsScreen(),
@@ -193,13 +190,7 @@ const _settingsRoutes = [
   '/settings/chat',
 ];
 
-const _tabTitles = [
-  'Accueil',
-  'Calendrier',
-  'Notes',
-  'Dépenses',
-  'Chat',
-];
+const _tabTitles = ['Accueil', 'Calendrier', 'Notes', 'Dépenses', 'Chat'];
 
 // ── App shell ────────────────────────────────────────────────────────────────
 
@@ -251,139 +242,152 @@ class _AppShell extends ConsumerWidget {
       data: AppTheme.themed(primaryColor),
       child: Scaffold(
         backgroundColor: const Color(0xFFF7F9FC),
-        body: Stack(
-          children: [
-            // Shell remplit toute la hauteur — son fond s'étend dans les coins du top bar
-            MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                padding: MediaQuery.of(context).padding.copyWith(
-                  top: topBarHeight,
-                ),
-              ),
-              child: shell,
-            ),
-            // Top bar overlay avec coins arrondis
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: EdgeInsets.fromLTRB(24, topPad + 16, 24, 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: gradientColors,
+        body: Builder(
+          builder: (bodyContext) {
+            // `bodyContext` (contrairement au `context` de _AppShell, situé
+            // au-dessus du Scaffold) est à l'intérieur du body du Scaffold :
+            // son MediaQuery a déjà viewInsets.bottom mis à 0 par
+            // resizeToAvoidBottomInset quand le clavier est ouvert. Utiliser
+            // MediaQuery.of(context) ici écraserait cet ajustement avec les
+            // valeurs brutes et empêcherait tout le contenu (dont le chat) de
+            // remonter au-dessus du clavier.
+            final bodyMediaQuery = MediaQuery.of(bodyContext);
+            return Stack(
+              children: [
+                // Shell remplit toute la hauteur — son fond s'étend dans les coins du top bar
+                MediaQuery(
+                  data: bodyMediaQuery.copyWith(
+                    padding: bodyMediaQuery.padding.copyWith(
+                      top: topBarHeight,
+                      bottom: 0,
+                    ),
                   ),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(28),
-                    bottomRight: Radius.circular(28),
-                  ),
+                  child: shell,
                 ),
-                child: Row(
-                  children: [
-                    // Retour vers Mes espaces
-                    GestureDetector(
-                      onTap: () async {
-                        await ref
-                            .read(selectedGroupIdProvider.notifier)
-                            .select(null);
-                        if (context.mounted) context.go('/groups');
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
+                // Top bar overlay avec coins arrondis
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(24, topPad + 16, 24, 20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: gradientColors,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(28),
+                        bottomRight: Radius.circular(28),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    // Emoji / photo du groupe
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: groupPhotoUrl != null
-                          ? ClipOval(
-                              child: Image.network(
-                                groupPhotoUrl,
-                                width: 40,
-                                height: 40,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : Center(
-                              child: Text(
-                                group?.emoji?.isNotEmpty == true
-                                    ? group!.emoji!
-                                    : (group?.name.isNotEmpty == true
-                                        ? group!.name[0].toUpperCase()
-                                        : ''),
-                                style: const TextStyle(fontSize: 20),
-                              ),
+                    child: Row(
+                      children: [
+                        // Retour vers Mes espaces
+                        GestureDetector(
+                          onTap: () async {
+                            await ref
+                                .read(selectedGroupIdProvider.notifier)
+                                .select(null);
+                            if (context.mounted) context.go('/groups');
+                          },
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
                             ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Nom + titre onglet
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            group?.name ?? '',
-                            style: const TextStyle(
+                            child: const Icon(
+                              Icons.arrow_back_ios_new_rounded,
                               color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
+                              size: 18,
                             ),
                           ),
-                          Text(
-                            tabTitle,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.85),
-                              fontSize: 13,
+                        ),
+                        const SizedBox(width: 12),
+                        // Emoji / photo du groupe
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              width: 2,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    // Paramètres (onglet-spécifiques)
-                    GestureDetector(
-                      onTap: () => context.push(_settingsRoutes[idx]),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
+                          child: groupPhotoUrl != null
+                              ? ClipOval(
+                                  child: Image.network(
+                                    groupPhotoUrl,
+                                    width: 40,
+                                    height: 40,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Center(
+                                  child: Text(
+                                    group?.emoji?.isNotEmpty == true
+                                        ? group!.emoji!
+                                        : (group?.name.isNotEmpty == true
+                                              ? group!.name[0].toUpperCase()
+                                              : ''),
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
                         ),
-                        child: const Icon(
-                          Icons.settings_outlined,
-                          color: Colors.white,
-                          size: 20,
+                        const SizedBox(width: 10),
+                        // Nom + titre onglet
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                group?.name ?? '',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                tabTitle,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                        // Paramètres (onglet-spécifiques)
+                        GestureDetector(
+                          onTap: () => context.push(_settingsRoutes[idx]),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.settings_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
         bottomNavigationBar: Container(
           decoration: const BoxDecoration(
