@@ -54,5 +54,3 @@ android/key.properties
 windows/
 linux/
 macos/
-
-pubspec.lock
