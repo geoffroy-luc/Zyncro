@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../../domain/repositories/i_messages_repository.dart';
+import '../../../../core/utils/firestore_stream_extensions.dart';
 import '../../../../shared/models/message.dart';
 
 class MessagesRepository implements IMessagesRepository {
@@ -26,10 +27,7 @@ class MessagesRepository implements IMessagesRepository {
               .map((doc) => Message.fromMap(doc.id, doc.data()))
               .toList(),
         )
-        .handleError(
-          (_) {},
-          test: (e) => e is FirebaseException && e.code == 'permission-denied',
-        );
+        .surfacePermissionDenied('watchMessages');
   }
 
   @override
@@ -60,10 +58,7 @@ class MessagesRepository implements IMessagesRepository {
           msgs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
           return msgs;
         })
-        .handleError(
-          (_) {},
-          test: (e) => e is FirebaseException && e.code == 'permission-denied',
-        );
+        .surfacePermissionDenied('watchMediaMessages');
   }
 
   @override

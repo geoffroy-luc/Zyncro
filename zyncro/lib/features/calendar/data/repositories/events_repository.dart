@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/repositories/i_events_repository.dart';
+import '../../../../core/utils/firestore_stream_extensions.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/recurrence_rule.dart';
 
@@ -18,10 +19,7 @@ class EventsRepository implements IEventsRepository {
           (snap) =>
               snap.docs.map((doc) => Event.fromMap(doc.id, doc.data())).toList(),
         )
-        .handleError(
-          (_) {},
-          test: (e) => e is FirebaseException && e.code == 'permission-denied',
-        );
+        .surfacePermissionDenied('watchEvents');
   }
 
   @override

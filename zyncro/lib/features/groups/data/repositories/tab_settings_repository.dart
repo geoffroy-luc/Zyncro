@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/utils/firestore_stream_extensions.dart';
 import '../../../../shared/models/tab_settings.dart';
 
 class TabSettingsRepository {
@@ -17,10 +18,7 @@ class TabSettingsRepository {
           if (!snap.exists || snap.data() == null) return TabSettings.defaults;
           return TabSettings.fromMap(snap.data()!);
         })
-        .handleError(
-          (_) {},
-          test: (e) => e is FirebaseException && e.code == 'permission-denied',
-        );
+        .surfacePermissionDenied('watchSettings');
   }
 
   Future<void> updateSettings(String groupId, TabSettings settings) async {

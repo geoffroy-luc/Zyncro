@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,7 +30,10 @@ class GroupSelectionScreen extends ConsumerWidget {
       ),
       body: groupsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Erreur: $e')),
+        error: (e, _) => _GroupsErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(userGroupsProvider),
+        ),
         data: (_) {
           final groups = ref.watch(orderedGroupsProvider);
           return _GroupList(
@@ -75,6 +79,62 @@ class GroupSelectionScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _JoinGroupSheet(ref: ref),
+    );
+  }
+}
+
+// ── Error view ───────────────────────────────────────────────────────────────
+
+class _GroupsErrorView extends StatelessWidget {
+  const _GroupsErrorView({required this.error, required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final isPermission = error is FirebaseException &&
+        (error as FirebaseException).code == 'permission-denied';
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isPermission ? Icons.lock_outline : Icons.cloud_off_outlined,
+              size: 56,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              isPermission
+                  ? 'Impossible d\'accéder à tes espaces'
+                  : 'Impossible de charger tes espaces',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isPermission
+                  ? 'Vérifie ta connexion, puis reconnecte-toi si le problème persiste.'
+                  : 'Vérifie ta connexion internet, puis réessaie.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Réessayer'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

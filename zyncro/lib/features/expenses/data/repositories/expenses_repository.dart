@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/repositories/i_expenses_repository.dart';
+import '../../../../core/utils/firestore_stream_extensions.dart';
 import '../../../../shared/models/expense.dart';
 import '../../../../shared/models/recurrence_rule.dart';
 
@@ -19,10 +20,7 @@ class ExpensesRepository implements IExpensesRepository {
               .map((doc) => Expense.fromMap(doc.id, doc.data()))
               .toList(),
         )
-        .handleError(
-          (_) {},
-          test: (e) => e is FirebaseException && e.code == 'permission-denied',
-        );
+        .surfacePermissionDenied('watchExpenses');
   }
 
   @override

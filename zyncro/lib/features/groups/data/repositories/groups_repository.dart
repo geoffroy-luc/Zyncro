@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/repositories/i_groups_repository.dart';
+import '../../../../core/utils/firestore_stream_extensions.dart';
 import '../../../../shared/models/group.dart';
 import '../../../../shared/models/group_member.dart';
 
@@ -16,10 +17,7 @@ class GroupsRepository implements IGroupsRepository {
           (snap) =>
               snap.docs.map((doc) => Group.fromMap(doc.id, doc.data())).toList(),
         )
-        .handleError(
-          (_) {},
-          test: (e) => e is FirebaseException && e.code == 'permission-denied',
-        );
+        .surfacePermissionDenied('watchUserGroups');
   }
 
   @override
@@ -134,10 +132,7 @@ class GroupsRepository implements IGroupsRepository {
           (snap) =>
               snap.docs.map((doc) => GroupMember.fromMap(doc.data())).toList(),
         )
-        .handleError(
-          (_) {},
-          test: (e) => e is FirebaseException && e.code == 'permission-denied',
-        );
+        .surfacePermissionDenied('watchMembers');
   }
 
   @override

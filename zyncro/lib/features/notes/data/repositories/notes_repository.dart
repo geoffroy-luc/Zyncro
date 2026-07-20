@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/repositories/i_notes_repository.dart';
+import '../../../../core/utils/firestore_stream_extensions.dart';
 import '../../../../shared/models/note.dart';
 
 class NotesRepository implements INotesRepository {
@@ -24,10 +25,7 @@ class NotesRepository implements INotesRepository {
           });
           return notes;
         })
-        .handleError(
-          (_) {},
-          test: (e) => e is FirebaseException && e.code == 'permission-denied',
-        );
+        .surfacePermissionDenied('watchNotes');
   }
 
   @override
