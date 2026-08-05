@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["ST97HKUKXU.com.zyncro.app"],
+        "components": [
+          {
+            "/": "/i/*",
+            "comment": "Liens d'invitation de groupe Zyncro"
+          }
+        ]
+      }
+    ]
+  }
+}

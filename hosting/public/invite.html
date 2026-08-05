@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Rejoindre un groupe sur Zyncro</title>
+  <meta name="description" content="Tu as été invité·e à rejoindre un groupe sur Zyncro." />
+  <!-- Aperçu lors du partage (Open Graph) -->
+  <meta property="og:title" content="Rejoins-moi sur Zyncro" />
+  <meta property="og:description" content="Ouvre le lien pour rejoindre le groupe dans l'application Zyncro." />
+  <meta property="og:type" content="website" />
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --primary: #4f7cff;
+      --primary-dark: #315fea;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1420;
+        --card: #171d2b;
+        --text: #f3f4f6;
+        --muted: #9aa4b2;
+        --border: #273043;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      max-width: 420px;
+      width: 100%;
+      padding: 40px 28px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.10);
+    }
+    .badge {
+      width: 88px; height: 88px;
+      margin: 0 auto 20px;
+      border-radius: 26px;
+      background: linear-gradient(160deg, var(--primary), var(--primary-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 44px; color: #fff;
+      box-shadow: 0 10px 30px rgba(79,124,255,0.35);
+    }
+    h1 { font-size: 22px; margin: 0 0 8px; font-weight: 800; }
+    p.lead { color: var(--muted); font-size: 15px; margin: 0 0 24px; line-height: 1.5; }
+    .code-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+    .code {
+      font-size: 26px; font-weight: 800; letter-spacing: 6px;
+      color: var(--primary); margin-bottom: 28px;
+      font-variant-numeric: tabular-nums;
+    }
+    .btn {
+      display: block; width: 100%;
+      padding: 15px 18px; border-radius: 14px;
+      font-size: 16px; font-weight: 700;
+      border: none; cursor: pointer; text-decoration: none;
+      margin-bottom: 12px; transition: transform .05s ease, opacity .2s ease;
+    }
+    .btn:active { transform: scale(0.985); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-store {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .stores { margin-top: 8px; }
+    .foot { margin-top: 22px; font-size: 12px; color: var(--muted); }
+    .foot a { color: var(--primary); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="badge">👥</div>
+    <h1>Rejoins-moi sur Zyncro</h1>
+    <p class="lead">Tu as été invité·e à rejoindre un groupe. Ouvre l'application pour accepter l'invitation.</p>
+
+    <div class="code-label">Code d'invitation</div>
+    <div class="code" id="code">······</div>
+
+    <button class="btn btn-primary" id="openApp">Ouvrir dans l'application</button>
+
+    <div class="stores">
+      <a class="btn btn-store" id="playStore" href="#" rel="noopener"> Télécharger sur Google Play</a>
+      <a class="btn btn-store" id="appStore" href="#" rel="noopener"> Télécharger sur l'App Store</a>
+    </div>
+
+    <p class="foot">Déjà l'application&nbsp;? Ouvre-la et saisis le code ci-dessus dans «&nbsp;Rejoindre un espace&nbsp;».</p>
+  </main>
+
+  <script>
+    // ⚙️ À COMPLÉTER : URL de la fiche App Store (id numérique Apple).
+    //    Ex. https://apps.apple.com/app/zyncro/id0000000000
+    var APP_STORE_URL = "https://apps.apple.com/app/id0000000000";
+    var PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.zyncro.app";
+
+    // Récupère le code depuis le chemin /i/CODE
+    var parts = window.location.pathname.split("/").filter(Boolean);
+    var code = (parts.length >= 2 && parts[0] === "i") ? parts[1].toUpperCase() : "";
+    if (code) document.getElementById("code").textContent = code;
+
+    var ua = navigator.userAgent || "";
+    var isIOS = /iPhone|iPad|iPod/i.test(ua);
+    var isAndroid = /Android/i.test(ua);
+
+    document.getElementById("playStore").href = PLAY_STORE_URL;
+    document.getElementById("appStore").href = APP_STORE_URL;
+
+    // Met en avant le store correspondant à la plateforme.
+    if (isIOS) document.getElementById("playStore").style.display = "none";
+    if (isAndroid) document.getElementById("appStore").style.display = "none";
+
+    var storeUrl = isIOS ? APP_STORE_URL : PLAY_STORE_URL;
+
+    document.getElementById("openApp").addEventListener("click", function () {
+      if (!code) { window.location.href = storeUrl; return; }
+
+      if (isAndroid) {
+        // URL "intent" Android : ouvre l'app installée (package com.zyncro.app),
+        // sinon bascule automatiquement sur browser_fallback_url (Play Store).
+        window.location.href =
+          "intent://i/" + code +
+          "#Intent;scheme=zyncro;package=com.zyncro.app;" +
+          "S.browser_fallback_url=" + encodeURIComponent(PLAY_STORE_URL) + ";end";
+        return;
+      }
+
+      // iOS / autres : schéma personnalisé + repli vers le store si rien ne s'ouvre.
+      var start = Date.now();
+      window.location.href = "zyncro://i/" + code;
+      setTimeout(function () {
+        if (Date.now() - start < 2000 && !document.hidden) {
+          window.location.href = storeUrl;
+        }
+      }, 1400);
+    });
+  </script>
+</body>
+</html>

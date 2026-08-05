@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+        Déclare Zyncro comme cible de "partage direct".
+        Les raccourcis dynamiques (un par groupe actif) sont publiés à l'exécution
+        depuis MainActivity, avec la catégorie ci-dessous.
+    -->
+    <share-target android:targetClass="com.zyncro.app.MainActivity">
+        <data android:mimeType="image/*"/>
+        <data android:mimeType="video/*"/>
+        <data android:mimeType="text/*"/>
+        <category android:name="com.zyncro.app.category.SHARE_TARGET"/>
+    </share-target>
+</shortcuts>

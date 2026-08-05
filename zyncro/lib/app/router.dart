@@ -15,8 +15,10 @@ import '../features/expenses/presentation/screens/expenses_screen.dart';
 import '../features/expenses/presentation/screens/expenses_settings_screen.dart';
 import '../features/groups/presentation/providers/groups_provider.dart';
 import '../features/groups/presentation/providers/tab_settings_provider.dart';
+import '../features/groups/presentation/providers/invite_link_provider.dart';
 import '../features/groups/presentation/screens/group_selection_screen.dart';
 import '../features/groups/presentation/screens/group_settings_screen.dart';
+import '../features/groups/presentation/screens/join_by_link_screen.dart';
 import '../features/notes/presentation/screens/notes_screen.dart';
 import '../features/notes/presentation/screens/notes_settings_screen.dart';
 import '../core/constants/app_colors.dart';
@@ -24,6 +26,7 @@ import '../core/theme/app_theme.dart';
 import '../shared/models/tab_settings.dart';
 import '../features/chat/presentation/providers/messages_provider.dart';
 import '../features/chat/presentation/screens/media_gallery_screen.dart';
+import '../features/chat/presentation/screens/share_to_group_screen.dart';
 
 final rootNavigatorKeyProvider = Provider<GlobalKey<NavigatorState>>(
   (ref) => GlobalKey<NavigatorState>(),
@@ -57,6 +60,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (path == '/login' || path == '/register') {
+        // Un lien d'invitation ouvert hors connexion est rejoué après login.
+        final pendingInvite = ref.read(inviteLinkProvider);
+        if (pendingInvite != null) return '/i/$pendingInvite';
         return '/groups';
       }
 
@@ -87,8 +93,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const GroupSettingsScreen(),
       ),
       GoRoute(
+        path: '/i/:code',
+        builder: (_, state) =>
+            JoinByLinkScreen(code: state.pathParameters['code']!),
+      ),
+      GoRoute(
         path: '/media-gallery',
         builder: (_, __) => const MediaGalleryScreen(),
+      ),
+      GoRoute(
+        path: '/share',
+        builder: (_, __) => const ShareToGroupScreen(),
       ),
       GoRoute(
         path: '/settings/home',

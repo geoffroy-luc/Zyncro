@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/invite_share.dart';
 import '../../../../shared/models/group_member.dart';
 import '../../../../shared/models/tab_settings.dart';
 import '../../../../shared/widgets/color_picker_row.dart';
@@ -336,6 +337,30 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     }
   }
 
+  Future<void> _confirmRegenerate(String groupId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Régénérer le lien ?'),
+        content: const Text(
+          'Un nouveau code sera créé. Les liens et codes déjà partagés '
+          'cesseront de fonctionner.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: const Text('Régénérer'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await _generateCode(groupId);
+  }
+
   Future<void> _generateCode(String groupId) async {
     setState(() => _generating = true);
     try {
@@ -629,13 +654,17 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Partage ce code pour inviter quelqu\'un dans ce groupe.',
+                      'Partage le lien ou le code pour inviter quelqu\'un dans ce groupe.',
                       style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: 12),
                     if (group.inviteCode == null)
                       ElevatedButton.icon(
                         onPressed: _generating ? null : () => _generateCode(group.id),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primary,
+                          foregroundColor: Colors.white,
+                        ),
                         icon: _generating
                             ? const SizedBox(
                                 width: 16,
@@ -645,7 +674,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                             : const Icon(Icons.vpn_key_outlined, size: 18),
                         label: const Text('Générer un code'),
                       )
-                    else
+                    else ...[
                       Row(
                         children: [
                           Expanded(
@@ -684,6 +713,43 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => shareInviteLink(
+                            code: group.inviteCode!,
+                            groupName: group.name,
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primary,
+                            foregroundColor: Colors.white,
+                          ),
+                          icon: const Icon(Icons.ios_share, size: 18),
+                          label: const Text('Partager le lien d\'invitation'),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton.icon(
+                          onPressed: _generating
+                              ? null
+                              : () => _confirmRegenerate(group.id),
+                          icon: _generating
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.refresh, size: 18),
+                          label: const Text('Régénérer le lien'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: primary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/invite_share.dart';
 import '../../../../shared/models/group_member.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -168,6 +169,30 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
     }
   }
 
+  Future<void> _confirmRegenerate(String groupId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Régénérer le lien ?'),
+        content: const Text(
+          'Un nouveau code sera créé. Les liens et codes déjà partagés '
+          'cesseront de fonctionner.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: const Text('Régénérer'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await _generateCode(groupId);
+  }
+
   Future<void> _generateCode(String groupId) async {
     setState(() => _generating = true);
     try {
@@ -280,7 +305,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Partage ce code pour inviter quelqu\'un dans ce groupe.',
+                      'Partage le lien ou le code pour inviter quelqu\'un dans ce groupe.',
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.textSecondary,
@@ -304,7 +329,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                             : const Icon(Icons.vpn_key_outlined, size: 18),
                         label: const Text('Générer un code'),
                       ),
-                    ] else
+                    ] else ...[
                       Row(
                         children: [
                           Expanded(
@@ -352,6 +377,41 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => shareInviteLink(
+                            code: group.inviteCode!,
+                            groupName: group.name,
+                          ),
+                          icon: const Icon(Icons.ios_share, size: 18),
+                          label: const Text('Partager le lien d\'invitation'),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton.icon(
+                          onPressed: _generating
+                              ? null
+                              : () => _confirmRegenerate(group.id),
+                          icon: _generating
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.refresh, size: 18),
+                          label: const Text('Régénérer le lien'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
