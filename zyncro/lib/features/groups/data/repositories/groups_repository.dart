@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../../domain/repositories/i_groups_repository.dart';
 import '../../../../core/utils/firestore_stream_extensions.dart';
 import '../../../../shared/models/group.dart';
@@ -58,7 +59,11 @@ class GroupsRepository implements IGroupsRepository {
     );
     batch.set(
       _db.collection('invite_codes').doc(code),
-      {'groupId': groupRef.id},
+      {
+        'groupId': groupRef.id,
+        'groupName': name,
+        'groupEmoji': emoji,
+      },
     );
     await batch.commit();
 
@@ -211,15 +216,58 @@ class GroupsRepository implements IGroupsRepository {
 
   @override
   Future<String> generateInviteCode(String groupId) async {
+    final groupDoc = await _db.collection('groups').doc(groupId).get();
+    final groupData = groupDoc.data();
+    final oldCode = groupData?['inviteCode'] as String?;
     final code = Group.generateInviteCode();
     final batch = _db.batch();
+    // Régénération : l'ancien code est supprimé pour invalider les liens déjà
+    // partagés (un seul code actif par groupe).
+    if (oldCode != null && oldCode != code) {
+      batch.delete(_db.collection('invite_codes').doc(oldCode));
+    }
     batch.update(_db.collection('groups').doc(groupId), {'inviteCode': code});
     batch.set(
       _db.collection('invite_codes').doc(code),
-      {'groupId': groupId},
+      {
+        'groupId': groupId,
+        'groupName': groupData?['name'],
+        'groupEmoji': groupData?['emoji'],
+      },
     );
     await batch.commit();
     return code;
+  }
+
+  @override
+  Future<InvitePreview?> resolveInviteCode(String code) async {
+    final codeDoc = await _db
+        .collection('invite_codes')
+        .doc(code.toUpperCase().trim())
+        .get();
+    if (!codeDoc.exists) return null;
+    final data = codeDoc.data()!;
+    final groupId = data['groupId'] as String;
+
+    // La photo du groupe est lue en direct depuis Storage (chemin déterministe
+    // `group_photos/<groupId>.jpg`, lisible par tout utilisateur connecté) :
+    // toujours à jour, et accessible avant l'adhésion — contrairement au
+    // document `groups`, réservé aux membres. Absente → on retombe sur l'emoji.
+    String? photoUrl;
+    try {
+      photoUrl = await FirebaseStorage.instance
+          .ref('group_photos/$groupId.jpg')
+          .getDownloadURL();
+    } catch (_) {
+      photoUrl = null;
+    }
+
+    return InvitePreview(
+      groupId: groupId,
+      groupName: data['groupName'] as String?,
+      groupEmoji: data['groupEmoji'] as String?,
+      groupPhotoUrl: photoUrl,
+    );
   }
 
   @override

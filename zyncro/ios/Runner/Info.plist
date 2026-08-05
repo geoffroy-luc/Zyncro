@@ -65,7 +65,21 @@
 				<string>com.googleusercontent.apps.1010364828673-hf0fivaoor45ssecejupc9flmm30gre2</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.zyncro.app.invite</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>zyncro</string>
+			</array>
+		</dict>
 	</array>
+	<!-- Les liens sont traités par le package app_links (pas le deep-linking
+	     natif de Flutter) pour rester cohérent avec Android. -->
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

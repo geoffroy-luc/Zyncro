@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.zyncro.app",
+      "sha256_cert_fingerprints": [
+        "0D:82:A0:C7:67:9C:EC:BA:AA:93:42:F2:F4:42:E6:CE:41:3D:92:3E:C9:D1:1E:E4:66:BC:69:F1:D1:72:E3:42",
+        "1C:CB:B3:D5:14:4A:4A:BC:08:E4:7B:52:7E:DA:29:6B:91:71:49:BF:3C:52:F3:BB:92:82:AE:05:D7:F3:5C:75"
+      ]
+    }
+  }
+]

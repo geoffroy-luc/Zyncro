@@ -68,4 +68,6 @@ flutter {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("com.google.android.play:feature-delivery:2.1.0")
+    // Raccourcis de partage direct : ShortcutManagerCompat + IconCompat
+    implementation("androidx.core:core-ktx:1.13.1")
 }

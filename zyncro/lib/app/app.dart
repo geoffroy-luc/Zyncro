@@ -6,7 +6,9 @@ import '../core/services/update_service.dart';
 import '../core/theme/app_theme.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/chat/presentation/providers/messages_provider.dart';
+import '../features/chat/presentation/providers/share_provider.dart';
 import '../features/groups/presentation/providers/groups_provider.dart';
+import '../features/groups/presentation/providers/invite_link_provider.dart';
 import 'router.dart';
 
 class ZyncroApp extends ConsumerStatefulWidget {
@@ -86,6 +88,13 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
+    // Garde vivants : réception des partages entrants + raccourcis de partage
+    // direct (groupes les plus actifs) synchronisés avec Android + réception
+    // des liens d'invitation entrants (App Links / Universal Links).
+    ref.watch(incomingShareProvider);
+    ref.watch(shareShortcutsControllerProvider);
+    ref.watch(inviteLinkProvider);
+
     // Initialize FCM when the user is authenticated
     ref.listen(authStateProvider, (_, next) {
       final user = next.asData?.value;
@@ -94,10 +103,14 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
       }
     });
 
-    // Dismiss OS notifications when a group is opened
+    // Dismiss OS notifications when a group is opened + note l'activité du groupe
     ref.listen(selectedGroupIdProvider, (_, next) {
-      if (next.asData?.value != null) {
+      final groupId = next.asData?.value;
+      if (groupId != null) {
         NotificationService.dismissAllNotifications();
+        ref
+            .read(shareShortcutsControllerProvider.notifier)
+            .recordInteraction(groupId);
       }
     });
 
