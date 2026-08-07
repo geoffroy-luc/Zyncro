@@ -44,7 +44,7 @@ jobs:
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /home/runner/work/keystore/zyncro-release.jks
 
       - name: Build Android App Bundle
-        run: flutter build appbundle --release --build-number=$(( ${{ github.run_number }} + 100 ))
+        run: flutter build appbundle --release --build-number=$(( ${{ github.run_number }} + 300 ))
         working-directory: zyncro
 
       - name: Upload to Google Play
