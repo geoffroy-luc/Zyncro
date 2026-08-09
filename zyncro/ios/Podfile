@@ -41,6 +41,10 @@ post_install do |installer|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
       config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+      # Certains pods (ex. GTMAppAuth) déclarent un deployment target iOS 10.0,
+      # sous le minimum supporté (12.0) par les Xcode récents -> ARCHIVE FAILED.
+      # On aligne tous les pods sur la plateforme de l'app.
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
     end
   end
 end
