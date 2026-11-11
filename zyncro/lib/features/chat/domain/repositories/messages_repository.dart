@@ -121,10 +121,19 @@ abstract interface class MessagesRepository {
     required DateTime messageTimestamp,
   });
 
-  /// Stream du nombre de messages non lus pour l'utilisateur dans un groupe.
-  Stream<int> watchUnreadCount({
+  /// Date du dernier message lu par l'utilisateur dans ce groupe (`null` si
+  /// jamais lu).
+  Stream<DateTime?> watchLastReadAt({
     required String groupId,
     required String userId,
+  });
+
+  /// Nombre de messages postérieurs à [since].
+  /// ⚠️ Requête non bornée et messages de l'utilisateur comptés (BUGS_FOUND
+  /// C16) — bornée à l'étape 10 (performance).
+  Stream<int> watchCountSince({
+    required String groupId,
+    required DateTime since,
   });
 
   /// Marque le groupe comme lu à l'instant courant (ouverture du groupe).

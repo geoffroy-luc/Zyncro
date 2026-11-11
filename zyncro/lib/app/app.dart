@@ -1,10 +1,14 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zyncro/app/notification_banner.dart';
 import 'package:zyncro/app/router.dart';
-import 'package:zyncro/core/services/notification_service.dart';
-import 'package:zyncro/core/services/update_service.dart';
+import 'package:zyncro/core/app_update/app_update_service.dart';
+import 'package:zyncro/core/logging/app_logger.dart';
+import 'package:zyncro/core/notifications/local_notifications.dart';
+import 'package:zyncro/core/notifications/notification_providers.dart';
 import 'package:zyncro/core/theme/app_theme.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
@@ -24,13 +28,14 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
   @override
   void initState() {
     super.initState();
+    ref.read(pushNotificationServiceProvider).onTap = _onNotificationTap;
     WidgetsBinding.instance.addObserver(this);
     // Run after the first frame so the GoRouter navigator is ready.
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkUpdate());
   }
 
   Future<void> _checkUpdate() async {
-    final info = await UpdateService.check();
+    final info = await ref.read(appUpdateServiceProvider).check();
     if (info == null || !mounted) return;
 
     // Use GoRouter's navigator key — it always has a valid context.
@@ -62,7 +67,8 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
                   child: const Text('Plus tard'),
                 ),
               TextButton(
-                onPressed: () => UpdateService.openStore(info.storeUrl),
+                onPressed: () =>
+                    ref.read(appUpdateServiceProvider).openStore(info.storeUrl),
                 child: const Text('Mettre à jour'),
               ),
             ],
@@ -70,6 +76,28 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
         ),
       ),
     );
+  }
+
+  /// Ouverture d'une notification : sélectionne le groupe puis navigue vers
+  /// l'onglet visé.
+  Future<void> _onNotificationTap(String groupId, String? screen) async {
+    final route = switch (screen) {
+      'chat' => '/chat',
+      'expenses' => '/expenses',
+      'notes' => '/notes',
+      'calendar' => '/calendar',
+      _ => '/home',
+    };
+    await ref.read(selectedGroupIdProvider.notifier).select(groupId);
+
+    // Double post-frame : le 1er frame laisse GoRouter traiter le refresh
+    // déclenché par selectedGroupIdProvider, le 2e effectue la navigation.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        AppLogger.info('Notif', 'navigating → $route');
+        ref.read(routerProvider).go(route);
+      });
+    });
   }
 
   @override
@@ -83,7 +111,7 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     final inForeground = state == AppLifecycleState.resumed;
     ref.read(appInForegroundProvider.notifier).setForeground(inForeground);
     if (inForeground) {
-      unawaited(NotificationService.dismissAllNotifications());
+      unawaited(LocalNotifications.dismissAll());
     }
   }
 
@@ -102,7 +130,9 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     ref.listen(authStateProvider, (_, next) {
       final user = next.asData?.value;
       if (user != null) {
-        unawaited(NotificationService.initialize(user.uid, ref));
+        unawaited(
+          ref.read(pushNotificationServiceProvider).initialize(user.uid),
+        );
       }
     });
 
@@ -110,7 +140,7 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     ref.listen(selectedGroupIdProvider, (_, next) {
       final groupId = next.asData?.value;
       if (groupId != null) {
-        unawaited(NotificationService.dismissAllNotifications());
+        unawaited(LocalNotifications.dismissAll());
         unawaited(
           ref
               .read(shareShortcutsControllerProvider.notifier)

@@ -1,14 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:zyncro/core/services/notification_service.dart';
+import 'package:zyncro/core/notifications/push_notification_service.dart';
 import 'package:zyncro/features/auth/domain/entities/app_user.dart';
 import 'package:zyncro/features/auth/domain/repositories/auth_repository.dart';
 
 class FirebaseAuthRepository implements AuthRepository {
-  FirebaseAuthRepository(this._auth, {GoogleSignIn? googleSignIn})
+  FirebaseAuthRepository(this._auth, this._push, {GoogleSignIn? googleSignIn})
     : _googleSignIn = googleSignIn ?? GoogleSignIn();
 
   final FirebaseAuth _auth;
+  final PushNotificationService _push;
   final GoogleSignIn _googleSignIn;
 
   @override
@@ -79,7 +80,7 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    await NotificationService.removeToken();
+    await _push.removeToken();
     await _googleSignIn.signOut();
     await _auth.signOut();
   }
@@ -96,7 +97,7 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> deleteAccount() async {
-    await NotificationService.removeToken();
+    await _push.removeToken();
     await _googleSignIn.signOut();
     await _auth.currentUser?.delete();
   }

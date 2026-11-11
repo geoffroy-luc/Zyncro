@@ -64,6 +64,13 @@ abstract interface class GroupsRepository {
     required String name,
     String? description,
   });
+
+  /// Emoji du groupe (« 🏠 » par défaut côté appelant).
+  Future<void> updateGroupEmoji(String groupId, String emoji);
+
+  /// URL de la photo du groupe (`null` pour la retirer).
+  Future<void> updateGroupPhotoUrl(String groupId, String? photoUrl);
+
   Future<void> updateMemberDisplayName(
     String groupId,
     String userId,

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:zyncro/core/firebase/firestore_paths.dart';
 import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
 import 'package:zyncro/features/groups/data/mappers/group_mapper.dart';
 import 'package:zyncro/features/groups/data/mappers/group_member_mapper.dart';
@@ -273,6 +274,18 @@ class FirestoreGroupsRepository implements GroupsRepository {
       groupPhotoUrl: photoUrl,
     );
   }
+
+  @override
+  Future<void> updateGroupEmoji(String groupId, String emoji) => _db
+      .collection(FirestoreCollections.groups)
+      .doc(groupId)
+      .update({GroupFields.emoji: emoji});
+
+  @override
+  Future<void> updateGroupPhotoUrl(String groupId, String? photoUrl) => _db
+      .collection(FirestoreCollections.groups)
+      .doc(groupId)
+      .update({GroupFields.photoUrl: photoUrl});
 
   @override
   Future<void> updateMemberDisplayName(

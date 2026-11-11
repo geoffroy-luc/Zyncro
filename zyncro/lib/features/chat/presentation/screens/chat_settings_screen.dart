@@ -1,11 +1,10 @@
-import 'dart:io';
-
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/firebase/firestore_paths.dart';
+import 'package:zyncro/core/media/media_providers.dart';
+import 'package:zyncro/core/media/media_source.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
@@ -34,7 +33,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
 
-    final source = await showModalBottomSheet<ImageSource>(
+    final source = await showModalBottomSheet<MediaSource>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -56,12 +55,12 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
               title: const Text('Prendre une photo'),
-              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              onTap: () => Navigator.pop(ctx, MediaSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
               title: const Text('Choisir depuis la galerie'),
-              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              onTap: () => Navigator.pop(ctx, MediaSource.gallery),
             ),
             const SizedBox(height: 8),
           ],
@@ -72,26 +71,21 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
 
     setState(() => _loadingBg = true);
     try {
-      final picker = ImagePicker();
-      final file = await picker.pickImage(
-        source: source,
-        imageQuality: 80,
-        maxWidth: 1080,
-      );
-      if (file == null) return;
+      final path = await ref
+          .read(imagePickerServiceProvider)
+          .pickImage(source: source, imageQuality: 80, maxWidth: 1080);
+      if (path == null) return;
 
-      final ref = FirebaseStorage.instance.ref().child(
-        'chat_backgrounds/$groupId.jpg',
-      );
-      await ref.putFile(
-        File(file.path),
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-      final url = await ref.getDownloadURL();
+      final url = await ref
+          .read(fileStorageProvider)
+          .upload(
+            path,
+            StoragePaths.chatBackground(groupId),
+            contentType: 'image/jpeg',
+          );
 
       final settings =
-          this.ref.read(tabSettingsProvider).asData?.value ??
-          TabSettings.defaults;
+          ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
       await _update(
         settings,
         settings.copyWith(

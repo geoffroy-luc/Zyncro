@@ -41,25 +41,40 @@ void main() {
   });
 
   test('instances Firebase obtenues uniquement via core/firebase', () {
-    final pattern = RegExp(r'Firebase(Firestore|Storage|Auth)\.instance');
+    final pattern = RegExp(
+      r'Firebase(Firestore|Storage|Auth|Messaging)\.instance',
+    );
     const allowed = [
       'lib/core/firebase/firebase_providers.dart',
       'lib/core/firebase/firebase_emulators.dart',
     ];
-    // Dette résiduelle explicitement suivie (étapes 5 et 8 du plan).
-    const pending = [
-      'lib/core/services/notification_service.dart',
-      'lib/core/services/update_service.dart',
-      'lib/features/auth/presentation/screens/profile_screen.dart',
-      'lib/features/dashboard/presentation/screens/home_settings_screen.dart',
-      'lib/features/chat/presentation/screens/chat_settings_screen.dart',
-    ];
     final violations = <String>[
       for (final f in _dartFiles(''))
-        if (!allowed.contains(f.path) &&
-            !pending.contains(f.path) &&
-            pattern.hasMatch(f.readAsStringSync()))
+        if (!allowed.contains(f.path) && pattern.hasMatch(f.readAsStringSync()))
           f.path,
+    ];
+    expect(violations, isEmpty);
+  });
+
+  test('presentation/ n\'importe ni Firestore ni Storage', () {
+    final violations = <String>[
+      for (final f in _dartFiles('features'))
+        if (f.path.contains('/presentation/'))
+          for (final imp in _importsOf(f))
+            if (imp.contains('package:cloud_firestore/') ||
+                imp.contains('package:firebase_storage/'))
+              '${f.path} → $imp',
+    ];
+    expect(violations, isEmpty);
+  });
+
+  test('core/ ne dépend ni des features ni de app/', () {
+    final violations = <String>[
+      for (final f in _dartFiles('core'))
+        for (final imp in _importsOf(f))
+          if (imp.contains('package:zyncro/features/') ||
+              imp.contains('package:zyncro/app/'))
+            '${f.path} → $imp',
     ];
     expect(violations, isEmpty);
   });

@@ -1,11 +1,12 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/error/failure.dart';
+import 'package:zyncro/core/error/failure_mapper.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/groups/domain/entities/group.dart';
@@ -100,9 +101,7 @@ class _GroupsErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPermission =
-        error is FirebaseException &&
-        (error as FirebaseException).code == 'permission-denied';
+    final isPermission = FailureMapper.from(error) is PermissionDeniedFailure;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),

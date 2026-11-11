@@ -1,14 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/firebase/firestore_paths.dart';
+import 'package:zyncro/core/media/media_providers.dart';
+import 'package:zyncro/core/media/media_source.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/core/utils/invite_share.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
@@ -76,7 +75,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
               title: const Text('Choisir une photo'),
               onTap: () {
                 Navigator.pop(ctx);
-                unawaited(_pickGroupPhoto(ImageSource.gallery, settings));
+                unawaited(_pickGroupPhoto(MediaSource.gallery, settings));
               },
             ),
             ListTile(
@@ -84,7 +83,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
               title: const Text('Prendre une photo'),
               onTap: () {
                 Navigator.pop(ctx);
-                unawaited(_pickGroupPhoto(ImageSource.camera, settings));
+                unawaited(_pickGroupPhoto(MediaSource.camera, settings));
               },
             ),
             if (settings.homePhotoUrl != null)
@@ -141,37 +140,35 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     if (result == null) return;
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    await FirebaseFirestore.instance.collection('groups').doc(groupId).update({
-      'emoji': result.isEmpty ? '🏠' : result,
-    });
+    await ref
+        .read(groupsRepositoryProvider)
+        .updateGroupEmoji(groupId, result.isEmpty ? '🏠' : result);
   }
 
-  Future<void> _pickGroupPhoto(ImageSource source, TabSettings settings) async {
+  Future<void> _pickGroupPhoto(MediaSource source, TabSettings settings) async {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
     setState(() => _loadingPhoto = true);
     try {
-      final picker = ImagePicker();
-      final file = await picker.pickImage(
-        source: source,
-        imageQuality: 85,
-        maxWidth: 512,
-        maxHeight: 512,
-      );
-      if (file == null) return;
-      final storageRef = FirebaseStorage.instance.ref().child(
-        'group_photos/$groupId.jpg',
-      );
-      await storageRef.putFile(
-        File(file.path),
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-      final url = await storageRef.getDownloadURL();
+      final path = await ref
+          .read(imagePickerServiceProvider)
+          .pickImage(
+            source: source,
+            imageQuality: 85,
+            maxWidth: 512,
+            maxHeight: 512,
+          );
+      if (path == null) return;
+      final url = await ref
+          .read(fileStorageProvider)
+          .upload(
+            path,
+            StoragePaths.groupPhoto(groupId),
+            contentType: 'image/jpeg',
+          );
       // Sauvegarde sur le doc groupe (pour l'affichage partout) ET tabSettings
       await Future.wait([
-        FirebaseFirestore.instance.collection('groups').doc(groupId).update({
-          'photoUrl': url,
-        }),
+        ref.read(groupsRepositoryProvider).updateGroupPhotoUrl(groupId, url),
         _updateTabSettings(settings, settings.copyWith(homePhotoUrl: url)),
       ]);
     } on Exception catch (e) {
@@ -190,15 +187,12 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
     try {
-      await FirebaseStorage.instance
-          .ref()
-          .child('group_photos/$groupId.jpg')
-          .delete();
+      await ref
+          .read(fileStorageProvider)
+          .delete(StoragePaths.groupPhoto(groupId));
     } catch (_) {}
     await Future.wait([
-      FirebaseFirestore.instance.collection('groups').doc(groupId).update({
-        'photoUrl': null,
-      }),
+      ref.read(groupsRepositoryProvider).updateGroupPhotoUrl(groupId, null),
       _updateTabSettings(settings, settings.copyWith(clearHomePhotoUrl: true)),
     ]);
   }

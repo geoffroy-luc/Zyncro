@@ -3,10 +3,12 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:zyncro/core/firebase/firestore_paths.dart';
 import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
 import 'package:zyncro/features/chat/data/mappers/message_mapper.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';
 import 'package:zyncro/features/chat/domain/repositories/messages_repository.dart';
+import 'package:zyncro/features/groups/data/mappers/group_member_mapper.dart';
 
 class FirestoreMessagesRepository implements MessagesRepository {
   FirestoreMessagesRepository(this._db, this._storage);
@@ -404,25 +406,34 @@ class FirestoreMessagesRepository implements MessagesRepository {
   }
 
   @override
-  Stream<int> watchUnreadCount({
+  Stream<DateTime?> watchLastReadAt({
     required String groupId,
     required String userId,
   }) {
     return _db
-        .collection('groups')
+        .collection(FirestoreCollections.groups)
         .doc(groupId)
-        .collection('members')
+        .collection(FirestoreCollections.members)
         .doc(userId)
         .snapshots()
-        .asyncExpand((memberSnap) {
-          if (!memberSnap.exists) return Stream.value(0);
-          final ts = memberSnap.data()?['lastReadAt'] as Timestamp?;
-          if (ts == null) return Stream.value(0);
-          return _col(groupId)
-              .where('timestamp', isGreaterThan: ts)
-              .snapshots()
-              .map((snap) => snap.docs.length);
+        .map((snap) {
+          final ts = snap.data()?[GroupMemberFields.lastReadAt] as Timestamp?;
+          return ts?.toDate();
         });
+  }
+
+  @override
+  Stream<int> watchCountSince({
+    required String groupId,
+    required DateTime since,
+  }) {
+    return _col(groupId)
+        .where(
+          MessageFields.timestamp,
+          isGreaterThan: Timestamp.fromDate(since),
+        )
+        .snapshots()
+        .map((snap) => snap.docs.length);
   }
 
   @override

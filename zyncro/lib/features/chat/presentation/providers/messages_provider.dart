@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/core/firebase/firebase_providers.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
@@ -166,16 +165,8 @@ final _memberLastReadAtProvider = StreamProvider.family<DateTime?, String>((
   final userId = ref.watch(authStateProvider).asData?.value?.uid;
   if (userId == null) return Stream.value(null);
   return ref
-      .watch(firestoreProvider)
-      .collection('groups')
-      .doc(groupId)
-      .collection('members')
-      .doc(userId)
-      .snapshots()
-      .map((snap) {
-        final ts = snap.data()?['lastReadAt'] as Timestamp?;
-        return ts?.toDate();
-      });
+      .watch(messagesRepositoryProvider)
+      .watchLastReadAt(groupId: groupId, userId: userId);
 });
 
 /// Nombre de messages non lus pour l'utilisateur courant dans un groupe donné.
@@ -186,13 +177,8 @@ final unreadCountProvider = StreamProvider.family<int, String>((ref, groupId) {
       ?.value;
   if (lastReadAt == null) return Stream.value(0);
   return ref
-      .watch(firestoreProvider)
-      .collection('groups')
-      .doc(groupId)
-      .collection('messages')
-      .where('timestamp', isGreaterThan: Timestamp.fromDate(lastReadAt))
-      .snapshots()
-      .map((snap) => snap.docs.length);
+      .watch(messagesRepositoryProvider)
+      .watchCountSince(groupId: groupId, since: lastReadAt);
 });
 
 final typingProvider = StreamProvider<List<String>>((ref) {

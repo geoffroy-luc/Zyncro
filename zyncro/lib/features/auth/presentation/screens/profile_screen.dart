@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/notifications/notification_providers.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
 
@@ -28,13 +27,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _loadNotifPref() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(
-        () => _notificationsEnabled =
-            prefs.getBool('notifications_enabled') ?? true,
-      );
-    }
+    final enabled = await ref.read(notificationPreferencesProvider).isEnabled();
+    if (mounted) setState(() => _notificationsEnabled = enabled);
   }
 
   // ── Pseudo ────────────────────────────────────────────────────────────────
@@ -193,29 +187,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _toggleNotifications(bool value) async {
     setState(() => _loadingNotif = true);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('notifications_enabled', value);
+    await ref.read(notificationPreferencesProvider).setEnabled(value);
 
     final user = ref.read(authRepositoryProvider).currentUser;
     if (user != null) {
-      final messaging = FirebaseMessaging.instance;
-      if (value) {
-        final token = await messaging.getToken();
-        if (token != null) {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .set({'fcmToken': token}, SetOptions(merge: true));
-        }
-      } else {
-        try {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .update({'fcmToken': null});
-        } catch (_) {}
-        await messaging.deleteToken();
-      }
+      await ref
+          .read(pushNotificationServiceProvider)
+          .setEnabledForUser(user.uid, enabled: value);
     }
 
     if (mounted) {

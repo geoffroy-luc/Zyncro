@@ -9,8 +9,8 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz_lib;
 import 'package:zyncro/app/app.dart';
 import 'package:zyncro/core/firebase/firebase_emulators.dart';
-import 'package:zyncro/core/services/notification_service.dart';
-import 'package:zyncro/core/services/reminder_service.dart';
+import 'package:zyncro/core/notifications/local_notifications.dart';
+import 'package:zyncro/features/calendar/data/services/reminder_service.dart';
 import 'package:zyncro/firebase_options.dart';
 
 void main() async {
@@ -36,7 +36,7 @@ void main() async {
   final tzInfo = await FlutterTimezone.getLocalTimezone();
   tz_lib.setLocalLocation(tz_lib.getLocation(tzInfo.identifier));
   await ReminderService.initialize();
-  await NotificationService.createNotificationChannel();
-  NotificationService.registerBackgroundHandler();
+  await LocalNotifications.createNotificationChannel();
+  LocalNotifications.registerBackgroundHandler();
   runApp(const ProviderScope(child: ZyncroApp()));
 }
