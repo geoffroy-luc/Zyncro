@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/calendar/domain/entities/event.dart';
 import 'package:zyncro/features/calendar/presentation/providers/events_provider.dart';
 import 'package:zyncro/features/calendar/presentation/screens/event_form_screen.dart';
@@ -75,7 +75,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.border,
+                    color: context.colors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -94,21 +94,21 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         tempParticipants.clear();
                         tempRecurrence[0] = false;
                       }),
-                      child: const Text(
+                      child: Text(
                         'Réinitialiser',
-                        style: TextStyle(color: AppColors.error),
+                        style: TextStyle(color: context.colors.error),
                       ),
                     ),
                 ],
               ),
               if (members.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Participants',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -122,7 +122,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         m.displayName,
                         style: TextStyle(
                           fontSize: 13,
-                          color: sel ? Colors.white : AppColors.textPrimary,
+                          color: sel
+                              ? Colors.white
+                              : context.colors.textPrimary,
                         ),
                       ),
                       selected: sel,
@@ -135,8 +137,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       }),
                       selectedColor: primaryColor,
                       checkmarkColor: Colors.white,
-                      backgroundColor: AppColors.background,
-                      side: const BorderSide(color: AppColors.border),
+                      backgroundColor: context.colors.background,
+                      side: BorderSide(color: context.colors.border),
                       showCheckmark: false,
                     );
                   }).toList(),
@@ -253,7 +255,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       ? null
                       : isTomorrow
                       ? const Color(0x1A2BB8A5)
-                      : const Color(0xFFF7F9FC),
+                      : context.colors.background,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -262,8 +264,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     color: isToday
                         ? Colors.white
                         : isTomorrow
-                        ? AppColors.secondary
-                        : AppColors.textSecondary,
+                        ? context.colors.secondary
+                        : context.colors.textSecondary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -338,7 +340,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final leadingBlanks = firstOfMonth.weekday - 1;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: context.colors.background,
       floatingActionButton: FloatingActionButton(
         heroTag: 'fab_calendar',
         onPressed: () => Navigator.of(context).push(
@@ -372,13 +374,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             width: 36,
                             height: 36,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF7F9FC),
+                              color: context.colors.background,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.chevron_left,
                               size: 20,
-                              color: AppColors.textSecondary,
+                              color: context.colors.textSecondary,
                             ),
                           ),
                         ),
@@ -387,8 +389,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             'MMMM yyyy',
                             'fr_FR',
                           ).format(_displayedMonth),
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: context.colors.textPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
@@ -399,13 +401,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             width: 36,
                             height: 36,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF7F9FC),
+                              color: context.colors.background,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.chevron_right,
                               size: 20,
-                              color: AppColors.textSecondary,
+                              color: context.colors.textSecondary,
                             ),
                           ),
                         ),
@@ -415,33 +417,33 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     // Search bar
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF7F9FC),
+                        color: context.colors.background,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: context.colors.border),
                       ),
                       child: Row(
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 14),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
                             child: Icon(
                               Icons.search,
-                              color: AppColors.textSecondary,
+                              color: context.colors.textSecondary,
                               size: 20,
                             ),
                           ),
                           Expanded(
                             child: TextField(
                               onChanged: (v) => setState(() => _search = v),
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 hintText: 'Rechercher...',
                                 hintStyle: TextStyle(
-                                  color: AppColors.textSecondary,
+                                  color: context.colors.textSecondary,
                                   fontSize: 14,
                                 ),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
+                                contentPadding: const EdgeInsets.symmetric(
                                   vertical: 12,
                                 ),
                                 filled: false,
@@ -467,7 +469,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                 size: 18,
                                 color: _hasActiveFilters
                                     ? Colors.white
-                                    : AppColors.textSecondary,
+                                    : context.colors.textSecondary,
                               ),
                             ),
                           ),
@@ -479,7 +481,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF7F9FC),
+                        color: context.colors.background,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -503,8 +505,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(
-              child: Divider(height: 1, color: AppColors.border),
+            SliverToBoxAdapter(
+              child: Divider(height: 1, color: context.colors.border),
             ),
 
             // ── Corps ────────────────────────────────────────────────────
@@ -519,12 +521,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.border),
-                        boxShadow: const [
+                        border: Border.all(color: context.colors.border),
+                        boxShadow: [
                           BoxShadow(
-                            color: Color(0x0A000000),
+                            color: context.colors.shadow,
                             blurRadius: 4,
-                            offset: Offset(0, 2),
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -546,8 +548,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                         child: Center(
                                           child: Text(
                                             d,
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
+                                            style: TextStyle(
+                                              color:
+                                                  context.colors.textSecondary,
                                               fontSize: 11,
                                               fontWeight: FontWeight.w500,
                                             ),
@@ -636,7 +639,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                               ? Colors.white
                                               : isSelected
                                               ? primaryColor
-                                              : AppColors.textPrimary,
+                                              : context.colors.textPrimary,
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -719,8 +722,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       _selectedDay != null
                           ? DateFormat('d MMMM', 'fr_FR').format(_selectedDay!)
                           : 'Événements du mois',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
@@ -729,8 +732,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ] else ...[
                     Text(
                       DateFormat('MMMM yyyy', 'fr_FR').format(_displayedMonth),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
@@ -747,15 +750,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 24),
                         child: Column(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.event_outlined,
                               size: 48,
-                              color: AppColors.textSecondary,
+                              color: context.colors.textSecondary,
                             ),
                             const SizedBox(height: 12),
-                            const Text(
+                            Text(
                               'Aucun événement',
-                              style: TextStyle(color: AppColors.textSecondary),
+                              style: TextStyle(
+                                color: context.colors.textSecondary,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton.icon(
@@ -835,7 +840,7 @@ class _ToggleButton extends StatelessWidget {
               style: TextStyle(
                 color: active
                     ? Theme.of(context).colorScheme.primary
-                    : AppColors.textSecondary,
+                    : context.colors.textSecondary,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -872,12 +877,12 @@ class _EventCard extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
+          border: Border.all(color: context.colors.border),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x0A000000),
+              color: context.colors.shadow,
               blurRadius: 4,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -902,20 +907,20 @@ class _EventCard extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           event.title,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: context.colors.textPrimary,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
                         ),
                       ),
                       if (event.recurrence != null)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 4),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4),
                           child: Icon(
                             Icons.repeat,
                             size: 14,
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
                         ),
                     ],
@@ -923,18 +928,18 @@ class _EventCard extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.access_time,
                         size: 14,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         event.endDate != null
                             ? '${_timeLabel(event.startDate)} → ${_timeLabel(event.endDate!)}'
                             : _timeLabel(event.startDate),
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: context.colors.textSecondary,
                           fontSize: 12,
                         ),
                       ),
@@ -944,17 +949,17 @@ class _EventCard extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.place_outlined,
                           size: 14,
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                         ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             event.location!,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
+                            style: TextStyle(
+                              color: context.colors.textSecondary,
                               fontSize: 12,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -967,16 +972,16 @@ class _EventCard extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.person_outline,
                           size: 14,
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           event.creatorName!,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: context.colors.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -986,10 +991,10 @@ class _EventCard extends ConsumerWidget {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.edit_outlined,
               size: 16,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ],
         ),
@@ -1018,11 +1023,11 @@ class _AgendaEventCard extends ConsumerWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border(left: BorderSide(color: color, width: 4)),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0x0A000000),
+              color: context.colors.shadow,
               blurRadius: 4,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -1034,60 +1039,60 @@ class _AgendaEventCard extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     event.title,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
                   ),
                 ),
                 if (event.recurrence != null)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 6),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
                     child: Icon(
                       Icons.repeat,
                       size: 14,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                   ),
-                const Icon(
+                Icon(
                   Icons.edit_outlined,
                   size: 16,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.access_time,
                   size: 14,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   event.endDate != null
                       ? '${_timeLabel(event.startDate)} → ${_timeLabel(event.endDate!)}'
                       : _timeLabel(event.startDate),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: context.colors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
                 if (event.location != null) ...[
                   const SizedBox(width: 16),
-                  const Icon(
+                  Icon(
                     Icons.place_outlined,
                     size: 14,
-                    color: AppColors.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       event.location!,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: context.colors.textSecondary,
                         fontSize: 12,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -1100,16 +1105,16 @@ class _AgendaEventCard extends ConsumerWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.person_outline,
                     size: 14,
-                    color: AppColors.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     event.creatorName!,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
                       fontSize: 12,
                     ),
                   ),

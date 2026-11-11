@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/design_system/tokens/zyncro_colors.dart';
 
 class AppTheme {
   AppTheme._();
@@ -8,6 +9,7 @@ class AppTheme {
 
   static ThemeData themed(Color primary) => ThemeData(
     useMaterial3: true,
+    extensions: const [ZyncroColors.light],
     colorScheme: ColorScheme.light(
       primary: primary,
       secondary: AppColors.secondary,

@@ -15,8 +15,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';
 import 'package:zyncro/features/chat/domain/repositories/messages_repository.dart';
@@ -351,12 +351,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             ? Theme.of(
                                 context,
                               ).colorScheme.primary.withValues(alpha: 0.15)
-                            : const Color(0xFFF7F9FC),
+                            : context.colors.background,
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: hasReacted
                               ? Theme.of(context).colorScheme.primary
-                              : AppColors.border,
+                              : context.colors.border,
                         ),
                       ),
                       child: Center(
@@ -916,12 +916,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           decoration: BoxDecoration(
             color: _showQuickActions
                 ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-                : const Color(0xFFF7F9FC),
+                : context.colors.background,
             shape: BoxShape.circle,
             border: Border.all(
               color: _showQuickActions
                   ? Theme.of(context).colorScheme.primary
-                  : AppColors.border,
+                  : context.colors.border,
             ),
           ),
           child: AnimatedRotation(
@@ -931,7 +931,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               Icons.add,
               color: _showQuickActions
                   ? Theme.of(context).colorScheme.primary
-                  : AppColors.textSecondary,
+                  : context.colors.textSecondary,
               size: 20,
             ),
           ),
@@ -988,7 +988,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 border: Border.all(
                   color: active
                       ? Theme.of(context).colorScheme.primary
-                      : AppColors.border,
+                      : context.colors.border,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -1002,7 +1002,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 icon,
                 color: active
                     ? Theme.of(context).colorScheme.primary
-                    : AppColors.textSecondary,
+                    : context.colors.textSecondary,
                 size: 18,
               ),
             ),
@@ -1060,20 +1060,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           decoration: BoxDecoration(
             color: _showCameraActions
                 ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-                : const Color(0xFFF7F9FC),
+                : context.colors.background,
             shape: BoxShape.circle,
             border: Border.all(
               color: _showCameraActions
                   ? Theme.of(context).colorScheme.primary
-                  : AppColors.border,
+                  : context.colors.border,
             ),
           ),
           child: _isUploadingMedia
-              ? const Padding(
-                  padding: EdgeInsets.all(10),
+              ? Padding(
+                  padding: const EdgeInsets.all(10),
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AppColors.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
                 )
               : AnimatedSwitcher(
@@ -1087,7 +1087,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     key: ValueKey(_showCameraActions),
                     color: _showCameraActions
                         ? Theme.of(context).colorScheme.primary
-                        : AppColors.textSecondary,
+                        : context.colors.textSecondary,
                     size: 18,
                   ),
                 ),
@@ -1108,7 +1108,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.colors.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.15),
@@ -1117,7 +1117,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ],
         ),
-        child: Icon(icon, color: AppColors.textSecondary, size: 18),
+        child: Icon(icon, color: context.colors.textSecondary, size: 18),
       ),
     );
   }
@@ -1309,7 +1309,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     final bgColor = bgType == 'color' && bgValue != null
         ? hexToColor(bgValue)
-        : const Color(0xFFF7F9FC);
+        : context.colors.background;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -1329,19 +1329,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           Expanded(
                             child: Container(
                               decoration: BoxDecoration(
-                                color: AppColors.background,
+                                color: context.colors.background,
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: AppColors.border),
+                                border: Border.all(
+                                  color: context.colors.border,
+                                ),
                               ),
                               child: Row(
                                 children: [
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                     ),
                                     child: Icon(
                                       Icons.search,
-                                      color: AppColors.textSecondary,
+                                      color: context.colors.textSecondary,
                                       size: 18,
                                     ),
                                   ),
@@ -1350,18 +1352,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                       autofocus: true,
                                       onChanged: (v) =>
                                           setState(() => _search = v),
-                                      decoration: const InputDecoration(
+                                      decoration: InputDecoration(
                                         hintText: 'Rechercher dans le chat...',
                                         hintStyle: TextStyle(
-                                          color: AppColors.textSecondary,
+                                          color: context.colors.textSecondary,
                                           fontSize: 14,
                                         ),
                                         border: InputBorder.none,
                                         enabledBorder: InputBorder.none,
                                         focusedBorder: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 10,
-                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              vertical: 10,
+                                            ),
                                         filled: false,
                                       ),
                                     ),
@@ -1376,9 +1379,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               _showSearch = false;
                               _search = '';
                             }),
-                            child: const Icon(
+                            child: Icon(
                               Icons.close,
-                              color: AppColors.textSecondary,
+                              color: context.colors.textSecondary,
                               size: 20,
                             ),
                           ),
@@ -1405,10 +1408,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                         false);
                               }).toList();
                         if (messages.isEmpty) {
-                          return const Center(
+                          return Center(
                             child: Text(
                               'Aucun message. Soyez le premier !',
-                              style: TextStyle(color: AppColors.textSecondary),
+                              style: TextStyle(
+                                color: context.colors.textSecondary,
+                              ),
                             ),
                           );
                         }
@@ -1576,10 +1581,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border(
-                          top: BorderSide(color: AppColors.border),
+                          top: BorderSide(color: context.colors.border),
                         ),
                       ),
                       child: Row(
@@ -1605,7 +1610,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.close, size: 18),
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                             onPressed: () => setState(() {
                               _editingMessage = null;
                               _controller.clear();
@@ -1624,10 +1629,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border(
-                          top: BorderSide(color: AppColors.border),
+                          top: BorderSide(color: context.colors.border),
                         ),
                       ),
                       child: Row(
@@ -1667,8 +1672,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                       : _replyingTo!.content,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
+                                  style: TextStyle(
+                                    color: context.colors.textSecondary,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -1677,7 +1682,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.close, size: 18),
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                             onPressed: () => setState(() => _replyingTo = null),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
@@ -1689,9 +1694,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   // ── Input bar ───────────────────────────────────────────────
                   Container(
                     padding: const EdgeInsets.fromLTRB(12, 12, 24, 12),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border(top: BorderSide(color: AppColors.border)),
+                      border: Border(
+                        top: BorderSide(color: context.colors.border),
+                      ),
                     ),
                     child: _isRecording
                         // ── Recording mode ────────────────────────────────────
@@ -1707,9 +1714,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                     bottom: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF7F9FC),
+                                    color: context.colors.background,
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: AppColors.border),
+                                    border: Border.all(
+                                      color: context.colors.border,
+                                    ),
                                   ),
                                   child: const Icon(
                                     Icons.close,
@@ -1732,17 +1741,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                     const SizedBox(width: 8),
                                     Text(
                                       _fmtDuration(_recordingDuration),
-                                      style: const TextStyle(
-                                        color: AppColors.textPrimary,
+                                      style: TextStyle(
+                                        color: context.colors.textPrimary,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                     const SizedBox(width: 6),
-                                    const Text(
+                                    Text(
                                       'Enregistrement…',
                                       style: TextStyle(
-                                        color: AppColors.textSecondary,
+                                        color: context.colors.textSecondary,
                                         fontSize: 13,
                                       ),
                                     ),
@@ -1799,32 +1808,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF7F9FC),
+                                    color: context.colors.background,
                                     borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(color: AppColors.border),
+                                    border: Border.all(
+                                      color: context.colors.border,
+                                    ),
                                   ),
                                   child: TextField(
                                     controller: _controller,
                                     focusNode: _inputFocusNode,
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       hintText: 'Écrire un message...',
                                       hintStyle: TextStyle(
-                                        color: AppColors.textSecondary,
+                                        color: context.colors.textSecondary,
                                         fontSize: 14,
                                       ),
                                       border: InputBorder.none,
                                       enabledBorder: InputBorder.none,
                                       focusedBorder: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 8,
-                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
                                       filled: false,
                                       isDense: true,
                                     ),
                                     maxLines: 4,
                                     minLines: 1,
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
+                                    style: TextStyle(
+                                      color: context.colors.textPrimary,
                                       fontSize: 14,
                                     ),
                                     textInputAction: TextInputAction.newline,
@@ -1979,8 +1991,8 @@ class _TypingIndicator extends StatelessWidget {
       color: Colors.white,
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppColors.textSecondary,
+        style: TextStyle(
+          color: context.colors.textSecondary,
           fontSize: 12,
           fontStyle: FontStyle.italic,
         ),
@@ -2057,7 +2069,7 @@ class _MessageBubble extends StatelessWidget {
         return Text(
           '🎵 Audio',
           style: TextStyle(
-            color: isMe ? Colors.white : AppColors.textPrimary,
+            color: isMe ? Colors.white : context.colors.textPrimary,
             fontSize: 14,
           ),
         );
@@ -2132,7 +2144,7 @@ class _MessageBubble extends StatelessWidget {
               errorBuilder: (_, __, ___) => Text(
                 '🖼️ Image',
                 style: TextStyle(
-                  color: isMe ? Colors.white : AppColors.textPrimary,
+                  color: isMe ? Colors.white : context.colors.textPrimary,
                   fontSize: 14,
                 ),
               ),
@@ -2143,7 +2155,7 @@ class _MessageBubble extends StatelessWidget {
         return Text(
           '🖼️ Média',
           style: TextStyle(
-            color: isMe ? Colors.white : AppColors.textPrimary,
+            color: isMe ? Colors.white : context.colors.textPrimary,
             fontSize: 14,
           ),
         );
@@ -2197,7 +2209,7 @@ class _MessageBubble extends StatelessWidget {
             style: TextStyle(
               color: hasCustomBackground
                   ? Colors.black
-                  : AppColors.textSecondary,
+                  : context.colors.textSecondary,
               fontSize: 11,
             ),
             textAlign: TextAlign.center,
@@ -2225,8 +2237,8 @@ class _MessageBubble extends StatelessWidget {
             child: Center(
               child: Text(
                 timeLabel,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: context.colors.textSecondary,
                   fontSize: 11,
                 ),
               ),
@@ -2321,8 +2333,8 @@ class _MessageBubble extends StatelessWidget {
             padding: const EdgeInsets.only(left: 46, bottom: 2),
             child: Text(
               member?.displayName ?? message.senderName ?? '',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: context.colors.textSecondary,
                 fontSize: 11,
                 fontWeight: FontWeight.w400,
               ),
@@ -2366,12 +2378,12 @@ class _MessageBubble extends StatelessWidget {
                       borderRadius: radius,
                       border: isMedia
                           ? null
-                          : Border.all(color: AppColors.border),
-                      boxShadow: const [
+                          : Border.all(color: context.colors.border),
+                      boxShadow: [
                         BoxShadow(
-                          color: Color(0x0A000000),
+                          color: context.colors.shadow,
                           blurRadius: 4,
-                          offset: Offset(0, 2),
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
@@ -2438,7 +2450,7 @@ class _LinkedTextState extends State<_LinkedText> {
     final text = widget.text;
     final isMe = widget.isMe;
     final matches = _MessageBubble._urlRegex.allMatches(text).toList();
-    final textColor = isMe ? Colors.white : AppColors.textPrimary;
+    final textColor = isMe ? Colors.white : context.colors.textPrimary;
     final linkColor = isMe ? Colors.white : const Color(0xFF1D6AE5);
     final textStyle = TextStyle(color: textColor, fontSize: 14, height: 1.4);
 
@@ -2588,7 +2600,7 @@ class _LinkPreviewWidgetState extends State<_LinkPreviewWidget> {
       decoration: BoxDecoration(
         color: widget.isMe
             ? Colors.white.withValues(alpha: 0.15)
-            : const Color(0xFFF3F4F6),
+            : context.colors.subtleSurface,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
@@ -2613,9 +2625,9 @@ class _LinkPreviewWidgetState extends State<_LinkPreviewWidget> {
         : Theme.of(context).colorScheme.primary;
     final bgColor = isMe
         ? Colors.white.withValues(alpha: 0.18)
-        : const Color(0xFFF3F4F6);
-    final titleColor = isMe ? Colors.white : AppColors.textPrimary;
-    final subColor = isMe ? Colors.white70 : AppColors.textSecondary;
+        : context.colors.subtleSurface;
+    final titleColor = isMe ? Colors.white : context.colors.textPrimary;
+    final subColor = isMe ? Colors.white70 : context.colors.textSecondary;
 
     return GestureDetector(
       onTap: () async {
@@ -2977,9 +2989,9 @@ class _SeenByRow extends StatelessWidget {
             padding: const EdgeInsets.only(left: 4),
             child: Text(
               '+$overflow',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
           ),
@@ -3020,18 +3032,18 @@ class _ReactionsRow extends StatelessWidget {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.border,
+                    color: context.colors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Réactions',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.colors.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -3047,10 +3059,10 @@ class _ReactionsRow extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           '${uids.length}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
                         ),
                       ],
@@ -3064,9 +3076,9 @@ class _ReactionsRow extends StatelessWidget {
                         padding: const EdgeInsets.only(left: 8, bottom: 4),
                         child: Text(
                           name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textPrimary,
+                            color: context.colors.textPrimary,
                           ),
                         ),
                       );
@@ -3104,14 +3116,14 @@ class _ReactionsRow extends StatelessWidget {
                   ? Theme.of(
                       context,
                     ).colorScheme.primary.withValues(alpha: 0.15)
-                  : const Color(0xFFF0F2F5),
+                  : context.colors.mutedSurface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isMine
                     ? Theme.of(
                         context,
                       ).colorScheme.primary.withValues(alpha: 0.4)
-                    : AppColors.border,
+                    : context.colors.border,
               ),
             ),
             child: Row(
@@ -3126,7 +3138,7 @@ class _ReactionsRow extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: isMine
                         ? darken(Theme.of(context).colorScheme.primary)
-                        : AppColors.textSecondary,
+                        : context.colors.textSecondary,
                   ),
                 ),
               ],
@@ -3169,7 +3181,7 @@ class _ReplyPreview extends StatelessWidget {
         decoration: BoxDecoration(
           color: isMe
               ? Colors.white.withValues(alpha: 0.2)
-              : const Color(0xFFF0F2F5),
+              : context.colors.mutedSurface,
           borderRadius: BorderRadius.circular(8),
           border: Border(
             left: BorderSide(
@@ -3202,7 +3214,7 @@ class _ReplyPreview extends StatelessWidget {
                 fontSize: 12,
                 color: isMe
                     ? Colors.white.withValues(alpha: 0.75)
-                    : AppColors.textSecondary,
+                    : context.colors.textSecondary,
               ),
             ),
           ],
@@ -3518,7 +3530,7 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
                               fontSize: 10,
                               color: widget.isMe
                                   ? Colors.white.withValues(alpha: 0.8)
-                                  : AppColors.textSecondary,
+                                  : context.colors.textSecondary,
                             ),
                           ),
                           const Spacer(),
@@ -3640,12 +3652,12 @@ class _PollCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
-            boxShadow: const [
+            border: Border.all(color: context.colors.border),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x0A000000),
+                color: context.colors.shadow,
                 blurRadius: 4,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -3743,12 +3755,12 @@ class _PollCard extends StatelessWidget {
                               ? Theme.of(
                                   context,
                                 ).colorScheme.primary.withValues(alpha: 0.08)
-                              : const Color(0xFFF7F9FC),
+                              : context.colors.background,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: isSelected
                                 ? Theme.of(context).colorScheme.primary
-                                : AppColors.border,
+                                : context.colors.border,
                           ),
                         ),
                         child: Column(
@@ -3767,24 +3779,24 @@ class _PollCard extends StatelessWidget {
                                   size: 15,
                                   color: isSelected
                                       ? Theme.of(context).colorScheme.primary
-                                      : AppColors.textSecondary,
+                                      : context.colors.textSecondary,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     options[i],
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13,
-                                      color: AppColors.textPrimary,
+                                      color: context.colors.textPrimary,
                                     ),
                                   ),
                                 ),
                                 Text(
                                   '$votes',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: AppColors.textSecondary,
+                                    color: context.colors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -3820,8 +3832,8 @@ class _PollCard extends StatelessWidget {
                   '$totalVotes vote${totalVotes != 1 ? 's' : ''}'
                   '${message.senderName != null ? ' · ${isMe ? 'Votre sondage' : message.senderName!}' : ''}'
                   '${message.editedAt != null ? ' · modifié' : ''}',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: context.colors.textSecondary,
                     fontSize: 11,
                   ),
                 ),
@@ -3942,12 +3954,12 @@ class _EditPollDialogState extends State<_EditPollDialog> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Options',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
@@ -3974,7 +3986,7 @@ class _EditPollDialogState extends State<_EditPollDialog> {
                     if (_optionControllers.length > 2)
                       IconButton(
                         icon: const Icon(Icons.close, size: 18),
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                         onPressed: () => _removeOption(i),
                         padding: const EdgeInsets.only(left: 4),
                         constraints: const BoxConstraints(),
@@ -4142,12 +4154,12 @@ class _CreatePollDialogState extends State<_CreatePollDialog> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Options',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
@@ -4174,7 +4186,7 @@ class _CreatePollDialogState extends State<_CreatePollDialog> {
                     if (_optionControllers.length > 2)
                       IconButton(
                         icon: const Icon(Icons.close, size: 18),
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                         onPressed: () => _removeOption(i),
                         padding: const EdgeInsets.only(left: 4),
                         constraints: const BoxConstraints(),

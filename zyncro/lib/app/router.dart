@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/theme/app_theme.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/auth/presentation/screens/login_screen.dart';
 import 'package:zyncro/features/auth/presentation/screens/profile_screen.dart';
@@ -249,7 +249,7 @@ class _AppShell extends ConsumerWidget {
     return Theme(
       data: AppTheme.themed(primaryColor),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF7F9FC),
+        backgroundColor: context.colors.background,
         body: Builder(
           builder: (bodyContext) {
             // `bodyContext` (contrairement au `context` de _AppShell, situé
@@ -398,9 +398,9 @@ class _AppShell extends ConsumerWidget {
           },
         ),
         bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
-            border: Border(top: BorderSide(color: AppColors.border)),
+            border: Border(top: BorderSide(color: context.colors.border)),
           ),
           child: SafeArea(
             top: false,
@@ -438,7 +438,7 @@ class _AppShell extends ConsumerWidget {
                                 size: 24,
                                 color: isActive
                                     ? primaryColor
-                                    : AppColors.textSecondary,
+                                    : context.colors.textSecondary,
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -450,7 +450,7 @@ class _AppShell extends ConsumerWidget {
                                       : FontWeight.w400,
                                   color: isActive
                                       ? primaryColor
-                                      : AppColors.textSecondary,
+                                      : context.colors.textSecondary,
                                 ),
                               ),
                             ],

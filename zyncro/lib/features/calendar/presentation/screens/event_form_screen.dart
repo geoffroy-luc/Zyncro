@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/calendar/data/services/reminder_service.dart';
 import 'package:zyncro/features/calendar/domain/entities/event.dart';
@@ -142,9 +143,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text(
+            child: Text(
               'Supprimer',
-              style: TextStyle(color: AppColors.error),
+              style: TextStyle(color: context.colors.error),
             ),
           ),
         ],
@@ -331,7 +332,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                       Icons.block_outlined,
                       color: selectedFreq == null
                           ? primary
-                          : AppColors.textSecondary,
+                          : context.colors.textSecondary,
                     ),
                     title: const Text('Aucune'),
                     trailing: selectedFreq == null
@@ -348,7 +349,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                     return ListTile(
                       leading: Icon(
                         Icons.repeat,
-                        color: isSelected ? primary : AppColors.textSecondary,
+                        color: isSelected
+                            ? primary
+                            : context.colors.textSecondary,
                       ),
                       title: Text(label),
                       trailing: isSelected
@@ -361,12 +364,12 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                   // Fin de récurrence (visible seulement si fréquence choisie)
                   if (selectedFreq != null) ...[
                     const Divider(height: 24),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
                       child: Text(
                         'Fin de la répétition',
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -461,7 +464,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                                           ),
                                           decoration: BoxDecoration(
                                             border: Border.all(
-                                              color: AppColors.border,
+                                              color: context.colors.border,
                                             ),
                                             borderRadius: BorderRadius.circular(
                                               8,
@@ -536,27 +539,27 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.colors.border),
         ),
         child: Row(
           children: [
-            const Icon(Icons.repeat, size: 20, color: AppColors.textSecondary),
+            Icon(Icons.repeat, size: 20, color: context.colors.textSecondary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
                 style: TextStyle(
                   color: _recurrence != null
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
+                      ? context.colors.textPrimary
+                      : context.colors.textSecondary,
                   fontSize: 14,
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
               size: 20,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ],
         ),
@@ -614,7 +617,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 return ListTile(
                   leading: Icon(
                     icon,
-                    color: selected ? primary : AppColors.textSecondary,
+                    color: selected ? primary : context.colors.textSecondary,
                   ),
                   title: Text(label),
                   trailing: selected ? Icon(Icons.check, color: primary) : null,
@@ -625,9 +628,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 );
               }),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.tune_outlined,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
                 title: const Text('Personnalisé…'),
                 onTap: () {
@@ -715,14 +718,14 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.colors.border),
         ),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.notifications_outlined,
               size: 20,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -730,16 +733,16 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 _reminderLabel,
                 style: TextStyle(
                   color: _reminderMinutes != null
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
+                      ? context.colors.textPrimary
+                      : context.colors.textSecondary,
                   fontSize: 14,
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
               size: 20,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ],
         ),
@@ -758,8 +761,8 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
+          style: TextStyle(
+            color: context.colors.textSecondary,
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),
@@ -778,20 +781,20 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.calendar_today_outlined,
                         size: 16,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         DateFormat('d MMM yyyy', 'fr_FR').format(date),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: context.colors.textPrimary,
                           fontSize: 13,
                         ),
                       ),
@@ -811,20 +814,20 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: context.colors.border),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.access_time,
                       size: 16,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       time.format(context),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontSize: 13,
                       ),
                     ),
@@ -874,7 +877,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     final tabSettings =
         ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: Text(
           widget.event != null ? 'Modifier l\'événement' : 'Nouvel événement',
@@ -882,7 +885,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         actions: [
           if (widget.event != null)
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+              icon: Icon(Icons.delete_outline, color: context.colors.error),
               onPressed: _delete,
             ),
           IconButton(
@@ -938,10 +941,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 maxLines: 3,
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Couleur',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -994,10 +997,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Participants',
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -1034,7 +1037,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                                     : Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isSelected ? color : AppColors.border,
+                                  color: isSelected
+                                      ? color
+                                      : context.colors.border,
                                   width: isSelected ? 1.5 : 1,
                                 ),
                               ),
@@ -1058,7 +1063,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                                           : FontWeight.w400,
                                       color: isSelected
                                           ? color
-                                          : AppColors.textPrimary,
+                                          : context.colors.textPrimary,
                                     ),
                                   ),
                                   if (isSelected) ...[
@@ -1080,10 +1085,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                   );
                 },
               ),
-              const Text(
+              Text(
                 'Répétition',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1091,10 +1096,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
               const SizedBox(height: 8),
               _buildRecurrenceRow(),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Rappel',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),

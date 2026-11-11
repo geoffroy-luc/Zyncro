@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/chat/presentation/screens/media_viewer_screen.dart';
@@ -77,16 +77,16 @@ class MediaGalleryScreen extends ConsumerWidget {
     final mediaAsync = ref.watch(mediaMessagesProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Médias partagés'),
         backgroundColor: Colors.white,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: context.colors.textPrimary,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: AppColors.border),
+          child: Container(height: 1, color: context.colors.border),
         ),
       ),
       body: mediaAsync.when(
@@ -95,20 +95,20 @@ class MediaGalleryScreen extends ConsumerWidget {
         data: (messages) {
           final items = _buildItems(messages);
           if (items.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     Icons.photo_library_outlined,
                     size: 64,
-                    color: AppColors.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
                     'Aucun média partagé',
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                       fontSize: 16,
                     ),
                   ),
@@ -222,10 +222,10 @@ class _ImageThumb extends StatelessWidget {
       url,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => Container(
-        color: AppColors.border,
-        child: const Icon(
+        color: context.colors.border,
+        child: Icon(
           Icons.broken_image_outlined,
-          color: AppColors.textSecondary,
+          color: context.colors.textSecondary,
         ),
       ),
     );
@@ -239,7 +239,7 @@ class _VideoThumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF1C1C1E),
+      color: context.colors.mediaBackground,
       child: const Center(
         child: Icon(
           Icons.play_circle_fill_rounded,
@@ -294,7 +294,7 @@ class MediaPreviewTile extends StatelessWidget {
                 height: 72,
                 child: isVideo
                     ? Container(
-                        color: const Color(0xFF1C1C1E),
+                        color: context.colors.mediaBackground,
                         child: const Center(
                           child: Icon(
                             Icons.play_circle_fill_rounded,
@@ -307,10 +307,10 @@ class MediaPreviewTile extends StatelessWidget {
                         url,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
-                          color: AppColors.border,
-                          child: const Icon(
+                          color: context.colors.border,
+                          child: Icon(
                             Icons.broken_image_outlined,
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
                         ),
                       ),
@@ -383,7 +383,7 @@ class MediaPreviewTile extends StatelessWidget {
           height: 72,
           child: isVideo
               ? Container(
-                  color: const Color(0xFF1C1C1E),
+                  color: context.colors.mediaBackground,
                   child: const Center(
                     child: Icon(
                       Icons.play_circle_fill_rounded,
@@ -396,10 +396,10 @@ class MediaPreviewTile extends StatelessWidget {
                   url,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
-                    color: AppColors.border,
-                    child: const Icon(
+                    color: context.colors.border,
+                    child: Icon(
                       Icons.broken_image_outlined,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ),

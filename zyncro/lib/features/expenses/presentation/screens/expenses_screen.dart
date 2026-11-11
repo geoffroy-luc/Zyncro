@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/expenses/domain/entities/expense.dart';
 import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
@@ -150,7 +150,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: context.colors.background,
       floatingActionButton: _currentTab == 0
           ? FloatingActionButton(
               heroTag: 'fab_expenses',
@@ -178,9 +178,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 controller: _tabController,
                 indicatorColor: Theme.of(context).colorScheme.primary,
                 indicatorWeight: 3,
-                dividerColor: AppColors.border,
+                dividerColor: context.colors.border,
                 labelColor: Theme.of(context).colorScheme.primary,
-                unselectedLabelColor: AppColors.textSecondary,
+                unselectedLabelColor: context.colors.textSecondary,
                 labelStyle: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
@@ -203,33 +203,35 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: context.colors.background,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Row(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 14),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
                         child: Icon(
                           Icons.search,
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                           size: 20,
                         ),
                       ),
                       Expanded(
                         child: TextField(
                           onChanged: (v) => setState(() => _search = v),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: 'Rechercher une dépense...',
                             hintStyle: TextStyle(
-                              color: AppColors.textSecondary,
+                              color: context.colors.textSecondary,
                               fontSize: 14,
                             ),
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
                             filled: false,
                           ),
                         ),
@@ -300,16 +302,16 @@ class _DepensesTab extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Aperçu du groupe',
                     style: TextStyle(
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Divider(height: 1, color: AppColors.border),
+                  Divider(height: 1, color: context.colors.border),
                   const SizedBox(height: 16),
                   _OverviewRow(
                     label: 'Total dépenses',
@@ -334,15 +336,15 @@ class _DepensesTab extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 32),
                 child: Column(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.receipt_long_outlined,
                       size: 48,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                     const SizedBox(height: 12),
-                    const Text(
+                    Text(
                       'Aucune dépense',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      style: TextStyle(color: context.colors.textSecondary),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
@@ -359,10 +361,10 @@ class _DepensesTab extends ConsumerWidget {
               ),
             )
           else ...[
-            const Text(
+            Text(
               'Dépenses récentes',
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
               ),
@@ -491,18 +493,18 @@ class _EquilibreTab extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 16, 20, 12),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                     child: Text(
                       'Soldes',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
                     ),
                   ),
-                  const Divider(height: 1, color: AppColors.border),
+                  Divider(height: 1, color: context.colors.border),
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
@@ -526,8 +528,8 @@ class _EquilibreTab extends ConsumerWidget {
                               Expanded(
                                 child: Text(
                                   name,
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
+                                  style: TextStyle(
+                                    color: context.colors.textPrimary,
                                     fontWeight: FontWeight.w500,
                                     fontSize: 14,
                                   ),
@@ -578,18 +580,18 @@ class _EquilibreTab extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 16, 20, 12),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                     child: Text(
                       'À régler',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
                     ),
                   ),
-                  const Divider(height: 1, color: AppColors.border),
+                  Divider(height: 1, color: context.colors.border),
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
@@ -607,9 +609,9 @@ class _EquilibreTab extends ConsumerWidget {
                                   children: [
                                     RichText(
                                       text: TextSpan(
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 14,
-                                          color: AppColors.textPrimary,
+                                          color: context.colors.textPrimary,
                                         ),
                                         children: [
                                           TextSpan(
@@ -701,10 +703,10 @@ class _EquilibreTab extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Text(
+                    Text(
                       'Les comptes sont équilibrés',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -732,12 +734,12 @@ class _SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
+        border: Border.all(color: context.colors.border),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
+            color: context.colors.shadow,
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -763,12 +765,12 @@ class _OverviewRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
         ),
         Text(
           value,
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: context.colors.textPrimary,
             fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
             fontSize: bold ? 17 : 14,
           ),
@@ -792,19 +794,19 @@ class _ExpenseCard extends ConsumerWidget {
         ref.watch(tabSettingsProvider).asData?.value.expensesCategories ??
         defaultExpenseCategories;
     final color = expense.expenseType == ExpenseType.reimbursement
-        ? const Color(0xFF27AE60)
+        ? context.colors.success
         : _catColor(categories, expense.category);
 
     final cardContent = Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
+        border: Border.all(color: context.colors.border),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
+            color: context.colors.shadow,
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -835,8 +837,8 @@ class _ExpenseCard extends ConsumerWidget {
                           children: [
                             Text(
                               expense.title,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
+                              style: TextStyle(
+                                color: context.colors.textPrimary,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
                               ),
@@ -855,10 +857,10 @@ class _ExpenseCard extends ConsumerWidget {
                                   ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(100),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Remboursement',
                                   style: TextStyle(
-                                    color: Color(0xFF27AE60),
+                                    color: context.colors.success,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -870,22 +872,22 @@ class _ExpenseCard extends ConsumerWidget {
                               children: [
                                 Text(
                                   'Payé par ${isMe ? 'vous' : expense.paidByName}',
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
+                                  style: TextStyle(
+                                    color: context.colors.textSecondary,
                                     fontSize: 12,
                                   ),
                                 ),
-                                const Text(
+                                Text(
                                   ' • ',
                                   style: TextStyle(
-                                    color: AppColors.textSecondary,
+                                    color: context.colors.textSecondary,
                                     fontSize: 12,
                                   ),
                                 ),
                                 Text(
                                   _formatDate(expense.date),
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
+                                  style: TextStyle(
+                                    color: context.colors.textSecondary,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -896,8 +898,8 @@ class _ExpenseCard extends ConsumerWidget {
                       ),
                       Text(
                         _formatAmount(expense.amount, currency: currency),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: context.colors.textPrimary,
                           fontWeight: FontWeight.w600,
                           fontSize: 17,
                         ),

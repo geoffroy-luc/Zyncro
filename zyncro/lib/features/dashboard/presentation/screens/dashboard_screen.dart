@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/calendar/domain/entities/event.dart';
 import 'package:zyncro/features/calendar/presentation/providers/events_provider.dart';
@@ -108,7 +108,7 @@ class DashboardScreen extends ConsumerWidget {
     final calendarColor = _colorForTab(1, tabSettings);
     final notesColor = _colorForTab(2, tabSettings);
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -184,26 +184,26 @@ class DashboardScreen extends ConsumerWidget {
                                   children: [
                                     Text(
                                       _formatAmount(totalExpenses),
-                                      style: const TextStyle(
-                                        color: AppColors.textPrimary,
+                                      style: TextStyle(
+                                        color: context.colors.textPrimary,
                                         fontSize: 28,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    const Text(
+                                    Text(
                                       'total du groupe',
                                       style: TextStyle(
-                                        color: AppColors.textSecondary,
+                                        color: context.colors.textSecondary,
                                         fontSize: 13,
                                       ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                const Divider(
+                                Divider(
                                   height: 1,
-                                  color: AppColors.border,
+                                  color: context.colors.border,
                                 ),
                                 _ExpenseRow(
                                   label: 'Votre solde',
@@ -212,7 +212,7 @@ class DashboardScreen extends ConsumerWidget {
                                       : _formatAmount(myBalance),
                                   valueColor: myBalance >= 0
                                       ? const Color(0xFF2BB8A5)
-                                      : AppColors.error,
+                                      : context.colors.error,
                                 ),
                                 const SizedBox(height: 4),
                               ],
@@ -293,10 +293,10 @@ class DashboardScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  const Text(
+                                  Text(
                                     'Médias partagés',
                                     style: TextStyle(
-                                      color: AppColors.textPrimary,
+                                      color: context.colors.textPrimary,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 15,
                                     ),
@@ -313,7 +313,7 @@ class DashboardScreen extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            const Divider(height: 1, color: AppColors.border),
+                            Divider(height: 1, color: context.colors.border),
                             SizedBox(
                               height: 88,
                               child: ListView.separated(
@@ -336,10 +336,10 @@ class DashboardScreen extends ConsumerWidget {
                     ],
 
                     // Actions rapides
-                    const Text(
+                    Text(
                       'Actions rapides',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
@@ -405,12 +405,12 @@ class _Card extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
+        border: Border.all(color: context.colors.border),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
+            color: context.colors.shadow,
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -434,8 +434,8 @@ class _CardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: context.colors.border)),
       ),
       child: Row(
         children: [
@@ -451,8 +451,8 @@ class _CardHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             title,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: context.colors.textPrimary,
               fontWeight: FontWeight.w600,
               fontSize: 15,
             ),
@@ -475,7 +475,7 @@ class _EmptyHint extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
         ),
         TextButton.icon(
           onPressed: onTap,
@@ -570,8 +570,8 @@ class _EventRow extends StatelessWidget {
             children: [
               Text(
                 event.title,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: context.colors.textPrimary,
                   fontWeight: FontWeight.w500,
                   fontSize: 14,
                 ),
@@ -580,8 +580,8 @@ class _EventRow extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 dateLabel,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: context.colors.textSecondary,
                   fontSize: 12,
                 ),
               ),
@@ -612,11 +612,11 @@ class _PinnedNoteCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.2)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
+            color: context.colors.shadow,
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -636,16 +636,16 @@ class _PinnedNoteCard extends StatelessWidget {
                   child: Icon(Icons.sticky_note_2, size: 16, color: color),
                 ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Note épinglée',
                   style: TextStyle(
-                    color: AppColors.textPrimary,
+                    color: context.colors.textPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                   ),
                 ),
                 const Spacer(),
-                const Icon(Icons.push_pin, size: 16, color: AppColors.accent),
+                Icon(Icons.push_pin, size: 16, color: context.colors.accent),
               ],
             ),
           ),
@@ -657,8 +657,8 @@ class _PinnedNoteCard extends StatelessWidget {
               children: [
                 Text(
                   note.title,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.colors.textPrimary,
                     fontWeight: FontWeight.w500,
                     fontSize: 15,
                   ),
@@ -667,8 +667,8 @@ class _PinnedNoteCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     note.content,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
                       fontSize: 13,
                       height: 1.5,
                     ),
@@ -710,10 +710,7 @@ class _ExpenseRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13,
-            ),
+            style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
           ),
           Text(
             value,
@@ -767,8 +764,8 @@ class _MessageRow extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontWeight: FontWeight.w500,
                       fontSize: 13,
                     ),
@@ -776,8 +773,8 @@ class _MessageRow extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     _timeAgo(message.timestamp),
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
                       fontSize: 11,
                     ),
                   ),
@@ -794,8 +791,8 @@ class _MessageRow extends StatelessWidget {
                     : message.type == MessageType.poll
                     ? 'a créé un sondage'
                     : message.content,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                 ),
                 maxLines: 1,

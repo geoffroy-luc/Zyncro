@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 
 class SettingsSection extends StatelessWidget {
   final String title;
@@ -20,11 +20,11 @@ class SettingsSection extends StatelessWidget {
           padding: const EdgeInsets.only(top: 16, bottom: 8),
           child: Text(
             title.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ),
         ),
@@ -32,12 +32,12 @@ class SettingsSection extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-            boxShadow: const [
+            border: Border.all(color: context.colors.border),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x0A000000),
+                color: context.colors.shadow,
                 blurRadius: 4,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -84,19 +84,19 @@ class SettingsTile extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       if (subtitle != null) ...[
                         const SizedBox(height: 2),
                         Text(
                           subtitle!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
                         ),
                       ],
@@ -106,9 +106,9 @@ class SettingsTile extends StatelessWidget {
                 if (trailing != null)
                   trailing!
                 else if (onTap != null && showChevron)
-                  const Icon(
+                  Icon(
                     Icons.chevron_right_rounded,
-                    color: AppColors.textSecondary,
+                    color: context.colors.textSecondary,
                     size: 20,
                   ),
               ],
@@ -126,9 +126,9 @@ class SettingsDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(left: 20),
-      child: Divider(height: 1, color: AppColors.border),
+    return Padding(
+      padding: const EdgeInsets.only(left: 20),
+      child: Divider(height: 1, color: context.colors.border),
     );
   }
 }

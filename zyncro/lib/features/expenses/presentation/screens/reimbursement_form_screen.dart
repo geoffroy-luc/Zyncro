@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/expenses/domain/entities/expense.dart';
@@ -144,7 +144,7 @@ class _ReimbursementFormScreenState
     final others = members.where((m) => m.uid != currentUid).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Remboursement'),
         actions: [
@@ -195,10 +195,10 @@ class _ReimbursementFormScreenState
               ),
               const SizedBox(height: 24),
 
-              const Text(
+              Text(
                 'Date',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -214,20 +214,20 @@ class _ReimbursementFormScreenState
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.calendar_today_outlined,
                         size: 18,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                       const SizedBox(width: 12),
                       Text(
                         DateFormat('d MMMM yyyy', 'fr_FR').format(_date),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: context.colors.textPrimary,
                           fontSize: 14,
                         ),
                       ),
@@ -237,10 +237,10 @@ class _ReimbursementFormScreenState
               ),
               const SizedBox(height: 24),
 
-              const Text(
+              Text(
                 'Je rembourse à',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -266,7 +266,7 @@ class _ReimbursementFormScreenState
                             : Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isSelected ? color : AppColors.border,
+                          color: isSelected ? color : context.colors.border,
                           width: isSelected ? 1.5 : 1,
                         ),
                       ),
@@ -288,7 +288,9 @@ class _ReimbursementFormScreenState
                               fontWeight: isSelected
                                   ? FontWeight.w600
                                   : FontWeight.w400,
-                              color: isSelected ? color : AppColors.textPrimary,
+                              color: isSelected
+                                  ? color
+                                  : context.colors.textPrimary,
                             ),
                           ),
                           if (isSelected) ...[
@@ -310,7 +312,7 @@ class _ReimbursementFormScreenState
                 const SizedBox(height: 16),
                 Text(
                   _error!,
-                  style: const TextStyle(color: AppColors.error, fontSize: 13),
+                  style: TextStyle(color: context.colors.error, fontSize: 13),
                 ),
               ],
             ],

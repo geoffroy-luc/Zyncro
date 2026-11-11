@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/constants/expense_categories.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/expenses/domain/entities/expense.dart';
@@ -265,7 +265,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       Icons.block_outlined,
                       color: selectedFreq == null
                           ? primary
-                          : AppColors.textSecondary,
+                          : context.colors.textSecondary,
                     ),
                     title: const Text('Aucune'),
                     trailing: selectedFreq == null
@@ -279,7 +279,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                     return ListTile(
                       leading: Icon(
                         Icons.repeat,
-                        color: isSelected ? primary : AppColors.textSecondary,
+                        color: isSelected
+                            ? primary
+                            : context.colors.textSecondary,
                       ),
                       title: Text(label),
                       trailing: isSelected
@@ -290,12 +292,12 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   }),
                   if (selectedFreq != null) ...[
                     const Divider(height: 24),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
                       child: Text(
                         'Fin de la répétition',
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -384,7 +386,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                                           ),
                                           decoration: BoxDecoration(
                                             border: Border.all(
-                                              color: AppColors.border,
+                                              color: context.colors.border,
                                             ),
                                             borderRadius: BorderRadius.circular(
                                               8,
@@ -457,27 +459,27 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.colors.border),
         ),
         child: Row(
           children: [
-            const Icon(Icons.repeat, size: 20, color: AppColors.textSecondary),
+            Icon(Icons.repeat, size: 20, color: context.colors.textSecondary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
                 style: TextStyle(
                   color: _recurrence != null
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
+                      ? context.colors.textPrimary
+                      : context.colors.textSecondary,
                   fontSize: 14,
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
               size: 20,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ],
         ),
@@ -604,9 +606,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text(
+            child: Text(
               'Supprimer',
-              style: TextStyle(color: AppColors.error),
+              style: TextStyle(color: context.colors.error),
             ),
           ),
         ],
@@ -710,7 +712,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         .toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: Text(
           widget.expense != null ? 'Modifier la dépense' : 'Nouvelle dépense',
@@ -718,7 +720,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         actions: [
           if (widget.expense != null)
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+              icon: Icon(Icons.delete_outline, color: context.colors.error),
               onPressed: _delete,
             ),
           IconButton(
@@ -788,10 +790,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               const SizedBox(height: 24),
 
               // Date
-              const Text(
+              Text(
                 'Date',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -807,20 +809,20 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.calendar_today_outlined,
                         size: 18,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                       const SizedBox(width: 12),
                       Text(
                         DateFormat('d MMMM yyyy', 'fr_FR').format(_date),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: context.colors.textPrimary,
                           fontSize: 14,
                         ),
                       ),
@@ -831,10 +833,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               const SizedBox(height: 24),
 
               // Payé par
-              const Text(
+              Text(
                 'Payé par',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -864,7 +866,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                             : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected ? color : AppColors.border,
+                          color: isSelected ? color : context.colors.border,
                           width: isSelected ? 1.5 : 1,
                         ),
                       ),
@@ -886,7 +888,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                               fontWeight: isSelected
                                   ? FontWeight.w600
                                   : FontWeight.w400,
-                              color: isSelected ? color : AppColors.textPrimary,
+                              color: isSelected
+                                  ? color
+                                  : context.colors.textPrimary,
                             ),
                           ),
                           if (isSelected) ...[
@@ -906,10 +910,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               const SizedBox(height: 24),
 
               // Membres
-              const Text(
+              Text(
                 'Partager avec',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -959,7 +963,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                             : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected ? color : AppColors.border,
+                          color: isSelected ? color : context.colors.border,
                           width: isSelected ? 1.5 : 1,
                         ),
                       ),
@@ -981,7 +985,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                               fontWeight: isSelected
                                   ? FontWeight.w600
                                   : FontWeight.w400,
-                              color: isSelected ? color : AppColors.textPrimary,
+                              color: isSelected
+                                  ? color
+                                  : context.colors.textPrimary,
                             ),
                           ),
                           if (isSelected) ...[
@@ -1001,10 +1007,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               const SizedBox(height: 24),
 
               // Répartition
-              const Text(
+              Text(
                 'Répartition',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1066,9 +1072,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                                 Expanded(
                                   child: Text(
                                     _memberLabel(m, currentUid),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
-                                      color: AppColors.textPrimary,
+                                      color: context.colors.textPrimary,
                                     ),
                                   ),
                                 ),
@@ -1141,10 +1147,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               const SizedBox(height: 24),
 
               // Répétition
-              const Text(
+              Text(
                 'Répétition',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1154,10 +1160,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               const SizedBox(height: 24),
 
               // Catégorie
-              const Text(
+              Text(
                 'Catégorie',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1185,7 +1191,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                               : Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: selected ? color : AppColors.border,
+                            color: selected ? color : context.colors.border,
                             width: selected ? 1.5 : 1,
                           ),
                         ),
@@ -1195,7 +1201,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                             Icon(
                               icon,
                               size: 16,
-                              color: selected ? color : AppColors.textSecondary,
+                              color: selected
+                                  ? color
+                                  : context.colors.textSecondary,
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -1203,7 +1211,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                               style: TextStyle(
                                 color: selected
                                     ? color
-                                    : AppColors.textSecondary,
+                                    : context.colors.textSecondary,
                                 fontSize: 13,
                                 fontWeight: selected
                                     ? FontWeight.w600
@@ -1225,21 +1233,21 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: context.colors.border),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.add,
                             size: 16,
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Text(
                             'Nouvelle catégorie',
                             style: TextStyle(
-                              color: AppColors.textSecondary,
+                              color: context.colors.textSecondary,
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
                             ),
@@ -1255,7 +1263,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                 const SizedBox(height: 16),
                 Text(
                   _splitError!,
-                  style: const TextStyle(color: AppColors.error, fontSize: 13),
+                  style: TextStyle(color: context.colors.error, fontSize: 13),
                 ),
               ],
             ],

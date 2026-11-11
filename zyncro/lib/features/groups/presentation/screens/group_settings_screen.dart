@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/invite_share.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/groups/domain/entities/group_member.dart';
@@ -249,7 +249,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
     final isOwner = group.createdBy == currentUser?.uid;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(title: const Text('Paramètres du groupe')),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -266,7 +266,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                       width: 52,
                       height: 52,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        color: context.colors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
@@ -291,16 +291,16 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                           if (group.description != null)
                             Text(
                               group.description!,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                               ),
                             ),
                           Text(
                             '${group.memberIds.length} membre${group.memberIds.length > 1 ? 's' : ''}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.secondary,
+                              color: context.colors.secondary,
                             ),
                           ),
                         ],
@@ -315,7 +315,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                           group.description,
                         ),
                         icon: const Icon(Icons.edit_outlined, size: 20),
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                   ],
                 ),
@@ -332,11 +332,11 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Partage le lien ou le code pour inviter quelqu\'un dans ce groupe.',
                       style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -367,23 +367,23 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                                 vertical: 12,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(
+                                color: context.colors.primary.withValues(
                                   alpha: 0.06,
                                 ),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: AppColors.primary.withValues(
+                                  color: context.colors.primary.withValues(
                                     alpha: 0.2,
                                   ),
                                 ),
                               ),
                               child: Text(
                                 group.inviteCode!,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 4,
-                                  color: AppColors.primary,
+                                  color: context.colors.primary,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -403,7 +403,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                             },
                             icon: const Icon(Icons.copy),
                             style: IconButton.styleFrom(
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: context.colors.primary,
                               foregroundColor: Colors.white,
                             ),
                           ),
@@ -439,7 +439,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                               : const Icon(Icons.refresh, size: 18),
                           label: const Text('Régénérer le lien'),
                           style: TextButton.styleFrom(
-                            foregroundColor: AppColors.primary,
+                            foregroundColor: context.colors.primary,
                           ),
                         ),
                       ),
@@ -476,16 +476,16 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           color: member.isOwner
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
+                              ? context.colors.primary
+                              : context.colors.textSecondary,
                         ),
                       ),
                       trailing: isCurrentUser
                           ? IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.edit_outlined,
                                 size: 18,
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                               ),
                               tooltip: 'Changer mon pseudo',
                               onPressed: () => _editMyPseudo(
@@ -496,9 +496,9 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                             )
                           : isOwner && !member.isOwner
                           ? PopupMenuButton<String>(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.more_vert,
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                                 size: 20,
                               ),
                               onSelected: (action) {
@@ -530,20 +530,20 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                                     ],
                                   ),
                                 ),
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                   value: 'remove',
                                   child: Row(
                                     children: [
                                       Icon(
                                         Icons.person_remove_outlined,
                                         size: 18,
-                                        color: AppColors.error,
+                                        color: context.colors.error,
                                       ),
-                                      SizedBox(width: 10),
+                                      const SizedBox(width: 10),
                                       Text(
                                         'Retirer du groupe',
                                         style: TextStyle(
-                                          color: AppColors.error,
+                                          color: context.colors.error,
                                         ),
                                       ),
                                     ],
@@ -582,8 +582,8 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                 : () => _confirmLeave(context, ref, currentUser?.uid),
             style: TextButton.styleFrom(
               foregroundColor: isOwner
-                  ? AppColors.textSecondary
-                  : AppColors.error,
+                  ? context.colors.textSecondary
+                  : context.colors.error,
             ),
             icon: const Icon(Icons.exit_to_app_outlined),
             label: const Text('Quitter ce groupe'),
@@ -594,7 +594,9 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
             TextButton.icon(
               onPressed: () =>
                   _confirmDeleteGroup(context, ref, group.id, group.inviteCode),
-              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+              style: TextButton.styleFrom(
+                foregroundColor: context.colors.error,
+              ),
               icon: const Icon(Icons.delete_forever_outlined),
               label: const Text('Supprimer le groupe'),
             ),
@@ -626,7 +628,9 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.error,
+            ),
             child: const Text('Supprimer'),
           ),
         ],
@@ -723,7 +727,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
             child: const Text('Retirer'),
           ),
         ],
@@ -775,7 +779,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
             child: const Text('Quitter'),
           ),
         ],
@@ -834,10 +838,10 @@ class _Section extends StatelessWidget {
           padding: const EdgeInsets.only(top: 16, bottom: 8),
           child: Text(
             title.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
               letterSpacing: 0.8,
             ),
           ),

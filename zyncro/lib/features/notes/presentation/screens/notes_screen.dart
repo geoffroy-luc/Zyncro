@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/notes/domain/entities/note.dart';
 import 'package:zyncro/features/notes/presentation/providers/notes_provider.dart';
@@ -66,7 +67,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
     final notesAsync = ref.watch(notesProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: context.colors.background,
       floatingActionButton: FloatingActionButton(
         heroTag: 'fab_notes',
         onPressed: _openEditor,
@@ -112,33 +113,35 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF7F9FC),
+                            color: context.colors.background,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.border),
+                            border: Border.all(color: context.colors.border),
                           ),
                           child: Row(
                             children: [
-                              const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 14),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                ),
                                 child: Icon(
                                   Icons.search,
-                                  color: AppColors.textSecondary,
+                                  color: context.colors.textSecondary,
                                   size: 20,
                                 ),
                               ),
                               Expanded(
                                 child: TextField(
                                   onChanged: (v) => setState(() => _search = v),
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                     hintText: 'Rechercher...',
                                     hintStyle: TextStyle(
-                                      color: AppColors.textSecondary,
+                                      color: context.colors.textSecondary,
                                       fontSize: 14,
                                     ),
                                     border: InputBorder.none,
                                     enabledBorder: InputBorder.none,
                                     focusedBorder: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(
+                                    contentPadding: const EdgeInsets.symmetric(
                                       vertical: 12,
                                     ),
                                     filled: false,
@@ -152,8 +155,8 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                     ),
                   ),
                 ),
-                const SliverToBoxAdapter(
-                  child: Divider(height: 1, color: AppColors.border),
+                SliverToBoxAdapter(
+                  child: Divider(height: 1, color: context.colors.border),
                 ),
 
                 // ── Contenu ─────────────────────────────────────────────
@@ -163,15 +166,17 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.description_outlined,
                             size: 48,
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'Aucune note',
-                            style: TextStyle(color: AppColors.textSecondary),
+                            style: TextStyle(
+                              color: context.colors.textSecondary,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
@@ -190,18 +195,18 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                       delegate: SliverChildListDelegate([
                         // Épinglées
                         if (pinned.isNotEmpty) ...[
-                          const Row(
+                          Row(
                             children: [
                               Icon(
                                 Icons.push_pin,
                                 size: 16,
-                                color: AppColors.accent,
+                                color: context.colors.accent,
                               ),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
                                 'Épinglées',
                                 style: TextStyle(
-                                  color: AppColors.textPrimary,
+                                  color: context.colors.textPrimary,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15,
                                 ),
@@ -224,10 +229,10 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
 
                         // Récentes
                         if (recent.isNotEmpty) ...[
-                          const Text(
+                          Text(
                             'Récentes',
                             style: TextStyle(
-                              color: AppColors.textPrimary,
+                              color: context.colors.textPrimary,
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
@@ -380,11 +385,11 @@ class _PinnedNoteCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color.withValues(alpha: 0.15), width: 2),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0x0A000000),
+              color: context.colors.shadow,
               blurRadius: 4,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -426,8 +431,8 @@ class _PinnedNoteCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           note.title,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: context.colors.textPrimary,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
@@ -445,8 +450,8 @@ class _PinnedNoteCard extends StatelessWidget {
                                 : Icons.push_pin_outlined,
                             size: 18,
                             color: note.isPinned
-                                ? AppColors.accent
-                                : AppColors.textSecondary,
+                                ? context.colors.accent
+                                : context.colors.textSecondary,
                           ),
                         ),
                       ),
@@ -464,8 +469,8 @@ class _PinnedNoteCard extends StatelessWidget {
                   else
                     Text(
                       note.content,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: context.colors.textSecondary,
                         fontSize: 13,
                         height: 1.5,
                       ),
@@ -475,16 +480,16 @@ class _PinnedNoteCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.access_time,
                         size: 12,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         _formatDate(note.updatedAt),
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: context.colors.textSecondary,
                           fontSize: 11,
                         ),
                       ),
@@ -522,12 +527,12 @@ class _RecentNoteCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
+          border: Border.all(color: context.colors.border),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x0A000000),
+              color: context.colors.shadow,
               blurRadius: 4,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -581,8 +586,8 @@ class _RecentNoteCard extends StatelessWidget {
                                   : Icons.push_pin_outlined,
                               size: 16,
                               color: note.isPinned
-                                  ? AppColors.accent
-                                  : AppColors.textSecondary.withValues(
+                                  ? context.colors.accent
+                                  : context.colors.textSecondary.withValues(
                                       alpha: 0.5,
                                     ),
                             ),
@@ -594,8 +599,8 @@ class _RecentNoteCard extends StatelessWidget {
                     // Titre
                     Text(
                       note.title,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
@@ -618,8 +623,8 @@ class _RecentNoteCard extends StatelessWidget {
                             )
                           : Text(
                               note.content,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
+                              style: TextStyle(
+                                color: context.colors.textSecondary,
                                 fontSize: 11,
                                 height: 1.4,
                               ),
@@ -631,16 +636,16 @@ class _RecentNoteCard extends StatelessWidget {
                     // Date
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.access_time,
                           size: 11,
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _formatDate(note.updatedAt),
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: context.colors.textSecondary,
                             fontSize: 10,
                           ),
                         ),

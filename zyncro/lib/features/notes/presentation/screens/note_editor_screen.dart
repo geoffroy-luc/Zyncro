@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
@@ -221,9 +222,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text(
+            child: Text(
               'Supprimer',
-              style: TextStyle(color: AppColors.error),
+              style: TextStyle(color: context.colors.error),
             ),
           ),
         ],
@@ -304,13 +305,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final accentColor = hexToColor(_selectedColor);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: Text(isEditing ? 'Modifier la note' : 'Nouvelle note'),
         actions: [
           if (isEditing)
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+              icon: Icon(Icons.delete_outline, color: context.colors.error),
               onPressed: _delete,
             ),
           IconButton(
@@ -350,10 +351,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               const SizedBox(height: 16),
 
               // Couleur
-              const Text(
+              Text(
                 'Couleur',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -434,10 +435,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                         children: [
                           ReorderableDragStartListener(
                             index: i,
-                            child: const Icon(
+                            child: Icon(
                               Icons.drag_handle,
                               size: 20,
-                              color: AppColors.textSecondary,
+                              color: context.colors.textSecondary,
                             ),
                           ),
                           Checkbox(
@@ -455,8 +456,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                               focusNode: _itemFocusNodes[i],
                               decoration: InputDecoration(
                                 hintText: 'Élément ${i + 1}…',
-                                hintStyle: const TextStyle(
-                                  color: AppColors.textSecondary,
+                                hintStyle: TextStyle(
+                                  color: context.colors.textSecondary,
                                 ),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
@@ -466,8 +467,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                               style: TextStyle(
                                 fontSize: 15,
                                 color: item.done
-                                    ? AppColors.textSecondary
-                                    : AppColors.textPrimary,
+                                    ? context.colors.textSecondary
+                                    : context.colors.textPrimary,
                                 decoration: item.done
                                     ? TextDecoration.lineThrough
                                     : TextDecoration.none,
@@ -479,10 +480,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.close,
                               size: 18,
-                              color: AppColors.textSecondary,
+                              color: context.colors.textSecondary,
                             ),
                             onPressed: () => _removeChecklistItem(i),
                             padding: EdgeInsets.zero,
@@ -535,7 +536,9 @@ class _OptionChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? accentColor.withValues(alpha: 0.1) : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? accentColor : AppColors.border),
+          border: Border.all(
+            color: selected ? accentColor : context.colors.border,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -543,14 +546,14 @@ class _OptionChip extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: selected ? accentColor : AppColors.textSecondary,
+              color: selected ? accentColor : context.colors.textSecondary,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: selected ? accentColor : AppColors.textSecondary,
+                color: selected ? accentColor : context.colors.textSecondary,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),

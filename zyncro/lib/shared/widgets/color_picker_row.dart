@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 
 // ── HSV Color Picker Dialog ───────────────────────────────────────────────────
 
@@ -98,7 +99,7 @@ class _ColorPickerSheetState extends State<_ColorPickerSheet> {
             height: 4,
             margin: const EdgeInsets.only(bottom: 20),
             decoration: BoxDecoration(
-              color: AppColors.border,
+              color: context.colors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -154,7 +155,7 @@ class _ColorPickerSheetState extends State<_ColorPickerSheet> {
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: context.colors.border),
                 ),
               ),
               const SizedBox(width: 12),
@@ -170,11 +171,11 @@ class _ColorPickerSheetState extends State<_ColorPickerSheet> {
                     prefixText: '#',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: AppColors.border),
+                      borderSide: BorderSide(color: context.colors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: AppColors.border),
+                      borderSide: BorderSide(color: context.colors.border),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -348,9 +349,9 @@ class ColorPickerRow extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
+            child: Text(
               'Supprimer',
-              style: TextStyle(color: AppColors.error),
+              style: TextStyle(color: context.colors.error),
             ),
           ),
         ],
@@ -395,13 +396,13 @@ class ColorPickerRow extends StatelessWidget {
               height: 30,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.border, width: 1.5),
-                color: AppColors.background,
+                border: Border.all(color: context.colors.border, width: 1.5),
+                color: context.colors.background,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.add,
                 size: 16,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
           ),

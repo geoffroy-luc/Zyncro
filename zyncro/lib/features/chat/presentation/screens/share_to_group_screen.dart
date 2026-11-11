@@ -5,7 +5,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/share_provider.dart';
@@ -42,26 +42,26 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
 
     // Plus rien à partager (déjà envoyé / annulé) → on ferme proprement.
     if (share == null) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: SizedBox.shrink(),
+      return Scaffold(
+        backgroundColor: context.colors.background,
+        body: const SizedBox.shrink(),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: AppColors.surface,
+        backgroundColor: context.colors.surface,
+        surfaceTintColor: context.colors.surface,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textPrimary),
+          icon: Icon(Icons.close, color: context.colors.textPrimary),
           onPressed: _sending ? null : _cancel,
         ),
-        title: const Text(
+        title: Text(
           'Partager vers…',
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: context.colors.textPrimary,
             fontSize: 17,
             fontWeight: FontWeight.w600,
           ),
@@ -70,16 +70,16 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
       body: Column(
         children: [
           _SharePreview(share: share),
-          const Divider(height: 1, color: AppColors.border),
+          Divider(height: 1, color: context.colors.border),
           Expanded(
             child: groups.isEmpty
-                ? const Center(
+                ? Center(
                     child: Padding(
-                      padding: EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(24),
                       child: Text(
                         "Vous n'avez encore aucun groupe.\nCréez-en un pour pouvoir partager.",
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(color: context.colors.textSecondary),
                       ),
                     ),
                   )
@@ -117,8 +117,10 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
         child: ElevatedButton(
           onPressed: canSend ? _send : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
+            backgroundColor: context.colors.primary,
+            disabledBackgroundColor: context.colors.primary.withValues(
+              alpha: 0.4,
+            ),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
@@ -252,19 +254,19 @@ class _SharePreview extends StatelessWidget {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
-        color: AppColors.surface,
+        color: context.colors.surface,
         child: Text(
           share.text ?? '',
           maxLines: 4,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
         ),
       );
     }
 
     return Container(
       width: double.infinity,
-      color: AppColors.surface,
+      color: context.colors.surface,
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       child: SizedBox(
         height: 88,
@@ -284,10 +286,10 @@ class _SharePreview extends StatelessWidget {
                     ? Image.file(File(m.path), fit: BoxFit.cover)
                     : Container(
                         color: Colors.black12,
-                        child: const Icon(
+                        child: Icon(
                           Icons.play_circle_outline,
                           size: 34,
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                         ),
                       ),
               ),
@@ -319,7 +321,7 @@ class _GroupRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         color: selected
-            ? AppColors.primary.withValues(alpha: 0.08)
+            ? context.colors.primary.withValues(alpha: 0.08)
             : Colors.transparent,
         child: Row(
           children: [
@@ -327,7 +329,7 @@ class _GroupRow extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: context.colors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               clipBehavior: Clip.antiAlias,
@@ -348,8 +350,8 @@ class _GroupRow extends StatelessWidget {
             Expanded(
               child: Text(
                 group.name,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: context.colors.textPrimary,
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                 ),
@@ -359,7 +361,7 @@ class _GroupRow extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color: selected ? AppColors.primary : AppColors.border,
+              color: selected ? context.colors.primary : context.colors.border,
             ),
           ],
         ),

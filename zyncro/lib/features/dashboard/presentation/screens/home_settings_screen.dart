@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/firebase/firestore_paths.dart';
 import 'package:zyncro/core/media/media_providers.dart';
 import 'package:zyncro/core/media/media_source.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/core/utils/invite_share.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/groups/domain/entities/group_member.dart';
@@ -57,7 +57,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.border,
+                color: context.colors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -88,13 +88,13 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
             ),
             if (settings.homePhotoUrl != null)
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.delete_outline,
-                  color: AppColors.error,
+                  color: context.colors.error,
                 ),
-                title: const Text(
+                title: Text(
                   'Supprimer la photo',
-                  style: TextStyle(color: AppColors.error),
+                  style: TextStyle(color: context.colors.error),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -413,7 +413,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
             child: const Text('Quitter'),
           ),
         ],
@@ -463,7 +463,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.error,
+            ),
             child: const Text('Supprimer'),
           ),
         ],
@@ -550,7 +552,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
             child: const Text('Retirer'),
           ),
         ],
@@ -601,7 +603,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     final emoji = group.emoji ?? group.name[0].toUpperCase();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -610,17 +612,17 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
+        title: Text(
           'Paramètres Accueil',
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.colors.textPrimary,
           ),
         ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.border),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(height: 1, color: context.colors.border),
         ),
       ),
       body: ListView(
@@ -686,16 +688,16 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                           if (group.description != null)
                             Text(
                               group.description!,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                               ),
                             ),
                           Text(
                             '${group.memberIds.length} membre${group.memberIds.length > 1 ? 's' : ''}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.secondary,
+                              color: context.colors.secondary,
                             ),
                           ),
                         ],
@@ -709,7 +711,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                           group.description,
                         ),
                         icon: const Icon(Icons.edit_outlined, size: 20),
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                   ],
                 ),
@@ -726,11 +728,11 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Partage le lien ou le code pour inviter quelqu\'un dans ce groupe.',
                       style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -902,15 +904,15 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                           fontSize: 12,
                           color: member.isOwner
                               ? primary
-                              : AppColors.textSecondary,
+                              : context.colors.textSecondary,
                         ),
                       ),
                       trailing: isCurrentUser
                           ? IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.edit_outlined,
                                 size: 18,
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                               ),
                               tooltip: 'Changer mon pseudo',
                               onPressed: () =>
@@ -918,9 +920,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                             )
                           : isOwner && !member.isOwner
                           ? PopupMenuButton<String>(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.more_vert,
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                                 size: 20,
                               ),
                               onSelected: (action) {
@@ -944,20 +946,20 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                                     ],
                                   ),
                                 ),
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                   value: 'remove',
                                   child: Row(
                                     children: [
                                       Icon(
                                         Icons.person_remove_outlined,
                                         size: 18,
-                                        color: AppColors.error,
+                                        color: context.colors.error,
                                       ),
-                                      SizedBox(width: 10),
+                                      const SizedBox(width: 10),
                                       Text(
                                         'Retirer du groupe',
                                         style: TextStyle(
-                                          color: AppColors.error,
+                                          color: context.colors.error,
                                         ),
                                       ),
                                     ],
@@ -996,8 +998,8 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                 : () => _confirmLeave(currentUser?.uid),
             style: TextButton.styleFrom(
               foregroundColor: isOwner
-                  ? AppColors.textSecondary
-                  : AppColors.error,
+                  ? context.colors.textSecondary
+                  : context.colors.error,
             ),
             icon: const Icon(Icons.exit_to_app_outlined),
             label: const Text('Quitter ce groupe'),
@@ -1007,7 +1009,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
             const Divider(height: 32),
             TextButton.icon(
               onPressed: () => _confirmDeleteGroup(group.id, group.inviteCode),
-              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+              style: TextButton.styleFrom(
+                foregroundColor: context.colors.error,
+              ),
               icon: const Icon(Icons.delete_forever_outlined),
               label: const Text('Supprimer le groupe'),
             ),
@@ -1037,10 +1041,10 @@ class _Section extends StatelessWidget {
           padding: const EdgeInsets.only(top: 16, bottom: 8),
           child: Text(
             title.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
               letterSpacing: 0.8,
             ),
           ),

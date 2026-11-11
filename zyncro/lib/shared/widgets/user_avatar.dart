@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 
 /// Returns a deterministic colour for a given user [uid].
 /// The same uid always maps to the same colour, regardless of the screen.
@@ -28,7 +28,7 @@ class UserAvatar extends StatelessWidget {
   final double radius;
 
   /// Accent colour for the initials circle background / text.
-  /// Defaults to [AppColors.primary].
+  /// Defaults to [context.colors.primary].
   final Color? color;
 
   const UserAvatar({
@@ -42,7 +42,7 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = color ?? AppColors.primary;
+    final accent = color ?? context.colors.primary;
     final initials = _initials(displayName);
     final size = radius * 2;
 

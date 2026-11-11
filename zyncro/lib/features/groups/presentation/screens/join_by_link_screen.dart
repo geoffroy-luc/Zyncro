@@ -1,9 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/groups/domain/repositories/groups_repository.dart';
@@ -121,12 +121,12 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textPrimary),
+          icon: Icon(Icons.close, color: context.colors.textPrimary),
           onPressed: _close,
         ),
       ),
@@ -204,10 +204,10 @@ class _InviteCard extends StatelessWidget {
           width: 96,
           height: 96,
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.08),
+            color: context.colors.primary.withValues(alpha: 0.08),
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.2),
+              color: context.colors.primary.withValues(alpha: 0.2),
               width: 2,
             ),
           ),
@@ -227,7 +227,7 @@ class _InviteCard extends StatelessWidget {
               ? 'Tu fais déjà partie de'
               : 'Tu as été invité·e à rejoindre',
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
+            color: context.colors.textSecondary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -243,7 +243,7 @@ class _InviteCard extends StatelessWidget {
         if (error != null) ...[
           Text(
             error!,
-            style: const TextStyle(color: AppColors.error, fontSize: 13),
+            style: TextStyle(color: context.colors.error, fontSize: 13),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -308,10 +308,10 @@ class _InvalidLink extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(
+        Icon(
           Icons.link_off_rounded,
           size: 64,
-          color: AppColors.textSecondary,
+          color: context.colors.textSecondary,
         ),
         const SizedBox(height: 20),
         Text(
@@ -321,10 +321,10 @@ class _InvalidLink extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Ce lien d\'invitation est invalide ou a expiré. Demande un nouveau '
           'lien à un membre du groupe.',
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: context.colors.textSecondary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 28),

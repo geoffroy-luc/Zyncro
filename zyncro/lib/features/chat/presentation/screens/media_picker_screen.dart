@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 
 typedef MediaPickerResult = List<({String path, String mimeType})>;
 
@@ -254,7 +255,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                 if (_isLimited)
                   Container(
                     width: double.infinity,
-                    color: const Color(0xFF1C1C1E),
+                    color: context.colors.mediaBackground,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 10,

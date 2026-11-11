@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/error/failure.dart';
 import 'package:zyncro/core/error/failure_mapper.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/groups/domain/entities/group.dart';
@@ -20,7 +20,7 @@ class GroupSelectionScreen extends ConsumerWidget {
     final groupsAsync = ref.watch(userGroupsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Mes espaces'),
         actions: [
@@ -111,7 +111,7 @@ class _GroupsErrorView extends StatelessWidget {
             Icon(
               isPermission ? Icons.lock_outline : Icons.cloud_off_outlined,
               size: 56,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
             const SizedBox(height: 16),
             Text(
@@ -119,10 +119,10 @@ class _GroupsErrorView extends StatelessWidget {
                   ? 'Impossible d\'accéder à tes espaces'
                   : 'Impossible de charger tes espaces',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -131,7 +131,7 @@ class _GroupsErrorView extends StatelessWidget {
                   ? 'Vérifie ta connexion, puis reconnecte-toi si le problème persiste.'
                   : 'Vérifie ta connexion internet, puis réessaie.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: context.colors.textSecondary),
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
@@ -249,7 +249,7 @@ class _GroupTile extends ConsumerWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: context.colors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: group.photoUrl != null
@@ -281,7 +281,7 @@ class _GroupTile extends ConsumerWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.accent,
+                          color: context.colors.accent,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Colors.white, width: 1.5),
                         ),
@@ -315,7 +315,7 @@ class _GroupTile extends ConsumerWidget {
                     Text(
                       '${group.memberIds.length} membre${group.memberIds.length > 1 ? 's' : ''}',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.secondary,
+                        color: context.colors.secondary,
                       ),
                     ),
                   ],
@@ -339,22 +339,22 @@ class _GroupTile extends ConsumerWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
+                      color: context.colors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       group.inviteCode!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
+                        color: context.colors.primary,
                         letterSpacing: 1.2,
                       ),
                     ),
                   ),
                 ),
               const SizedBox(width: 4),
-              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+              Icon(Icons.chevron_right, color: context.colors.textSecondary),
             ],
           ),
         ),
@@ -383,13 +383,13 @@ class _EmptyHint extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: context.colors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.people_outline,
                 size: 40,
-                color: AppColors.primary,
+                color: context.colors.primary,
               ),
             ),
             const SizedBox(height: 24),
@@ -496,9 +496,9 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
     final theme = Theme.of(context);
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(
         24,
@@ -539,11 +539,14 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
                       height: 48,
                       decoration: BoxDecoration(
                         color: selected
-                            ? AppColors.primary.withValues(alpha: 0.15)
-                            : AppColors.background,
+                            ? context.colors.primary.withValues(alpha: 0.15)
+                            : context.colors.background,
                         borderRadius: BorderRadius.circular(12),
                         border: selected
-                            ? Border.all(color: AppColors.primary, width: 2)
+                            ? Border.all(
+                                color: context.colors.primary,
+                                width: 2,
+                              )
                             : null,
                       ),
                       child: Center(
@@ -694,9 +697,9 @@ class _JoinGroupSheetState extends ConsumerState<_JoinGroupSheet> {
     final theme = Theme.of(context);
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(
         24,

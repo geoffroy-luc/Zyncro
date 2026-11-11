@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -177,7 +177,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 'Zyncro',
                 style: theme.textTheme.headlineLarge?.copyWith(
-                  color: AppColors.primary,
+                  color: context.colors.primary,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -235,13 +235,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.08),
+                          color: context.colors.error.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           _error!,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.error,
+                            color: context.colors.error,
                           ),
                         ),
                       ),
@@ -251,7 +251,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: TextButton(
                         onPressed: _loading ? null : _resetPassword,
                         style: TextButton.styleFrom(
-                          foregroundColor: AppColors.textSecondary,
+                          foregroundColor: context.colors.textSecondary,
                           padding: EdgeInsets.zero,
                           minimumSize: const Size(0, 32),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -278,12 +278,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Row(
                   children: [
-                    const Expanded(child: Divider(color: AppColors.border)),
+                    Expanded(child: Divider(color: context.colors.border)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text('ou', style: theme.textTheme.bodySmall),
                     ),
-                    const Expanded(child: Divider(color: AppColors.border)),
+                    Expanded(child: Divider(color: context.colors.border)),
                   ],
                 ),
               ),
@@ -292,7 +292,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               OutlinedButton.icon(
                 onPressed: _loading ? null : _signInWithGoogle,
                 icon: _loadingType == _LoadingType.google
-                    ? const _Spinner(color: AppColors.primary)
+                    ? _Spinner(color: context.colors.primary)
                     : const _GoogleIcon(),
                 label: const Text('Continuer avec Google'),
               ),
@@ -303,7 +303,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 OutlinedButton.icon(
                   onPressed: _loading ? null : _signInWithApple,
                   icon: _loadingType == _LoadingType.apple
-                      ? const _Spinner(color: AppColors.primary)
+                      ? _Spinner(color: context.colors.primary)
                       : const _AppleIcon(),
                   label: const Text('Continuer avec Apple'),
                 ),
@@ -314,11 +314,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               OutlinedButton.icon(
                 onPressed: _loading ? null : _showGuestPseudoSheet,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.textSecondary,
-                  side: const BorderSide(color: AppColors.border),
+                  foregroundColor: context.colors.textSecondary,
+                  side: BorderSide(color: context.colors.border),
                 ),
                 icon: _loadingType == _LoadingType.anonymous
-                    ? const _Spinner(color: AppColors.textSecondary)
+                    ? _Spinner(color: context.colors.textSecondary)
                     : const Icon(Icons.person_outline, size: 20),
                 label: const Text('Continuer sans compte'),
               ),
@@ -379,9 +379,9 @@ class _GuestPseudoSheetState extends State<_GuestPseudoSheet> {
     final theme = Theme.of(context);
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(
         24,
@@ -412,7 +412,7 @@ class _GuestPseudoSheetState extends State<_GuestPseudoSheet> {
             Text(
               'Entre un pseudo pour être identifié dans ton groupe.',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
             const SizedBox(height: 20),

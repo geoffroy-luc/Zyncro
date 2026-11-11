@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/notifications/notification_providers.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
 
@@ -92,7 +92,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.border,
+                color: context.colors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -128,13 +128,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 showProfilePhoto
                     ? Icons.hide_image_outlined
                     : Icons.image_outlined,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
               title: Text(
                 showProfilePhoto
                     ? 'Afficher uniquement mes initiales'
                     : 'Afficher ma photo de profil',
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.colors.textSecondary),
               ),
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -243,7 +243,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: const Text('Annuler'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.colors.error,
+            ),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text(
               'Supprimer',
@@ -286,7 +288,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final effectivePhotoUrl = customPhotoUrl ?? user?.photoUrl;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(title: const Text('Mon profil')),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 24),
@@ -297,12 +299,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               alignment: Alignment.bottomRight,
               children: [
                 _loadingPhoto
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 88,
                         height: 88,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                         ),
                       )
                     : GestureDetector(
@@ -322,7 +324,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        color: context.colors.primary,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                       ),
@@ -342,7 +344,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Text(
                 email,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
               ),
             ),
@@ -352,17 +354,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const _SectionHeader(label: 'Informations'),
           _Card(
             child: ListTile(
-              leading: const Icon(
+              leading: Icon(
                 Icons.person_outline,
-                color: AppColors.primary,
+                color: context.colors.primary,
               ),
               title: const Text('Pseudo'),
               subtitle: Text(displayName),
               trailing: IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.edit_outlined,
                   size: 20,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
                 onPressed: _editPseudo,
               ),
@@ -379,7 +381,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     showProfilePhoto
                         ? Icons.account_circle_outlined
                         : Icons.account_circle_outlined,
-                    color: AppColors.primary,
+                    color: context.colors.primary,
                   ),
                   title: const Text('Afficher ma photo de profil'),
                   subtitle: Text(
@@ -387,7 +389,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ? 'Les autres voient ta photo'
                         : 'Les autres voient tes initiales',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                   ),
                   trailing: _loadingPhoto
@@ -399,21 +401,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       : Switch(
                           value: showProfilePhoto,
                           onChanged: _toggleShowPhoto,
-                          activeThumbColor: AppColors.primary,
+                          activeThumbColor: context.colors.primary,
                         ),
                 ),
-                const Divider(
+                Divider(
                   height: 1,
                   indent: 16,
                   endIndent: 16,
-                  color: AppColors.border,
+                  color: context.colors.border,
                 ),
                 ListTile(
                   leading: Icon(
                     _notificationsEnabled
                         ? Icons.notifications_outlined
                         : Icons.notifications_off_outlined,
-                    color: AppColors.primary,
+                    color: context.colors.primary,
                   ),
                   title: const Text('Notifications'),
                   trailing: _loadingNotif
@@ -425,7 +427,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       : Switch(
                           value: _notificationsEnabled,
                           onChanged: _toggleNotifications,
-                          activeThumbColor: AppColors.primary,
+                          activeThumbColor: context.colors.primary,
                         ),
                 ),
               ],
@@ -438,27 +440,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.logout_outlined,
-                    color: AppColors.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
                   title: const Text('Se déconnecter'),
                   onTap: _signOut,
                 ),
-                const Divider(
+                Divider(
                   height: 1,
                   indent: 16,
                   endIndent: 16,
-                  color: AppColors.border,
+                  color: context.colors.border,
                 ),
                 ListTile(
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.delete_outline,
-                    color: AppColors.error,
+                    color: context.colors.error,
                   ),
-                  title: const Text(
+                  title: Text(
                     'Supprimer le compte',
-                    style: TextStyle(color: AppColors.error),
+                    style: TextStyle(color: context.colors.error),
                   ),
                   onTap: _deleteAccount,
                 ),
@@ -484,7 +486,7 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: AppColors.textSecondary,
+          color: context.colors.textSecondary,
           letterSpacing: 0.8,
           fontWeight: FontWeight.w600,
         ),
@@ -502,9 +504,9 @@ class _Card extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: child,
     );
