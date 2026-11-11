@@ -206,6 +206,39 @@ class TabSettings {
     );
   }
 
+  /// Champs de premier niveau dont la valeur diffère entre `this` (état de
+  /// départ, tel que vu par l'appelant) et [next] (état voulu).
+  ///
+  /// Sert à n'écrire QUE ce que l'utilisateur a modifié : écrire la carte
+  /// complète écrasait les modifications concurrentes des autres membres et,
+  /// pendant un chargement, réinitialisait tous les onglets (BUGS_FOUND G1).
+  Map<String, dynamic> changedFieldsTo(TabSettings next) {
+    final before = toMap();
+    final after = next.toMap();
+    return {
+      for (final entry in after.entries)
+        if (!_jsonEquals(before[entry.key], entry.value)) entry.key: entry.value,
+    };
+  }
+
+  static bool _jsonEquals(Object? a, Object? b) {
+    if (a is List && b is List) {
+      if (a.length != b.length) return false;
+      for (var i = 0; i < a.length; i++) {
+        if (!_jsonEquals(a[i], b[i])) return false;
+      }
+      return true;
+    }
+    if (a is Map && b is Map) {
+      if (a.length != b.length) return false;
+      for (final key in a.keys) {
+        if (!b.containsKey(key) || !_jsonEquals(a[key], b[key])) return false;
+      }
+      return true;
+    }
+    return a == b;
+  }
+
   /// Retire une couleur d'une palette : si c'est une couleur personnalisée,
   /// elle est supprimée de [customColors] ; sinon (couleur de base), elle est
   /// masquée via [hiddenBaseColors].

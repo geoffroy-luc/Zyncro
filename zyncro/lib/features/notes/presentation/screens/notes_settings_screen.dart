@@ -10,10 +10,12 @@ import '../../../groups/presentation/providers/tab_settings_provider.dart';
 class NotesSettingsScreen extends ConsumerWidget {
   const NotesSettingsScreen({super.key});
 
-  Future<void> _update(WidgetRef ref, TabSettings next) async {
+  Future<void> _update(WidgetRef ref, TabSettings from, TabSettings to) async {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    await ref.read(tabSettingsRepositoryProvider).updateSettings(groupId, next);
+    await ref
+        .read(tabSettingsRepositoryProvider)
+        .updateSettings(groupId, from: from, to: to);
   }
 
   @override
@@ -56,13 +58,13 @@ class NotesSettingsScreen extends ConsumerWidget {
                   selected: settings.notesThemeColor,
                   extraColors: settings.customColors,
                   hiddenBaseColors: settings.hiddenBaseColors,
-                  onSelect: (hex) => _update(ref, settings.copyWith(notesThemeColor: hex)),
+                  onSelect: (hex) => _update(ref, settings, settings.copyWith(notesThemeColor: hex)),
                   onAddColor: (hex) => _update(
                     ref,
-                    settings.copyWith(customColors: [...settings.customColors, hex]),
+                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
                   ),
                   onDeleteColor: (hex) =>
-                      _update(ref, settings.withColorRemoved(hex)),
+                      _update(ref, settings, settings.withColorRemoved(hex)),
                 ),
               ),
             ],
