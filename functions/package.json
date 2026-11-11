@@ -2,6 +2,7 @@
   "name": "functions",
   "scripts": {
     "build": "tsc",
+    "test": "vitest run",
     "deploy": "npm run build && firebase deploy --only functions"
   },
   "engines": {
@@ -13,6 +14,10 @@
     "firebase-functions": "^6.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.72.2",
+    "vitest": "^3.2.7"
   }
 }
