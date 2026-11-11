@@ -133,6 +133,16 @@ final mediaMessagesProvider = StreamProvider<List<Message>>((ref) {
   return ref.watch(messagesRepositoryProvider).watchMediaMessages(groupId);
 });
 
+/// Les 6 derniers médias du groupe (aperçu du tableau de bord) : requête
+/// bornée côté serveur au lieu de tout l'historique.
+final recentMediaMessagesProvider = StreamProvider<List<Message>>((ref) {
+  final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
+  if (groupId == null) return Stream.value([]);
+  return ref
+      .watch(messagesRepositoryProvider)
+      .watchRecentMediaMessages(groupId, limit: 6);
+});
+
 /// True uniquement quand l'utilisateur est sur l'onglet Chat.
 class ChatTabActiveNotifier extends Notifier<bool> {
   @override

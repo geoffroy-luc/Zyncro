@@ -1,5 +1,8 @@
 import 'package:zyncro/features/chat/domain/entities/message.dart';
 
+/// Plafond du compteur de non-lus (badge « 99+ »).
+const unreadCountCap = 100;
+
 abstract interface class MessagesRepository {
   Stream<List<Message>> watchMessages(String groupId);
   Future<List<Message>> fetchMessagesBefore(
@@ -8,6 +11,13 @@ abstract interface class MessagesRepository {
     int limit = 50,
   });
   Stream<List<Message>> watchMediaMessages(String groupId);
+
+  /// Les [limit] messages photo / vidéo les plus récents (aperçu du
+  /// tableau de bord). Index composite (type, timestamp desc) requis.
+  Stream<List<Message>> watchRecentMediaMessages(
+    String groupId, {
+    required int limit,
+  });
   Future<void> sendMessage({
     required String groupId,
     required String senderId,
@@ -128,9 +138,10 @@ abstract interface class MessagesRepository {
     required String userId,
   });
 
-  /// Nombre de messages postérieurs à [since].
-  /// ⚠️ Requête non bornée et messages de l'utilisateur comptés (BUGS_FOUND
-  /// C16) — bornée à l'étape 10 (performance).
+  /// Nombre de messages postérieurs à [since], plafonné à [unreadCountCap]
+  /// (le badge affiche « 99+ » au-delà de 99 : rendu identique, sans lire
+  /// tout l'historique). ⚠️ Les messages de l'utilisateur sont comptés
+  /// (BUGS_FOUND C16).
   Stream<int> watchCountSince({
     required String groupId,
     required DateTime since,

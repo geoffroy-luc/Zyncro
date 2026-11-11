@@ -74,6 +74,26 @@ class FirestoreMessagesRepository implements MessagesRepository {
   }
 
   @override
+  Stream<List<Message>> watchRecentMediaMessages(
+    String groupId, {
+    required int limit,
+  }) {
+    return _col(groupId)
+        .where(MessageFields.type, whereIn: ['image', 'file'])
+        .orderBy(MessageFields.timestamp, descending: true)
+        .limit(limit)
+        .snapshots()
+        .map(
+          (snap) => mapDocsSafely(
+            snap.docs,
+            MessageMapper.fromFirestore,
+            label: 'watchRecentMediaMessages',
+          ),
+        )
+        .surfacePermissionDenied('watchRecentMediaMessages');
+  }
+
+  @override
   Future<void> setTyping({
     required String groupId,
     required String userId,
@@ -432,6 +452,7 @@ class FirestoreMessagesRepository implements MessagesRepository {
           MessageFields.timestamp,
           isGreaterThan: Timestamp.fromDate(since),
         )
+        .limit(unreadCountCap)
         .snapshots()
         .map((snap) => snap.docs.length);
   }

@@ -64,7 +64,7 @@ class DashboardScreen extends ConsumerWidget {
     final recentMessages = allMessages.take(3).toList();
 
     // Médias partagés
-    final allMedia = ref.watch(mediaMessagesProvider).asData?.value ?? [];
+    final allMedia = ref.watch(recentMediaMessagesProvider).asData?.value ?? [];
     final previewMedia = allMedia.take(6).toList();
 
     final tabSettings =
