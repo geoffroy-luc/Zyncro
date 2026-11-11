@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/repositories/i_notes_repository.dart';
-import '../../../../core/utils/firestore_stream_extensions.dart';
-import '../../../../shared/models/note.dart';
+import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
+import 'package:zyncro/features/notes/domain/repositories/i_notes_repository.dart';
+import 'package:zyncro/shared/models/note.dart';
 
 class NotesRepository implements INotesRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;

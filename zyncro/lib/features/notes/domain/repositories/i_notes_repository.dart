@@ -1,4 +1,4 @@
-import '../../../../shared/models/note.dart';
+import 'package:zyncro/shared/models/note.dart';
 
 abstract interface class INotesRepository {
   Stream<List<Note>> watchNotes(String groupId);

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_colors.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../chat/presentation/providers/messages_provider.dart';
-import '../../domain/repositories/i_groups_repository.dart';
-import '../providers/groups_provider.dart';
-import '../providers/invite_link_provider.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/groups/domain/repositories/i_groups_repository.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/invite_link_provider.dart';
 
 /// Écran de confirmation affiché lorsqu'un lien d'invitation est ouvert.
 /// Résout le code → aperçu du groupe → propose de rejoindre.

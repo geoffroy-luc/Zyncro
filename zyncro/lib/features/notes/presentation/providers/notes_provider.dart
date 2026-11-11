@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/notes_repository.dart';
-import '../../domain/repositories/i_notes_repository.dart';
-import '../../../../shared/models/note.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/notes/data/repositories/notes_repository.dart';
+import 'package:zyncro/features/notes/domain/repositories/i_notes_repository.dart';
+import 'package:zyncro/shared/models/note.dart';
 
 final notesRepositoryProvider = Provider<INotesRepository>(
   (_) => NotesRepository(),

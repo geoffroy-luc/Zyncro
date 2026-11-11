@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/messages_repository.dart';
-import '../../domain/repositories/i_messages_repository.dart';
-import '../../../../shared/models/message.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/data/repositories/messages_repository.dart';
+import 'package:zyncro/features/chat/domain/repositories/i_messages_repository.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/shared/models/message.dart';
 
 final messagesRepositoryProvider = Provider<IMessagesRepository>(
   (_) => MessagesRepository(),

@@ -1,5 +1,5 @@
-import '../../../../shared/models/event.dart';
-import '../../../../shared/models/recurrence_rule.dart';
+import 'package:zyncro/shared/models/event.dart';
+import 'package:zyncro/shared/models/recurrence_rule.dart';
 
 abstract interface class IEventsRepository {
   Stream<List<Event>> watchEvents(String groupId);

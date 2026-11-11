@@ -1,6 +1,6 @@
-import '../models/event.dart';
-import '../models/expense.dart';
-import '../models/recurrence_rule.dart';
+import 'package:zyncro/shared/models/event.dart';
+import 'package:zyncro/shared/models/expense.dart';
+import 'package:zyncro/shared/models/recurrence_rule.dart';
 
 /// Expands recurring events into individual instances within the given window.
 /// Non-recurring events are returned as-is.
@@ -31,9 +31,7 @@ List<Event> _expandRecurring(
   DateTime rangeEnd,
 ) {
   final rule = base.recurrence!;
-  final eventDuration = base.endDate != null
-      ? base.endDate!.difference(base.startDate)
-      : null;
+  final eventDuration = base.endDate?.difference(base.startDate);
 
   final instances = <Event>[];
   DateTime current = base.startDate;
@@ -43,10 +41,13 @@ List<Event> _expandRecurring(
   while (occurrenceIndex < maxInstances) {
     // Check rule end conditions
     if (rule.endType == RecurrenceEndType.count &&
-        occurrenceIndex >= rule.count!)
+        occurrenceIndex >= rule.count!) {
       break;
-    if (rule.endType == RecurrenceEndType.until && current.isAfter(rule.until!))
+    }
+    if (rule.endType == RecurrenceEndType.until &&
+        current.isAfter(rule.until!)) {
       break;
+    }
     // Stop generating beyond the display range
     if (current.isAfter(rangeEnd)) break;
 
@@ -126,8 +127,10 @@ List<Expense> _expandRecurringExpense(Expense base, DateTime now) {
 
   while (idx < maxInstances) {
     if (rule.endType == RecurrenceEndType.count && idx >= rule.count!) break;
-    if (rule.endType == RecurrenceEndType.until && current.isAfter(rule.until!))
+    if (rule.endType == RecurrenceEndType.until &&
+        current.isAfter(rule.until!)) {
       break;
+    }
     if (current.isAfter(now)) break;
 
     instances.add(

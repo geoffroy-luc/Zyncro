@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../app/router.dart';
-import '../../features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/app/router.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 
 /// Background message handler — must be a top-level function.
 @pragma('vm:entry-point')
@@ -69,11 +69,7 @@ class NotificationService {
     await _foregroundSub?.cancel();
 
     // Request permission (iOS & Android 13+)
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    final settings = await _messaging.requestPermission();
     if (settings.authorizationStatus == AuthorizationStatus.denied) return;
 
     // Save initial token
@@ -245,12 +241,10 @@ class _NotificationBannerState extends ConsumerState<NotificationBanner> {
             if (notif.body != null) Text(notif.body!),
           ],
         ),
-        duration: const Duration(seconds: 4),
       );
     } else {
       snackBar = SnackBar(
         content: Text('${visible.length} nouvelles notifications'),
-        duration: const Duration(seconds: 4),
       );
     }
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/expense_categories.dart';
-import '../../core/theme/app_theme.dart';
-import '../models/expense_category.dart';
-import 'color_picker_row.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/constants/expense_categories.dart';
+import 'package:zyncro/core/theme/app_theme.dart';
+import 'package:zyncro/shared/models/expense_category.dart';
+import 'package:zyncro/shared/widgets/color_picker_row.dart';
 
 Future<ExpenseCategory?> showCategoryEditor(
   BuildContext context, {

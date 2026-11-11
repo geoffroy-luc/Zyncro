@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/models/event.dart';
-import '../../../../shared/models/group_member.dart';
-import '../../../../shared/models/tab_settings.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
-import '../../../groups/presentation/providers/tab_settings_provider.dart';
-import '../providers/events_provider.dart';
-import 'event_form_screen.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/calendar/presentation/providers/events_provider.dart';
+import 'package:zyncro/features/calendar/presentation/screens/event_form_screen.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/shared/models/event.dart';
+import 'package:zyncro/shared/models/group_member.dart';
+import 'package:zyncro/shared/models/tab_settings.dart';
 
 const _defaultEventColor = Color(0xFF4F7CFF);
 
@@ -338,11 +338,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ? allEvents.where((e) => _eventOnDay(e, _selectedDay!)).toList()
         : monthEvents;
 
-    final firstOfMonth = DateTime(
-      _displayedMonth.year,
-      _displayedMonth.month,
-      1,
-    );
+    final firstOfMonth = DateTime(_displayedMonth.year, _displayedMonth.month);
     final daysInMonth = DateTime(
       _displayedMonth.year,
       _displayedMonth.month + 1,
@@ -366,7 +362,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: SafeArea(
-        top: true,
         child: CustomScrollView(
           slivers: [
             // ── Header ──────────────────────────────────────────────────
@@ -578,7 +573,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 7,
-                                  childAspectRatio: 1,
                                   mainAxisSpacing: 4,
                                   crossAxisSpacing: 4,
                                 ),

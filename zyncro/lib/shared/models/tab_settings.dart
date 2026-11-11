@@ -1,4 +1,4 @@
-import 'expense_category.dart';
+import 'package:zyncro/shared/models/expense_category.dart';
 
 class CalendarFilters {
   final List<String> participantIds;

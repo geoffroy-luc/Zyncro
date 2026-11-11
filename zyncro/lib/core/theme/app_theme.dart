@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
 
 class AppTheme {
   AppTheme._();
@@ -12,8 +12,6 @@ class AppTheme {
       primary: primary,
       secondary: AppColors.secondary,
       tertiary: AppColors.accent,
-      surface: AppColors.surface,
-      onPrimary: Colors.white,
       onSecondary: Colors.white,
       onSurface: AppColors.textPrimary,
       outline: AppColors.border,

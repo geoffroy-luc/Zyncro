@@ -1,4 +1,4 @@
-import '../../../../shared/models/message.dart';
+import 'package:zyncro/shared/models/message.dart';
 
 abstract interface class IMessagesRepository {
   Stream<List<Message>> watchMessages(String groupId);

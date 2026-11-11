@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/auth_repository.dart';
-import '../../data/services/user_profile_service.dart';
-import '../../domain/repositories/i_auth_repository.dart';
+import 'package:zyncro/features/auth/data/repositories/auth_repository.dart';
+import 'package:zyncro/features/auth/data/services/user_profile_service.dart';
+import 'package:zyncro/features/auth/domain/repositories/i_auth_repository.dart';
 
 final authRepositoryProvider = Provider<IAuthRepository>(
   (_) => AuthRepository(),

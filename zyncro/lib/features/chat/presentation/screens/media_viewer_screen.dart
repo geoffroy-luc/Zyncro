@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../../../shared/models/message.dart';
+import 'package:zyncro/shared/models/message.dart';
 
 // ── Utilitaire de téléchargement partagé ─────────────────────────────────────
 
@@ -16,8 +16,9 @@ class MediaDownloader {
   static Future<void> downloadImage(BuildContext context, String url) async {
     try {
       final response = await http.get(Uri.parse(url));
-      if (response.statusCode != 200)
+      if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode}');
+      }
       final dir = await getTemporaryDirectory();
       final file = File(
         '${dir.path}/zyncro_${DateTime.now().millisecondsSinceEpoch}.jpg',
@@ -42,8 +43,9 @@ class MediaDownloader {
   static Future<void> downloadVideo(BuildContext context, String url) async {
     try {
       final response = await http.get(Uri.parse(url));
-      if (response.statusCode != 200)
+      if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode}');
+      }
       final dir = await getTemporaryDirectory();
       final file = File(
         '${dir.path}/zyncro_${DateTime.now().millisecondsSinceEpoch}.mp4',
@@ -471,7 +473,6 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
                                     duration.inMilliseconds.toDouble(),
                                   )
                                 : 0,
-                            min: 0,
                             max: duration.inMilliseconds > 0
                                 ? duration.inMilliseconds.toDouble()
                                 : 1,
@@ -871,7 +872,6 @@ class _SwipeVideoPageState extends State<_SwipeVideoPage> {
                                   duration.inMilliseconds.toDouble(),
                                 )
                               : 0,
-                          min: 0,
                           max: duration.inMilliseconds > 0
                               ? duration.inMilliseconds.toDouble()
                               : 1,

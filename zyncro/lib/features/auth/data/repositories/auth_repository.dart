@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import '../../../../core/services/notification_service.dart';
-import '../../domain/repositories/i_auth_repository.dart';
+import 'package:zyncro/core/services/notification_service.dart';
+import 'package:zyncro/features/auth/domain/repositories/i_auth_repository.dart';
 
 class AuthRepository implements IAuthRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;

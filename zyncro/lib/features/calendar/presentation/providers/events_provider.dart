@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/events_repository.dart';
-import '../../domain/repositories/i_events_repository.dart';
-import '../../../../shared/models/event.dart';
-import '../../../../shared/utils/recurrence_utils.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/calendar/data/repositories/events_repository.dart';
+import 'package:zyncro/features/calendar/domain/repositories/i_events_repository.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/shared/models/event.dart';
+import 'package:zyncro/shared/utils/recurrence_utils.dart';
 
 final eventsRepositoryProvider = Provider<IEventsRepository>(
   (_) => EventsRepository(),

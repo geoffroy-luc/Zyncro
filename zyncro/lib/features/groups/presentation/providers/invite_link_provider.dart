@@ -4,9 +4,9 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../app/router.dart';
-import '../../../../core/constants/invite.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/app/router.dart';
+import 'package:zyncro/core/constants/invite.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 
 /// Écoute les liens d'invitation entrants (App Links / Universal Links /
 /// schéma `zyncro://`) et navigue vers l'écran de confirmation `/i/CODE`.

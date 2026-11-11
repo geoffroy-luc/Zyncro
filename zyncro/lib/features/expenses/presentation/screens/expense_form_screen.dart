@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/expense_categories.dart';
-import '../../../../shared/models/expense.dart';
-import '../../../../shared/models/expense_category.dart';
-import '../../../../shared/models/group_member.dart';
-import '../../../../shared/models/recurrence_rule.dart';
-import '../../../../shared/models/tab_settings.dart';
-import '../../../../shared/widgets/category_editor_sheet.dart';
-import '../../../../shared/widgets/color_picker_row.dart';
-import '../../../../shared/widgets/user_avatar.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../chat/presentation/providers/messages_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
-import '../../../groups/presentation/providers/tab_settings_provider.dart';
-import '../providers/expenses_provider.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/constants/expense_categories.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/shared/models/expense.dart';
+import 'package:zyncro/shared/models/expense_category.dart';
+import 'package:zyncro/shared/models/group_member.dart';
+import 'package:zyncro/shared/models/recurrence_rule.dart';
+import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/shared/widgets/category_editor_sheet.dart';
+import 'package:zyncro/shared/widgets/color_picker_row.dart';
+import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 class ExpenseFormScreen extends ConsumerStatefulWidget {
   final Expense? expense;
@@ -105,11 +105,8 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
       _percentageSplitControllers.remove(uid)?.dispose();
     }
     for (final m in members) {
-      _amountSplitControllers.putIfAbsent(m.uid, () => TextEditingController());
-      _percentageSplitControllers.putIfAbsent(
-        m.uid,
-        () => TextEditingController(),
-      );
+      _amountSplitControllers.putIfAbsent(m.uid, TextEditingController.new);
+      _percentageSplitControllers.putIfAbsent(m.uid, TextEditingController.new);
     }
   }
 
@@ -301,104 +298,113 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                         ),
                       ),
                     ),
-                    RadioListTile<RecurrenceEndType>(
-                      value: RecurrenceEndType.forever,
+                    RadioGroup<RecurrenceEndType>(
                       groupValue: endType,
                       onChanged: (v) => setSt(() => endType = v!),
-                      title: const Text('Toujours'),
-                      activeColor: primary,
-                    ),
-                    RadioListTile<RecurrenceEndType>(
-                      value: RecurrenceEndType.count,
-                      groupValue: endType,
-                      onChanged: (v) => setSt(() => endType = v!),
-                      activeColor: primary,
-                      title: endType == RecurrenceEndType.count
-                          ? Row(
-                              children: [
-                                const Text('Nombre de fois :'),
-                                const SizedBox(width: 12),
-                                SizedBox(
-                                  width: 72,
-                                  child: TextField(
-                                    controller: countController,
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.center,
-                                    maxLength: 3,
-                                    decoration: const InputDecoration(
-                                      counterText: '',
-                                      isDense: true,
-                                      border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 8,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RadioListTile<RecurrenceEndType>(
+                            value: RecurrenceEndType.forever,
+                            title: const Text('Toujours'),
+                            activeColor: primary,
+                          ),
+                          RadioListTile<RecurrenceEndType>(
+                            value: RecurrenceEndType.count,
+                            activeColor: primary,
+                            title: endType == RecurrenceEndType.count
+                                ? Row(
+                                    children: [
+                                      const Text('Nombre de fois :'),
+                                      const SizedBox(width: 12),
+                                      SizedBox(
+                                        width: 72,
+                                        child: TextField(
+                                          controller: countController,
+                                          keyboardType: TextInputType.number,
+                                          textAlign: TextAlign.center,
+                                          maxLength: 3,
+                                          decoration: const InputDecoration(
+                                            counterText: '',
+                                            isDense: true,
+                                            border: OutlineInputBorder(),
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 8,
+                                                ),
+                                          ),
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
+                                          onChanged: (v) {
+                                            final n = int.tryParse(v);
+                                            if (n != null &&
+                                                n >= 1 &&
+                                                n <= 999) {
+                                              setSt(() => countValue = n);
+                                            }
+                                          },
+                                        ),
                                       ),
-                                    ),
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
                                     ],
-                                    onChanged: (v) {
-                                      final n = int.tryParse(v);
-                                      if (n != null && n >= 1 && n <= 999) {
-                                        setSt(() => countValue = n);
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
-                            )
-                          : const Text('Nombre de fois'),
-                    ),
-                    RadioListTile<RecurrenceEndType>(
-                      value: RecurrenceEndType.until,
-                      groupValue: endType,
-                      onChanged: (v) => setSt(() => endType = v!),
-                      activeColor: primary,
-                      title: endType == RecurrenceEndType.until
-                          ? Row(
-                              children: [
-                                const Text('Jusqu\'au :'),
-                                const SizedBox(width: 12),
-                                GestureDetector(
-                                  onTap: () async {
-                                    final picked = await showDatePicker(
-                                      context: ctx,
-                                      initialDate: untilDate,
-                                      firstDate: _date,
-                                      lastDate: DateTime(2100),
-                                    );
-                                    if (picked != null) {
-                                      setSt(() {
-                                        untilDate = picked;
-                                      });
-                                    }
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: AppColors.border,
+                                  )
+                                : const Text('Nombre de fois'),
+                          ),
+                          RadioListTile<RecurrenceEndType>(
+                            value: RecurrenceEndType.until,
+                            activeColor: primary,
+                            title: endType == RecurrenceEndType.until
+                                ? Row(
+                                    children: [
+                                      const Text('Jusqu\'au :'),
+                                      const SizedBox(width: 12),
+                                      GestureDetector(
+                                        onTap: () async {
+                                          final picked = await showDatePicker(
+                                            context: ctx,
+                                            initialDate: untilDate,
+                                            firstDate: _date,
+                                            lastDate: DateTime(2100),
+                                          );
+                                          if (picked != null) {
+                                            setSt(() {
+                                              untilDate = picked;
+                                            });
+                                          }
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: AppColors.border,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            DateFormat(
+                                              'd MMM yyyy',
+                                              'fr_FR',
+                                            ).format(untilDate),
+                                            style: TextStyle(
+                                              color: primary,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      DateFormat(
-                                        'd MMM yyyy',
-                                        'fr_FR',
-                                      ).format(untilDate),
-                                      style: TextStyle(
-                                        color: primary,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : const Text('Jusqu\'au'),
+                                    ],
+                                  )
+                                : const Text('Jusqu\'au'),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                   Padding(
@@ -764,8 +770,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   if (v == null || v.trim().isEmpty) return 'Champ requis';
                   final p = _parseDouble(v);
                   if (p == null || p <= 0) return 'Montant invalide';
-                  if (p > 999999.99)
+                  if (p > 999999.99) {
                     return 'Montant trop élevé (max 999 999,99 €)';
+                  }
                   return null;
                 },
               ),

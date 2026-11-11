@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/models/message.dart';
-import '../providers/messages_provider.dart';
-import 'media_viewer_screen.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/chat/presentation/screens/media_viewer_screen.dart';
+import 'package:zyncro/shared/models/message.dart';
 
 // Représente un média individuel (image ou vidéo), qu'il vienne d'un message
 // unique ou d'un album multi-médias.
@@ -56,7 +56,6 @@ List<_GalleryItem> _buildItems(List<Message> messages) {
             message: message,
             url: data['url'] as String? ?? '',
             mimeType: data['mimeType'] as String? ?? '',
-            albumMedias: null,
             albumIndex: 0,
             messageIndex: i,
           ),

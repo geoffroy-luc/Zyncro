@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/services/notification_service.dart';
-import '../core/services/update_service.dart';
-import '../core/theme/app_theme.dart';
-import '../features/auth/presentation/providers/auth_provider.dart';
-import '../features/chat/presentation/providers/messages_provider.dart';
-import '../features/chat/presentation/providers/share_provider.dart';
-import '../features/groups/presentation/providers/groups_provider.dart';
-import '../features/groups/presentation/providers/invite_link_provider.dart';
-import 'router.dart';
+import 'package:zyncro/app/router.dart';
+import 'package:zyncro/core/services/notification_service.dart';
+import 'package:zyncro/core/services/update_service.dart';
+import 'package:zyncro/core/theme/app_theme.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/share_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/invite_link_provider.dart';
 
 class ZyncroApp extends ConsumerStatefulWidget {
   const ZyncroApp({super.key});

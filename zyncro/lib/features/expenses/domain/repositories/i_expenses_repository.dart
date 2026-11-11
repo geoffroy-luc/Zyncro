@@ -1,5 +1,5 @@
-import '../../../../shared/models/expense.dart';
-import '../../../../shared/models/recurrence_rule.dart';
+import 'package:zyncro/shared/models/expense.dart';
+import 'package:zyncro/shared/models/recurrence_rule.dart';
 
 abstract interface class IExpensesRepository {
   Stream<List<Expense>> watchExpenses(String groupId);

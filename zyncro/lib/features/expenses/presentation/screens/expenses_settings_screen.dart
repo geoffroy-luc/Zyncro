@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/expense_categories.dart';
-import '../../../../shared/models/expense_category.dart';
-import '../../../../shared/models/tab_settings.dart';
-import '../../../../shared/widgets/category_editor_sheet.dart';
-import '../../../../shared/widgets/color_picker_row.dart';
-import '../../../../shared/widgets/settings_widgets.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
-import '../../../groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/constants/expense_categories.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/shared/models/expense_category.dart';
+import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/shared/widgets/category_editor_sheet.dart';
+import 'package:zyncro/shared/widgets/color_picker_row.dart';
+import 'package:zyncro/shared/widgets/settings_widgets.dart';
 
 const _currencies = ['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'CAD', 'AUD'];
 const _currencySymbols = {

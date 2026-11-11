@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/models/group.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../chat/presentation/providers/messages_provider.dart';
-import '../providers/groups_provider.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/shared/models/group.dart';
 
 class GroupSelectionScreen extends ConsumerWidget {
   const GroupSelectionScreen({super.key});
@@ -51,7 +51,7 @@ class GroupSelectionScreen extends ConsumerWidget {
             onCreateTap: () => _showCreateSheet(context, ref),
             onJoinTap: () => _showJoinSheet(context, ref),
             onReorder: (oldIndex, newIndex) {
-              var ids = groups.map((g) => g.id).toList();
+              final ids = groups.map((g) => g.id).toList();
               if (newIndex > oldIndex) newIndex--;
               final moved = ids.removeAt(oldIndex);
               ids.insert(newIndex, moved);
@@ -569,8 +569,9 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
               maxLength: 150,
               maxLines: 2,
               validator: (v) {
-                if (v != null && v.trim().length > 150)
+                if (v != null && v.trim().length > 150) {
                   return '150 caractères maximum';
+                }
                 return null;
               },
             ),

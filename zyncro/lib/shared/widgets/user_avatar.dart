@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
 
 /// Returns a deterministic colour for a given user [uid].
 /// The same uid always maps to the same colour, regardless of the screen.

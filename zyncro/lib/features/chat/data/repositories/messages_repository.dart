@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import '../../domain/repositories/i_messages_repository.dart';
-import '../../../../core/utils/firestore_stream_extensions.dart';
-import '../../../../shared/models/message.dart';
+import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
+import 'package:zyncro/features/chat/domain/repositories/i_messages_repository.dart';
+import 'package:zyncro/shared/models/message.dart';
 
 class MessagesRepository implements IMessagesRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -97,7 +97,7 @@ class MessagesRepository implements IMessagesRepository {
     required String groupId,
     required String currentUserId,
   }) {
-    final staleThreshold = const Duration(seconds: 6);
+    const staleThreshold = Duration(seconds: 6);
     return _typingCol(groupId)
         .snapshots()
         .map((snap) {

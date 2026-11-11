@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/utils/invite_share.dart';
-import '../../../../shared/models/group_member.dart';
-import '../../../../shared/widgets/user_avatar.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../chat/presentation/providers/messages_provider.dart';
-import '../providers/groups_provider.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/utils/invite_share.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/shared/models/group_member.dart';
+import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 // ── Members stream provider ──────────────────────────────────────────────────
 
@@ -62,8 +62,9 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                     m.uid != currentUser?.uid &&
                     m.displayName.toLowerCase() == trimmed,
               );
-              if (isDuplicate)
+              if (isDuplicate) {
                 return 'Ce pseudo est déjà utilisé dans ce groupe';
+              }
               return null;
             },
           ),
@@ -75,8 +76,9 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           ),
           FilledButton(
             onPressed: () {
-              if (formKey.currentState!.validate())
+              if (formKey.currentState!.validate()) {
                 Navigator.pop(context, true);
+              }
             },
             child: const Text('Enregistrer'),
           ),
@@ -146,8 +148,9 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                 maxLength: 150,
                 maxLines: 2,
                 validator: (v) {
-                  if (v != null && v.trim().length > 150)
+                  if (v != null && v.trim().length > 150) {
                     return '150 caractères maximum';
+                  }
                   return null;
                 },
               ),
@@ -161,8 +164,9 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           ),
           FilledButton(
             onPressed: () {
-              if (formKey.currentState!.validate())
+              if (formKey.currentState!.validate()) {
                 Navigator.pop(context, true);
+              }
             },
             child: const Text('Enregistrer'),
           ),
@@ -457,7 +461,6 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                         photoUrl: member.photoUrl,
                         showPhoto: member.showProfilePhoto,
                         displayName: member.displayName,
-                        radius: 20,
                         color: avatarColorForUid(member.uid),
                       ),
                       title: Text(

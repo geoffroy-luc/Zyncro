@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/models/note.dart';
-import '../../../../shared/models/tab_settings.dart';
-import '../../../../shared/widgets/color_picker_row.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../chat/presentation/providers/messages_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
-import '../../../groups/presentation/providers/tab_settings_provider.dart';
-import '../providers/notes_provider.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/features/notes/presentation/providers/notes_provider.dart';
+import 'package:zyncro/shared/models/note.dart';
+import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/shared/widgets/color_picker_row.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   final Note? note; // null = création
@@ -343,9 +343,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               const SizedBox(height: 16),
 
               // Couleur
-              Text(
+              const Text(
                 'Couleur',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,

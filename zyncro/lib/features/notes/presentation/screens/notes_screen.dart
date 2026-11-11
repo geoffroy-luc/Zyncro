@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/models/note.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
-import '../providers/notes_provider.dart';
-import 'note_editor_screen.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/notes/presentation/providers/notes_provider.dart';
+import 'package:zyncro/features/notes/presentation/screens/note_editor_screen.dart';
+import 'package:zyncro/shared/models/note.dart';
 
 Color _hexToColor(String? hex) {
   if (hex == null) return AppColors.secondary;
@@ -64,7 +64,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
       backgroundColor: const Color(0xFFF7F9FC),
       floatingActionButton: FloatingActionButton(
         heroTag: 'fab_notes',
-        onPressed: () => _openEditor(),
+        onPressed: _openEditor,
         backgroundColor: Theme.of(
           context,
         ).colorScheme.primary.withValues(alpha: 0.85),
@@ -74,7 +74,6 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: SafeArea(
-        top: true,
         child: notesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('Erreur: $e')),
@@ -171,7 +170,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
-                            onPressed: () => _openEditor(),
+                            onPressed: _openEditor,
                             icon: const Icon(Icons.add),
                             label: const Text('Créer une note'),
                           ),
@@ -609,8 +608,6 @@ class _RecentNoteCard extends StatelessWidget {
                                 child: _buildChecklistPreview(
                                   note.checklist,
                                   color,
-                                  maxItems: 3,
-                                  fontSize: 11,
                                 ),
                               ),
                             )

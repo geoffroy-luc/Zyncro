@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
 
 Color hexToColor(String hex) =>
     Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
@@ -290,7 +290,8 @@ class _HuePainter extends CustomPainter {
     // Rainbow gradient
     canvas.drawRRect(
       rrect,
-      Paint()..shader = LinearGradient(colors: _hueColors).createShader(rect),
+      Paint()
+        ..shader = const LinearGradient(colors: _hueColors).createShader(rect),
     );
 
     // Cursor line

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'recurrence_rule.dart';
+import 'package:zyncro/shared/models/recurrence_rule.dart';
 
 enum ExpenseType { expense, reimbursement }
 

@@ -1,18 +1,19 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/models/expense.dart';
-import '../../../../shared/models/expense_category.dart';
-import '../../../../shared/models/group_member.dart';
-import '../../../../shared/widgets/color_picker_row.dart';
-import '../../../../shared/widgets/user_avatar.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../groups/presentation/providers/tab_settings_provider.dart';
-import '../providers/expenses_provider.dart';
-import 'expense_form_screen.dart';
-import 'reimbursement_form_screen.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
+import 'package:zyncro/features/expenses/presentation/screens/expense_form_screen.dart';
+import 'package:zyncro/features/expenses/presentation/screens/reimbursement_form_screen.dart';
+import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/shared/models/expense.dart';
+import 'package:zyncro/shared/models/expense_category.dart';
+import 'package:zyncro/shared/models/group_member.dart';
+import 'package:zyncro/shared/widgets/color_picker_row.dart';
+import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 const _currencySymbols = {
   'EUR': '€',
@@ -166,7 +167,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             )
           : null,
       body: SafeArea(
-        top: true,
         child: Column(
           children: [
             // ── Tab bar ──────────────────────────────────────────────
@@ -518,7 +518,6 @@ class _EquilibreTab extends ConsumerWidget {
                                 photoUrl: member?.photoUrl,
                                 showPhoto: member?.showProfilePhoto ?? true,
                                 displayName: name,
-                                radius: 20,
                                 color: avatarColorForUid(entry.key),
                               ),
                               const SizedBox(width: 12),

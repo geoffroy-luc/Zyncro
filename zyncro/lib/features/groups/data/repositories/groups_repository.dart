@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import '../../domain/repositories/i_groups_repository.dart';
-import '../../../../core/utils/firestore_stream_extensions.dart';
-import '../../../../shared/models/group.dart';
-import '../../../../shared/models/group_member.dart';
+import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
+import 'package:zyncro/features/groups/domain/repositories/i_groups_repository.dart';
+import 'package:zyncro/shared/models/group.dart';
+import 'package:zyncro/shared/models/group_member.dart';
 
 class GroupsRepository implements IGroupsRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;

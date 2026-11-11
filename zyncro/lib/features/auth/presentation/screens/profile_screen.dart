@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/widgets/user_avatar.dart';
-import '../providers/auth_provider.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -318,7 +318,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               alignment: Alignment.bottomRight,
               children: [
                 _loadingPhoto
-                    ? SizedBox(
+                    ? const SizedBox(
                         width: 88,
                         height: 88,
                         child: CircularProgressIndicator(
@@ -370,7 +370,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 32),
 
           // ── Section : Infos ──────────────────────────────────────────────
-          _SectionHeader(label: 'Informations'),
+          const _SectionHeader(label: 'Informations'),
           _Card(
             child: ListTile(
               leading: const Icon(
@@ -391,7 +391,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
 
           // ── Section : Préférences ────────────────────────────────────────
-          _SectionHeader(label: 'Préférences'),
+          const _SectionHeader(label: 'Préférences'),
           _Card(
             child: Column(
               children: [
@@ -423,7 +423,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           activeThumbColor: AppColors.primary,
                         ),
                 ),
-                Divider(
+                const Divider(
                   height: 1,
                   indent: 16,
                   endIndent: 16,
@@ -454,7 +454,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
 
           // ── Section : Compte ─────────────────────────────────────────────
-          _SectionHeader(label: 'Compte'),
+          const _SectionHeader(label: 'Compte'),
           _Card(
             child: Column(
               children: [
@@ -466,7 +466,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   title: const Text('Se déconnecter'),
                   onTap: _signOut,
                 ),
-                Divider(
+                const Divider(
                   height: 1,
                   indent: 16,
                   endIndent: 16,

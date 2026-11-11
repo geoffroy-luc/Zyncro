@@ -5,14 +5,13 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
-
-import '../../../../app/router.dart';
-import '../../../../core/constants/invite.dart';
-import '../../../../core/services/group_activity_service.dart';
-import '../../../../core/services/share_shortcuts_service.dart';
-import '../../../../shared/models/group.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/app/router.dart';
+import 'package:zyncro/core/constants/invite.dart';
+import 'package:zyncro/core/services/group_activity_service.dart';
+import 'package:zyncro/core/services/share_shortcuts_service.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/shared/models/group.dart';
 
 // ── Contenu partagé en attente d'être envoyé ─────────────────────────────────
 
@@ -185,8 +184,9 @@ class ShareShortcutsController extends Notifier<void> {
 
   Future<Uint8List?> _iconFor(Group g) async {
     final url = g.photoUrl;
-    if (url == null || url.isEmpty)
+    if (url == null || url.isEmpty) {
       return null; // le natif dessinera l'initiale
+    }
     if (_iconCache.containsKey(url)) return _iconCache[url];
     try {
       final resp = await http

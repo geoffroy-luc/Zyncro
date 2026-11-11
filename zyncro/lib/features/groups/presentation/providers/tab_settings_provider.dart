@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/tab_settings_repository.dart';
-import '../../../../shared/models/tab_settings.dart';
-import 'groups_provider.dart';
+import 'package:zyncro/features/groups/data/repositories/tab_settings_repository.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/shared/models/tab_settings.dart';
 
 final tabSettingsRepositoryProvider = Provider<TabSettingsRepository>(
   (_) => TabSettingsRepository(),

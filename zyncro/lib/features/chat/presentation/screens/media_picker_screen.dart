@@ -67,21 +67,19 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
 
     final limited = permission == PermissionState.limited;
 
-    final filterOption = FilterOptionGroup(
-      orders: [const OrderOption(type: OrderOptionType.createDate, asc: false)],
-    );
+    final filterOption = FilterOptionGroup(orders: [const OrderOption()]);
 
     final paths = await PhotoManager.getAssetPathList(
-      type: RequestType.common,
       onlyAll: true,
       filterOption: filterOption,
     );
     if (paths.isEmpty) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loading = false;
           _isLimited = limited;
         });
+      }
       return;
     }
 
@@ -228,24 +226,20 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
               child: CircularProgressIndicator(color: Color(0xFFE85D75)),
             )
           : _permissionDenied
-          ? Center(
+          ? const Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.lock_outline,
-                    color: Colors.white54,
-                    size: 52,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
+                  Icon(Icons.lock_outline, color: Colors.white54, size: 52),
+                  SizedBox(height: 16),
+                  Text(
                     'Accès à la galerie refusé',
                     style: TextStyle(color: Colors.white, fontSize: 15),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   TextButton(
                     onPressed: PhotoManager.openSetting,
-                    child: const Text(
+                    child: Text(
                       'Ouvrir les réglages',
                       style: TextStyle(color: Color(0xFFE85D75)),
                     ),

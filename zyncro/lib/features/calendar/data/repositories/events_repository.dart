@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/repositories/i_events_repository.dart';
-import '../../../../core/utils/firestore_stream_extensions.dart';
-import '../../../../shared/models/event.dart';
-import '../../../../shared/models/recurrence_rule.dart';
+import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
+import 'package:zyncro/features/calendar/domain/repositories/i_events_repository.dart';
+import 'package:zyncro/shared/models/event.dart';
+import 'package:zyncro/shared/models/recurrence_rule.dart';
 
 class EventsRepository implements IEventsRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;

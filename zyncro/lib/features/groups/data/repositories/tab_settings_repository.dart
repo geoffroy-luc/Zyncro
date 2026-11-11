@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../core/utils/firestore_stream_extensions.dart';
-import '../../../../shared/models/tab_settings.dart';
+import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
+import 'package:zyncro/shared/models/tab_settings.dart';
 
 class TabSettingsRepository {
   TabSettingsRepository({FirebaseFirestore? firestore})

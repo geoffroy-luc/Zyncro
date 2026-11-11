@@ -4,8 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../providers/auth_provider.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -134,11 +134,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   });
 
   void _stopLoading() {
-    if (mounted)
+    if (mounted) {
       setState(() {
         _loading = false;
         _loadingType = null;
       });
+    }
   }
 
   void _setError(String msg) {
@@ -423,8 +424,9 @@ class _GuestPseudoSheetState extends State<_GuestPseudoSheet> {
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => _submit(),
               validator: (v) {
-                if (v == null || v.trim().isEmpty)
+                if (v == null || v.trim().isEmpty) {
                   return 'Le pseudo est requis';
+                }
                 if (v.trim().length < 2) return 'Minimum 2 caractères';
                 return null;
               },

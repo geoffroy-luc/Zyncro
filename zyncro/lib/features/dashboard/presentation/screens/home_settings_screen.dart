@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -6,16 +7,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/utils/invite_share.dart';
-import '../../../../shared/models/group_member.dart';
-import '../../../../shared/models/tab_settings.dart';
-import '../../../../shared/widgets/color_picker_row.dart';
-import '../../../../shared/widgets/user_avatar.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../chat/presentation/providers/messages_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
-import '../../../groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/utils/invite_share.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/shared/models/group_member.dart';
+import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/shared/widgets/color_picker_row.dart';
+import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 class HomeSettingsScreen extends ConsumerStatefulWidget {
   const HomeSettingsScreen({super.key});
@@ -243,8 +244,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                 maxLength: 150,
                 maxLines: 2,
                 validator: (v) {
-                  if (v != null && v.trim().length > 150)
+                  if (v != null && v.trim().length > 150) {
                     return '150 caractères maximum';
+                  }
                   return null;
                 },
               ),
@@ -258,8 +260,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           ),
           FilledButton(
             onPressed: () {
-              if (formKey.currentState!.validate())
+              if (formKey.currentState!.validate()) {
                 Navigator.pop(context, true);
+              }
             },
             child: const Text('Enregistrer'),
           ),
@@ -279,7 +282,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                 : descController.text.trim(),
           );
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
@@ -314,8 +317,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                     m.uid != currentUser?.uid &&
                     m.displayName.toLowerCase() == trimmed,
               );
-              if (isDuplicate)
+              if (isDuplicate) {
                 return 'Ce pseudo est déjà utilisé dans ce groupe';
+              }
               return null;
             },
           ),
@@ -327,8 +331,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           ),
           FilledButton(
             onPressed: () {
-              if (formKey.currentState!.validate())
+              if (formKey.currentState!.validate()) {
                 Navigator.pop(context, true);
+              }
             },
             child: const Text('Enregistrer'),
           ),
@@ -347,7 +352,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           .read(groupsRepositoryProvider)
           .updateMemberDisplayName(groupId, user.uid, newPseudo);
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
         );
@@ -418,7 +423,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
         ],
       ),
     );
-    if (confirmed != true || !context.mounted) return;
+    if (confirmed != true || !mounted) return;
 
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
@@ -437,9 +442,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
             systemMessage: '👋 $userName a quitté le groupe',
           );
       await ref.read(selectedGroupIdProvider.notifier).select(null);
-      if (context.mounted) context.go('/groups');
+      if (mounted) context.go('/groups');
     } catch (_) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Impossible de quitter le groupe.')),
         );
@@ -472,9 +477,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     try {
       await ref.read(groupsRepositoryProvider).deleteGroup(groupId, inviteCode);
       await ref.read(selectedGroupIdProvider.notifier).select(null);
-      if (context.mounted) context.go('/groups');
+      if (mounted) context.go('/groups');
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
@@ -526,7 +531,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
             notifScreen: 'chat',
           );
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
@@ -883,7 +888,6 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                         photoUrl: member.photoUrl,
                         showPhoto: member.showProfilePhoto,
                         displayName: member.displayName,
-                        radius: 20,
                         color: avatarColorForUid(member.uid),
                       ),
                       title: Text(

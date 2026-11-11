@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../shared/models/group.dart';
+import 'package:zyncro/shared/models/group.dart';
 
 /// Score d'activité local par groupe, avec décroissance temporelle.
 ///

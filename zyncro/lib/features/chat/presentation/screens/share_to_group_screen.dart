@@ -5,13 +5,12 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
-
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/models/group.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
-import '../providers/messages_provider.dart';
-import '../providers/share_provider.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/share_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/shared/models/group.dart';
 
 /// Écran présenté quand du contenu est partagé vers Zyncro depuis une autre app.
 /// Affiche un aperçu, laisse choisir le groupe destinataire puis envoie.
@@ -231,9 +230,7 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
             m.path,
             targetPath,
             quality: 85,
-            minWidth: 1920,
             minHeight: 1920,
-            keepExif: false,
           );
           return (filePath: result?.path ?? m.path, mimeType: 'image/jpeg');
         }

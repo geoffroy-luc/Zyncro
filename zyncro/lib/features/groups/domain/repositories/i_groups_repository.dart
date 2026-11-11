@@ -1,5 +1,5 @@
-import '../../../../shared/models/group.dart';
-import '../../../../shared/models/group_member.dart';
+import 'package:zyncro/shared/models/group.dart';
+import 'package:zyncro/shared/models/group_member.dart';
 
 /// Aperçu d'un groupe résolu depuis un code d'invitation, sans le rejoindre.
 class InvitePreview {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
 
 class SettingsSection extends StatelessWidget {
   final String title;

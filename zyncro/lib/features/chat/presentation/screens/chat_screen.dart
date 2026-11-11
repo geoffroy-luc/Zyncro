@@ -2,32 +2,32 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/models/group_member.dart';
-import '../../../../shared/models/message.dart';
-import '../../../../shared/widgets/user_avatar.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../expenses/presentation/providers/expenses_provider.dart';
-import '../../domain/repositories/i_messages_repository.dart';
-import '../providers/messages_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
-import '../../../groups/presentation/providers/tab_settings_provider.dart';
-import '../../../../shared/models/tab_settings.dart';
-import 'media_picker_screen.dart';
-import 'media_viewer_screen.dart';
-import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/domain/repositories/i_messages_repository.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/chat/presentation/screens/media_picker_screen.dart';
+import 'package:zyncro/features/chat/presentation/screens/media_viewer_screen.dart';
+import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/shared/models/group_member.dart';
+import 'package:zyncro/shared/models/message.dart';
+import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 Color _chatDark(Color c) {
   final hsl = HSLColor.fromColor(c);
@@ -61,7 +61,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   String? _highlightedMessageId;
 
   GlobalKey _keyForMessage(String id) =>
-      _messageKeys.putIfAbsent(id, () => GlobalKey());
+      _messageKeys.putIfAbsent(id, GlobalKey.new);
 
   void _scrollToMessage(String? id, List<Message> messages) {
     if (id == null) return;
@@ -284,8 +284,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   static const _quickEmojis = ['❤️', '😂', '😮', '😢', '😡', '👍'];
 
   static bool _isSameGroup(Message older, Message newer) {
-    if (older.senderId == null || older.senderId != newer.senderId)
+    if (older.senderId == null || older.senderId != newer.senderId) {
       return false;
+    }
     if (older.type == MessageType.system || newer.type == MessageType.system) {
       return false;
     }
@@ -644,10 +645,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final dir = await getTemporaryDirectory();
     final path =
         '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-    await _recorder.start(
-      const RecordConfig(encoder: AudioEncoder.aacLc),
-      path: path,
-    );
+    await _recorder.start(const RecordConfig(), path: path);
     setState(() {
       _isRecording = true;
       _recordingDuration = Duration.zero;
@@ -736,7 +734,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         .push<MediaPickerResult>(
           MaterialPageRoute(
             fullscreenDialog: true,
-            builder: (_) => const MediaPickerScreen(maxCount: 10),
+            builder: (_) => const MediaPickerScreen(),
           ),
         );
     if (picked == null || picked.isEmpty || !mounted) return;
@@ -758,9 +756,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               media.path,
               targetPath,
               quality: 85,
-              minWidth: 1920,
               minHeight: 1920,
-              keepExif: false,
             );
             return (
               filePath: result?.path ?? media.path,
@@ -855,9 +851,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           file.path,
           targetPath,
           quality: 85,
-          minWidth: 1920,
           minHeight: 1920,
-          keepExif: false,
         );
         if (result != null) {
           uploadPath = result.path;
@@ -1301,7 +1295,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       backgroundColor: bgColor,
       body: buildBackground(
         SafeArea(
-          top: true,
           child: Stack(
             children: [
               Column(
@@ -1563,7 +1556,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         border: Border(
                           top: BorderSide(color: AppColors.border),
@@ -1611,7 +1604,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         border: Border(
                           top: BorderSide(color: AppColors.border),
@@ -2513,11 +2506,12 @@ class _LinkPreviewWidgetState extends State<_LinkPreviewWidget> {
               _ogTag(body, 'og:site_name') ??
               Uri.parse(widget.url).host.replaceFirst('www.', ''),
         );
-        if (mounted)
+        if (mounted) {
           setState(() {
             _meta = meta;
             _loading = false;
           });
+        }
       } else {
         if (mounted) setState(() => _loading = false);
       }
@@ -3295,7 +3289,6 @@ class _SwipeToReplyState extends State<_SwipeToReply>
                 child: Opacity(
                   opacity: (absX / _threshold).clamp(0.0, 1.0),
                   child: Align(
-                    alignment: Alignment.center,
                     child: Icon(
                       Icons.reply_rounded,
                       color: Theme.of(context).colorScheme.primary,
