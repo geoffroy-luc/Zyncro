@@ -12,6 +12,7 @@ import 'package:zyncro/core/utils/invite_share.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/home_settings_section.dart';
 import 'package:zyncro/features/groups/domain/entities/group_member.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
@@ -629,7 +630,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           // ── Espace ──────────────────────────────────────────────────
-          _Section(
+          HomeSettingsSection(
             title: 'Espace',
             child: Card(
               child: Padding(
@@ -720,7 +721,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           ),
 
           // ── Code d'invitation ────────────────────────────────────────
-          _Section(
+          HomeSettingsSection(
             title: "Code d'invitation",
             child: Card(
               child: Padding(
@@ -849,7 +850,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           ),
 
           // ── Couleur du thème ─────────────────────────────────────────
-          _Section(
+          HomeSettingsSection(
             title: 'Couleur du thème',
             child: Card(
               child: Padding(
@@ -878,7 +879,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           ),
 
           // ── Membres ──────────────────────────────────────────────────
-          _Section(
+          HomeSettingsSection(
             title: 'Membres',
             child: membersAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -1020,37 +1021,6 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           const SizedBox(height: 24),
         ],
       ),
-    );
-  }
-}
-
-// ── Section widget ────────────────────────────────────────────────────────────
-
-class _Section extends StatelessWidget {
-  final String title;
-  final Widget child;
-
-  const _Section({required this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 16, bottom: 8),
-          child: Text(
-            title.toUpperCase(),
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: context.colors.textSecondary,
-              letterSpacing: 0.8,
-            ),
-          ),
-        ),
-        child,
-      ],
     );
   }
 }

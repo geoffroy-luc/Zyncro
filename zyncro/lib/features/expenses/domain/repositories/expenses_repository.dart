@@ -20,5 +20,4 @@ abstract interface class ExpensesRepository {
   });
   Future<void> updateExpense(String groupId, Expense expense);
   Future<void> deleteExpense(String groupId, String expenseId);
-  Future<void> settleExpense(String groupId, String expenseId);
 }

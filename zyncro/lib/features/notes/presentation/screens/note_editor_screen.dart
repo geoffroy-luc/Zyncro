@@ -10,6 +10,7 @@ import 'package:zyncro/features/chat/presentation/providers/messages_provider.da
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/notes/domain/entities/note.dart';
 import 'package:zyncro/features/notes/presentation/providers/notes_provider.dart';
+import 'package:zyncro/features/notes/presentation/widgets/option_chip.dart';
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 import 'package:zyncro/shared/widgets/color_picker_row.dart';
@@ -374,7 +375,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               // Options : épingler + checklist
               Row(
                 children: [
-                  _OptionChip(
+                  OptionChip(
                     icon: _isPinned ? Icons.push_pin : Icons.push_pin_outlined,
                     label: 'Épingler',
                     selected: _isPinned,
@@ -382,7 +383,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     onTap: () => setState(() => _isPinned = !_isPinned),
                   ),
                   const SizedBox(width: 8),
-                  _OptionChip(
+                  OptionChip(
                     icon: _isChecklist
                         ? Icons.checklist_rounded
                         : Icons.checklist_outlined,
@@ -506,58 +507,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               ],
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _OptionChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final Color accentColor;
-  final VoidCallback onTap;
-
-  const _OptionChip({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.accentColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? accentColor.withValues(alpha: 0.1) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected ? accentColor : context.colors.border,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: selected ? accentColor : context.colors.textSecondary,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                color: selected ? accentColor : context.colors.textSecondary,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
         ),
       ),
     );

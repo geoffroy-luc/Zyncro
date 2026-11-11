@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/features/chat/presentation/widgets/asset_thumbnail.dart';
+import 'package:zyncro/features/chat/presentation/widgets/media_picker_screen_helpers.dart';
 
 typedef MediaPickerResult = List<({String path, String mimeType})>;
-
-const _kPageSize = 80;
 
 class MediaPickerScreen extends StatefulWidget {
   final int maxCount;
@@ -89,14 +88,17 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
     _currentPage = 0;
     _hasMore = true;
 
-    final assets = await _album!.getAssetListPaged(page: 0, size: _kPageSize);
+    final assets = await _album!.getAssetListPaged(
+      page: 0,
+      size: pickerKPageSize,
+    );
 
     if (mounted) {
       setState(() {
         _assets = assets;
         _loading = false;
         _isLimited = limited;
-        _hasMore = assets.length == _kPageSize;
+        _hasMore = assets.length == pickerKPageSize;
       });
     }
   }
@@ -109,14 +111,14 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
     final nextPage = _currentPage + 1;
     final more = await _album!.getAssetListPaged(
       page: nextPage,
-      size: _kPageSize,
+      size: pickerKPageSize,
     );
 
     if (mounted) {
       setState(() {
         _assets.addAll(more);
         _currentPage = nextPage;
-        _hasMore = more.length == _kPageSize;
+        _hasMore = more.length == pickerKPageSize;
         _loadingMore = false;
       });
     }
@@ -360,7 +362,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                                 fit: StackFit.expand,
                                 children: [
                                   // Thumbnail
-                                  _AssetThumbnail(asset: asset),
+                                  AssetThumbnail(asset: asset),
 
                                   // Overlay grisé si quota atteint et non sélectionné
                                   if (!isSelected && maxReached)
@@ -469,60 +471,5 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
               ],
             ),
     );
-  }
-}
-
-class _AssetThumbnail extends StatefulWidget {
-  final AssetEntity asset;
-  const _AssetThumbnail({required this.asset});
-
-  @override
-  State<_AssetThumbnail> createState() => _AssetThumbnailState();
-}
-
-class _AssetThumbnailState extends State<_AssetThumbnail> {
-  Uint8List? _bytes;
-  bool _error = false;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(
-      widget.asset
-          .thumbnailDataWithSize(const ThumbnailSize.square(200))
-          .then((bytes) {
-            if (mounted) setState(() => _bytes = bytes);
-          })
-          .catchError((_) {
-            if (mounted) setState(() => _error = true);
-          }),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_error || (_bytes != null && _bytes!.isEmpty)) {
-      return Container(
-        color: Colors.grey[900],
-        child: const Icon(Icons.broken_image, color: Colors.grey),
-      );
-    }
-    final bytes = _bytes;
-    if (bytes == null) {
-      return Container(
-        color: Colors.grey[900],
-        child: const Center(
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 1.5,
-              color: Colors.white38,
-            ),
-          ),
-        ),
-      );
-    }
-    return Image.memory(bytes, fit: BoxFit.cover, gaplessPlayback: true);
   }
 }

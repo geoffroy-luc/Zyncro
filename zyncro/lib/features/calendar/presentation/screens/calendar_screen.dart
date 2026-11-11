@@ -8,18 +8,15 @@ import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/calendar/domain/entities/event.dart';
 import 'package:zyncro/features/calendar/presentation/providers/events_provider.dart';
 import 'package:zyncro/features/calendar/presentation/screens/event_form_screen.dart';
+import 'package:zyncro/features/calendar/presentation/widgets/agenda_event_card.dart';
+import 'package:zyncro/features/calendar/presentation/widgets/calendar_event_card.dart';
+import 'package:zyncro/features/calendar/presentation/widgets/calendar_screen_helpers.dart';
+import 'package:zyncro/features/calendar/presentation/widgets/calendar_toggle_button.dart';
+import 'package:zyncro/features/calendar/presentation/widgets/view_mode.dart';
 import 'package:zyncro/features/groups/domain/entities/group_member.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
-
-const _defaultEventColor = Color(0xFF4F7CFF);
-
-Color _eventColor(Event e) => tryHexToColor(e.color) ?? _defaultEventColor;
-
-String _timeLabel(DateTime dt) => DateFormat('HH:mm').format(dt);
-
-enum _ViewMode { month, agenda }
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
@@ -29,7 +26,7 @@ class CalendarScreen extends ConsumerStatefulWidget {
 }
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
-  _ViewMode _viewMode = _ViewMode.month;
+  ViewMode _viewMode = ViewMode.month;
   String _search = '';
   DateTime _displayedMonth = DateTime(
     DateTime.now().year,
@@ -275,7 +272,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               ...grouped[day]!.map(
                 (e) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: _AgendaEventCard(event: e),
+                  child: AgendaEventCard(event: e),
                 ),
               ),
             ],
@@ -486,17 +483,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       ),
                       child: Row(
                         children: [
-                          _ToggleButton(
+                          CalendarToggleButton(
                             label: 'Mois',
-                            active: _viewMode == _ViewMode.month,
+                            active: _viewMode == ViewMode.month,
                             onTap: () =>
-                                setState(() => _viewMode = _ViewMode.month),
+                                setState(() => _viewMode = ViewMode.month),
                           ),
-                          _ToggleButton(
+                          CalendarToggleButton(
                             label: 'Agenda',
-                            active: _viewMode == _ViewMode.agenda,
+                            active: _viewMode == ViewMode.agenda,
                             onTap: () =>
-                                setState(() => _viewMode = _ViewMode.agenda),
+                                setState(() => _viewMode = ViewMode.agenda),
                           ),
                         ],
                       ),
@@ -514,7 +511,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               padding: const EdgeInsets.all(24),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  if (_viewMode == _ViewMode.month) ...[
+                  if (_viewMode == ViewMode.month) ...[
                     // Grille
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -667,7 +664,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                                                         alpha:
                                                                             0.8,
                                                                       )
-                                                                : _eventColor(
+                                                                : calendarEventColor(
                                                                     e,
                                                                   ),
                                                             borderRadius:
@@ -692,17 +689,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                                               const EdgeInsets.symmetric(
                                                                 horizontal: 1,
                                                               ),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                                color: isToday
-                                                                    ? Colors
-                                                                          .white
-                                                                    : _eventColor(
-                                                                        e,
-                                                                      ),
-                                                                shape: BoxShape
-                                                                    .circle,
-                                                              ),
+                                                          decoration: BoxDecoration(
+                                                            color: isToday
+                                                                ? Colors.white
+                                                                : calendarEventColor(
+                                                                    e,
+                                                                  ),
+                                                            shape:
+                                                                BoxShape.circle,
+                                                          ),
                                                         ),
                                                       )
                                                       .toList(),
@@ -782,13 +777,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         ),
                       ),
                     )
-                  else if (_viewMode == _ViewMode.agenda)
+                  else if (_viewMode == ViewMode.agenda)
                     ..._buildAgendaSections(visibleEvents, primaryColor)
                   else
                     ...visibleEvents.map(
                       (e) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _EventCard(event: e),
+                        child: CalendarEventCard(event: e),
                       ),
                     ),
 
@@ -796,331 +791,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ]),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ToggleButton extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  const _ToggleButton({
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: active ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: active
-                ? const [
-                    BoxShadow(
-                      color: Color(0x0F000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: active
-                    ? Theme.of(context).colorScheme.primary
-                    : context.colors.textSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EventCard extends ConsumerWidget {
-  final Event event;
-  const _EventCard({required this.event});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final color = _eventColor(event);
-
-    void openEdit() {
-      unawaited(
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => EventFormScreen(event: event),
-          ),
-        ),
-      );
-    }
-
-    final cardContent = GestureDetector(
-      onTap: openEdit,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.colors.border),
-          boxShadow: [
-            BoxShadow(
-              color: context.colors.shadow,
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 4,
-              height: 56,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          event.title,
-                          style: TextStyle(
-                            color: context.colors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      if (event.recurrence != null)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4),
-                          child: Icon(
-                            Icons.repeat,
-                            size: 14,
-                            color: context.colors.textSecondary,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.access_time,
-                        size: 14,
-                        color: context.colors.textSecondary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        event.endDate != null
-                            ? '${_timeLabel(event.startDate)} → ${_timeLabel(event.endDate!)}'
-                            : _timeLabel(event.startDate),
-                        style: TextStyle(
-                          color: context.colors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (event.location != null) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.place_outlined,
-                          size: 14,
-                          color: context.colors.textSecondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            event.location!,
-                            style: TextStyle(
-                              color: context.colors.textSecondary,
-                              fontSize: 12,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                  if (event.creatorName != null) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.person_outline,
-                          size: 14,
-                          color: context.colors.textSecondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          event.creatorName!,
-                          style: TextStyle(
-                            color: context.colors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Icon(
-              Icons.edit_outlined,
-              size: 16,
-              color: context.colors.textSecondary,
-            ),
-          ],
-        ),
-      ),
-    );
-
-    return cardContent;
-  }
-}
-
-class _AgendaEventCard extends ConsumerWidget {
-  final Event event;
-  const _AgendaEventCard({required this.event});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final color = _eventColor(event);
-
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => EventFormScreen(event: event)),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border(left: BorderSide(color: color, width: 4)),
-          boxShadow: [
-            BoxShadow(
-              color: context.colors.shadow,
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    event.title,
-                    style: TextStyle(
-                      color: context.colors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-                if (event.recurrence != null)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: Icon(
-                      Icons.repeat,
-                      size: 14,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                Icon(
-                  Icons.edit_outlined,
-                  size: 16,
-                  color: context.colors.textSecondary,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  Icons.access_time,
-                  size: 14,
-                  color: context.colors.textSecondary,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  event.endDate != null
-                      ? '${_timeLabel(event.startDate)} → ${_timeLabel(event.endDate!)}'
-                      : _timeLabel(event.startDate),
-                  style: TextStyle(
-                    color: context.colors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                if (event.location != null) ...[
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.place_outlined,
-                    size: 14,
-                    color: context.colors.textSecondary,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      event.location!,
-                      style: TextStyle(
-                        color: context.colors.textSecondary,
-                        fontSize: 12,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            if (event.creatorName != null) ...[
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(
-                    Icons.person_outline,
-                    size: 14,
-                    color: context.colors.textSecondary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    event.creatorName!,
-                    style: TextStyle(
-                      color: context.colors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ],
         ),
       ),

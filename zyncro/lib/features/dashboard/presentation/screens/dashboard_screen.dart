@@ -1,63 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
-import 'package:zyncro/features/calendar/domain/entities/event.dart';
 import 'package:zyncro/features/calendar/presentation/providers/events_provider.dart';
 import 'package:zyncro/features/calendar/presentation/screens/event_form_screen.dart';
-import 'package:zyncro/features/chat/domain/entities/message.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/chat/presentation/screens/media_gallery_screen.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/dashboard_card.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/dashboard_card_header.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/dashboard_empty_hint.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/dashboard_screen_helpers.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/event_row.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/expense_row.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/message_row.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/pinned_note_card.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/quick_action_button.dart';
 import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
-import 'package:zyncro/features/groups/domain/entities/group_member.dart';
-import 'package:zyncro/features/notes/domain/entities/note.dart';
 import 'package:zyncro/features/notes/presentation/providers/notes_provider.dart';
 import 'package:zyncro/features/notes/presentation/screens/note_editor_screen.dart';
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
-import 'package:zyncro/shared/widgets/user_avatar.dart';
-
-const _defaultTabColors = [
-  Color(0xFF9B59B6), // Home
-  Color(0xFF4F7CFF), // Calendrier
-  Color(0xFF2BB8A5), // Notes
-  Color(0xFFFFB86B), // Dépenses
-  Color(0xFFE85D75), // Chat
-];
-
-Color _colorForTab(int idx, TabSettings settings) {
-  final hex = switch (idx) {
-    0 => settings.homeThemeColor,
-    1 => settings.calendarThemeColor,
-    2 => settings.notesThemeColor,
-    3 => settings.expensesThemeColor,
-    4 => settings.chatThemeColor,
-    _ => null,
-  };
-  if (hex == null) return _defaultTabColors[idx];
-  return hexToColor(hex);
-}
-
-bool _isToday(DateTime dt) {
-  final now = DateTime.now();
-  return dt.year == now.year && dt.month == now.month && dt.day == now.day;
-}
-
-String _formatAmount(double v) => NumberFormat.currency(
-  locale: 'fr_FR',
-  symbol: '€',
-  decimalDigits: 2,
-).format(v);
-
-String _timeAgo(DateTime dt) {
-  final diff = DateTime.now().difference(dt);
-  if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
-  if (diff.inHours < 24) return 'Il y a ${diff.inHours} h';
-  return 'Il y a ${diff.inDays} j';
-}
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -104,9 +68,9 @@ class DashboardScreen extends ConsumerWidget {
 
     final tabSettings =
         ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
-    final homeColor = _colorForTab(0, tabSettings);
-    final calendarColor = _colorForTab(1, tabSettings);
-    final notesColor = _colorForTab(2, tabSettings);
+    final homeColor = dashboardColorForTab(0, tabSettings);
+    final calendarColor = dashboardColorForTab(1, tabSettings);
+    final notesColor = dashboardColorForTab(2, tabSettings);
     return Scaffold(
       backgroundColor: context.colors.background,
       body: SafeArea(
@@ -120,10 +84,10 @@ class DashboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Prochains événements
-                    _Card(
+                    DashboardCard(
                       child: Column(
                         children: [
-                          _CardHeader(
+                          DashboardCardHeader(
                             icon: Icons.calendar_today,
                             iconColor: homeColor,
                             title: 'Prochains événements',
@@ -131,7 +95,7 @@ class DashboardScreen extends ConsumerWidget {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                             child: upcomingEvents.isEmpty
-                                ? _EmptyHint(
+                                ? DashboardEmptyHint(
                                     label: 'Aucun événement à venir',
                                     onTap: () => Navigator.of(context).push(
                                       MaterialPageRoute<void>(
@@ -146,7 +110,7 @@ class DashboardScreen extends ConsumerWidget {
                                             padding: const EdgeInsets.only(
                                               bottom: 12,
                                             ),
-                                            child: _EventRow(event: e),
+                                            child: EventRow(event: e),
                                           ),
                                         )
                                         .toList(),
@@ -159,15 +123,15 @@ class DashboardScreen extends ConsumerWidget {
 
                     // Note épinglée
                     if (pinnedNote != null) ...[
-                      _PinnedNoteCard(note: pinnedNote, color: notesColor),
+                      PinnedNoteCard(note: pinnedNote, color: notesColor),
                       const SizedBox(height: 12),
                     ],
 
                     // Résumé dépenses
-                    _Card(
+                    DashboardCard(
                       child: Column(
                         children: [
-                          _CardHeader(
+                          DashboardCardHeader(
                             icon: Icons.trending_up,
                             iconColor: homeColor,
                             title: 'Résumé des dépenses',
@@ -183,7 +147,7 @@ class DashboardScreen extends ConsumerWidget {
                                   textBaseline: TextBaseline.alphabetic,
                                   children: [
                                     Text(
-                                      _formatAmount(totalExpenses),
+                                      dashboardFormatAmount(totalExpenses),
                                       style: TextStyle(
                                         color: context.colors.textPrimary,
                                         fontSize: 28,
@@ -205,11 +169,11 @@ class DashboardScreen extends ConsumerWidget {
                                   height: 1,
                                   color: context.colors.border,
                                 ),
-                                _ExpenseRow(
+                                ExpenseRow(
                                   label: 'Votre solde',
                                   value: myBalance >= 0
-                                      ? '+${_formatAmount(myBalance)}'
-                                      : _formatAmount(myBalance),
+                                      ? '+${dashboardFormatAmount(myBalance)}'
+                                      : dashboardFormatAmount(myBalance),
                                   valueColor: myBalance >= 0
                                       ? const Color(0xFF2BB8A5)
                                       : context.colors.error,
@@ -225,10 +189,10 @@ class DashboardScreen extends ConsumerWidget {
 
                     // Activité récente (messages)
                     if (recentMessages.isNotEmpty) ...[
-                      _Card(
+                      DashboardCard(
                         child: Column(
                           children: [
-                            _CardHeader(
+                            DashboardCardHeader(
                               icon: Icons.chat_bubble_outline,
                               iconColor: homeColor,
                               title: 'Activité récente',
@@ -247,7 +211,7 @@ class DashboardScreen extends ConsumerWidget {
                                         padding: const EdgeInsets.only(
                                           bottom: 12,
                                         ),
-                                        child: _MessageRow(
+                                        child: MessageRow(
                                           message: m,
                                           isMe: m.senderId == currentUid,
                                           memberNames: memberNames,
@@ -267,7 +231,7 @@ class DashboardScreen extends ConsumerWidget {
 
                     // Médias partagés
                     if (previewMedia.isNotEmpty) ...[
-                      _Card(
+                      DashboardCard(
                         child: Column(
                           children: [
                             Padding(
@@ -348,7 +312,7 @@ class DashboardScreen extends ConsumerWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: _QuickActionButton(
+                          child: QuickActionButton(
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -365,7 +329,7 @@ class DashboardScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _QuickActionButton(
+                          child: QuickActionButton(
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -389,484 +353,6 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ),
       ), // SafeArea
-    );
-  }
-}
-
-// ── Widgets helpers ──────────────────────────────────────────────────────────
-
-class _Card extends StatelessWidget {
-  final Widget child;
-  const _Card({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.shadow,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
-}
-
-class _CardHeader extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-
-  const _CardHeader({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: context.colors.border)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 16, color: iconColor),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              color: context.colors.textPrimary,
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyHint extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _EmptyHint({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
-        ),
-        TextButton.icon(
-          onPressed: onTap,
-          icon: const Icon(Icons.add, size: 16),
-          label: const Text('Ajouter'),
-        ),
-      ],
-    );
-  }
-}
-
-class _EventRow extends StatelessWidget {
-  final Event event;
-  const _EventRow({required this.event});
-
-  Color _parseEventColor() =>
-      tryHexToColor(event.color) ?? const Color(0xFF4F7CFF);
-
-  @override
-  Widget build(BuildContext context) {
-    final isToday = _isToday(event.startDate);
-
-    final baseColor = _parseEventColor();
-    final colorPair = [
-      baseColor,
-      Color.fromARGB(
-        (baseColor.a * 255.0).round() & 0xff,
-        ((baseColor.r * 255.0).round() & 0xff) * 4 ~/ 5,
-        ((baseColor.g * 255.0).round() & 0xff) * 4 ~/ 5,
-        ((baseColor.b * 255.0).round() & 0xff) * 4 ~/ 5,
-      ),
-    ];
-
-    String dateLabel;
-    if (isToday) {
-      dateLabel =
-          "Aujourd'hui • ${DateFormat('HH:mm').format(event.startDate)}";
-    } else {
-      dateLabel = DateFormat('d MMM • HH:mm', 'fr_FR').format(event.startDate);
-    }
-
-    return Row(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: colorPair,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: colorPair.first.withValues(alpha: 0.3),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                DateFormat(
-                  'MMM',
-                  'fr_FR',
-                ).format(event.startDate).toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                '${event.startDate.day}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  height: 1,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                event.title,
-                style: TextStyle(
-                  color: context.colors.textPrimary,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                dateLabel,
-                style: TextStyle(
-                  color: context.colors.textSecondary,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PinnedNoteCard extends StatelessWidget {
-  final Note note;
-  final Color color;
-  const _PinnedNoteCard({required this.note, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.05),
-            color.withValues(alpha: 0.10),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.shadow,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.sticky_note_2, size: 16, color: color),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Note épinglée',
-                  style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
-                const Spacer(),
-                Icon(Icons.push_pin, size: 16, color: context.colors.accent),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: color.withValues(alpha: 0.2)),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  note.title,
-                  style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 15,
-                  ),
-                ),
-                if (note.content.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    note.content,
-                    style: TextStyle(
-                      color: context.colors.textSecondary,
-                      fontSize: 13,
-                      height: 1.5,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                const SizedBox(height: 12),
-                Text(
-                  'Modifié ${_timeAgo(note.updatedAt)}',
-                  style: TextStyle(color: color, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ExpenseRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color valueColor;
-
-  const _ExpenseRow({
-    required this.label,
-    required this.value,
-    required this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: valueColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MessageRow extends StatelessWidget {
-  final Message message;
-  final bool isMe;
-  final Map<String, String> memberNames;
-  final List<GroupMember> members;
-  const _MessageRow({
-    required this.message,
-    required this.isMe,
-    required this.memberNames,
-    required this.members,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final resolvedName = isMe
-        ? 'Vous'
-        : (memberNames[message.senderId] ?? message.senderName ?? '?');
-    final name = resolvedName;
-    final member = members.where((m) => m.uid == message.senderId).firstOrNull;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        UserAvatar(
-          photoUrl: member?.photoUrl,
-          showPhoto: member?.showProfilePhoto ?? true,
-          displayName: isMe ? 'Vous' : resolvedName,
-          radius: 18,
-          color: avatarColorForUid(message.senderId ?? ''),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    name,
-                    style: TextStyle(
-                      color: context.colors.textPrimary,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _timeAgo(message.timestamp),
-                    style: TextStyle(
-                      color: context.colors.textSecondary,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                message.type == MessageType.image
-                    ? 'a envoyé une photo'
-                    : message.type == MessageType.file
-                    ? 'a envoyé un fichier'
-                    : message.type == MessageType.audio
-                    ? 'a envoyé un audio'
-                    : message.type == MessageType.poll
-                    ? 'a créé un sondage'
-                    : message.content,
-                style: TextStyle(
-                  color: context.colors.textSecondary,
-                  fontSize: 13,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _QuickActionButton extends StatelessWidget {
-  final LinearGradient gradient;
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickActionButton({
-    required this.gradient,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: gradient.colors.first.withValues(alpha: 0.25),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Icon(icon, color: Colors.white, size: 20),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

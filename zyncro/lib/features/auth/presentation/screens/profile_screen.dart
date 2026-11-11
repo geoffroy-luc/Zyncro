@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:zyncro/core/notifications/notification_providers.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/auth/presentation/widgets/profile_card.dart';
+import 'package:zyncro/features/auth/presentation/widgets/profile_section_header.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -351,8 +353,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 32),
 
           // ── Section : Infos ──────────────────────────────────────────────
-          const _SectionHeader(label: 'Informations'),
-          _Card(
+          const ProfileSectionHeader(label: 'Informations'),
+          ProfileCard(
             child: ListTile(
               leading: Icon(
                 Icons.person_outline,
@@ -372,8 +374,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
 
           // ── Section : Préférences ────────────────────────────────────────
-          const _SectionHeader(label: 'Préférences'),
-          _Card(
+          const ProfileSectionHeader(label: 'Préférences'),
+          ProfileCard(
             child: Column(
               children: [
                 ListTile(
@@ -435,8 +437,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
 
           // ── Section : Compte ─────────────────────────────────────────────
-          const _SectionHeader(label: 'Compte'),
-          _Card(
+          const ProfileSectionHeader(label: 'Compte'),
+          ProfileCard(
             child: Column(
               children: [
                 ListTile(
@@ -469,46 +471,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-class _SectionHeader extends StatelessWidget {
-  final String label;
-  const _SectionHeader({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
-      child: Text(
-        label.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: context.colors.textSecondary,
-          letterSpacing: 0.8,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-class _Card extends StatelessWidget {
-  final Widget child;
-  const _Card({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: child,
     );
   }
 }

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +7,8 @@ import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/share_provider.dart';
+import 'package:zyncro/features/chat/presentation/widgets/group_row.dart';
+import 'package:zyncro/features/chat/presentation/widgets/share_preview.dart';
 import 'package:zyncro/features/groups/domain/entities/group.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 
@@ -69,7 +69,7 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
       ),
       body: Column(
         children: [
-          _SharePreview(share: share),
+          SharePreview(share: share),
           Divider(height: 1, color: context.colors.border),
           Expanded(
             child: groups.isEmpty
@@ -88,7 +88,7 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
                     itemCount: groups.length,
                     itemBuilder: (context, i) {
                       final g = groups[i];
-                      return _GroupRow(
+                      return GroupRow(
                         group: g,
                         selected: g.id == _selectedGroupId,
                         onTap: _sending
@@ -238,134 +238,6 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
         }
         return (filePath: m.path, mimeType: m.mimeType);
       }),
-    );
-  }
-}
-
-// ── Aperçu du contenu partagé ────────────────────────────────────────────────
-
-class _SharePreview extends StatelessWidget {
-  final PendingShare share;
-  const _SharePreview({required this.share});
-
-  @override
-  Widget build(BuildContext context) {
-    if (share.kind == SharedKind.text) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        color: context.colors.surface,
-        child: Text(
-          share.text ?? '',
-          maxLines: 4,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
-        ),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      color: context.colors.surface,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      child: SizedBox(
-        height: 88,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: share.medias.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (context, i) {
-            final m = share.medias[i];
-            final isImage = m.mimeType.startsWith('image/');
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: SizedBox(
-                width: 88,
-                height: 88,
-                child: isImage
-                    ? Image.file(File(m.path), fit: BoxFit.cover)
-                    : Container(
-                        color: Colors.black12,
-                        child: Icon(
-                          Icons.play_circle_outline,
-                          size: 34,
-                          color: context.colors.textSecondary,
-                        ),
-                      ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-// ── Ligne de groupe ──────────────────────────────────────────────────────────
-
-class _GroupRow extends StatelessWidget {
-  final Group group;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  const _GroupRow({
-    required this.group,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        color: selected
-            ? context.colors.primary.withValues(alpha: 0.08)
-            : Colors.transparent,
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: context.colors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: group.photoUrl != null
-                  ? Image.network(group.photoUrl!, fit: BoxFit.cover)
-                  : Center(
-                      child: Text(
-                        group.emoji?.isNotEmpty == true
-                            ? group.emoji!
-                            : (group.name.isNotEmpty
-                                  ? group.name[0].toUpperCase()
-                                  : '?'),
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                    ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                group.name,
-                style: TextStyle(
-                  color: context.colors.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            Icon(
-              selected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              color: selected ? context.colors.primary : context.colors.border,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

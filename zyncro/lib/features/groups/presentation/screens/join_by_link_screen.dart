@@ -9,6 +9,8 @@ import 'package:zyncro/features/chat/presentation/providers/messages_provider.da
 import 'package:zyncro/features/groups/domain/repositories/groups_repository.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/invite_link_provider.dart';
+import 'package:zyncro/features/groups/presentation/widgets/invite_card.dart';
+import 'package:zyncro/features/groups/presentation/widgets/join_link_invalid_link.dart';
 
 /// Écran de confirmation affiché lorsqu'un lien d'invitation est ouvert.
 /// Résout le code → aperçu du groupe → propose de rejoindre.
@@ -146,7 +148,7 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
 
                 final preview = snapshot.data;
                 if (snapshot.hasError || preview == null) {
-                  return _InvalidLink(onClose: _close);
+                  return JoinLinkInvalidLink(onClose: _close);
                 }
 
                 // Déjà membre ? (les groupes de l'utilisateur sont accessibles)
@@ -156,7 +158,7 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
                   (g) => g.id == preview.groupId,
                 );
 
-                return _InviteCard(
+                return InviteCard(
                   preview: preview,
                   alreadyMember: alreadyMember,
                   joining: _joining,
@@ -169,173 +171,6 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _InviteCard extends StatelessWidget {
-  final InvitePreview preview;
-  final bool alreadyMember;
-  final bool joining;
-  final String? error;
-  final VoidCallback onJoin;
-  final VoidCallback onOpen;
-
-  const _InviteCard({
-    required this.preview,
-    required this.alreadyMember,
-    required this.joining,
-    required this.error,
-    required this.onJoin,
-    required this.onOpen,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final name = preview.groupName;
-    final emoji = preview.groupEmoji;
-    final photoUrl = preview.groupPhotoUrl;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            color: context.colors.primary.withValues(alpha: 0.08),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: context.colors.primary.withValues(alpha: 0.2),
-              width: 2,
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: (photoUrl != null && photoUrl.isNotEmpty)
-              ? Image.network(
-                  photoUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
-                      _EmojiAvatar(emoji: emoji, name: name),
-                )
-              : _EmojiAvatar(emoji: emoji, name: name),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          alreadyMember
-              ? 'Tu fais déjà partie de'
-              : 'Tu as été invité·e à rejoindre',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: context.colors.textSecondary,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 6),
-        Text(
-          name?.isNotEmpty == true ? name! : 'un espace Zyncro',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 32),
-        if (error != null) ...[
-          Text(
-            error!,
-            style: TextStyle(color: context.colors.error, fontSize: 13),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-        ],
-        SizedBox(
-          width: double.infinity,
-          child: alreadyMember
-              ? ElevatedButton.icon(
-                  onPressed: onOpen,
-                  icon: const Icon(Icons.login),
-                  label: const Text('Ouvrir cet espace'),
-                )
-              : ElevatedButton(
-                  onPressed: joining ? null : onJoin,
-                  child: joining
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text('Rejoindre'),
-                ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Repli quand le groupe n'a pas de photo (ou qu'elle échoue à charger) :
-/// emoji du groupe, sinon initiale du nom, sinon 👥.
-class _EmojiAvatar extends StatelessWidget {
-  final String? emoji;
-  final String? name;
-
-  const _EmojiAvatar({required this.emoji, required this.name});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        (emoji != null && emoji!.isNotEmpty)
-            ? emoji!
-            : ((name != null && name!.isNotEmpty)
-                  ? name![0].toUpperCase()
-                  : '👥'),
-        style: const TextStyle(fontSize: 44),
-      ),
-    );
-  }
-}
-
-class _InvalidLink extends StatelessWidget {
-  final VoidCallback onClose;
-  const _InvalidLink({required this.onClose});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.link_off_rounded,
-          size: 64,
-          color: context.colors.textSecondary,
-        ),
-        const SizedBox(height: 20),
-        Text(
-          'Lien invalide',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Ce lien d\'invitation est invalide ou a expiré. Demande un nouveau '
-          'lien à un membre du groupe.',
-          style: TextStyle(color: context.colors.textSecondary),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 28),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: onClose,
-            child: const Text('Fermer'),
-          ),
-        ),
-      ],
     );
   }
 }

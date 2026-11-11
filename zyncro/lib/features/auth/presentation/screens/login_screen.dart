@@ -7,6 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/auth/presentation/widgets/apple_icon.dart';
+import 'package:zyncro/features/auth/presentation/widgets/google_icon.dart';
+import 'package:zyncro/features/auth/presentation/widgets/guest_pseudo_sheet.dart';
+import 'package:zyncro/features/auth/presentation/widgets/loading_type.dart';
+import 'package:zyncro/features/auth/presentation/widgets/spinner.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -20,7 +25,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
-  _LoadingType? _loadingType;
+  LoadingType? _loadingType;
   bool _obscurePassword = true;
   String? _error;
 
@@ -33,7 +38,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
-    _startLoading(_LoadingType.email);
+    _startLoading(LoadingType.email);
     try {
       await ref
           .read(authRepositoryProvider)
@@ -49,7 +54,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
-    _startLoading(_LoadingType.google);
+    _startLoading(LoadingType.google);
     try {
       await ref.read(authRepositoryProvider).signInWithGoogle();
     } on FirebaseAuthException catch (e) {
@@ -62,7 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _signInWithApple() async {
-    _startLoading(_LoadingType.apple);
+    _startLoading(LoadingType.apple);
     try {
       await ref.read(authRepositoryProvider).signInWithApple();
     } on FirebaseAuthException catch (e) {
@@ -84,7 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _setError('Entre ton email pour réinitialiser le mot de passe.');
       return;
     }
-    _startLoading(_LoadingType.email);
+    _startLoading(LoadingType.email);
     try {
       await ref.read(authRepositoryProvider).resetPassword(email);
       if (mounted) {
@@ -109,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (_) => _GuestPseudoSheet(
+        builder: (_) => GuestPseudoSheet(
           onConfirm: (pseudo) {
             Navigator.of(context).pop();
             unawaited(_signInAnonymously(pseudo));
@@ -120,7 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _signInAnonymously(String pseudo) async {
-    _startLoading(_LoadingType.anonymous);
+    _startLoading(LoadingType.anonymous);
     try {
       await ref.read(authRepositoryProvider).signInAnonymously(pseudo);
     } on FirebaseAuthException catch (_) {
@@ -130,7 +135,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _startLoading(_LoadingType type) => setState(() {
+  void _startLoading(LoadingType type) => setState(() {
     _loading = true;
     _loadingType = type;
     _error = null;
@@ -265,8 +270,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 12),
                     ElevatedButton(
                       onPressed: _loading ? null : _signIn,
-                      child: _loadingType == _LoadingType.email
-                          ? const _Spinner()
+                      child: _loadingType == LoadingType.email
+                          ? const Spinner()
                           : const Text('Se connecter'),
                     ),
                   ],
@@ -291,9 +296,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               // ── Google ────────────────────────────────────────────
               OutlinedButton.icon(
                 onPressed: _loading ? null : _signInWithGoogle,
-                icon: _loadingType == _LoadingType.google
-                    ? _Spinner(color: context.colors.primary)
-                    : const _GoogleIcon(),
+                icon: _loadingType == LoadingType.google
+                    ? Spinner(color: context.colors.primary)
+                    : const GoogleIcon(),
                 label: const Text('Continuer avec Google'),
               ),
               const SizedBox(height: 12),
@@ -302,9 +307,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (Platform.isIOS) ...[
                 OutlinedButton.icon(
                   onPressed: _loading ? null : _signInWithApple,
-                  icon: _loadingType == _LoadingType.apple
-                      ? _Spinner(color: context.colors.primary)
-                      : const _AppleIcon(),
+                  icon: _loadingType == LoadingType.apple
+                      ? Spinner(color: context.colors.primary)
+                      : const AppleIcon(),
                   label: const Text('Continuer avec Apple'),
                 ),
                 const SizedBox(height: 12),
@@ -317,8 +322,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   foregroundColor: context.colors.textSecondary,
                   side: BorderSide(color: context.colors.border),
                 ),
-                icon: _loadingType == _LoadingType.anonymous
-                    ? _Spinner(color: context.colors.textSecondary)
+                icon: _loadingType == LoadingType.anonymous
+                    ? Spinner(color: context.colors.textSecondary)
                     : const Icon(Icons.person_outline, size: 20),
                 label: const Text('Continuer sans compte'),
               ),
@@ -331,154 +336,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 24),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-enum _LoadingType { email, google, apple, anonymous }
-
-class _Spinner extends StatelessWidget {
-  final Color color;
-  const _Spinner({this.color = Colors.white});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 18,
-      height: 18,
-      child: CircularProgressIndicator(color: color, strokeWidth: 2),
-    );
-  }
-}
-
-// ── Guest pseudo sheet ────────────────────────────────────────────────────────
-
-class _GuestPseudoSheet extends StatefulWidget {
-  final void Function(String pseudo) onConfirm;
-
-  const _GuestPseudoSheet({required this.onConfirm});
-
-  @override
-  State<_GuestPseudoSheet> createState() => _GuestPseudoSheetState();
-}
-
-class _GuestPseudoSheetState extends State<_GuestPseudoSheet> {
-  final _controller = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        24,
-        24,
-        24,
-        MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Continuer sans compte',
-                  style: theme.textTheme.titleLarge,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Entre un pseudo pour être identifié dans ton groupe.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: context.colors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: _controller,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Pseudo',
-                prefixIcon: Icon(Icons.person_outline),
-              ),
-              textCapitalization: TextCapitalization.words,
-              textInputAction: TextInputAction.done,
-              onFieldSubmitted: (_) => _submit(),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) {
-                  return 'Le pseudo est requis';
-                }
-                if (v.trim().length < 2) return 'Minimum 2 caractères';
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(onPressed: _submit, child: const Text('Continuer')),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      widget.onConfirm(_controller.text.trim());
-    }
-  }
-}
-
-class _AppleIcon extends StatelessWidget {
-  const _AppleIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 20,
-      height: 20,
-      child: Icon(Icons.apple, size: 20, color: Colors.black),
-    );
-  }
-}
-
-class _GoogleIcon extends StatelessWidget {
-  const _GoogleIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 20,
-      height: 20,
-      decoration: const BoxDecoration(shape: BoxShape.circle),
-      child: const Text(
-        'G',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF4285F4),
-          height: 1.3,
         ),
       ),
     );

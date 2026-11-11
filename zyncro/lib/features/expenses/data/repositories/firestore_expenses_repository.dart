@@ -78,9 +78,4 @@ class FirestoreExpensesRepository implements ExpensesRepository {
   Future<void> deleteExpense(String groupId, String expenseId) async {
     await _col(groupId).doc(expenseId).delete();
   }
-
-  @override
-  Future<void> settleExpense(String groupId, String expenseId) async {
-    await _col(groupId).doc(expenseId).update({'settled': true});
-  }
 }
