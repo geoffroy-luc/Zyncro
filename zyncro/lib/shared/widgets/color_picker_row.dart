@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
-
-Color hexToColor(String hex) =>
-    Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
-
-String colorToHex(Color color) {
-  final argb = color.toARGB32();
-  return '#${(argb & 0x00FFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
-}
+import 'package:zyncro/core/utils/color_hex.dart';
 
 // ── HSV Color Picker Dialog ───────────────────────────────────────────────────
 

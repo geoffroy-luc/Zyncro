@@ -1,8 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/notes/presentation/providers/notes_provider.dart';
 import 'package:zyncro/features/notes/presentation/screens/note_editor_screen.dart';
@@ -10,7 +12,7 @@ import 'package:zyncro/shared/models/note.dart';
 
 Color _hexToColor(String? hex) {
   if (hex == null) return AppColors.secondary;
-  return Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
+  return hexToColor(hex);
 }
 
 String _formatDate(DateTime dt) {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/calendar/presentation/providers/events_provider.dart';
 import 'package:zyncro/features/calendar/presentation/screens/event_form_screen.dart';
@@ -18,11 +19,6 @@ import 'package:zyncro/shared/models/message.dart';
 import 'package:zyncro/shared/models/note.dart';
 import 'package:zyncro/shared/models/tab_settings.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
-
-Color _darken(Color color) {
-  final hsl = HSLColor.fromColor(color);
-  return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
-}
 
 const _defaultTabColors = [
   Color(0xFF9B59B6), // Home
@@ -42,7 +38,7 @@ Color _colorForTab(int idx, TabSettings settings) {
     _ => null,
   };
   if (hex == null) return _defaultTabColors[idx];
-  return Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
+  return hexToColor(hex);
 }
 
 bool _isToday(DateTime dt) {
@@ -356,7 +352,7 @@ class DashboardScreen extends ConsumerWidget {
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [calendarColor, _darken(calendarColor)],
+                              colors: [calendarColor, darken(calendarColor)],
                             ),
                             icon: Icons.calendar_today,
                             label: 'Ajouter un événement',
@@ -373,7 +369,7 @@ class DashboardScreen extends ConsumerWidget {
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [notesColor, _darken(notesColor)],
+                              colors: [notesColor, darken(notesColor)],
                             ),
                             icon: Icons.sticky_note_2_outlined,
                             label: 'Nouvelle note',
@@ -495,16 +491,8 @@ class _EventRow extends StatelessWidget {
   final Event event;
   const _EventRow({required this.event});
 
-  Color _parseEventColor() {
-    if (event.color == null) return const Color(0xFF4F7CFF);
-    try {
-      return Color(
-        int.parse('FF${event.color!.replaceAll('#', '')}', radix: 16),
-      );
-    } catch (_) {
-      return const Color(0xFF4F7CFF);
-    }
-  }
+  Color _parseEventColor() =>
+      tryHexToColor(event.color) ?? const Color(0xFF4F7CFF);
 
   @override
   Widget build(BuildContext context) {

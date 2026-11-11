@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/theme/app_theme.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/auth/presentation/screens/login_screen.dart';
 import 'package:zyncro/features/auth/presentation/screens/profile_screen.dart';
@@ -175,11 +176,6 @@ const _defaultTabGradients = [
   [Color(0xFFE85D75), Color(0xFFC94060)], // Chat - rose
 ];
 
-Color _darken(Color color) {
-  final hsl = HSLColor.fromColor(color);
-  return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
-}
-
 List<Color> _gradientForTab(int idx, TabSettings settings) {
   final hex = switch (idx) {
     0 => settings.homeThemeColor,
@@ -190,8 +186,8 @@ List<Color> _gradientForTab(int idx, TabSettings settings) {
     _ => null,
   };
   if (hex == null) return _defaultTabGradients[idx];
-  final base = Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
-  return [base, _darken(base)];
+  final base = hexToColor(hex);
+  return [base, darken(base)];
 }
 
 const _settingsRoutes = [

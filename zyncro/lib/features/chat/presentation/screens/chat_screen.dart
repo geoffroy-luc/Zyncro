@@ -16,6 +16,7 @@ import 'package:record/record.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/domain/repositories/i_messages_repository.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
@@ -28,11 +29,6 @@ import 'package:zyncro/shared/models/group_member.dart';
 import 'package:zyncro/shared/models/message.dart';
 import 'package:zyncro/shared/models/tab_settings.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
-
-Color _chatDark(Color c) {
-  final hsl = HSLColor.fromColor(c);
-  return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
-}
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -1312,7 +1308,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
 
     final bgColor = bgType == 'color' && bgValue != null
-        ? Color(int.parse('FF${bgValue.replaceAll('#', '')}', radix: 16))
+        ? hexToColor(bgValue)
         : const Color(0xFFF7F9FC);
 
     return Scaffold(
@@ -1765,7 +1761,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                       end: Alignment.bottomRight,
                                       colors: [
                                         Theme.of(context).colorScheme.primary,
-                                        _chatDark(
+                                        darken(
                                           Theme.of(context).colorScheme.primary,
                                         ),
                                       ],
@@ -1849,7 +1845,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                         end: Alignment.bottomRight,
                                         colors: [
                                           Theme.of(context).colorScheme.primary,
-                                          _chatDark(
+                                          darken(
                                             Theme.of(
                                               context,
                                             ).colorScheme.primary,
@@ -1895,7 +1891,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                         end: Alignment.bottomRight,
                                         colors: [
                                           Theme.of(context).colorScheme.primary,
-                                          _chatDark(
+                                          darken(
                                             Theme.of(
                                               context,
                                             ).colorScheme.primary,
@@ -2271,7 +2267,7 @@ class _MessageBubble extends StatelessWidget {
                         end: Alignment.bottomRight,
                         colors: [
                           Theme.of(context).colorScheme.primary,
-                          _chatDark(Theme.of(context).colorScheme.primary),
+                          darken(Theme.of(context).colorScheme.primary),
                         ],
                       ),
                 borderRadius: radius,
@@ -3129,7 +3125,7 @@ class _ReactionsRow extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: isMine
-                        ? _chatDark(Theme.of(context).colorScheme.primary)
+                        ? darken(Theme.of(context).colorScheme.primary)
                         : AppColors.textSecondary,
                   ),
                 ),
@@ -3668,7 +3664,7 @@ class _PollCard extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: [
                       Theme.of(context).colorScheme.primary,
-                      _chatDark(Theme.of(context).colorScheme.primary),
+                      darken(Theme.of(context).colorScheme.primary),
                     ],
                   ),
                   borderRadius: const BorderRadius.vertical(

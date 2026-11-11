@@ -1,10 +1,12 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/constants/expense_categories.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
@@ -16,7 +18,6 @@ import 'package:zyncro/shared/models/group_member.dart';
 import 'package:zyncro/shared/models/recurrence_rule.dart';
 import 'package:zyncro/shared/models/tab_settings.dart';
 import 'package:zyncro/shared/widgets/category_editor_sheet.dart';
-import 'package:zyncro/shared/widgets/color_picker_row.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 class ExpenseFormScreen extends ConsumerStatefulWidget {

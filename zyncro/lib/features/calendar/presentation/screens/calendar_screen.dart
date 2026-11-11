@@ -1,8 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/features/calendar/presentation/providers/events_provider.dart';
 import 'package:zyncro/features/calendar/presentation/screens/event_form_screen.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
@@ -13,19 +15,7 @@ import 'package:zyncro/shared/models/tab_settings.dart';
 
 const _defaultEventColor = Color(0xFF4F7CFF);
 
-Color _darken(Color color) {
-  final hsl = HSLColor.fromColor(color);
-  return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
-}
-
-Color _eventColor(Event e) {
-  if (e.color == null) return _defaultEventColor;
-  try {
-    return Color(int.parse('FF${e.color!.replaceAll('#', '')}', radix: 16));
-  } catch (_) {
-    return _defaultEventColor;
-  }
-}
+Color _eventColor(Event e) => tryHexToColor(e.color) ?? _defaultEventColor;
 
 String _timeLabel(DateTime dt) => DateFormat('HH:mm').format(dt);
 
@@ -256,7 +246,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 decoration: BoxDecoration(
                   gradient: isToday
                       ? LinearGradient(
-                          colors: [primaryColor, _darken(primaryColor)],
+                          colors: [primaryColor, darken(primaryColor)],
                         )
                       : null,
                   color: isToday
@@ -619,7 +609,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                             end: Alignment.bottomRight,
                                             colors: [
                                               primaryColor,
-                                              _darken(primaryColor),
+                                              darken(primaryColor),
                                             ],
                                           ),
                                           borderRadius: BorderRadius.circular(

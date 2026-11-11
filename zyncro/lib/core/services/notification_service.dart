@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/app/router.dart';
+import 'package:zyncro/core/logging/app_logger.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 
 /// Background message handler — must be a top-level function.
@@ -75,7 +76,7 @@ class NotificationService {
     // Save initial token
     final token = await _messaging.getToken();
     // Ne jamais journaliser le token FCM (visible dans logcat en release).
-    debugPrint('[FCM] token ${token == null ? 'absent' : 'obtenu'}');
+    AppLogger.info('FCM', 'token ${token == null ? 'absent' : 'obtenu'}');
     if (token != null) await _saveToken(userId, token);
 
     // Refresh token — stocké pour pouvoir l'annuler au logout
@@ -106,7 +107,7 @@ class NotificationService {
     RemoteMessage message,
     WidgetRef ref,
   ) async {
-    debugPrint('[Notif] tap — data: ${message.data}');
+    AppLogger.info('Notif', 'tap — data: ${message.data}');
 
     final groupId = message.data['groupId'] as String?;
     if (groupId == null) return;
@@ -120,7 +121,7 @@ class NotificationService {
       _ => '/home',
     };
 
-    debugPrint('[Notif] groupId=$groupId  screen=$screen  → route=$route');
+    AppLogger.info('Notif', 'groupId=$groupId  screen=$screen  → route=$route');
 
     // Sélectionner le bon groupe
     await ref.read(selectedGroupIdProvider.notifier).select(groupId);
@@ -129,7 +130,7 @@ class NotificationService {
     // déclenché par selectedGroupIdProvider, le 2e effectue la navigation.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        debugPrint('[Notif] navigating → $route');
+        AppLogger.info('Notif', 'navigating → $route');
         ref.read(routerProvider).go(route);
       });
     });
@@ -141,9 +142,9 @@ class NotificationService {
         'fcmToken': token,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      debugPrint('[FCM] token saved for $userId');
+      AppLogger.info('FCM', 'token saved for $userId');
     } on FirebaseException catch (e) {
-      debugPrint('[FCM] token save FAILED: ${e.code} — ${e.message}');
+      AppLogger.warning('FCM', 'token save FAILED: ${e.code} — ${e.message}');
     }
   }
 

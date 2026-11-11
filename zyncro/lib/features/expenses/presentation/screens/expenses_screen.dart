@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
 import 'package:zyncro/features/expenses/presentation/screens/expense_form_screen.dart';
@@ -12,7 +13,6 @@ import 'package:zyncro/features/groups/presentation/providers/tab_settings_provi
 import 'package:zyncro/shared/models/expense.dart';
 import 'package:zyncro/shared/models/expense_category.dart';
 import 'package:zyncro/shared/models/group_member.dart';
-import 'package:zyncro/shared/widgets/color_picker_row.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 const _currencySymbols = {

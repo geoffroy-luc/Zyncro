@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+import 'package:zyncro/core/logging/app_logger.dart';
 
 extension FirestoreStreamErrors<T> on Stream<T> {
   /// Gère les erreurs `permission-denied` de Firestore sans jamais figer le
@@ -16,7 +16,7 @@ extension FirestoreStreamErrors<T> on Stream<T> {
   /// [label] identifie la source dans les logs (ex: `'watchUserGroups'`).
   Stream<T> surfacePermissionDenied(String label) {
     return handleError((Object error, StackTrace stackTrace) {
-      debugPrint('[$label] Firestore permission-denied: $error');
+      AppLogger.warning(label, 'Firestore permission-denied', error);
       // On relance (même objet, même stack) pour que l'erreur atteigne le
       // StreamProvider et l'UI.
       Error.throwWithStackTrace(error, stackTrace);
@@ -43,7 +43,11 @@ List<T> mapDocsSafely<T>(
     } catch (error) {
       // Error (TypeError, ArgumentError de values.byName…) autant qu'Exception :
       // on ne veut perdre que le document fautif, jamais la liste.
-      debugPrint('[$label] document ignoré (${doc.reference.path}) : $error');
+      AppLogger.warning(
+        label,
+        'document ignoré (${doc.reference.path})',
+        error,
+      );
     }
   }
   return result;

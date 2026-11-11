@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/constants/expense_categories.dart';
 import 'package:zyncro/core/theme/app_theme.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/shared/models/expense_category.dart';
 import 'package:zyncro/shared/widgets/color_picker_row.dart';
 
