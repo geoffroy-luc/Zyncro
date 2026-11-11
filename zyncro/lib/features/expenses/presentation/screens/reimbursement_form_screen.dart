@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -112,15 +113,17 @@ class _ReimbursementFormScreenState
 
       final userName =
           nameByUid[user.uid] ?? user.displayName ?? user.email ?? 'Quelqu\'un';
-      ref
-          .read(messagesRepositoryProvider)
-          .sendSystemMessage(
-            groupId: groupId,
-            userId: user.uid,
-            content:
-                '💸 $userName a remboursé ${nameByUid[_toUid] ?? ''} (${amount.toStringAsFixed(2)} €)',
-            notifScreen: 'expenses',
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: groupId,
+              userId: user.uid,
+              content:
+                  '💸 $userName a remboursé ${nameByUid[_toUid] ?? ''} (${amount.toStringAsFixed(2)} €)',
+              notifScreen: 'expenses',
+            ),
+      );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {

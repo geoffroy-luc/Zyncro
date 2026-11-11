@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,31 +38,35 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     final ctx = navKey.currentContext;
     if (ctx == null || !ctx.mounted) return;
 
-    showDialog<void>(
-      context: ctx,
-      barrierDismissible: !info.isMandatory,
-      builder: (dialogCtx) => PopScope(
-        canPop: !info.isMandatory,
-        child: AlertDialog(
-          title: Text(
-            info.isMandatory ? 'Mise à jour requise' : 'Mise à jour disponible',
-          ),
-          content: Text(
-            info.isMandatory
-                ? "Cette version de Zyncro n'est plus supportée. Veuillez mettre à jour l'application pour continuer."
-                : 'La version ${info.latestVersion} est disponible. Voulez-vous mettre à jour ?',
-          ),
-          actions: [
-            if (!info.isMandatory)
-              TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(),
-                child: const Text('Plus tard'),
-              ),
-            TextButton(
-              onPressed: () => UpdateService.openStore(info.storeUrl),
-              child: const Text('Mettre à jour'),
+    unawaited(
+      showDialog<void>(
+        context: ctx,
+        barrierDismissible: !info.isMandatory,
+        builder: (dialogCtx) => PopScope(
+          canPop: !info.isMandatory,
+          child: AlertDialog(
+            title: Text(
+              info.isMandatory
+                  ? 'Mise à jour requise'
+                  : 'Mise à jour disponible',
             ),
-          ],
+            content: Text(
+              info.isMandatory
+                  ? "Cette version de Zyncro n'est plus supportée. Veuillez mettre à jour l'application pour continuer."
+                  : 'La version ${info.latestVersion} est disponible. Voulez-vous mettre à jour ?',
+            ),
+            actions: [
+              if (!info.isMandatory)
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  child: const Text('Plus tard'),
+                ),
+              TextButton(
+                onPressed: () => UpdateService.openStore(info.storeUrl),
+                child: const Text('Mettre à jour'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -78,7 +83,7 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     final inForeground = state == AppLifecycleState.resumed;
     ref.read(appInForegroundProvider.notifier).setForeground(inForeground);
     if (inForeground) {
-      NotificationService.dismissAllNotifications();
+      unawaited(NotificationService.dismissAllNotifications());
     }
   }
 
@@ -97,7 +102,7 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     ref.listen(authStateProvider, (_, next) {
       final user = next.asData?.value;
       if (user != null) {
-        NotificationService.initialize(user.uid, ref);
+        unawaited(NotificationService.initialize(user.uid, ref));
       }
     });
 
@@ -105,10 +110,12 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     ref.listen(selectedGroupIdProvider, (_, next) {
       final groupId = next.asData?.value;
       if (groupId != null) {
-        NotificationService.dismissAllNotifications();
-        ref
-            .read(shareShortcutsControllerProvider.notifier)
-            .recordInteraction(groupId);
+        unawaited(NotificationService.dismissAllNotifications());
+        unawaited(
+          ref
+              .read(shareShortcutsControllerProvider.notifier)
+              .recordInteraction(groupId),
+        );
       }
     });
 

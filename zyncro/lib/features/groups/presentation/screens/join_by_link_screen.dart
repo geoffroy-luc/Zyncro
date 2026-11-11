@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -83,14 +84,16 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
       }
 
       final userName = freshUser.displayName ?? user.email ?? 'Quelqu\'un';
-      ref
-          .read(messagesRepositoryProvider)
-          .sendSystemMessage(
-            groupId: group.id,
-            userId: user.uid,
-            content: '👋 $userName a rejoint le groupe',
-            notifScreen: 'chat',
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: group.id,
+              userId: user.uid,
+              content: '👋 $userName a rejoint le groupe',
+              notifScreen: 'chat',
+            ),
+      );
 
       await ref.read(selectedGroupIdProvider.notifier).select(group.id);
       if (mounted) context.go('/home');

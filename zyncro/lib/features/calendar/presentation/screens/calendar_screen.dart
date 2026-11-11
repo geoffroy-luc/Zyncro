@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -865,8 +866,12 @@ class _EventCard extends ConsumerWidget {
     final color = _eventColor(event);
 
     void openEdit() {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => EventFormScreen(event: event)),
+      unawaited(
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => EventFormScreen(event: event),
+          ),
+        ),
       );
     }
 

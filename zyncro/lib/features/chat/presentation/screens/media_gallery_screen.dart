@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -350,22 +351,26 @@ class MediaPreviewTile extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         if (isVideo) {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => VideoViewerScreen(
-                url: url,
-                senderName: message.senderName,
-                sentAt: message.timestamp,
+          unawaited(
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => VideoViewerScreen(
+                  url: url,
+                  senderName: message.senderName,
+                  sentAt: message.timestamp,
+                ),
               ),
             ),
           );
         } else {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => ImageViewerScreen(
-                url: url,
-                senderName: message.senderName,
-                sentAt: message.timestamp,
+          unawaited(
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ImageViewerScreen(
+                  url: url,
+                  senderName: message.senderName,
+                  sentAt: message.timestamp,
+                ),
               ),
             ),
           );

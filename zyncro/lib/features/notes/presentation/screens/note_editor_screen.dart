@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
@@ -180,14 +181,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           user.email ??
           'Quelqu\'un';
       final action = isCreating ? 'a créé une note' : 'a modifié la note';
-      ref
-          .read(messagesRepositoryProvider)
-          .sendSystemMessage(
-            groupId: groupId,
-            userId: user.uid,
-            content: '📝 $userName $action « $title »',
-            notifScreen: 'notes',
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: groupId,
+              userId: user.uid,
+              content: '📝 $userName $action « $title »',
+              notifScreen: 'notes',
+            ),
+      );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -237,15 +240,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               user.displayName ??
               user.email ??
               'Quelqu\'un';
-          ref
-              .read(messagesRepositoryProvider)
-              .sendSystemMessage(
-                groupId: groupId,
-                userId: user.uid,
-                content:
-                    '📝 $userName a supprimé la note « ${widget.note!.title} »',
-                notifScreen: 'notes',
-              );
+          unawaited(
+            ref
+                .read(messagesRepositoryProvider)
+                .sendSystemMessage(
+                  groupId: groupId,
+                  userId: user.uid,
+                  content:
+                      '📝 $userName a supprimé la note « ${widget.note!.title} »',
+                  notifScreen: 'notes',
+                ),
+          );
         }
         if (mounted) Navigator.of(context).pop();
       } catch (e) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -33,8 +34,10 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
   String _search = '';
 
   void _openEditor({Note? note}) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => NoteEditorScreen(note: note)),
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => NoteEditorScreen(note: note)),
+      ),
     );
   }
 

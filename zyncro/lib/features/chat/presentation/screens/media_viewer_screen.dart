@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -93,12 +94,14 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    unawaited(
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
+    );
   }
 
   @override
   void dispose() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
     super.dispose();
   }
 
@@ -270,15 +273,19 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
-      ..initialize().then((_) {
+    unawaited(
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
+    );
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
+    unawaited(
+      _controller.initialize().then((_) {
         if (mounted) {
           setState(() => _initialized = true);
-          _controller.play();
+          unawaited(_controller.play());
         }
-      });
-    _controller.setLooping(true);
+      }),
+    );
+    unawaited(_controller.setLooping(true));
     _controller.addListener(_onControllerUpdate);
   }
 
@@ -289,8 +296,8 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
   @override
   void dispose() {
     _controller.removeListener(_onControllerUpdate);
-    _controller.dispose();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    unawaited(_controller.dispose());
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
     super.dispose();
   }
 
@@ -449,9 +456,11 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
                             size: 28,
                           ),
                           onPressed: () {
-                            isPlaying
-                                ? _controller.pause()
-                                : _controller.play();
+                            unawaited(
+                              isPlaying
+                                  ? _controller.pause()
+                                  : _controller.play(),
+                            );
                           },
                         ),
 
@@ -480,8 +489,10 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
                             inactiveColor: Colors.white38,
                             thumbColor: Colors.white,
                             onChanged: (v) {
-                              _controller.seekTo(
-                                Duration(milliseconds: v.toInt()),
+                              unawaited(
+                                _controller.seekTo(
+                                  Duration(milliseconds: v.toInt()),
+                                ),
                               );
                             },
                           ),
@@ -535,13 +546,15 @@ class _MediaSwipeViewerState extends State<MediaSwipeViewer> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    unawaited(
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
+    );
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
     super.dispose();
   }
 
@@ -765,14 +778,16 @@ class _SwipeVideoPageState extends State<_SwipeVideoPage> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
-      ..initialize().then((_) {
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
+    unawaited(
+      _controller.initialize().then((_) {
         if (mounted) {
           setState(() => _initialized = true);
-          if (widget.isActive) _controller.play();
+          if (widget.isActive) unawaited(_controller.play());
         }
-      });
-    _controller.setLooping(true);
+      }),
+    );
+    unawaited(_controller.setLooping(true));
     _controller.addListener(_onUpdate);
   }
 
@@ -781,10 +796,10 @@ class _SwipeVideoPageState extends State<_SwipeVideoPage> {
     super.didUpdateWidget(old);
     if (widget.isActive != old.isActive) {
       if (widget.isActive) {
-        _controller.play();
+        unawaited(_controller.play());
       } else {
-        _controller.pause();
-        _controller.seekTo(Duration.zero);
+        unawaited(_controller.pause());
+        unawaited(_controller.seekTo(Duration.zero));
       }
     }
   }
@@ -796,7 +811,7 @@ class _SwipeVideoPageState extends State<_SwipeVideoPage> {
   @override
   void dispose() {
     _controller.removeListener(_onUpdate);
-    _controller.dispose();
+    unawaited(_controller.dispose());
     super.dispose();
   }
 
@@ -939,13 +954,15 @@ class _AlbumSwipeViewerState extends State<AlbumSwipeViewer> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    unawaited(
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky),
+    );
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
     super.dispose();
   }
 

@@ -127,7 +127,7 @@ class IncomingShareNotifier extends Notifier<PendingShare?> {
   }
 
   void _navigate() {
-    ref.read(routerProvider).push('/share');
+    unawaited(ref.read(routerProvider).push('/share'));
   }
 
   /// Efface le partage en attente (après envoi ou annulation).
@@ -151,7 +151,7 @@ class ShareShortcutsController extends Notifier<void> {
     // Re-publie dès que la liste des groupes change (ajout, suppression, photo).
     ref.listen(userGroupsProvider, (_, next) {
       final groups = next.asData?.value;
-      if (groups != null) _resync(groups);
+      if (groups != null) unawaited(_resync(groups));
     }, fireImmediately: true);
   }
 
@@ -161,7 +161,7 @@ class ShareShortcutsController extends Notifier<void> {
     if (uid == null) return;
     await GroupActivityService.recordInteraction(uid, groupId, weight: weight);
     final groups = ref.read(userGroupsProvider).asData?.value;
-    if (groups != null) _resync(groups);
+    if (groups != null) unawaited(_resync(groups));
   }
 
   Future<void> _resync(List<Group> groups) async {

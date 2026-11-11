@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,7 +64,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           minute: _startTime.minute,
         );
       }
-      _loadReminder(e.id);
+      unawaited(_loadReminder(e.id));
       _recurrence = e.recurrence;
       _selectedParticipantIds = e.participantIds.toSet();
     } else {
@@ -159,15 +160,17 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         await ReminderService.cancelReminder(widget.event!.id);
         final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
         if (user != null) {
-          ref
-              .read(messagesRepositoryProvider)
-              .sendSystemMessage(
-                groupId: groupId,
-                userId: user.uid,
-                content:
-                    '📅 $userName a supprimé un événement « ${widget.event!.title} »',
-                notifScreen: 'calendar',
-              );
+          unawaited(
+            ref
+                .read(messagesRepositoryProvider)
+                .sendSystemMessage(
+                  groupId: groupId,
+                  userId: user.uid,
+                  content:
+                      '📅 $userName a supprimé un événement « ${widget.event!.title} »',
+                  notifScreen: 'calendar',
+                ),
+          );
         }
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
@@ -250,14 +253,16 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       final action = isCreating
           ? 'a créé un événement'
           : 'a modifié l\'événement';
-      ref
-          .read(messagesRepositoryProvider)
-          .sendSystemMessage(
-            groupId: groupId,
-            userId: user.uid,
-            content: '📅 $userName $action « $title »',
-            notifScreen: 'calendar',
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: groupId,
+              userId: user.uid,
+              content: '📅 $userName $action « $title »',
+              notifScreen: 'calendar',
+            ),
+      );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -625,7 +630,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 title: const Text('Personnalisé…'),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _showCustomReminderDialog();
+                  unawaited(_showCustomReminderDialog());
                 },
               ),
               const SizedBox(height: 8),

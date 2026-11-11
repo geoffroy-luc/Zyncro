@@ -92,13 +92,13 @@ class NotificationService {
     final initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _handleNotificationTap(initialMessage, ref);
+        unawaited(_handleNotificationTap(initialMessage, ref));
       });
     }
 
     // Background → foreground : tap sur une notif
     _openedAppSub = FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      _handleNotificationTap(message, ref);
+      unawaited(_handleNotificationTap(message, ref));
     });
   }
 

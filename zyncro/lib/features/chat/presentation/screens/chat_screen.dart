@@ -86,36 +86,42 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
 
     if (key.currentContext != null) {
-      Scrollable.ensureVisible(
-        key.currentContext!,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
-        alignment: 0.5,
-      ).then((_) => highlight());
+      unawaited(
+        Scrollable.ensureVisible(
+          key.currentContext!,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+          alignment: 0.5,
+        ).then((_) => highlight()),
+      );
     } else {
       final estimated =
           _scrollController.position.maxScrollExtent *
           (index / messages.length);
-      _scrollController
-          .animateTo(
-            estimated,
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeInOut,
-          )
-          .then((_) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (key.currentContext != null) {
-                Scrollable.ensureVisible(
-                  key.currentContext!,
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  alignment: 0.5,
-                ).then((_) => highlight());
-              } else {
-                highlight();
-              }
-            });
-          });
+      unawaited(
+        _scrollController
+            .animateTo(
+              estimated,
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOut,
+            )
+            .then((_) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (key.currentContext != null) {
+                  unawaited(
+                    Scrollable.ensureVisible(
+                      key.currentContext!,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      alignment: 0.5,
+                    ).then((_) => highlight()),
+                  );
+                } else {
+                  highlight();
+                }
+              });
+            }),
+      );
     }
   }
 
@@ -142,7 +148,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (!_scrollController.hasClients) return;
     final pos = _scrollController.position;
     if (pos.pixels >= pos.maxScrollExtent - 300) {
-      ref.read(chatMessagesProvider.notifier).loadMore();
+      unawaited(ref.read(chatMessagesProvider.notifier).loadMore());
     }
   }
 
@@ -157,14 +163,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _currentUserId = user.uid;
     _repo = repo;
 
-    repo.setTyping(
-      groupId: groupId,
-      userId: user.uid,
-      userName:
-          ref.read(currentMemberProvider).asData?.value?.displayName ??
-          user.displayName ??
-          user.email ??
-          'Anonyme',
+    unawaited(
+      repo.setTyping(
+        groupId: groupId,
+        userId: user.uid,
+        userName:
+            ref.read(currentMemberProvider).asData?.value?.displayName ??
+            user.displayName ??
+            user.email ??
+            'Anonyme',
+      ),
     );
 
     _typingTimer?.cancel();
@@ -176,14 +184,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final userId = _currentUserId;
     final repo = _repo;
     if (groupId == null || userId == null || repo == null) return;
-    repo.clearTyping(groupId: groupId, userId: userId);
+    unawaited(repo.clearTyping(groupId: groupId, userId: userId));
   }
 
   @override
   void dispose() {
     _typingTimer?.cancel();
     _recordingTimer?.cancel();
-    _recorder.dispose();
+    unawaited(_recorder.dispose());
     _clearTyping();
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
@@ -270,10 +278,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             replyToContent: reply?.content,
           );
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+        unawaited(
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          ),
         );
       }
     } finally {
@@ -619,10 +629,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         );
 
     if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+      unawaited(
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        ),
       );
     }
   }
@@ -703,10 +715,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             durationSeconds: duration.inSeconds,
           );
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+        unawaited(
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          ),
         );
       }
     } catch (e) {
@@ -794,10 +808,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             );
       }
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+        unawaited(
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          ),
         );
       }
     } catch (e) {
@@ -871,10 +887,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             replyToContent: reply?.content,
           );
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+        unawaited(
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          ),
         );
       }
     } catch (e) {
@@ -1021,7 +1039,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             index: 1,
             onTap: () {
               setState(() => _showQuickActions = false);
-              _showCreatePoll();
+              unawaited(_showCreatePoll());
             },
           ),
         ],
@@ -1157,7 +1175,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ? null
                 : () {
                     setState(() => _showCameraActions = false);
-                    _captureFromCamera(video: false);
+                    unawaited(_captureFromCamera(video: false));
                   },
           ),
           option(
@@ -1168,7 +1186,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ? null
                 : () {
                     setState(() => _showCameraActions = false);
-                    _captureFromCamera(video: true);
+                    unawaited(_captureFromCamera(video: true));
                   },
           ),
           option(
@@ -1179,7 +1197,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ? null
                 : () {
                     setState(() => _showCameraActions = false);
-                    _pickFromGallery();
+                    unawaited(_pickFromGallery());
                   },
           ),
         ],
@@ -1216,14 +1234,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final groupId = ref.read(selectedGroupIdProvider).asData?.value;
       final userId = ref.read(authStateProvider).asData?.value?.uid;
       if (groupId == null || userId == null) return;
-      ref
-          .read(messagesRepositoryProvider)
-          .markAsRead(
-            groupId: groupId,
-            userId: userId,
-            messageId: msgs.first.id,
-            messageTimestamp: msgs.first.timestamp,
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .markAsRead(
+              groupId: groupId,
+              userId: userId,
+              messageId: msgs.first.id,
+              messageTimestamp: msgs.first.timestamp,
+            ),
+      );
     });
 
     // Marque le dernier message comme lu dès qu'on arrive sur l'onglet chat
@@ -1235,14 +1255,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final groupId = ref.read(selectedGroupIdProvider).asData?.value;
       final userId = ref.read(authStateProvider).asData?.value?.uid;
       if (groupId == null || userId == null) return;
-      ref
-          .read(messagesRepositoryProvider)
-          .markAsRead(
-            groupId: groupId,
-            userId: userId,
-            messageId: msgs.first.id,
-            messageTimestamp: msgs.first.timestamp,
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .markAsRead(
+              groupId: groupId,
+              userId: userId,
+              messageId: msgs.first.id,
+              messageTimestamp: msgs.first.timestamp,
+            ),
+      );
     });
 
     // Marque le dernier message comme lu quand l'app revient au premier plan
@@ -1255,14 +1277,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final groupId = ref.read(selectedGroupIdProvider).asData?.value;
       final userId = ref.read(authStateProvider).asData?.value?.uid;
       if (groupId == null || userId == null) return;
-      ref
-          .read(messagesRepositoryProvider)
-          .markAsRead(
-            groupId: groupId,
-            userId: userId,
-            messageId: msgs.first.id,
-            messageTimestamp: msgs.first.timestamp,
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .markAsRead(
+              groupId: groupId,
+              userId: userId,
+              messageId: msgs.first.id,
+              messageTimestamp: msgs.first.timestamp,
+            ),
+      );
     });
 
     if (currentUid == null) {
@@ -2483,7 +2507,7 @@ class _LinkPreviewWidgetState extends State<_LinkPreviewWidget> {
   @override
   void initState() {
     super.initState();
-    _fetchMeta();
+    unawaited(_fetchMeta());
   }
 
   Future<void> _fetchMeta() async {
@@ -2705,18 +2729,20 @@ class _VideoThumbnailState extends State<_VideoThumbnail> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
-      ..initialize().then((_) {
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
+    unawaited(
+      _controller.initialize().then((_) {
         if (mounted) {
-          _controller.seekTo(Duration.zero);
+          unawaited(_controller.seekTo(Duration.zero));
           setState(() => _ready = true);
         }
-      });
+      }),
+    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    unawaited(_controller.dispose());
     super.dispose();
   }
 
@@ -2981,78 +3007,80 @@ class _ReactionsRow extends StatelessWidget {
     final entries = reactions.entries.where((e) => e.value.isNotEmpty).toList();
     final nameByUid = {for (final m in members) m.uid: m.displayName};
 
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (_) => Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Réactions',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+              const SizedBox(height: 16),
+              const Text(
+                'Réactions',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ...entries.map((e) {
-              final emoji = e.key;
-              final uids = e.value;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(emoji, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${uids.length}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+              const SizedBox(height: 16),
+              ...entries.map((e) {
+                final emoji = e.key;
+                final uids = e.value;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(emoji, style: const TextStyle(fontSize: 18)),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${uids.length}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  ...uids.map((uid) {
-                    final name = uid == currentUserId
-                        ? 'Vous'
-                        : (nameByUid[uid] ?? uid);
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 8, bottom: 4),
-                      child: Text(
-                        name,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ...uids.map((uid) {
+                      final name = uid == currentUserId
+                          ? 'Vous'
+                          : (nameByUid[uid] ?? uid);
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 8, bottom: 4),
+                        child: Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 12),
-                ],
-              );
-            }),
-          ],
+                      );
+                    }),
+                    const SizedBox(height: 12),
+                  ],
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );
@@ -3245,7 +3273,7 @@ class _SwipeToReplyState extends State<_SwipeToReply>
     });
     if (_dragX.abs() >= _threshold && !_triggered) {
       _triggered = true;
-      HapticFeedback.lightImpact();
+      unawaited(HapticFeedback.lightImpact());
       widget.onReply?.call();
     }
   }
@@ -3260,7 +3288,7 @@ class _SwipeToReplyState extends State<_SwipeToReply>
     _resetAnimation = Tween<double>(begin: _dragX, end: 0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     )..addListener(_onResetTick);
-    _controller.forward(from: 0);
+    unawaited(_controller.forward(from: 0));
   }
 
   @override
@@ -3348,7 +3376,7 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
   @override
   void dispose() {
     _isDisposed = true;
-    _player.dispose();
+    unawaited(_player.dispose());
     super.dispose();
   }
 
@@ -3362,15 +3390,17 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
     final total = _player.duration;
     if (total == null || total.inMilliseconds == 0) return;
     final ratio = (dx / width).clamp(0.0, 1.0);
-    _player.seek(
-      Duration(milliseconds: (total.inMilliseconds * ratio).round()),
+    unawaited(
+      _player.seek(
+        Duration(milliseconds: (total.inMilliseconds * ratio).round()),
+      ),
     );
   }
 
   void _toggleSpeed() {
     final next = _speed == 1.0 ? 2.0 : 1.0;
     setState(() => _speed = next);
-    _player.setSpeed(next);
+    unawaited(_player.setSpeed(next));
   }
 
   @override
@@ -3500,8 +3530,10 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
                           GestureDetector(
                             onTap: () {
                               final t = position - const Duration(seconds: 5);
-                              _player.seek(
-                                t < Duration.zero ? Duration.zero : t,
+                              unawaited(
+                                _player.seek(
+                                  t < Duration.zero ? Duration.zero : t,
+                                ),
                               );
                             },
                             child: Padding(
@@ -3513,7 +3545,7 @@ class _AudioPlayerWidgetState extends State<_AudioPlayerWidget> {
                           GestureDetector(
                             onTap: () {
                               final t = position + const Duration(seconds: 5);
-                              _player.seek(t > total ? total : t);
+                              unawaited(_player.seek(t > total ? total : t));
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(8),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -37,7 +38,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _init();
+    unawaited(_init());
   }
 
   @override
@@ -49,7 +50,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 400) {
-      _loadMoreAssets();
+      unawaited(_loadMoreAssets());
     }
   }
 
@@ -485,14 +486,16 @@ class _AssetThumbnailState extends State<_AssetThumbnail> {
   @override
   void initState() {
     super.initState();
-    widget.asset
-        .thumbnailDataWithSize(const ThumbnailSize.square(200))
-        .then((bytes) {
-          if (mounted) setState(() => _bytes = bytes);
-        })
-        .catchError((_) {
-          if (mounted) setState(() => _error = true);
-        });
+    unawaited(
+      widget.asset
+          .thumbnailDataWithSize(const ThumbnailSize.square(200))
+          .then((bytes) {
+            if (mounted) setState(() => _bytes = bytes);
+          })
+          .catchError((_) {
+            if (mounted) setState(() => _error = true);
+          }),
+    );
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -103,15 +104,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _showGuestPseudoSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _GuestPseudoSheet(
-        onConfirm: (pseudo) {
-          Navigator.of(context).pop();
-          _signInAnonymously(pseudo);
-        },
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => _GuestPseudoSheet(
+          onConfirm: (pseudo) {
+            Navigator.of(context).pop();
+            unawaited(_signInAnonymously(pseudo));
+          },
+        ),
       ),
     );
   }

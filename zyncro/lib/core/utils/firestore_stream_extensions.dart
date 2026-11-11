@@ -15,10 +15,11 @@ extension FirestoreStreamErrors<T> on Stream<T> {
   ///
   /// [label] identifie la source dans les logs (ex: `'watchUserGroups'`).
   Stream<T> surfacePermissionDenied(String label) {
-    return handleError((Object error, StackTrace _) {
+    return handleError((Object error, StackTrace stackTrace) {
       debugPrint('[$label] Firestore permission-denied: $error');
-      // On relance pour que l'erreur atteigne le StreamProvider et l'UI.
-      throw error;
+      // On relance (même objet, même stack) pour que l'erreur atteigne le
+      // StreamProvider et l'UI.
+      Error.throwWithStackTrace(error, stackTrace);
     }, test: (e) => e is FirebaseException && e.code == 'permission-denied');
   }
 }

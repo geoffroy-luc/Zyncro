@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -66,7 +67,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
               title: const Text('Choisir un emoji'),
               onTap: () {
                 Navigator.pop(ctx);
-                _pickEmoji(groupEmoji);
+                unawaited(_pickEmoji(groupEmoji));
               },
             ),
             ListTile(
@@ -74,7 +75,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
               title: const Text('Choisir une photo'),
               onTap: () {
                 Navigator.pop(ctx);
-                _pickGroupPhoto(ImageSource.gallery, settings);
+                unawaited(_pickGroupPhoto(ImageSource.gallery, settings));
               },
             ),
             ListTile(
@@ -82,7 +83,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
               title: const Text('Prendre une photo'),
               onTap: () {
                 Navigator.pop(ctx);
-                _pickGroupPhoto(ImageSource.camera, settings);
+                unawaited(_pickGroupPhoto(ImageSource.camera, settings));
               },
             ),
             if (settings.homePhotoUrl != null)
@@ -97,7 +98,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _removeGroupPhoto(settings);
+                  unawaited(_removeGroupPhoto(settings));
                 },
               ),
             const SizedBox(height: 8),
@@ -521,15 +522,17 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           currentUser.displayName ??
           currentUser.email ??
           'Quelqu\'un';
-      ref
-          .read(messagesRepositoryProvider)
-          .sendSystemMessage(
-            groupId: groupId,
-            userId: currentUser.uid,
-            content:
-                '👑 $ownerName a transféré la propriété du groupe à ${newOwner.displayName}',
-            notifScreen: 'chat',
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: groupId,
+              userId: currentUser.uid,
+              content:
+                  '👑 $ownerName a transféré la propriété du groupe à ${newOwner.displayName}',
+              notifScreen: 'chat',
+            ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -570,14 +573,16 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           currentUser.displayName ??
           currentUser.email ??
           'Quelqu\'un';
-      ref
-          .read(messagesRepositoryProvider)
-          .sendSystemMessage(
-            groupId: groupId,
-            userId: currentUser.uid,
-            content: '👋 $ownerName a retiré ${member.displayName} du groupe',
-            notifScreen: 'chat',
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: groupId,
+              userId: currentUser.uid,
+              content: '👋 $ownerName a retiré ${member.displayName} du groupe',
+              notifScreen: 'chat',
+            ),
+      );
     }
   }
 
@@ -786,8 +791,10 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                           const SizedBox(width: 12),
                           IconButton.filled(
                             onPressed: () {
-                              Clipboard.setData(
-                                ClipboardData(text: group.inviteCode!),
+                              unawaited(
+                                Clipboard.setData(
+                                  ClipboardData(text: group.inviteCode!),
+                                ),
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Code copié !')),
@@ -923,9 +930,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                               ),
                               onSelected: (action) {
                                 if (action == 'transfer') {
-                                  _confirmTransferOwnership(member);
+                                  unawaited(_confirmTransferOwnership(member));
                                 } else if (action == 'remove') {
-                                  _confirmRemove(member);
+                                  unawaited(_confirmRemove(member));
                                 }
                               },
                               itemBuilder: (_) => [

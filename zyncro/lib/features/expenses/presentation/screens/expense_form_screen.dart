@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -535,15 +536,17 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         await ref
             .read(expensesRepositoryProvider)
             .updateExpense(groupId, updated);
-        ref
-            .read(messagesRepositoryProvider)
-            .sendSystemMessage(
-              groupId: groupId,
-              userId: user.uid,
-              content:
-                  '💰 $userName a modifié la dépense « $title » (${amount.toStringAsFixed(2)} €)',
-              notifScreen: 'expenses',
-            );
+        unawaited(
+          ref
+              .read(messagesRepositoryProvider)
+              .sendSystemMessage(
+                groupId: groupId,
+                userId: user.uid,
+                content:
+                    '💰 $userName a modifié la dépense « $title » (${amount.toStringAsFixed(2)} €)',
+                notifScreen: 'expenses',
+              ),
+        );
       } else {
         await ref
             .read(expensesRepositoryProvider)
@@ -562,15 +565,17 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               userId: user.uid,
               recurrence: _recurrence,
             );
-        ref
-            .read(messagesRepositoryProvider)
-            .sendSystemMessage(
-              groupId: groupId,
-              userId: user.uid,
-              content:
-                  '💰 $userName a ajouté une dépense « $title » (${amount.toStringAsFixed(2)} €)',
-              notifScreen: 'expenses',
-            );
+        unawaited(
+          ref
+              .read(messagesRepositoryProvider)
+              .sendSystemMessage(
+                groupId: groupId,
+                userId: user.uid,
+                content:
+                    '💰 $userName a ajouté une dépense « $title » (${amount.toStringAsFixed(2)} €)',
+                notifScreen: 'expenses',
+              ),
+        );
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
@@ -616,15 +621,17 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
             .deleteExpense(groupId, widget.expense!.firestoreId);
         final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
         if (user != null) {
-          ref
-              .read(messagesRepositoryProvider)
-              .sendSystemMessage(
-                groupId: groupId,
-                userId: user.uid,
-                content:
-                    '💰 $userName a supprimé une dépense « ${widget.expense!.title} »',
-                notifScreen: 'expenses',
-              );
+          unawaited(
+            ref
+                .read(messagesRepositoryProvider)
+                .sendSystemMessage(
+                  groupId: groupId,
+                  userId: user.uid,
+                  content:
+                      '💰 $userName a supprimé une dépense « ${widget.expense!.title} »',
+                  notifScreen: 'expenses',
+                ),
+          );
         }
         if (mounted) Navigator.of(context).pop();
       } catch (e) {

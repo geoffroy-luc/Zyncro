@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
@@ -156,9 +157,11 @@ class _ExpensesSettingsScreenState
                         .toList(),
                     onChanged: (val) {
                       if (val != null) {
-                        _update(
-                          settings,
-                          settings.copyWith(expensesCurrency: val),
+                        unawaited(
+                          _update(
+                            settings,
+                            settings.copyWith(expensesCurrency: val),
+                          ),
                         );
                       }
                     },

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -41,9 +42,11 @@ class GroupSelectionScreen extends ConsumerWidget {
             onGroupTap: (group) async {
               final userId = ref.read(authStateProvider).asData?.value?.uid;
               if (userId != null) {
-                ref
-                    .read(messagesRepositoryProvider)
-                    .markGroupAsRead(groupId: group.id, userId: userId);
+                unawaited(
+                  ref
+                      .read(messagesRepositoryProvider)
+                      .markGroupAsRead(groupId: group.id, userId: userId),
+                );
               }
               await ref.read(selectedGroupIdProvider.notifier).select(group.id);
               if (context.mounted) context.go('/home');
@@ -55,7 +58,7 @@ class GroupSelectionScreen extends ConsumerWidget {
               if (newIndex > oldIndex) newIndex--;
               final moved = ids.removeAt(oldIndex);
               ids.insert(newIndex, moved);
-              ref.read(groupOrderProvider.notifier).reorder(ids);
+              unawaited(ref.read(groupOrderProvider.notifier).reorder(ids));
             },
           );
         },
@@ -64,20 +67,24 @@ class GroupSelectionScreen extends ConsumerWidget {
   }
 
   void _showCreateSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _CreateGroupSheet(ref: ref),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => _CreateGroupSheet(ref: ref),
+      ),
     );
   }
 
   void _showJoinSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _JoinGroupSheet(ref: ref),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => _JoinGroupSheet(ref: ref),
+      ),
     );
   }
 }
@@ -317,7 +324,9 @@ class _GroupTile extends ConsumerWidget {
               if (group.inviteCode != null)
                 GestureDetector(
                   onTap: () {
-                    Clipboard.setData(ClipboardData(text: group.inviteCode!));
+                    unawaited(
+                      Clipboard.setData(ClipboardData(text: group.inviteCode!)),
+                    );
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Code ${group.inviteCode} copié !'),
@@ -657,14 +666,16 @@ class _JoinGroupSheetState extends ConsumerState<_JoinGroupSheet> {
       }
 
       final userName = freshUser.displayName ?? user.email ?? 'Quelqu\'un';
-      ref
-          .read(messagesRepositoryProvider)
-          .sendSystemMessage(
-            groupId: group.id,
-            userId: user.uid,
-            content: '👋 $userName a rejoint le groupe',
-            notifScreen: 'chat',
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: group.id,
+              userId: user.uid,
+              content: '👋 $userName a rejoint le groupe',
+              notifScreen: 'chat',
+            ),
+      );
 
       await ref.read(selectedGroupIdProvider.notifier).select(group.id);
       if (mounted) {

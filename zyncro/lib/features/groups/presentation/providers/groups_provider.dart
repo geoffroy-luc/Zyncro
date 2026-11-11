@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
@@ -56,7 +57,7 @@ class SelectedGroupIdNotifier extends AsyncNotifier<String?> {
       if (currentId != null &&
           groups != null &&
           !groups.any((g) => g.id == currentId)) {
-        select(null);
+        unawaited(select(null));
       }
     });
 

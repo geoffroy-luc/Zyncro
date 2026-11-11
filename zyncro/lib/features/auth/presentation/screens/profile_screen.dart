@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +24,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadNotifPref();
+    unawaited(_loadNotifPref());
   }
 
   Future<void> _loadNotifPref() async {
@@ -107,7 +108,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               title: const Text('Prendre une photo'),
               onTap: () {
                 Navigator.of(ctx).pop();
-                _pickPhoto(ImageSource.camera);
+                unawaited(_pickPhoto(ImageSource.camera));
               },
             ),
             ListTile(
@@ -115,7 +116,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               title: const Text('Choisir depuis la galerie'),
               onTap: () {
                 Navigator.of(ctx).pop();
-                _pickPhoto(ImageSource.gallery);
+                unawaited(_pickPhoto(ImageSource.gallery));
               },
             ),
             if (hasProviderPhoto && hasCustomPhoto)
@@ -124,7 +125,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: const Text('Réinitialiser avec la photo Google/Apple'),
                 onTap: () {
                   Navigator.of(ctx).pop();
-                  _resetToProviderPhoto();
+                  unawaited(_resetToProviderPhoto());
                 },
               ),
             const Divider(height: 1),
@@ -143,7 +144,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               onTap: () {
                 Navigator.of(ctx).pop();
-                _toggleShowPhoto(!showProfilePhoto);
+                unawaited(_toggleShowPhoto(!showProfilePhoto));
               },
             ),
             const SizedBox(height: 8),

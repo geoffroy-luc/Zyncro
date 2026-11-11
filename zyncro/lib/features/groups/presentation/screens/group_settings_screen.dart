@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -390,8 +391,10 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                           const SizedBox(width: 12),
                           IconButton.filled(
                             onPressed: () {
-                              Clipboard.setData(
-                                ClipboardData(text: group.inviteCode!),
+                              unawaited(
+                                Clipboard.setData(
+                                  ClipboardData(text: group.inviteCode!),
+                                ),
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Code copié !')),
@@ -499,13 +502,17 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                               ),
                               onSelected: (action) {
                                 if (action == 'transfer') {
-                                  _confirmTransferOwnership(
-                                    context,
-                                    ref,
-                                    member,
+                                  unawaited(
+                                    _confirmTransferOwnership(
+                                      context,
+                                      ref,
+                                      member,
+                                    ),
                                   );
                                 } else if (action == 'remove') {
-                                  _confirmRemove(context, ref, member);
+                                  unawaited(
+                                    _confirmRemove(context, ref, member),
+                                  );
                                 }
                               },
                               itemBuilder: (_) => [
@@ -678,15 +685,17 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           currentUser.displayName ??
           currentUser.email ??
           'Quelqu\'un';
-      ref
-          .read(messagesRepositoryProvider)
-          .sendSystemMessage(
-            groupId: groupId,
-            userId: currentUser.uid,
-            content:
-                '👑 $ownerName a transféré la propriété du groupe à ${newOwner.displayName}',
-            notifScreen: 'chat',
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: groupId,
+              userId: currentUser.uid,
+              content:
+                  '👑 $ownerName a transféré la propriété du groupe à ${newOwner.displayName}',
+              notifScreen: 'chat',
+            ),
+      );
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(
@@ -731,14 +740,16 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           currentUser.displayName ??
           currentUser.email ??
           'Quelqu\'un';
-      ref
-          .read(messagesRepositoryProvider)
-          .sendSystemMessage(
-            groupId: groupId,
-            userId: currentUser.uid,
-            content: '👋 $ownerName a retiré ${member.displayName} du groupe',
-            notifScreen: 'chat',
-          );
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: groupId,
+              userId: currentUser.uid,
+              content: '👋 $ownerName a retiré ${member.displayName} du groupe',
+              notifScreen: 'chat',
+            ),
+      );
     }
   }
 
