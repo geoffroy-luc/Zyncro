@@ -976,7 +976,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           // ── Quitter ──────────────────────────────────────────────────
           TextButton.icon(
             onPressed: isOwner
-                ? () => showDialog(
+                ? () => showDialog<void>(
                     context: context,
                     builder: (_) => AlertDialog(
                       title: const Text('Impossible de quitter'),

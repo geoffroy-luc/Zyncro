@@ -33,9 +33,9 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
   String _search = '';
 
   void _openEditor({Note? note}) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => NoteEditorScreen(note: note)));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => NoteEditorScreen(note: note)),
+    );
   }
 
   Future<void> _togglePin(Note note) async {

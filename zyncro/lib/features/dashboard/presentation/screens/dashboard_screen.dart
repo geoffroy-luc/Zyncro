@@ -138,7 +138,7 @@ class DashboardScreen extends ConsumerWidget {
                                 ? _EmptyHint(
                                     label: 'Aucun événement à venir',
                                     onTap: () => Navigator.of(context).push(
-                                      MaterialPageRoute(
+                                      MaterialPageRoute<void>(
                                         builder: (_) => const EventFormScreen(),
                                       ),
                                     ),
@@ -361,7 +361,7 @@ class DashboardScreen extends ConsumerWidget {
                             icon: Icons.calendar_today,
                             label: 'Ajouter un événement',
                             onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
+                              MaterialPageRoute<void>(
                                 builder: (_) => const EventFormScreen(),
                               ),
                             ),
@@ -378,7 +378,7 @@ class DashboardScreen extends ConsumerWidget {
                             icon: Icons.sticky_note_2_outlined,
                             label: 'Nouvelle note',
                             onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
+                              MaterialPageRoute<void>(
                                 builder: (_) => const NoteEditorScreen(),
                               ),
                             ),

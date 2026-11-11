@@ -2064,7 +2064,7 @@ class _MessageBubble extends StatelessWidget {
         if (mimeType.startsWith('video/') || message.type == MessageType.file) {
           return GestureDetector(
             onTap: () => Navigator.of(context, rootNavigator: true).push(
-              MaterialPageRoute(
+              MaterialPageRoute<void>(
                 builder: (_) => VideoViewerScreen(
                   url: url,
                   senderName: message.senderName,
@@ -2077,7 +2077,7 @@ class _MessageBubble extends StatelessWidget {
         }
         return GestureDetector(
           onTap: () => Navigator.of(context, rootNavigator: true).push(
-            MaterialPageRoute(
+            MaterialPageRoute<void>(
               builder: (_) => ImageViewerScreen(
                 url: url,
                 senderName: message.senderName,
@@ -2822,7 +2822,7 @@ class _MediaAlbumBubble extends StatelessWidget {
     final total = medias.length;
     return GestureDetector(
       onTap: () => Navigator.of(context, rootNavigator: true).push(
-        MaterialPageRoute(
+        MaterialPageRoute<void>(
           builder: (_) => AlbumSwipeViewer(
             medias: medias,
             initialIndex: 0,
@@ -2981,7 +2981,7 @@ class _ReactionsRow extends StatelessWidget {
     final entries = reactions.entries.where((e) => e.value.isNotEmpty).toList();
     final nameByUid = {for (final m in members) m.uid: m.displayName};
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

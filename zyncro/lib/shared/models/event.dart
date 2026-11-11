@@ -53,7 +53,9 @@ class Event {
       recurrence: map['recurrence'] != null
           ? RecurrenceRule.fromMap(map['recurrence'] as Map<String, dynamic>)
           : null,
-      participantIds: List<String>.from(map['participantIds'] ?? []),
+      participantIds: List<String>.from(
+        (map['participantIds'] as List<dynamic>?) ?? const <dynamic>[],
+      ),
     );
   }
 

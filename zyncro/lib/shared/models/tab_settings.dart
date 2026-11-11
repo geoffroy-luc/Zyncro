@@ -13,7 +13,9 @@ class CalendarFilters {
 
   factory CalendarFilters.fromMap(Map<String, dynamic> map) {
     return CalendarFilters(
-      participantIds: List<String>.from(map['participantIds'] ?? []),
+      participantIds: List<String>.from(
+        (map['participantIds'] as List<dynamic>?) ?? const <dynamic>[],
+      ),
       recurrenceOnly: (map['recurrenceOnly'] as bool?) ?? false,
       category: map['category'] as String?,
     );
@@ -86,8 +88,12 @@ class TabSettings {
 
   factory TabSettings.fromMap(Map<String, dynamic> map) {
     return TabSettings(
-      customColors: List<String>.from(map['customColors'] ?? []),
-      hiddenBaseColors: List<String>.from(map['hiddenBaseColors'] ?? []),
+      customColors: List<String>.from(
+        (map['customColors'] as List<dynamic>?) ?? const <dynamic>[],
+      ),
+      hiddenBaseColors: List<String>.from(
+        (map['hiddenBaseColors'] as List<dynamic>?) ?? const <dynamic>[],
+      ),
       homeThemeColor: map['homeThemeColor'] as String?,
       calendarThemeColor: map['calendarThemeColor'] as String?,
       notesThemeColor: map['notesThemeColor'] as String?,
@@ -106,7 +112,10 @@ class TabSettings {
                 .toList()
           : [
               ...defaultExpenseCategories,
-              ...List<String>.from(map['expensesCustomCategories'] ?? []).map(
+              ...List<String>.from(
+                (map['expensesCustomCategories'] as List<dynamic>?) ??
+                    const <dynamic>[],
+              ).map(
                 (name) => ExpenseCategory(
                   name: name,
                   iconKey: 'label',
@@ -116,7 +125,8 @@ class TabSettings {
             ],
       calendarDisplayMode: (map['calendarDisplayMode'] as String?) ?? 'band',
       calendarCustomCategories: List<String>.from(
-        map['calendarCustomCategories'] ?? [],
+        (map['calendarCustomCategories'] as List<dynamic>?) ??
+            const <dynamic>[],
       ),
       calendarFilters: map['calendarFilters'] != null
           ? CalendarFilters.fromMap(

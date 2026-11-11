@@ -22,7 +22,9 @@ class AppUser {
       displayName: map['displayName'] as String?,
       photoUrl: map['photoUrl'] as String?,
       showProfilePhoto: map['showProfilePhoto'] as bool? ?? true,
-      groupIds: List<String>.from(map['groupIds'] ?? []),
+      groupIds: List<String>.from(
+        (map['groupIds'] as List<dynamic>?) ?? const <dynamic>[],
+      ),
     );
   }
 

@@ -58,7 +58,9 @@ class Expense {
       amount: (map['amount'] as num).toDouble(),
       paidBy: map['paidBy'] as String,
       paidByName: map['paidByName'] as String? ?? map['paidBy'] as String,
-      splitWith: List<String>.from(map['splitWith'] ?? []),
+      splitWith: List<String>.from(
+        (map['splitWith'] as List<dynamic>?) ?? const <dynamic>[],
+      ),
       settled: map['settled'] as bool? ?? false,
       category: map['category'] as String?,
       date: (map['date'] as Timestamp).toDate(),

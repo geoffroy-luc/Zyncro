@@ -103,7 +103,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _showGuestPseudoSheet() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

@@ -83,7 +83,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final hasProviderPhoto = (user?.photoURL ?? '').isNotEmpty;
     final hasCustomPhoto = (customPhotoUrl ?? '').isNotEmpty;
 
-    await showModalBottomSheet(
+    await showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

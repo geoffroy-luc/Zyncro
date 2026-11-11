@@ -155,7 +155,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ? FloatingActionButton(
               heroTag: 'fab_expenses',
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ExpenseFormScreen()),
+                MaterialPageRoute<void>(
+                  builder: (_) => const ExpenseFormScreen(),
+                ),
               ),
               backgroundColor: Theme.of(
                 context,
@@ -345,7 +347,7 @@ class _DepensesTab extends ConsumerWidget {
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
                       onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
+                        MaterialPageRoute<void>(
                           builder: (_) => const ExpenseFormScreen(),
                         ),
                       ),
@@ -644,7 +646,7 @@ class _EquilibreTab extends ConsumerWidget {
                                 const SizedBox(width: 12),
                                 TextButton(
                                   onPressed: () => Navigator.of(context).push(
-                                    MaterialPageRoute(
+                                    MaterialPageRoute<void>(
                                       builder: (_) => ReimbursementFormScreen(
                                         initialToUid: s.toUid,
                                         initialAmount: s.amount,
@@ -933,7 +935,9 @@ class _ExpenseCard extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => ExpenseFormScreen(expense: expense)),
+        MaterialPageRoute<void>(
+          builder: (_) => ExpenseFormScreen(expense: expense),
+        ),
       ),
       child: cardContent,
     );

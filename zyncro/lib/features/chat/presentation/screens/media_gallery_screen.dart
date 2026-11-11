@@ -162,7 +162,7 @@ class _MediaTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
+        MaterialPageRoute<void>(
           builder: (_) =>
               AlbumSwipeViewer(medias: viewerItems, initialIndex: viewerIndex),
         ),
@@ -275,7 +275,7 @@ class MediaPreviewTile extends StatelessWidget {
 
       return GestureDetector(
         onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
+          MaterialPageRoute<void>(
             builder: (_) => AlbumSwipeViewer(
               medias: medias,
               initialIndex: 0,
@@ -351,7 +351,7 @@ class MediaPreviewTile extends StatelessWidget {
       onTap: () {
         if (isVideo) {
           Navigator.of(context).push(
-            MaterialPageRoute(
+            MaterialPageRoute<void>(
               builder: (_) => VideoViewerScreen(
                 url: url,
                 senderName: message.senderName,
@@ -361,7 +361,7 @@ class MediaPreviewTile extends StatelessWidget {
           );
         } else {
           Navigator.of(context).push(
-            MaterialPageRoute(
+            MaterialPageRoute<void>(
               builder: (_) => ImageViewerScreen(
                 url: url,
                 senderName: message.senderName,

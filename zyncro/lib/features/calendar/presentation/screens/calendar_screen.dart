@@ -351,7 +351,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       floatingActionButton: FloatingActionButton(
         heroTag: 'fab_calendar',
         onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
+          MaterialPageRoute<void>(
             builder: (_) => EventFormScreen(initialDate: _selectedDay ?? today),
           ),
         ),
@@ -773,7 +773,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                 foregroundColor: Colors.white,
                               ),
                               onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(
+                                MaterialPageRoute<void>(
                                   builder: (_) => EventFormScreen(
                                     initialDate: _selectedDay ?? today,
                                   ),
@@ -865,9 +865,9 @@ class _EventCard extends ConsumerWidget {
     final color = _eventColor(event);
 
     void openEdit() {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => EventFormScreen(event: event)));
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => EventFormScreen(event: event)),
+      );
     }
 
     final cardContent = GestureDetector(
@@ -1014,9 +1014,9 @@ class _AgendaEventCard extends ConsumerWidget {
     final color = _eventColor(event);
 
     return GestureDetector(
-      onTap: () => Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => EventFormScreen(event: event))),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => EventFormScreen(event: event)),
+      ),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

@@ -38,7 +38,9 @@ class Group {
       description: map['description'] as String?,
       emoji: map['emoji'] as String?,
       photoUrl: map['photoUrl'] as String?,
-      memberIds: List<String>.from(map['memberIds'] ?? []),
+      memberIds: List<String>.from(
+        (map['memberIds'] as List<dynamic>?) ?? const <dynamic>[],
+      ),
       createdBy: map['createdBy'] as String,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       inviteCode: map['inviteCode'] as String?,

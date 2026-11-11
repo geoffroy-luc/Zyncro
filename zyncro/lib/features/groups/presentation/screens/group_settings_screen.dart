@@ -556,7 +556,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           // ── Leave group ──────────────────────────────────────────
           TextButton.icon(
             onPressed: isOwner
-                ? () => showDialog(
+                ? () => showDialog<void>(
                     context: context,
                     builder: (_) => AlertDialog(
                       title: const Text('Impossible de quitter'),
