@@ -7,10 +7,10 @@ import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/features/notes/domain/entities/note.dart';
 import 'package:zyncro/features/notes/presentation/providers/notes_provider.dart';
-import 'package:zyncro/shared/models/note.dart';
-import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
+import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 import 'package:zyncro/shared/widgets/color_picker_row.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {

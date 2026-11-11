@@ -10,8 +10,8 @@ import 'package:zyncro/core/constants/invite.dart';
 import 'package:zyncro/core/services/group_activity_service.dart';
 import 'package:zyncro/core/services/share_shortcuts_service.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/groups/domain/entities/group.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/shared/models/group.dart';
 
 // ── Contenu partagé en attente d'être envoyé ─────────────────────────────────
 

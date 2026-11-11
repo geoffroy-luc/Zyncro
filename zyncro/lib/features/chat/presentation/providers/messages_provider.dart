@@ -4,13 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/core/firebase/firebase_providers.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
-import 'package:zyncro/features/chat/data/repositories/messages_repository.dart';
-import 'package:zyncro/features/chat/domain/repositories/i_messages_repository.dart';
+import 'package:zyncro/features/chat/data/repositories/firestore_messages_repository.dart';
+import 'package:zyncro/features/chat/domain/entities/message.dart';
+import 'package:zyncro/features/chat/domain/repositories/messages_repository.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/shared/models/message.dart';
 
-final messagesRepositoryProvider = Provider<IMessagesRepository>(
-  (ref) => MessagesRepository(
+final messagesRepositoryProvider = Provider<MessagesRepository>(
+  (ref) => FirestoreMessagesRepository(
     ref.watch(firestoreProvider),
     ref.watch(firebaseStorageProvider),
   ),

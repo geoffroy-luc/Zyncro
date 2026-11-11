@@ -21,13 +21,13 @@ import 'package:zyncro/features/expenses/presentation/screens/expenses_screen.da
 import 'package:zyncro/features/expenses/presentation/screens/expenses_settings_screen.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/invite_link_provider.dart';
-import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
 import 'package:zyncro/features/groups/presentation/screens/group_selection_screen.dart';
 import 'package:zyncro/features/groups/presentation/screens/group_settings_screen.dart';
 import 'package:zyncro/features/groups/presentation/screens/join_by_link_screen.dart';
 import 'package:zyncro/features/notes/presentation/screens/notes_screen.dart';
 import 'package:zyncro/features/notes/presentation/screens/notes_settings_screen.dart';
-import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
+import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 
 final rootNavigatorKeyProvider = Provider<GlobalKey<NavigatorState>>(
   (ref) => GlobalKey<NavigatorState>(),

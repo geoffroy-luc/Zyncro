@@ -81,7 +81,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     bool showProfilePhoto,
   ) async {
     final user = ref.read(authRepositoryProvider).currentUser;
-    final hasProviderPhoto = (user?.photoURL ?? '').isNotEmpty;
+    final hasProviderPhoto = (user?.photoUrl ?? '').isNotEmpty;
     final hasCustomPhoto = (customPhotoUrl ?? '').isNotEmpty;
 
     await showModalBottomSheet<void>(
@@ -305,7 +305,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // Custom photo (uploaded) or null → fall back to provider photo
     final customPhotoUrl = userDoc?['photoUrl'] as String?;
     final showProfilePhoto = userDoc?['showProfilePhoto'] as bool? ?? true;
-    final effectivePhotoUrl = customPhotoUrl ?? user?.photoURL;
+    final effectivePhotoUrl = customPhotoUrl ?? user?.photoUrl;
 
     return Scaffold(
       backgroundColor: AppColors.background,

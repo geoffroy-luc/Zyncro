@@ -6,13 +6,13 @@ import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/expenses/domain/entities/expense.dart';
 import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
 import 'package:zyncro/features/expenses/presentation/screens/expense_form_screen.dart';
 import 'package:zyncro/features/expenses/presentation/screens/reimbursement_form_screen.dart';
-import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
-import 'package:zyncro/shared/models/expense.dart';
-import 'package:zyncro/shared/models/expense_category.dart';
-import 'package:zyncro/shared/models/group_member.dart';
+import 'package:zyncro/features/groups/domain/entities/group_member.dart';
+import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/shared/domain/categories/expense_category.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 const _currencySymbols = {

@@ -3,10 +3,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zyncro/core/constants/invite.dart';
+import 'package:zyncro/features/expenses/domain/entities/expense.dart';
 import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
+import 'package:zyncro/features/groups/domain/entities/group.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/shared/models/expense.dart';
-import 'package:zyncro/shared/models/group.dart';
 
 Expense exp({
   required String paidBy,

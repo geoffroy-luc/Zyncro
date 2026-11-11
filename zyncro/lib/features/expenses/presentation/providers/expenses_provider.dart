@@ -1,14 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/core/firebase/firebase_providers.dart';
-import 'package:zyncro/features/expenses/data/repositories/expenses_repository.dart';
-import 'package:zyncro/features/expenses/domain/repositories/i_expenses_repository.dart';
+import 'package:zyncro/features/expenses/data/repositories/firestore_expenses_repository.dart';
+import 'package:zyncro/features/expenses/domain/entities/expense.dart';
+import 'package:zyncro/features/expenses/domain/repositories/expenses_repository.dart';
+import 'package:zyncro/features/expenses/domain/services/expense_recurrence.dart';
+import 'package:zyncro/features/groups/domain/entities/group_member.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/shared/models/expense.dart';
-import 'package:zyncro/shared/models/group_member.dart';
-import 'package:zyncro/shared/utils/recurrence_utils.dart';
 
-final expensesRepositoryProvider = Provider<IExpensesRepository>(
-  (ref) => ExpensesRepository(ref.watch(firestoreProvider)),
+final expensesRepositoryProvider = Provider<ExpensesRepository>(
+  (ref) => FirestoreExpensesRepository(ref.watch(firestoreProvider)),
 );
 
 final expensesProvider = StreamProvider<List<Expense>>((ref) {

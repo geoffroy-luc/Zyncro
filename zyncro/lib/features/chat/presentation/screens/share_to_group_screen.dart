@@ -9,8 +9,8 @@ import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/share_provider.dart';
+import 'package:zyncro/features/groups/domain/entities/group.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/shared/models/group.dart';
 
 /// Écran présenté quand du contenu est partagé vers Zyncro depuis une autre app.
 /// Affiche un aperçu, laisse choisir le groupe destinataire puis envoie.

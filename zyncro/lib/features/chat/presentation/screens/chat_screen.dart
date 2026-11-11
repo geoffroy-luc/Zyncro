@@ -18,16 +18,16 @@ import 'package:video_player/video_player.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
-import 'package:zyncro/features/chat/domain/repositories/i_messages_repository.dart';
+import 'package:zyncro/features/chat/domain/entities/message.dart';
+import 'package:zyncro/features/chat/domain/repositories/messages_repository.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/chat/presentation/screens/media_picker_screen.dart';
 import 'package:zyncro/features/chat/presentation/screens/media_viewer_screen.dart';
 import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
+import 'package:zyncro/features/groups/domain/entities/group_member.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
-import 'package:zyncro/shared/models/group_member.dart';
-import 'package:zyncro/shared/models/message.dart';
-import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
+import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -131,7 +131,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   // Sauvegardés pour pouvoir les utiliser dans dispose() sans ref
   String? _currentGroupId;
   String? _currentUserId;
-  IMessagesRepository? _repo;
+  MessagesRepository? _repo;
 
   @override
   void initState() {

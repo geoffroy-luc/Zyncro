@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/core/firebase/firebase_providers.dart';
-import 'package:zyncro/features/calendar/data/repositories/events_repository.dart';
-import 'package:zyncro/features/calendar/domain/repositories/i_events_repository.dart';
+import 'package:zyncro/features/calendar/data/repositories/firestore_events_repository.dart';
+import 'package:zyncro/features/calendar/domain/entities/event.dart';
+import 'package:zyncro/features/calendar/domain/repositories/events_repository.dart';
+import 'package:zyncro/features/calendar/domain/services/event_recurrence.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/shared/models/event.dart';
-import 'package:zyncro/shared/utils/recurrence_utils.dart';
 
-final eventsRepositoryProvider = Provider<IEventsRepository>(
-  (ref) => EventsRepository(ref.watch(firestoreProvider)),
+final eventsRepositoryProvider = Provider<EventsRepository>(
+  (ref) => FirestoreEventsRepository(ref.watch(firestoreProvider)),
 );
 
 /// Raw events from Firestore (base events only, recurring not expanded).

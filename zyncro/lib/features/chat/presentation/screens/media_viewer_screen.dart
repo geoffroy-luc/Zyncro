@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 
-import 'package:zyncro/shared/models/message.dart';
+import 'package:zyncro/features/chat/domain/entities/message.dart';
 
 // ── Utilitaire de téléchargement partagé ─────────────────────────────────────
 

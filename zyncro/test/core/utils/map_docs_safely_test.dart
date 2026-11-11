@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
-import 'package:zyncro/shared/models/event.dart';
-import 'package:zyncro/shared/models/expense.dart';
-import 'package:zyncro/shared/models/message.dart';
-import 'package:zyncro/shared/models/note.dart';
+import 'package:zyncro/features/calendar/data/mappers/event_mapper.dart';
+import 'package:zyncro/features/chat/data/mappers/message_mapper.dart';
+import 'package:zyncro/features/expenses/data/mappers/expense_mapper.dart';
+import 'package:zyncro/features/notes/data/mappers/note_mapper.dart';
 
 void main() {
   late FakeFirebaseFirestore db;
@@ -52,7 +52,7 @@ void main() {
 
         final expenses = mapDocsSafely(
           await docsOf('groups/g1/expenses'),
-          Expense.fromMap,
+          ExpenseMapper.fromFirestore,
           label: 'test',
         );
         expect(expenses.map((e) => e.id), ['ok']);
@@ -74,7 +74,7 @@ void main() {
       expect(
         mapDocsSafely(
           await docsOf('e'),
-          Event.fromMap,
+          EventMapper.fromFirestore,
           label: 't',
         ).map((e) => e.id),
         ['ok'],
@@ -89,7 +89,7 @@ void main() {
         'updatedAt': Timestamp.now(),
       });
       expect(
-        mapDocsSafely(await docsOf('n'), Note.fromMap, label: 't'),
+        mapDocsSafely(await docsOf('n'), NoteMapper.fromFirestore, label: 't'),
         isEmpty,
       );
     });
@@ -105,17 +105,17 @@ void main() {
       }
       final ids = mapDocsSafely(
         await docsOf('m'),
-        Message.fromMap,
+        MessageMapper.fromFirestore,
         label: 't',
       ).map((m) => m.id);
       expect(ids, ['a', 'b', 'c']);
     });
   });
 
-  group('Message.fromMap (BUGS_FOUND D2)', () {
+  group('MessageMapper.fromFirestore (BUGS_FOUND D2)', () {
     test('timestamp serveur en attente (null) → estimé localement', () {
       final before = DateTime.now();
-      final message = Message.fromMap('m1', {
+      final message = MessageMapper.fromFirestore('m1', {
         'groupId': 'g1',
         'senderId': 'a',
         'content': 'a quitté le groupe',
@@ -127,7 +127,7 @@ void main() {
 
     test('timestamp présent → inchangé', () {
       final ts = Timestamp.fromMillisecondsSinceEpoch(1700000000000);
-      final message = Message.fromMap('m1', {
+      final message = MessageMapper.fromFirestore('m1', {
         'groupId': 'g1',
         'content': 'x',
         'type': 'text',

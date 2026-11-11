@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/features/chat/domain/entities/message.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/chat/presentation/screens/media_viewer_screen.dart';
-import 'package:zyncro/shared/models/message.dart';
 
 // Représente un média individuel (image ou vidéo), qu'il vienne d'un message
 // unique ou d'un album multi-médias.

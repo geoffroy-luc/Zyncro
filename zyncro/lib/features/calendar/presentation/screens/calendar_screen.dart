@@ -5,13 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/features/calendar/domain/entities/event.dart';
 import 'package:zyncro/features/calendar/presentation/providers/events_provider.dart';
 import 'package:zyncro/features/calendar/presentation/screens/event_form_screen.dart';
+import 'package:zyncro/features/groups/domain/entities/group_member.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
-import 'package:zyncro/shared/models/event.dart';
-import 'package:zyncro/shared/models/group_member.dart';
-import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
+import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 
 const _defaultEventColor = Color(0xFF4F7CFF);
 

@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
-import 'package:zyncro/features/groups/domain/repositories/i_groups_repository.dart';
+import 'package:zyncro/features/groups/domain/repositories/groups_repository.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/invite_link_provider.dart';
 
@@ -60,7 +60,7 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
       final freshUser = ref.read(authRepositoryProvider).currentUser ?? user;
       final userDoc = ref.read(userDocProvider).asData?.value;
       final effectivePhotoUrl =
-          userDoc?['photoUrl'] as String? ?? freshUser.photoURL;
+          userDoc?['photoUrl'] as String? ?? freshUser.photoUrl;
       final showPhoto = userDoc?['showProfilePhoto'] as bool? ?? true;
 
       final group = await ref

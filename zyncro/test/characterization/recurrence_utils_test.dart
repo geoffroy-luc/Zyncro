@@ -2,10 +2,11 @@
 // compris (BUGS_FOUND K1, K2, E10-E13). Les tests marqués « BUG » seront
 // inversés quand le correctif sera validé (étape 13).
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zyncro/shared/models/event.dart';
-import 'package:zyncro/shared/models/expense.dart';
-import 'package:zyncro/shared/models/recurrence_rule.dart';
-import 'package:zyncro/shared/utils/recurrence_utils.dart';
+import 'package:zyncro/features/calendar/domain/entities/event.dart';
+import 'package:zyncro/features/calendar/domain/services/event_recurrence.dart';
+import 'package:zyncro/features/expenses/domain/entities/expense.dart';
+import 'package:zyncro/features/expenses/domain/services/expense_recurrence.dart';
+import 'package:zyncro/shared/domain/recurrence/recurrence_rule.dart';
 
 Event event(
   DateTime start, {

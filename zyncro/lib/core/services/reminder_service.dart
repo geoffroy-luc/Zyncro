@@ -4,7 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
-import 'package:zyncro/shared/models/event.dart';
+import 'package:zyncro/features/calendar/domain/entities/event.dart';
 
 class ReminderService {
   static const _prefKey = 'event_reminders_v1';

@@ -5,15 +5,25 @@
 // et mappers (étape 4) doivent les faire passer sans modification.
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zyncro/shared/models/event.dart';
-import 'package:zyncro/shared/models/expense.dart';
-import 'package:zyncro/shared/models/expense_category.dart';
-import 'package:zyncro/shared/models/group.dart';
-import 'package:zyncro/shared/models/group_member.dart';
-import 'package:zyncro/shared/models/message.dart';
-import 'package:zyncro/shared/models/note.dart';
-import 'package:zyncro/shared/models/recurrence_rule.dart';
-import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/features/calendar/data/mappers/event_mapper.dart';
+import 'package:zyncro/features/calendar/domain/entities/event.dart';
+import 'package:zyncro/features/chat/data/mappers/message_mapper.dart';
+import 'package:zyncro/features/chat/domain/entities/message.dart';
+import 'package:zyncro/features/expenses/data/mappers/expense_mapper.dart';
+import 'package:zyncro/features/expenses/domain/entities/expense.dart';
+import 'package:zyncro/features/groups/data/mappers/group_mapper.dart';
+import 'package:zyncro/features/groups/data/mappers/group_member_mapper.dart';
+import 'package:zyncro/features/groups/domain/entities/group.dart';
+import 'package:zyncro/features/groups/domain/services/invite_code_generator.dart';
+import 'package:zyncro/features/notes/data/mappers/note_mapper.dart';
+import 'package:zyncro/features/notes/domain/entities/note.dart';
+import 'package:zyncro/features/settings/data/mappers/tab_settings_mapper.dart';
+import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
+import 'package:zyncro/shared/data/mappers/expense_category_mapper.dart';
+import 'package:zyncro/shared/data/mappers/recurrence_rule_mapper.dart';
+import 'package:zyncro/shared/domain/categories/expense_category.dart';
+import 'package:zyncro/shared/domain/recurrence/recurrence_rule.dart';
+import 'package:zyncro/shared/presentation/recurrence_rule_label.dart';
 
 final t1 = DateTime(2026, 3, 14, 9, 30);
 final t2 = DateTime(2026, 3, 14, 11);
@@ -24,28 +34,34 @@ void main() {
   group('RecurrenceRule', () {
     test('toMap complet / minimal', () {
       expect(
-        RecurrenceRule(
-          frequency: RecurrenceFrequency.monthly,
-          endType: RecurrenceEndType.until,
-          until: t3,
-        ).toMap(),
+        RecurrenceRuleMapper.toFirestore(
+          RecurrenceRule(
+            frequency: RecurrenceFrequency.monthly,
+            endType: RecurrenceEndType.until,
+            until: t3,
+          ),
+        ),
         {'frequency': 'monthly', 'endType': 'until', 'until': ts(t3)},
       );
       expect(
-        const RecurrenceRule(
-          frequency: RecurrenceFrequency.weekly,
-          endType: RecurrenceEndType.count,
-          count: 3,
-        ).toMap(),
+        RecurrenceRuleMapper.toFirestore(
+          const RecurrenceRule(
+            frequency: RecurrenceFrequency.weekly,
+            endType: RecurrenceEndType.count,
+            count: 3,
+          ),
+        ),
         {'frequency': 'weekly', 'endType': 'count', 'count': 3},
       );
       expect(
-        const RecurrenceRule(frequency: RecurrenceFrequency.daily).toMap(),
+        RecurrenceRuleMapper.toFirestore(
+          const RecurrenceRule(frequency: RecurrenceFrequency.daily),
+        ),
         {'frequency': 'daily', 'endType': 'forever'},
       );
     });
     test('fromMap legacy sans endType → forever', () {
-      final rule = RecurrenceRule.fromMap({'frequency': 'yearly'});
+      final rule = RecurrenceRuleMapper.fromFirestore({'frequency': 'yearly'});
       expect(rule.frequency, RecurrenceFrequency.yearly);
       expect(rule.endType, RecurrenceEndType.forever);
       expect(rule.count, isNull);
@@ -93,7 +109,7 @@ void main() {
         recurrence: const RecurrenceRule(frequency: RecurrenceFrequency.weekly),
         participantIds: const ['alice', 'bob'],
       );
-      expect(event.toMap(), {
+      expect(EventMapper.toFirestore(event), {
         'groupId': 'g1',
         'title': 'Dîner',
         'description': 'chez Bob',
@@ -118,7 +134,7 @@ void main() {
         createdBy: 'alice',
         createdAt: t3,
       );
-      expect(event.toMap(), {
+      expect(EventMapper.toFirestore(event), {
         'groupId': 'g1',
         'title': 'T',
         'description': null,
@@ -131,7 +147,7 @@ void main() {
       });
     });
     test('fromMap legacy (sans participants ni couleur)', () {
-      final e = Event.fromMap('e1', {
+      final e = EventMapper.fromFirestore('e1', {
         'groupId': 'g1',
         'title': 'T',
         'startDate': ts(t1),
@@ -181,7 +197,7 @@ void main() {
           count: 3,
         ),
       );
-      expect(expense.toMap(), {
+      expect(ExpenseMapper.toFirestore(expense), {
         'groupId': 'g1',
         'title': 'Courses',
         'amount': 42.5,
@@ -215,7 +231,7 @@ void main() {
         createdAt: t3,
         expenseType: ExpenseType.reimbursement,
       );
-      expect(expense.toMap(), {
+      expect(ExpenseMapper.toFirestore(expense), {
         'groupId': 'g1',
         'title': 'T',
         'amount': 10.0,
@@ -232,7 +248,7 @@ void main() {
       });
     });
     test('fromMap legacy : paidByName absent → paidBy, montant entier', () {
-      final e = Expense.fromMap('x1', {
+      final e = ExpenseMapper.fromFirestore('x1', {
         'groupId': 'g1',
         'title': 'T',
         'amount': 12,
@@ -250,7 +266,7 @@ void main() {
       expect(e.firestoreId, 'x1');
     });
     test('effectiveSplitAmounts : parts égales si pas de splitAmounts', () {
-      final e = Expense.fromMap('x1', {
+      final e = ExpenseMapper.fromFirestore('x1', {
         'groupId': 'g',
         'title': 'T',
         'amount': 30,
@@ -278,7 +294,7 @@ void main() {
         createdAt: t1,
         updatedAt: t2,
       );
-      expect(note.toMap(), {
+      expect(NoteMapper.toFirestore(note), {
         'groupId': 'g1',
         'title': 'Liste',
         'content': '',
@@ -294,7 +310,7 @@ void main() {
       });
     });
     test('fromMap legacy (pas de checklist ni isPinned)', () {
-      final n = Note.fromMap('n1', {
+      final n = NoteMapper.fromFirestore('n1', {
         'groupId': 'g1',
         'title': 'T',
         'content': 'c',
@@ -319,7 +335,7 @@ void main() {
         type: MessageType.text,
         timestamp: t1,
       );
-      expect(m.toMap(), {
+      expect(MessageMapper.toFirestore(m), {
         'groupId': 'g1',
         'senderId': 'a',
         'senderName': 'Alice',
@@ -345,7 +361,7 @@ void main() {
         replyToSenderName: 'Bob',
         replyToContent: 'avant',
       );
-      expect(m.toMap(), {
+      expect(MessageMapper.toFirestore(m), {
         'groupId': 'g1',
         'senderId': 'a',
         'senderName': 'Alice',
@@ -383,7 +399,7 @@ void main() {
         createdAt: t1,
         inviteCode: 'ABC234',
       );
-      expect(g.toMap(), {
+      expect(GroupMapper.toFirestore(g), {
         'name': 'Coloc',
         'description': null,
         'emoji': null,
@@ -397,13 +413,13 @@ void main() {
     test('Group.generateInviteCode : 6 caractères sans ambiguïté', () {
       for (var i = 0; i < 200; i++) {
         expect(
-          Group.generateInviteCode(),
+          newInviteCode(),
           matches(RegExp(r'^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$')),
         );
       }
     });
     test('GroupMember.fromMap : défauts', () {
-      final m = GroupMember.fromMap(const {});
+      final m = GroupMemberMapper.fromFirestore(const {});
       expect(m.uid, '');
       expect(m.displayName, 'Membre');
       expect(m.role, 'member');
@@ -414,7 +430,7 @@ void main() {
 
   group('TabSettings', () {
     test('toMap des défauts', () {
-      expect(TabSettings.defaults.toMap(), {
+      expect(TabSettingsMapper.toFirestore(TabSettings.defaults), {
         'customColors': <String>[],
         'hiddenBaseColors': <String>[],
         'homeThemeColor': null,
@@ -426,7 +442,8 @@ void main() {
         'chatBackgroundValue': null,
         'expensesCurrency': 'EUR',
         'expensesCategories': [
-          for (final c in defaultExpenseCategories) c.toMap(),
+          for (final c in defaultExpenseCategories)
+            ExpenseCategoryMapper.toFirestore(c),
         ],
         'calendarDisplayMode': 'band',
         'calendarCustomCategories': <String>[],
@@ -439,7 +456,7 @@ void main() {
       });
     });
     test('fromMap legacy : expensesCustomCategories ajoutées aux défauts', () {
-      final s = TabSettings.fromMap({
+      final s = TabSettingsMapper.fromFirestore({
         'expensesCustomCategories': ['Animaux'],
       });
       expect(s.expensesCategories.map((c) => c.name), [
@@ -450,8 +467,11 @@ void main() {
       expect(s.expensesCategories.last.colorHex, '#4F7CFF');
     });
     test('fromMap vide → défauts', () {
-      final s = TabSettings.fromMap(const {});
-      expect(s.toMap(), TabSettings.defaults.toMap());
+      final s = TabSettingsMapper.fromFirestore(const {});
+      expect(
+        TabSettingsMapper.toFirestore(s),
+        TabSettingsMapper.toFirestore(TabSettings.defaults),
+      );
     });
     test(
       'withColorRemoved : couleur perso supprimée, couleur de base masquée',
@@ -478,12 +498,12 @@ void main() {
         iconKey: 'pets',
         colorHex: '#FFA940',
       );
-      expect(c.toMap(), {
+      expect(ExpenseCategoryMapper.toFirestore(c), {
         'name': 'X',
         'iconKey': 'pets',
         'colorHex': '#FFA940',
       });
-      final d = ExpenseCategory.fromMap(const {});
+      final d = ExpenseCategoryMapper.fromFirestore(const {});
       expect([d.name, d.iconKey, d.colorHex], ['', 'label', '#4F7CFF']);
     });
   });

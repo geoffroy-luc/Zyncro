@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,8 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/groups/domain/entities/group.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/shared/models/group.dart';
 
 class GroupSelectionScreen extends ConsumerWidget {
   const GroupSelectionScreen({super.key});
@@ -464,7 +465,7 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
       final freshUser = ref.read(authRepositoryProvider).currentUser ?? user;
       final userDoc = ref.read(userDocProvider).asData?.value;
       final effectivePhotoUrl =
-          userDoc?['photoUrl'] as String? ?? freshUser.photoURL;
+          userDoc?['photoUrl'] as String? ?? freshUser.photoUrl;
       final showPhoto = userDoc?['showProfilePhoto'] as bool? ?? true;
       final group = await ref
           .read(groupsRepositoryProvider)
@@ -646,7 +647,7 @@ class _JoinGroupSheetState extends ConsumerState<_JoinGroupSheet> {
       final freshUser = ref.read(authRepositoryProvider).currentUser ?? user;
       final userDoc = ref.read(userDocProvider).asData?.value;
       final effectivePhotoUrl =
-          userDoc?['photoUrl'] as String? ?? freshUser.photoURL;
+          userDoc?['photoUrl'] as String? ?? freshUser.photoUrl;
       final showPhoto = userDoc?['showProfilePhoto'] as bool? ?? true;
       final group = await ref
           .read(groupsRepositoryProvider)

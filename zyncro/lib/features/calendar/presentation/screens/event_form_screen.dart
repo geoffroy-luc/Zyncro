@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,13 +7,14 @@ import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/services/reminder_service.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/calendar/domain/entities/event.dart';
 import 'package:zyncro/features/calendar/presentation/providers/events_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
-import 'package:zyncro/shared/models/event.dart';
-import 'package:zyncro/shared/models/recurrence_rule.dart';
-import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
+import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/shared/domain/recurrence/recurrence_rule.dart';
+import 'package:zyncro/shared/presentation/recurrence_rule_label.dart';
 import 'package:zyncro/shared/widgets/color_picker_row.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
 

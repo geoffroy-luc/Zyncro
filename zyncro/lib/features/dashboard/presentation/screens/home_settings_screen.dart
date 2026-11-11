@@ -13,10 +13,10 @@ import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/core/utils/invite_share.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/groups/domain/entities/group_member.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
-import 'package:zyncro/features/groups/presentation/providers/tab_settings_provider.dart';
-import 'package:zyncro/shared/models/group_member.dart';
-import 'package:zyncro/shared/models/tab_settings.dart';
+import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
+import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 import 'package:zyncro/shared/widgets/color_picker_row.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
 
