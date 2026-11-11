@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:zyncro/core/firebase/firestore_paths.dart';
 import 'package:zyncro/core/media/media_providers.dart';
 import 'package:zyncro/core/media/media_source.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
@@ -267,7 +268,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
               SettingsTile(
                 title: 'Photos & vidéos partagées',
                 subtitle: 'Voir tous les médias du groupe',
-                onTap: () => context.push('/media-gallery'),
+                onTap: () => context.push(AppRoutes.mediaGallery),
               ),
             ],
           ),

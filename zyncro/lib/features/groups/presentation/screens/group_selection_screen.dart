@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
@@ -27,7 +28,7 @@ class GroupSelectionScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.account_circle_outlined),
             tooltip: 'Mon profil',
-            onPressed: () => context.push('/profile'),
+            onPressed: () => context.push(AppRoutes.profile),
           ),
         ],
       ),
@@ -51,7 +52,7 @@ class GroupSelectionScreen extends ConsumerWidget {
                 );
               }
               await ref.read(selectedGroupIdProvider.notifier).select(group.id);
-              if (context.mounted) context.go('/home');
+              if (context.mounted) context.go(AppRoutes.home);
             },
             onCreateTap: () => _showCreateSheet(context, ref),
             onJoinTap: () => _showJoinSheet(context, ref),

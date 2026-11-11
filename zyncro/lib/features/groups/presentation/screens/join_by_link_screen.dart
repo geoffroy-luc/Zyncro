@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
@@ -40,13 +41,13 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go('/groups');
+      context.go(AppRoutes.groups);
     }
   }
 
   Future<void> _openExisting(String groupId) async {
     await ref.read(selectedGroupIdProvider.notifier).select(groupId);
-    if (mounted) context.go('/home');
+    if (mounted) context.go(AppRoutes.home);
   }
 
   Future<void> _join(InvitePreview preview) async {
@@ -98,7 +99,7 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
       );
 
       await ref.read(selectedGroupIdProvider.notifier).select(group.id);
-      if (mounted) context.go('/home');
+      if (mounted) context.go(AppRoutes.home);
     } catch (e) {
       if (mounted) {
         setState(() {

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/auth/presentation/widgets/apple_icon.dart';
@@ -330,7 +331,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 24),
               TextButton(
-                onPressed: () => context.go('/register'),
+                onPressed: () => context.go(AppRoutes.register),
                 child: const Text("Pas encore de compte ? S'inscrire"),
               ),
               const SizedBox(height: 24),

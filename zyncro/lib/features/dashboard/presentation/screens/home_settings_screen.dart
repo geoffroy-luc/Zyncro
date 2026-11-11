@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:zyncro/core/firebase/firestore_paths.dart';
 import 'package:zyncro/core/media/media_providers.dart';
 import 'package:zyncro/core/media/media_source.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/core/utils/invite_share.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
@@ -439,7 +440,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
             systemMessage: '👋 $userName a quitté le groupe',
           );
       await ref.read(selectedGroupIdProvider.notifier).select(null);
-      if (mounted) context.go('/groups');
+      if (mounted) context.go(AppRoutes.groups);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -476,7 +477,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     try {
       await ref.read(groupsRepositoryProvider).deleteGroup(groupId, inviteCode);
       await ref.read(selectedGroupIdProvider.notifier).select(null);
-      if (mounted) context.go('/groups');
+      if (mounted) context.go(AppRoutes.groups);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(

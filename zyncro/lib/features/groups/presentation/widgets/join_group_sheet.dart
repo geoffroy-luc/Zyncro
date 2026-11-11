@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
@@ -83,7 +84,7 @@ class _JoinGroupSheetState extends ConsumerState<JoinGroupSheet> {
       await ref.read(selectedGroupIdProvider.notifier).select(group.id);
       if (mounted) {
         Navigator.of(context).pop();
-        context.go('/home');
+        context.go(AppRoutes.home);
       }
     } catch (e) {
       if (mounted) setState(() => _error = 'Erreur : $e');

@@ -7,6 +7,7 @@ import 'package:zyncro/app/notification_banner.dart';
 import 'package:zyncro/app/router.dart';
 import 'package:zyncro/core/app_update/app_update_service.dart';
 import 'package:zyncro/core/logging/app_logger.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/core/notifications/local_notifications.dart';
 import 'package:zyncro/core/notifications/notification_providers.dart';
 import 'package:zyncro/core/theme/app_theme.dart';
@@ -82,11 +83,11 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
   /// l'onglet visé.
   Future<void> _onNotificationTap(String groupId, String? screen) async {
     final route = switch (screen) {
-      'chat' => '/chat',
-      'expenses' => '/expenses',
-      'notes' => '/notes',
-      'calendar' => '/calendar',
-      _ => '/home',
+      'chat' => AppRoutes.chat,
+      'expenses' => AppRoutes.expenses,
+      'notes' => AppRoutes.notes,
+      'calendar' => AppRoutes.calendar,
+      _ => AppRoutes.home,
     };
     await ref.read(selectedGroupIdProvider.notifier).select(groupId);
 

@@ -3,6 +3,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
@@ -154,7 +155,7 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go('/groups');
+      context.go(AppRoutes.groups);
     }
   }
 
@@ -206,7 +207,7 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
       await ref.read(selectedGroupIdProvider.notifier).select(groupId);
 
       if (!mounted) return;
-      context.go('/chat');
+      context.go(AppRoutes.chat);
     } catch (e) {
       if (!mounted) return;
       setState(() => _sending = false);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
@@ -268,7 +269,7 @@ class DashboardScreen extends ConsumerWidget {
                                   const Spacer(),
                                   TextButton(
                                     onPressed: () =>
-                                        context.push('/media-gallery'),
+                                        context.push(AppRoutes.mediaGallery),
                                     child: const Text(
                                       'Voir tout',
                                       style: TextStyle(fontSize: 13),

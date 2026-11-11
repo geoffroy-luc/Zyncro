@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:zyncro/app/router.dart';
 import 'package:zyncro/core/constants/invite.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/core/services/share_shortcuts_service.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/groups/data/services/group_activity_service.dart';
@@ -127,7 +128,7 @@ class IncomingShareNotifier extends Notifier<PendingShare?> {
   }
 
   void _navigate() {
-    unawaited(ref.read(routerProvider).push('/share'));
+    unawaited(ref.read(routerProvider).push(AppRoutes.share));
   }
 
   /// Efface le partage en attente (après envoi ou annulation).
