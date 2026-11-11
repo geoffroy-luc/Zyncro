@@ -114,7 +114,9 @@
 
     // Récupère le code depuis le chemin /i/CODE
     var parts = window.location.pathname.split("/").filter(Boolean);
-    var code = (parts.length >= 2 && parts[0] === "i") ? parts[1].toUpperCase() : "";
+    var raw = (parts.length >= 2 && parts[0] === "i") ? parts[1].toUpperCase() : "";
+    // Seuls les codes au format attendu sont réutilisés (affichage + URL intent://).
+    var code = /^[A-Z0-9]{6}$/.test(raw) ? raw : "";
     if (code) document.getElementById("code").textContent = code;
 
     var ua = navigator.userAgent || "";
