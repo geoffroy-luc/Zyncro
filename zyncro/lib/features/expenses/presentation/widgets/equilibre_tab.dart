@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/features/expenses/domain/services/settlement_planner.dart';
 import 'package:zyncro/features/expenses/presentation/screens/reimbursement_form_screen.dart';
 import 'package:zyncro/features/expenses/presentation/widgets/expenses_screen_helpers.dart';
 import 'package:zyncro/features/expenses/presentation/widgets/expenses_section_card.dart';
@@ -37,7 +38,7 @@ class EquilibreTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currency =
         ref.watch(tabSettingsProvider).asData?.value.expensesCurrency ?? 'EUR';
-    final settlements = expensesComputeSettlements(balances);
+    final settlements = planSettlements(balances);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),

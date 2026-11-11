@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/calendar/domain/entities/event.dart';
+import 'package:zyncro/features/calendar/domain/services/calendar_queries.dart';
+import 'package:zyncro/features/calendar/domain/services/event_filter.dart';
 import 'package:zyncro/features/calendar/presentation/providers/events_provider.dart';
 import 'package:zyncro/features/calendar/presentation/screens/event_form_screen.dart';
 import 'package:zyncro/features/calendar/presentation/widgets/agenda_event_card.dart';
@@ -190,20 +192,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     _selectedDay = null;
   });
 
-  bool _isSameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
-
-  bool _eventOnDay(Event e, DateTime day) =>
-      _isSameDay(e.startDate, day) ||
-      (e.endDate != null &&
-          !e.startDate.isAfter(day) &&
-          !e.endDate!.isBefore(day));
-
-  List<Event> _eventsForMonth(List<Event> events) => events.where((e) {
-    return e.startDate.year == _displayedMonth.year &&
-        e.startDate.month == _displayedMonth.month;
-  }).toList();
-
   List<Widget> _buildAgendaSections(List<Event> events, Color primaryColor) {
     final Map<DateTime, List<Event>> grouped = {};
     for (final e in events) {
@@ -219,8 +207,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final widgets = <Widget>[];
 
     for (final day in sortedDays) {
-      final isToday = _isSameDay(day, today);
-      final isTomorrow = _isSameDay(
+      final isToday = isSameDay(day, today);
+      final isTomorrow = isSameDay(
         day,
         DateTime(today.year, today.month, today.day + 1),
       );
@@ -283,32 +271,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return widgets;
   }
 
-  List<Event> _applyFilters(List<Event> events, String search) {
-    var result = events;
-    if (search.isNotEmpty) {
-      final q = search.toLowerCase();
-      result = result
-          .where(
-            (e) =>
-                e.title.toLowerCase().contains(q) ||
-                (e.location?.toLowerCase().contains(q) ?? false),
-          )
-          .toList();
-    }
-    if (_filterParticipantIds.isNotEmpty) {
-      result = result
-          .where(
-            (e) => e.participantIds.any(
-              (id) => _filterParticipantIds.contains(id),
-            ),
-          )
-          .toList();
-    }
-    if (_filterRecurrenceOnly) {
-      result = result.where((e) => e.recurrence != null).toList();
-    }
-    return result;
-  }
+  List<Event> _applyFilters(List<Event> events, String search) => EventFilter(
+    search: search,
+    participantIds: _filterParticipantIds.toSet(),
+    recurrenceOnly: _filterRecurrenceOnly,
+  ).apply(events);
 
   @override
   Widget build(BuildContext context) {
@@ -321,11 +288,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final eventsAsync = ref.watch(expandedEventsProvider);
     final rawEvents = eventsAsync.asData?.value ?? [];
     final allEvents = _applyFilters(rawEvents, _search);
-    final monthEvents = _eventsForMonth(allEvents);
+    final monthEvents = eventsStartingInMonth(allEvents, _displayedMonth);
     final today = DateTime.now();
 
     final visibleEvents = _selectedDay != null
-        ? allEvents.where((e) => _eventOnDay(e, _selectedDay!)).toList()
+        ? allEvents.where((e) => eventOccursOnDay(e, _selectedDay!)).toList()
         : monthEvents;
 
     final firstOfMonth = DateTime(_displayedMonth.year, _displayedMonth.month);
@@ -576,12 +543,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                 _displayedMonth.month,
                                 dayNum,
                               );
-                              final isToday = _isSameDay(cellDate, today);
+                              final isToday = isSameDay(cellDate, today);
                               final isSelected =
                                   _selectedDay != null &&
-                                  _isSameDay(cellDate, _selectedDay!);
+                                  isSameDay(cellDate, _selectedDay!);
                               final dayEvents = monthEvents
-                                  .where((e) => _eventOnDay(e, cellDate))
+                                  .where((e) => eventOccursOnDay(e, cellDate))
                                   .toList();
                               return GestureDetector(
                                 behavior: HitTestBehavior.opaque,
