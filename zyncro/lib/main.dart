@@ -8,6 +8,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz_lib;
 import 'package:zyncro/app/app.dart';
+import 'package:zyncro/core/firebase/firebase_emulators.dart';
 import 'package:zyncro/core/services/notification_service.dart';
 import 'package:zyncro/core/services/reminder_service.dart';
 import 'package:zyncro/firebase_options.dart';
@@ -18,6 +19,7 @@ void main() async {
     Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
     initializeDateFormatting('fr_FR'),
   ]);
+  await connectFirebaseEmulatorsIfRequested();
   // App Check : providers de production en release (Play Integrity /
   // DeviceCheck), providers debug en développement. L'enforcement côté
   // console ne doit être activé qu'une fois les anciennes versions (qui
