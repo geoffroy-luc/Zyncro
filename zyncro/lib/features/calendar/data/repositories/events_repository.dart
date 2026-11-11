@@ -17,7 +17,7 @@ class EventsRepository implements IEventsRepository {
         .snapshots()
         .map(
           (snap) =>
-              snap.docs.map((doc) => Event.fromMap(doc.id, doc.data())).toList(),
+              mapDocsSafely(snap.docs, Event.fromMap, label: 'watchEvents'),
         )
         .surfacePermissionDenied('watchEvents');
   }

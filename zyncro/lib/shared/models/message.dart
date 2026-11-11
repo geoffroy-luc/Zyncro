@@ -39,7 +39,9 @@ class Message {
       senderName: map['senderName'] as String?,
       content: map['content'] as String,
       type: MessageType.values.byName(map['type'] as String? ?? 'text'),
-      timestamp: (map['timestamp'] as Timestamp).toDate(),
+      // null tant qu'un FieldValue.serverTimestamp() est en attente d'écriture
+      // (cache local) : on estime avec l'horloge locale (BUGS_FOUND D2).
+      timestamp: (map['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       editedAt: map['editedAt'] == null
           ? null
           : (map['editedAt'] as Timestamp).toDate(),
