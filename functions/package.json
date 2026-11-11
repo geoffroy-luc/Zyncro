@@ -2,6 +2,7 @@
   "name": "functions",
   "scripts": {
     "build": "tsc",
+    "lint": "eslint src test",
     "test": "vitest run",
     "deploy": "npm run build && firebase deploy --only functions"
   },
