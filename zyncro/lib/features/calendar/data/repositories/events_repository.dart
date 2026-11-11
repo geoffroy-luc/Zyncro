@@ -5,7 +5,9 @@ import 'package:zyncro/shared/models/event.dart';
 import 'package:zyncro/shared/models/recurrence_rule.dart';
 
 class EventsRepository implements IEventsRepository {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  EventsRepository(this._db);
+
+  final FirebaseFirestore _db;
 
   CollectionReference<Map<String, dynamic>> _col(String groupId) =>
       _db.collection('groups').doc(groupId).collection('events');

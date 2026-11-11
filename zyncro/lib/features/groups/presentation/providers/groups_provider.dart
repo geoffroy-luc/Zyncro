@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zyncro/core/firebase/firebase_providers.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/groups/data/repositories/groups_repository.dart';
 import 'package:zyncro/features/groups/domain/repositories/i_groups_repository.dart';
@@ -8,7 +10,10 @@ import 'package:zyncro/shared/models/group.dart';
 import 'package:zyncro/shared/models/group_member.dart';
 
 final groupsRepositoryProvider = Provider<IGroupsRepository>(
-  (_) => GroupsRepository(),
+  (ref) => GroupsRepository(
+    ref.watch(firestoreProvider),
+    ref.watch(firebaseStorageProvider),
+  ),
 );
 
 final userGroupsProvider = StreamProvider<List<Group>>((ref) {

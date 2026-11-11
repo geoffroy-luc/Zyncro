@@ -6,7 +6,10 @@ import 'package:zyncro/shared/models/group.dart';
 import 'package:zyncro/shared/models/group_member.dart';
 
 class GroupsRepository implements IGroupsRepository {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  GroupsRepository(this._db, this._storage);
+
+  final FirebaseFirestore _db;
+  final FirebaseStorage _storage;
 
   @override
   Stream<List<Group>> watchUserGroups(String userId) {
@@ -250,7 +253,7 @@ class GroupsRepository implements IGroupsRepository {
     // document `groups`, réservé aux membres. Absente → on retombe sur l'emoji.
     String? photoUrl;
     try {
-      photoUrl = await FirebaseStorage.instance
+      photoUrl = await _storage
           .ref('group_photos/$groupId.jpg')
           .getDownloadURL();
     } catch (_) {

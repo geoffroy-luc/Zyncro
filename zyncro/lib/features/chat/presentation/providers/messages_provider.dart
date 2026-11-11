@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zyncro/core/firebase/firebase_providers.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/data/repositories/messages_repository.dart';
 import 'package:zyncro/features/chat/domain/repositories/i_messages_repository.dart';
@@ -9,7 +10,10 @@ import 'package:zyncro/features/groups/presentation/providers/groups_provider.da
 import 'package:zyncro/shared/models/message.dart';
 
 final messagesRepositoryProvider = Provider<IMessagesRepository>(
-  (_) => MessagesRepository(),
+  (ref) => MessagesRepository(
+    ref.watch(firestoreProvider),
+    ref.watch(firebaseStorageProvider),
+  ),
 );
 
 // ── Pagination state ─────────────────────────────────────────────────────────
@@ -161,7 +165,8 @@ final _memberLastReadAtProvider = StreamProvider.family<DateTime?, String>((
 ) {
   final userId = ref.watch(authStateProvider).asData?.value?.uid;
   if (userId == null) return Stream.value(null);
-  return FirebaseFirestore.instance
+  return ref
+      .watch(firestoreProvider)
       .collection('groups')
       .doc(groupId)
       .collection('members')
@@ -180,7 +185,8 @@ final unreadCountProvider = StreamProvider.family<int, String>((ref, groupId) {
       .asData
       ?.value;
   if (lastReadAt == null) return Stream.value(0);
-  return FirebaseFirestore.instance
+  return ref
+      .watch(firestoreProvider)
       .collection('groups')
       .doc(groupId)
       .collection('messages')

@@ -4,8 +4,11 @@ import 'package:zyncro/core/services/notification_service.dart';
 import 'package:zyncro/features/auth/domain/repositories/i_auth_repository.dart';
 
 class AuthRepository implements IAuthRepository {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  AuthRepository(this._auth, {GoogleSignIn? googleSignIn})
+    : _googleSignIn = googleSignIn ?? GoogleSignIn();
+
+  final FirebaseAuth _auth;
+  final GoogleSignIn _googleSignIn;
 
   @override
   Stream<User?> get authStateChanges => _auth.authStateChanges();

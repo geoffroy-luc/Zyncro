@@ -8,7 +8,10 @@ import 'package:zyncro/features/chat/domain/repositories/i_messages_repository.d
 import 'package:zyncro/shared/models/message.dart';
 
 class MessagesRepository implements IMessagesRepository {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  MessagesRepository(this._db, this._storage);
+
+  final FirebaseFirestore _db;
+  final FirebaseStorage _storage;
 
   CollectionReference<Map<String, dynamic>> _col(String groupId) =>
       _db.collection('groups').doc(groupId).collection('messages');
@@ -190,9 +193,7 @@ class MessagesRepository implements IMessagesRepository {
     required int durationSeconds,
   }) async {
     final ref = _col(groupId).doc();
-    final storageRef = FirebaseStorage.instance.ref(
-      'audio/$groupId/${ref.id}.m4a',
-    );
+    final storageRef = _storage.ref('audio/$groupId/${ref.id}.m4a');
     final snapshot = await storageRef.putFile(
       File(filePath),
       SettableMetadata(contentType: 'audio/m4a'),
@@ -232,9 +233,7 @@ class MessagesRepository implements IMessagesRepository {
     final isVideo = mimeType.startsWith('video/');
     final ext = filePath.split('.').last;
     final ref = _col(groupId).doc();
-    final storageRef = FirebaseStorage.instance.ref(
-      'media/$groupId/${ref.id}.$ext',
-    );
+    final storageRef = _storage.ref('media/$groupId/${ref.id}.$ext');
     final snapshot = await storageRef.putFile(
       File(filePath),
       SettableMetadata(contentType: mimeType),
@@ -278,9 +277,7 @@ class MessagesRepository implements IMessagesRepository {
         final index = entry.key;
         final media = entry.value;
         final ext = media.filePath.split('.').last;
-        final storageRef = FirebaseStorage.instance.ref(
-          'media/$groupId/${ref.id}_$index.$ext',
-        );
+        final storageRef = _storage.ref('media/$groupId/${ref.id}_$index.$ext');
         final snapshot = await storageRef.putFile(
           File(media.filePath),
           SettableMetadata(contentType: media.mimeType),

@@ -3,8 +3,7 @@ import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
 import 'package:zyncro/shared/models/tab_settings.dart';
 
 class TabSettingsRepository {
-  TabSettingsRepository({FirebaseFirestore? firestore})
-    : _db = firestore ?? FirebaseFirestore.instance;
+  TabSettingsRepository(this._db);
 
   final FirebaseFirestore _db;
 

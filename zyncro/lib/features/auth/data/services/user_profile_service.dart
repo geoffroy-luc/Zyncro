@@ -17,9 +17,11 @@ import 'package:image_picker/image_picker.dart';
 ///   GroupMember docs store the *effective* photoUrl so they can be displayed
 ///   without extra reads.
 class UserProfileService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  UserProfileService(this._auth, this._db, this._storage);
+
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _db;
+  final FirebaseStorage _storage;
 
   User? get _user => _auth.currentUser;
 

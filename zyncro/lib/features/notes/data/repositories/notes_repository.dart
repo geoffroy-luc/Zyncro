@@ -4,7 +4,9 @@ import 'package:zyncro/features/notes/domain/repositories/i_notes_repository.dar
 import 'package:zyncro/shared/models/note.dart';
 
 class NotesRepository implements INotesRepository {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  NotesRepository(this._db);
+
+  final FirebaseFirestore _db;
 
   CollectionReference<Map<String, dynamic>> _col(String groupId) =>
       _db.collection('groups').doc(groupId).collection('notes');

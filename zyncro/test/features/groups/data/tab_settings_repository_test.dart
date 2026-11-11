@@ -11,7 +11,7 @@ void main() {
 
   setUp(() {
     db = FakeFirebaseFirestore();
-    repo = TabSettingsRepository(firestore: db);
+    repo = TabSettingsRepository(db);
   });
 
   Future<Map<String, dynamic>> stored() async =>

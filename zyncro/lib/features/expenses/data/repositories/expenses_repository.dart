@@ -5,7 +5,9 @@ import 'package:zyncro/shared/models/expense.dart';
 import 'package:zyncro/shared/models/recurrence_rule.dart';
 
 class ExpensesRepository implements IExpensesRepository {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  ExpensesRepository(this._db);
+
+  final FirebaseFirestore _db;
 
   CollectionReference<Map<String, dynamic>> _col(String groupId) =>
       _db.collection('groups').doc(groupId).collection('expenses');
