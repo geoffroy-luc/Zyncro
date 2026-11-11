@@ -1039,49 +1039,51 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return CompositedTransformTarget(
       link: _cameraButtonLink,
       child: GestureDetector(
-      onTap: _isUploadingMedia
-          ? null
-          : () => setState(() {
-              _showCameraActions = !_showCameraActions;
-              if (_showCameraActions) _showQuickActions = false;
-            }),
-      child: Container(
-        width: 40,
-        height: 40,
-        margin: const EdgeInsets.only(right: 8, bottom: 2),
-        decoration: BoxDecoration(
-          color: _showCameraActions
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-              : const Color(0xFFF7F9FC),
-          shape: BoxShape.circle,
-          border: Border.all(
+        onTap: _isUploadingMedia
+            ? null
+            : () => setState(() {
+                _showCameraActions = !_showCameraActions;
+                if (_showCameraActions) _showQuickActions = false;
+              }),
+        child: Container(
+          width: 40,
+          height: 40,
+          margin: const EdgeInsets.only(right: 8, bottom: 2),
+          decoration: BoxDecoration(
             color: _showCameraActions
-                ? Theme.of(context).colorScheme.primary
-                : AppColors.border,
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                : const Color(0xFFF7F9FC),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: _showCameraActions
+                  ? Theme.of(context).colorScheme.primary
+                  : AppColors.border,
+            ),
           ),
+          child: _isUploadingMedia
+              ? const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.textSecondary,
+                  ),
+                )
+              : AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 150),
+                  transitionBuilder: (child, anim) =>
+                      RotationTransition(turns: anim, child: child),
+                  child: Icon(
+                    _showCameraActions
+                        ? Icons.close
+                        : Icons.camera_alt_outlined,
+                    key: ValueKey(_showCameraActions),
+                    color: _showCameraActions
+                        ? Theme.of(context).colorScheme.primary
+                        : AppColors.textSecondary,
+                    size: 18,
+                  ),
+                ),
         ),
-        child: _isUploadingMedia
-            ? const Padding(
-                padding: EdgeInsets.all(10),
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.textSecondary,
-                ),
-              )
-            : AnimatedSwitcher(
-                duration: const Duration(milliseconds: 150),
-                transitionBuilder: (child, anim) =>
-                    RotationTransition(turns: anim, child: child),
-                child: Icon(
-                  _showCameraActions ? Icons.close : Icons.camera_alt_outlined,
-                  key: ValueKey(_showCameraActions),
-                  color: _showCameraActions
-                      ? Theme.of(context).colorScheme.primary
-                      : AppColors.textSecondary,
-                  size: 18,
-                ),
-              ),
-      ),
       ),
     );
   }
@@ -1151,41 +1153,41 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       width: boxSize,
       height: boxSize,
       child: Stack(
-      clipBehavior: Clip.none,
-      children: [
-        option(
-          icon: Icons.camera_alt_outlined,
-          angleDeg: 0,
-          index: 0,
-          onTap: _isUploadingMedia
-              ? null
-              : () {
-                  setState(() => _showCameraActions = false);
-                  _captureFromCamera(video: false);
-                },
-        ),
-        option(
-          icon: Icons.videocam_outlined,
-          angleDeg: 45,
-          index: 1,
-          onTap: _isUploadingMedia
-              ? null
-              : () {
-                  setState(() => _showCameraActions = false);
-                  _captureFromCamera(video: true);
-                },
-        ),
-        option(
-          icon: Icons.photo_library_outlined,
-          angleDeg: 90,
-          index: 2,
-          onTap: _isUploadingMedia
-              ? null
-              : () {
-                  setState(() => _showCameraActions = false);
-                  _pickFromGallery();
-                },
-        ),
+        clipBehavior: Clip.none,
+        children: [
+          option(
+            icon: Icons.camera_alt_outlined,
+            angleDeg: 0,
+            index: 0,
+            onTap: _isUploadingMedia
+                ? null
+                : () {
+                    setState(() => _showCameraActions = false);
+                    _captureFromCamera(video: false);
+                  },
+          ),
+          option(
+            icon: Icons.videocam_outlined,
+            angleDeg: 45,
+            index: 1,
+            onTap: _isUploadingMedia
+                ? null
+                : () {
+                    setState(() => _showCameraActions = false);
+                    _captureFromCamera(video: true);
+                  },
+          ),
+          option(
+            icon: Icons.photo_library_outlined,
+            angleDeg: 90,
+            index: 2,
+            onTap: _isUploadingMedia
+                ? null
+                : () {
+                    setState(() => _showCameraActions = false);
+                    _pickFromGallery();
+                  },
+          ),
         ],
       ),
     );

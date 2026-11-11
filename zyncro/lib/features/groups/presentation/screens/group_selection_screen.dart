@@ -41,10 +41,9 @@ class GroupSelectionScreen extends ConsumerWidget {
             onGroupTap: (group) async {
               final userId = ref.read(authStateProvider).asData?.value?.uid;
               if (userId != null) {
-                ref.read(messagesRepositoryProvider).markGroupAsRead(
-                  groupId: group.id,
-                  userId: userId,
-                );
+                ref
+                    .read(messagesRepositoryProvider)
+                    .markGroupAsRead(groupId: group.id, userId: userId);
               }
               await ref.read(selectedGroupIdProvider.notifier).select(group.id);
               if (context.mounted) context.go('/home');
@@ -93,7 +92,8 @@ class _GroupsErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPermission = error is FirebaseException &&
+    final isPermission =
+        error is FirebaseException &&
         (error as FirebaseException).code == 'permission-denied';
     return Center(
       child: Padding(
@@ -174,10 +174,8 @@ class _GroupList extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             buildDefaultDragHandles: false,
             onReorder: onReorder,
-            proxyDecorator: (child, index, animation) => Material(
-              color: Colors.transparent,
-              child: child,
-            ),
+            proxyDecorator: (child, index, animation) =>
+                Material(color: Colors.transparent, child: child),
             children: [
               for (var i = 0; i < groups.length; i++)
                 ReorderableDelayedDragStartListener(
@@ -430,7 +428,16 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
   String _selectedEmoji = '🏠';
   bool _loading = false;
 
-  final _emojis = ['🏠', '👫', '👨‍👩‍👧‍👦', '🧑‍🤝‍🧑', '✈️', '🏖️', '🎓', '💼'];
+  final _emojis = [
+    '🏠',
+    '👫',
+    '👨‍👩‍👧‍👦',
+    '🧑‍🤝‍🧑',
+    '✈️',
+    '🏖️',
+    '🎓',
+    '💼',
+  ];
 
   @override
   void dispose() {
@@ -447,19 +454,22 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
     try {
       final freshUser = ref.read(authRepositoryProvider).currentUser ?? user;
       final userDoc = ref.read(userDocProvider).asData?.value;
-      final effectivePhotoUrl = userDoc?['photoUrl'] as String? ?? freshUser.photoURL;
+      final effectivePhotoUrl =
+          userDoc?['photoUrl'] as String? ?? freshUser.photoURL;
       final showPhoto = userDoc?['showProfilePhoto'] as bool? ?? true;
-      final group = await ref.read(groupsRepositoryProvider).createGroup(
-        name: _nameController.text.trim(),
-        description: _descriptionController.text.trim().isNotEmpty
-            ? _descriptionController.text.trim()
-            : null,
-        emoji: _selectedEmoji,
-        userId: user.uid,
-        displayName: freshUser.displayName ?? user.email ?? 'Membre',
-        photoUrl: showPhoto ? effectivePhotoUrl : null,
-        showProfilePhoto: showPhoto,
-      );
+      final group = await ref
+          .read(groupsRepositoryProvider)
+          .createGroup(
+            name: _nameController.text.trim(),
+            description: _descriptionController.text.trim().isNotEmpty
+                ? _descriptionController.text.trim()
+                : null,
+            emoji: _selectedEmoji,
+            userId: user.uid,
+            displayName: freshUser.displayName ?? user.email ?? 'Membre',
+            photoUrl: showPhoto ? effectivePhotoUrl : null,
+            showProfilePhoto: showPhoto,
+          );
       if (mounted) {
         await ref.read(selectedGroupIdProvider.notifier).select(group.id);
         if (mounted) {
@@ -559,7 +569,8 @@ class _CreateGroupSheetState extends ConsumerState<_CreateGroupSheet> {
               maxLength: 150,
               maxLines: 2,
               validator: (v) {
-                if (v != null && v.trim().length > 150) return '150 caractères maximum';
+                if (v != null && v.trim().length > 150)
+                  return '150 caractères maximum';
                 return null;
               },
             ),
@@ -624,15 +635,18 @@ class _JoinGroupSheetState extends ConsumerState<_JoinGroupSheet> {
     try {
       final freshUser = ref.read(authRepositoryProvider).currentUser ?? user;
       final userDoc = ref.read(userDocProvider).asData?.value;
-      final effectivePhotoUrl = userDoc?['photoUrl'] as String? ?? freshUser.photoURL;
+      final effectivePhotoUrl =
+          userDoc?['photoUrl'] as String? ?? freshUser.photoURL;
       final showPhoto = userDoc?['showProfilePhoto'] as bool? ?? true;
-      final group = await ref.read(groupsRepositoryProvider).joinGroupByCode(
-        code,
-        user.uid,
-        freshUser.displayName ?? user.email ?? 'Membre',
-        photoUrl: showPhoto ? effectivePhotoUrl : null,
-        showProfilePhoto: showPhoto,
-      );
+      final group = await ref
+          .read(groupsRepositoryProvider)
+          .joinGroupByCode(
+            code,
+            user.uid,
+            freshUser.displayName ?? user.email ?? 'Membre',
+            photoUrl: showPhoto ? effectivePhotoUrl : null,
+            showProfilePhoto: showPhoto,
+          );
 
       if (!mounted) return;
 
@@ -642,12 +656,14 @@ class _JoinGroupSheetState extends ConsumerState<_JoinGroupSheet> {
       }
 
       final userName = freshUser.displayName ?? user.email ?? 'Quelqu\'un';
-      ref.read(messagesRepositoryProvider).sendSystemMessage(
-        groupId: group.id,
-        userId: user.uid,
-        content: '👋 $userName a rejoint le groupe',
-        notifScreen: 'chat',
-      );
+      ref
+          .read(messagesRepositoryProvider)
+          .sendSystemMessage(
+            groupId: group.id,
+            userId: user.uid,
+            content: '👋 $userName a rejoint le groupe',
+            notifScreen: 'chat',
+          );
 
       await ref.read(selectedGroupIdProvider.notifier).select(group.id);
       if (mounted) {

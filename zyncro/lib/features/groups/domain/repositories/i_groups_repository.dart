@@ -41,15 +41,32 @@ abstract interface class IGroupsRepository {
     String? photoUrl,
     bool showProfilePhoto,
   });
+
   /// Résout un code d'invitation en aperçu de groupe (nom / emoji) sans y
   /// adhérer. Utilisé par l'écran de confirmation d'un lien d'invitation.
   Future<InvitePreview?> resolveInviteCode(String code);
   Stream<List<GroupMember>> watchMembers(String groupId);
   Future<void> removeMember(String groupId, String userId);
-  Future<void> leaveGroup(String groupId, String userId, {String? systemMessage});
-  Future<void> transferOwnership(String groupId, String currentOwnerId, String newOwnerId);
+  Future<void> leaveGroup(
+    String groupId,
+    String userId, {
+    String? systemMessage,
+  });
+  Future<void> transferOwnership(
+    String groupId,
+    String currentOwnerId,
+    String newOwnerId,
+  );
   Future<void> deleteGroup(String groupId, String? inviteCode);
   Future<String> generateInviteCode(String groupId);
-  Future<void> updateGroupInfo(String groupId, {required String name, String? description});
-  Future<void> updateMemberDisplayName(String groupId, String userId, String displayName);
+  Future<void> updateGroupInfo(
+    String groupId, {
+    required String name,
+    String? description,
+  });
+  Future<void> updateMemberDisplayName(
+    String groupId,
+    String userId,
+    String displayName,
+  );
 }

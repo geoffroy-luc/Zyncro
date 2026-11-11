@@ -126,7 +126,9 @@ class _CategoryEditorSheetState extends State<CategoryEditorSheet> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: selected ? color.withValues(alpha: 0.12) : Colors.white,
+                      color: selected
+                          ? color.withValues(alpha: 0.12)
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: selected ? color : AppColors.border,

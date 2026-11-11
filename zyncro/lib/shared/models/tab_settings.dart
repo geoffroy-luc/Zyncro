@@ -98,22 +98,21 @@ class TabSettings {
       expensesCurrency: (map['expensesCurrency'] as String?) ?? 'EUR',
       expensesCategories: map['expensesCategories'] != null
           ? (map['expensesCategories'] as List)
-              .map(
-                (e) => ExpenseCategory.fromMap(
-                  Map<String, dynamic>.from(e as Map),
-                ),
-              )
-              .toList()
+                .map(
+                  (e) => ExpenseCategory.fromMap(
+                    Map<String, dynamic>.from(e as Map),
+                  ),
+                )
+                .toList()
           : [
               ...defaultExpenseCategories,
-              ...List<String>.from(map['expensesCustomCategories'] ?? [])
-                  .map(
-                    (name) => ExpenseCategory(
-                      name: name,
-                      iconKey: 'label',
-                      colorHex: '#4F7CFF',
-                    ),
-                  ),
+              ...List<String>.from(map['expensesCustomCategories'] ?? []).map(
+                (name) => ExpenseCategory(
+                  name: name,
+                  iconKey: 'label',
+                  colorHex: '#4F7CFF',
+                ),
+              ),
             ],
       calendarDisplayMode: (map['calendarDisplayMode'] as String?) ?? 'band',
       calendarCustomCategories: List<String>.from(
@@ -217,7 +216,8 @@ class TabSettings {
     final after = next.toMap();
     return {
       for (final entry in after.entries)
-        if (!_jsonEquals(before[entry.key], entry.value)) entry.key: entry.value,
+        if (!_jsonEquals(before[entry.key], entry.value))
+          entry.key: entry.value,
     };
   }
 

@@ -65,7 +65,9 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
       floatingActionButton: FloatingActionButton(
         heroTag: 'fab_notes',
         onPressed: () => _openEditor(),
-        backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
+        backgroundColor: Theme.of(
+          context,
+        ).colorScheme.primary.withValues(alpha: 0.85),
         shape: const CircleBorder(
           side: BorderSide(color: Colors.white24, width: 2),
         ),
@@ -74,185 +76,185 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
       body: SafeArea(
         top: true,
         child: notesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Erreur: $e')),
-        data: (allNotes) {
-          final searchLower = _search.toLowerCase();
-          final filtered = _search.isEmpty
-              ? allNotes
-              : allNotes
-                    .where(
-                      (n) =>
-                          n.title.toLowerCase().contains(searchLower) ||
-                          n.content.toLowerCase().contains(searchLower) ||
-                          n.checklist.any(
-                            (item) =>
-                                item.text.toLowerCase().contains(searchLower),
-                          ),
-                    )
-                    .toList();
-
-          final pinned = filtered.where((n) => n.isPinned).toList();
-          final recent = filtered.where((n) => !n.isPinned).toList();
-
-          return CustomScrollView(
-            slivers: [
-              // ── Header ──────────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
-                  child: Column(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF7F9FC),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Row(
-                          children: [
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 14),
-                              child: Icon(
-                                Icons.search,
-                                color: AppColors.textSecondary,
-                                size: 20,
-                              ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Erreur: $e')),
+          data: (allNotes) {
+            final searchLower = _search.toLowerCase();
+            final filtered = _search.isEmpty
+                ? allNotes
+                : allNotes
+                      .where(
+                        (n) =>
+                            n.title.toLowerCase().contains(searchLower) ||
+                            n.content.toLowerCase().contains(searchLower) ||
+                            n.checklist.any(
+                              (item) =>
+                                  item.text.toLowerCase().contains(searchLower),
                             ),
-                            Expanded(
-                              child: TextField(
-                                onChanged: (v) => setState(() => _search = v),
-                                decoration: const InputDecoration(
-                                  hintText: 'Rechercher...',
-                                  hintStyle: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 14,
-                                  ),
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  filled: false,
+                      )
+                      .toList();
+
+            final pinned = filtered.where((n) => n.isPinned).toList();
+            final recent = filtered.where((n) => !n.isPinned).toList();
+
+            return CustomScrollView(
+              slivers: [
+                // ── Header ──────────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF7F9FC),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 14),
+                                child: Icon(
+                                  Icons.search,
+                                  color: AppColors.textSecondary,
+                                  size: 20,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SliverToBoxAdapter(
-                child: Divider(height: 1, color: AppColors.border),
-              ),
-
-              // ── Contenu ─────────────────────────────────────────────
-              if (allNotes.isEmpty)
-                SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.description_outlined,
-                          size: 48,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Aucune note',
-                          style: TextStyle(color: AppColors.textSecondary),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () => _openEditor(),
-                          icon: const Icon(Icons.add),
-                          label: const Text('Créer une note'),
+                              Expanded(
+                                child: TextField(
+                                  onChanged: (v) => setState(() => _search = v),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Rechercher...',
+                                    hintStyle: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14,
+                                    ),
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    filled: false,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.all(24),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      // Épinglées
-                      if (pinned.isNotEmpty) ...[
-                        const Row(
-                          children: [
-                            Icon(
-                              Icons.push_pin,
-                              size: 16,
-                              color: AppColors.accent,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Épinglées',
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        ...pinned.map(
-                          (note) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _PinnedNoteCard(
-                              note: note,
-                              onTap: () => _openEditor(note: note),
-                              onTogglePin: () => _togglePin(note),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-
-                      // Récentes
-                      if (recent.isNotEmpty) ...[
-                        const Text(
-                          'Récentes',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 0.85,
-                              ),
-                          itemCount: recent.length,
-                          itemBuilder: (_, i) => _RecentNoteCard(
-                            note: recent[i],
-                            onTap: () => _openEditor(note: recent[i]),
-                            onTogglePin: () => _togglePin(recent[i]),
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(height: 24),
-                    ]),
-                  ),
                 ),
-            ],
-          );
-        },
+                const SliverToBoxAdapter(
+                  child: Divider(height: 1, color: AppColors.border),
+                ),
+
+                // ── Contenu ─────────────────────────────────────────────
+                if (allNotes.isEmpty)
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.description_outlined,
+                            size: 48,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Aucune note',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () => _openEditor(),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Créer une note'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.all(24),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        // Épinglées
+                        if (pinned.isNotEmpty) ...[
+                          const Row(
+                            children: [
+                              Icon(
+                                Icons.push_pin,
+                                size: 16,
+                                color: AppColors.accent,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Épinglées',
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          ...pinned.map(
+                            (note) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _PinnedNoteCard(
+                                note: note,
+                                onTap: () => _openEditor(note: note),
+                                onTogglePin: () => _togglePin(note),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
+                        // Récentes
+                        if (recent.isNotEmpty) ...[
+                          const Text(
+                            'Récentes',
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                  childAspectRatio: 0.85,
+                                ),
+                            itemCount: recent.length,
+                            itemBuilder: (_, i) => _RecentNoteCard(
+                              note: recent[i],
+                              onTap: () => _openEditor(note: recent[i]),
+                              onTogglePin: () => _togglePin(recent[i]),
+                            ),
+                          ),
+                        ],
+
+                        const SizedBox(height: 24),
+                      ]),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );

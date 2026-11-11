@@ -62,7 +62,9 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
           userDoc?['photoUrl'] as String? ?? freshUser.photoURL;
       final showPhoto = userDoc?['showProfilePhoto'] as bool? ?? true;
 
-      final group = await ref.read(groupsRepositoryProvider).joinGroupByCode(
+      final group = await ref
+          .read(groupsRepositoryProvider)
+          .joinGroupByCode(
             widget.code,
             user.uid,
             freshUser.displayName ?? user.email ?? 'Membre',
@@ -81,7 +83,9 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
       }
 
       final userName = freshUser.displayName ?? user.email ?? 'Quelqu\'un';
-      ref.read(messagesRepositoryProvider).sendSystemMessage(
+      ref
+          .read(messagesRepositoryProvider)
+          .sendSystemMessage(
             groupId: group.id,
             userId: user.uid,
             content: '👋 $userName a rejoint le groupe',
@@ -145,8 +149,9 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
                 // Déjà membre ? (les groupes de l'utilisateur sont accessibles)
                 final myGroups =
                     ref.watch(userGroupsProvider).asData?.value ?? [];
-                final alreadyMember =
-                    myGroups.any((g) => g.id == preview.groupId);
+                final alreadyMember = myGroups.any(
+                  (g) => g.id == preview.groupId,
+                );
 
                 return _InviteCard(
                   preview: preview,
@@ -208,10 +213,8 @@ class _InviteCard extends StatelessWidget {
               ? Image.network(
                   photoUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _EmojiAvatar(
-                    emoji: emoji,
-                    name: name,
-                  ),
+                  errorBuilder: (_, __, ___) =>
+                      _EmojiAvatar(emoji: emoji, name: name),
                 )
               : _EmojiAvatar(emoji: emoji, name: name),
         ),

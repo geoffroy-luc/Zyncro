@@ -37,27 +37,30 @@ List<_GalleryItem> _buildItems(List<Message> messages) {
     try {
       final data = jsonDecode(message.content) as Map<String, dynamic>;
       if (data.containsKey('medias')) {
-        final medias =
-            (data['medias'] as List).cast<Map<String, dynamic>>();
+        final medias = (data['medias'] as List).cast<Map<String, dynamic>>();
         for (int j = 0; j < medias.length; j++) {
-          items.add(_GalleryItem(
-            message: message,
-            url: medias[j]['url'] as String? ?? '',
-            mimeType: medias[j]['mimeType'] as String? ?? '',
-            albumMedias: medias,
-            albumIndex: j,
-            messageIndex: i,
-          ));
+          items.add(
+            _GalleryItem(
+              message: message,
+              url: medias[j]['url'] as String? ?? '',
+              mimeType: medias[j]['mimeType'] as String? ?? '',
+              albumMedias: medias,
+              albumIndex: j,
+              messageIndex: i,
+            ),
+          );
         }
       } else {
-        items.add(_GalleryItem(
-          message: message,
-          url: data['url'] as String? ?? '',
-          mimeType: data['mimeType'] as String? ?? '',
-          albumMedias: null,
-          albumIndex: 0,
-          messageIndex: i,
-        ));
+        items.add(
+          _GalleryItem(
+            message: message,
+            url: data['url'] as String? ?? '',
+            mimeType: data['mimeType'] as String? ?? '',
+            albumMedias: null,
+            albumIndex: 0,
+            messageIndex: i,
+          ),
+        );
       }
     } catch (_) {
       // message mal formé, on ignore
@@ -96,13 +99,18 @@ class MediaGalleryScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.photo_library_outlined,
-                      size: 64, color: AppColors.textSecondary),
+                  Icon(
+                    Icons.photo_library_outlined,
+                    size: 64,
+                    color: AppColors.textSecondary,
+                  ),
                   SizedBox(height: 16),
                   Text(
                     'Aucun média partagé',
                     style: TextStyle(
-                        color: AppColors.textSecondary, fontSize: 16),
+                      color: AppColors.textSecondary,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
@@ -110,12 +118,14 @@ class MediaGalleryScreen extends ConsumerWidget {
           }
           // Liste plate avec métadonnées par item pour le viewer global
           final viewerItems = items
-              .map((item) => {
-                    'url': item.url,
-                    'mimeType': item.mimeType,
-                    'senderName': item.message.senderName ?? '',
-                    'sentAt': item.message.timestamp.millisecondsSinceEpoch,
-                  })
+              .map(
+                (item) => {
+                  'url': item.url,
+                  'mimeType': item.mimeType,
+                  'senderName': item.message.senderName ?? '',
+                  'sentAt': item.message.timestamp.millisecondsSinceEpoch,
+                },
+              )
               .toList();
 
           return GridView.builder(
@@ -152,16 +162,18 @@ class _MediaTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => AlbumSwipeViewer(
-          medias: viewerItems,
-          initialIndex: viewerIndex,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) =>
+              AlbumSwipeViewer(medias: viewerItems, initialIndex: viewerIndex),
         ),
-      )),
+      ),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          item.isVideo ? _VideoThumb(url: item.url) : _ImageThumb(url: item.url),
+          item.isVideo
+              ? _VideoThumb(url: item.url)
+              : _ImageThumb(url: item.url),
           // Badge album (numéro dans l'album) en haut à droite
           if (item.isAlbum)
             Positioned(
@@ -176,15 +188,19 @@ class _MediaTile extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.photo_library_outlined,
-                        color: Colors.white, size: 10),
+                    const Icon(
+                      Icons.photo_library_outlined,
+                      color: Colors.white,
+                      size: 10,
+                    ),
                     const SizedBox(width: 2),
                     Text(
                       '${item.albumIndex + 1}/${item.albumMedias!.length}',
                       style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600),
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -207,8 +223,10 @@ class _ImageThumb extends StatelessWidget {
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => Container(
         color: AppColors.border,
-        child: const Icon(Icons.broken_image_outlined,
-            color: AppColors.textSecondary),
+        child: const Icon(
+          Icons.broken_image_outlined,
+          color: AppColors.textSecondary,
+        ),
       ),
     );
   }
@@ -250,22 +268,23 @@ class MediaPreviewTile extends StatelessWidget {
 
     // Album multi-médias : on affiche le premier média
     if (data.containsKey('medias')) {
-      final medias =
-          (data['medias'] as List).cast<Map<String, dynamic>>();
+      final medias = (data['medias'] as List).cast<Map<String, dynamic>>();
       if (medias.isEmpty) return const SizedBox.shrink();
       final first = medias.first;
       final url = first['url'] as String? ?? '';
       final isVideo = (first['mimeType'] as String? ?? '').startsWith('video/');
 
       return GestureDetector(
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => AlbumSwipeViewer(
-            medias: medias,
-            initialIndex: 0,
-            senderName: message.senderName,
-            sentAt: message.timestamp,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AlbumSwipeViewer(
+              medias: medias,
+              initialIndex: 0,
+              senderName: message.senderName,
+              sentAt: message.timestamp,
+            ),
           ),
-        )),
+        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: Stack(
@@ -277,23 +296,33 @@ class MediaPreviewTile extends StatelessWidget {
                     ? Container(
                         color: const Color(0xFF1C1C1E),
                         child: const Center(
-                          child: Icon(Icons.play_circle_fill_rounded,
-                              color: Colors.white, size: 28),
+                          child: Icon(
+                            Icons.play_circle_fill_rounded,
+                            color: Colors.white,
+                            size: 28,
+                          ),
                         ),
                       )
-                    : Image.network(url, fit: BoxFit.cover,
+                    : Image.network(
+                        url,
+                        fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                           color: AppColors.border,
-                          child: const Icon(Icons.broken_image_outlined,
-                              color: AppColors.textSecondary),
-                        )),
+                          child: const Icon(
+                            Icons.broken_image_outlined,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
               ),
               Positioned(
                 top: 3,
                 right: 3,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(6),
@@ -301,9 +330,10 @@ class MediaPreviewTile extends StatelessWidget {
                   child: Text(
                     '${medias.length}',
                     style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600),
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -321,21 +351,25 @@ class MediaPreviewTile extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         if (isVideo) {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => VideoViewerScreen(
-              url: url,
-              senderName: message.senderName,
-              sentAt: message.timestamp,
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => VideoViewerScreen(
+                url: url,
+                senderName: message.senderName,
+                sentAt: message.timestamp,
+              ),
             ),
-          ));
+          );
         } else {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ImageViewerScreen(
-              url: url,
-              senderName: message.senderName,
-              sentAt: message.timestamp,
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => ImageViewerScreen(
+                url: url,
+                senderName: message.senderName,
+                sentAt: message.timestamp,
+              ),
             ),
-          ));
+          );
         }
       },
       child: ClipRRect(
@@ -347,16 +381,24 @@ class MediaPreviewTile extends StatelessWidget {
               ? Container(
                   color: const Color(0xFF1C1C1E),
                   child: const Center(
-                    child: Icon(Icons.play_circle_fill_rounded,
-                        color: Colors.white, size: 28),
+                    child: Icon(
+                      Icons.play_circle_fill_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                   ),
                 )
-              : Image.network(url, fit: BoxFit.cover,
+              : Image.network(
+                  url,
+                  fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
                     color: AppColors.border,
-                    child: const Icon(Icons.broken_image_outlined,
-                        color: AppColors.textSecondary),
-                  )),
+                    child: const Icon(
+                      Icons.broken_image_outlined,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
         ),
       ),
     );

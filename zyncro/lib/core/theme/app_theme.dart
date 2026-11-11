@@ -67,10 +67,7 @@ class AppTheme {
         minimumSize: const Size(double.infinity, 52),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 0,
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -79,19 +76,13 @@ class AppTheme {
         minimumSize: const Size(double.infinity, 52),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         side: BorderSide(color: primary),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: primary,
-        textStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
       ),
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -100,13 +91,13 @@ class AppTheme {
       unselectedItemColor: AppColors.textSecondary,
       type: BottomNavigationBarType.fixed,
       elevation: 0,
-      selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+      selectedLabelStyle: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+      ),
       unselectedLabelStyle: const TextStyle(fontSize: 11),
     ),
-    dividerTheme: const DividerThemeData(
-      color: AppColors.border,
-      space: 1,
-    ),
+    dividerTheme: const DividerThemeData(color: AppColors.border, space: 1),
     textTheme: const TextTheme(
       headlineLarge: TextStyle(
         color: AppColors.textPrimary,

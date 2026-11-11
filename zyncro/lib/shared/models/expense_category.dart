@@ -31,7 +31,11 @@ class ExpenseCategory {
 }
 
 const defaultExpenseCategories = [
-  ExpenseCategory(name: 'Alimentation', iconKey: 'restaurant', colorHex: '#2BB8A5'),
+  ExpenseCategory(
+    name: 'Alimentation',
+    iconKey: 'restaurant',
+    colorHex: '#2BB8A5',
+  ),
   ExpenseCategory(name: 'Logement', iconKey: 'home', colorHex: '#4F7CFF'),
   ExpenseCategory(name: 'Transport', iconKey: 'car', colorHex: '#9B59B6'),
   ExpenseCategory(name: 'Loisirs', iconKey: 'games', colorHex: '#E85D75'),

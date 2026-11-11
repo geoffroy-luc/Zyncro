@@ -4,10 +4,7 @@ import '../constants/invite.dart';
 
 /// Ouvre la feuille de partage native (WhatsApp, SMS, mail…) avec un lien
 /// d'invitation pré-rempli pour le groupe identifié par [code].
-Future<void> shareInviteLink({
-  required String code,
-  String? groupName,
-}) async {
+Future<void> shareInviteLink({required String code, String? groupName}) async {
   final link = InviteLink.forCode(code);
   final name = (groupName != null && groupName.trim().isNotEmpty)
       ? ' « ${groupName.trim()} »'

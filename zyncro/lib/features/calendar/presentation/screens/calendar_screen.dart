@@ -40,8 +40,10 @@ class CalendarScreen extends ConsumerStatefulWidget {
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   _ViewMode _viewMode = _ViewMode.month;
   String _search = '';
-  DateTime _displayedMonth =
-      DateTime(DateTime.now().year, DateTime.now().month);
+  DateTime _displayedMonth = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+  );
   DateTime? _selectedDay;
 
   // Filtres locaux
@@ -52,7 +54,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       _filterParticipantIds.isNotEmpty || _filterRecurrenceOnly;
 
   Future<void> _showFilterSheet(
-      List<GroupMember> members, Color primaryColor) async {
+    List<GroupMember> members,
+    Color primaryColor,
+  ) async {
     final tempParticipants = List<String>.from(_filterParticipantIds);
     final tempRecurrence = [_filterRecurrenceOnly];
 
@@ -66,7 +70,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheet) => Padding(
           padding: EdgeInsets.fromLTRB(
-              24, 16, 24, MediaQuery.of(ctx).viewInsets.bottom + 32),
+            24,
+            16,
+            24,
+            MediaQuery.of(ctx).viewInsets.bottom + 32,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,27 +93,33 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Filtres',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 17)),
+                  const Text(
+                    'Filtres',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+                  ),
                   if (tempParticipants.isNotEmpty || tempRecurrence[0])
                     TextButton(
                       onPressed: () => setSheet(() {
                         tempParticipants.clear();
                         tempRecurrence[0] = false;
                       }),
-                      child: const Text('Réinitialiser',
-                          style: TextStyle(color: AppColors.error)),
+                      child: const Text(
+                        'Réinitialiser',
+                        style: TextStyle(color: AppColors.error),
+                      ),
                     ),
                 ],
               ),
               if (members.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                const Text('Participants',
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary)),
+                const Text(
+                  'Participants',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -113,12 +127,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   children: members.map((m) {
                     final sel = tempParticipants.contains(m.uid);
                     return FilterChip(
-                      label: Text(m.displayName,
-                          style: TextStyle(
-                              fontSize: 13,
-                              color: sel
-                                  ? Colors.white
-                                  : AppColors.textPrimary)),
+                      label: Text(
+                        m.displayName,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: sel ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
                       selected: sel,
                       onSelected: (v) => setSheet(() {
                         if (v) {
@@ -140,13 +155,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Récurrents uniquement',
-                      style: TextStyle(fontSize: 15)),
+                  const Text(
+                    'Récurrents uniquement',
+                    style: TextStyle(fontSize: 15),
+                  ),
                   Switch(
                     value: tempRecurrence[0],
                     activeThumbColor: primaryColor,
-                    onChanged: (v) =>
-                        setSheet(() => tempRecurrence[0] = v),
+                    onChanged: (v) => setSheet(() => tempRecurrence[0] = v),
                   ),
                 ],
               ),
@@ -154,12 +170,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  style: FilledButton.styleFrom(
-                      backgroundColor: primaryColor),
+                  style: FilledButton.styleFrom(backgroundColor: primaryColor),
                   onPressed: () {
                     setState(() {
-                      _filterParticipantIds =
-                          List<String>.from(tempParticipants);
+                      _filterParticipantIds = List<String>.from(
+                        tempParticipants,
+                      );
                       _filterRecurrenceOnly = tempRecurrence[0];
                     });
                     Navigator.pop(ctx);
@@ -175,16 +191,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   void _prevMonth() => setState(() {
-        _displayedMonth =
-            DateTime(_displayedMonth.year, _displayedMonth.month - 1);
-        _selectedDay = null;
-      });
+    _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month - 1);
+    _selectedDay = null;
+  });
 
   void _nextMonth() => setState(() {
-        _displayedMonth =
-            DateTime(_displayedMonth.year, _displayedMonth.month + 1);
-        _selectedDay = null;
-      });
+    _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month + 1);
+    _selectedDay = null;
+  });
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
@@ -196,15 +210,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           !e.endDate!.isBefore(day));
 
   List<Event> _eventsForMonth(List<Event> events) => events.where((e) {
-        return e.startDate.year == _displayedMonth.year &&
-            e.startDate.month == _displayedMonth.month;
-      }).toList();
+    return e.startDate.year == _displayedMonth.year &&
+        e.startDate.month == _displayedMonth.month;
+  }).toList();
 
   List<Widget> _buildAgendaSections(List<Event> events, Color primaryColor) {
     final Map<DateTime, List<Event>> grouped = {};
     for (final e in events) {
-      final day =
-          DateTime(e.startDate.year, e.startDate.month, e.startDate.day);
+      final day = DateTime(
+        e.startDate.year,
+        e.startDate.month,
+        e.startDate.day,
+      );
       grouped.putIfAbsent(day, () => []).add(e);
     }
     final sortedDays = grouped.keys.toList()..sort();
@@ -214,54 +231,64 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     for (final day in sortedDays) {
       final isToday = _isSameDay(day, today);
       final isTomorrow = _isSameDay(
-          day, DateTime(today.year, today.month, today.day + 1));
+        day,
+        DateTime(today.year, today.month, today.day + 1),
+      );
 
       final label = isToday
           ? "Aujourd'hui"
           : isTomorrow
-              ? 'Demain'
-              : DateFormat('EEEE d MMMM', 'fr_FR').format(day);
+          ? 'Demain'
+          : DateFormat('EEEE d MMMM', 'fr_FR').format(day);
 
-      widgets.add(Padding(
-        padding: const EdgeInsets.only(bottom: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                gradient: isToday
-                    ? LinearGradient(
-                        colors: [primaryColor, _darken(primaryColor)])
-                    : null,
-                color: isToday
-                    ? null
-                    : isTomorrow
-                        ? const Color(0x1A2BB8A5)
-                        : const Color(0xFFF7F9FC),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                label,
-                style: TextStyle(
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  gradient: isToday
+                      ? LinearGradient(
+                          colors: [primaryColor, _darken(primaryColor)],
+                        )
+                      : null,
                   color: isToday
-                      ? Colors.white
+                      ? null
                       : isTomorrow
-                          ? AppColors.secondary
-                          : AppColors.textSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                      ? const Color(0x1A2BB8A5)
+                      : const Color(0xFFF7F9FC),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: isToday
+                        ? Colors.white
+                        : isTomorrow
+                        ? AppColors.secondary
+                        : AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-            ...grouped[day]!.map((e) => Padding(
+              const SizedBox(height: 10),
+              ...grouped[day]!.map(
+                (e) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: _AgendaEventCard(event: e),
-                )),
-          ],
+                ),
+              ),
+            ],
+          ),
         ),
-      ));
+      );
     }
     return widgets;
   }
@@ -271,15 +298,20 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     if (search.isNotEmpty) {
       final q = search.toLowerCase();
       result = result
-          .where((e) =>
-              e.title.toLowerCase().contains(q) ||
-              (e.location?.toLowerCase().contains(q) ?? false))
+          .where(
+            (e) =>
+                e.title.toLowerCase().contains(q) ||
+                (e.location?.toLowerCase().contains(q) ?? false),
+          )
           .toList();
     }
     if (_filterParticipantIds.isNotEmpty) {
       result = result
-          .where((e) => e.participantIds
-              .any((id) => _filterParticipantIds.contains(id)))
+          .where(
+            (e) => e.participantIds.any(
+              (id) => _filterParticipantIds.contains(id),
+            ),
+          )
           .toList();
     }
     if (_filterRecurrenceOnly) {
@@ -306,10 +338,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ? allEvents.where((e) => _eventOnDay(e, _selectedDay!)).toList()
         : monthEvents;
 
-    final firstOfMonth =
-        DateTime(_displayedMonth.year, _displayedMonth.month, 1);
-    final daysInMonth =
-        DateTime(_displayedMonth.year, _displayedMonth.month + 1, 0).day;
+    final firstOfMonth = DateTime(
+      _displayedMonth.year,
+      _displayedMonth.month,
+      1,
+    );
+    final daysInMonth = DateTime(
+      _displayedMonth.year,
+      _displayedMonth.month + 1,
+      0,
+    ).day;
     final leadingBlanks = firstOfMonth.weekday - 1;
 
     return Scaffold(
@@ -322,376 +360,453 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ),
         ),
         backgroundColor: primaryColor.withValues(alpha: 0.85),
-        shape: const CircleBorder(side: BorderSide(color: Colors.white24, width: 2)),
+        shape: const CircleBorder(
+          side: BorderSide(color: Colors.white24, width: 2),
+        ),
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: SafeArea(
         top: true,
         child: CustomScrollView(
-        slivers: [
-          // ── Header ──────────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
-              child: Column(
-                children: [
-                  // Navigation mois
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: _prevMonth,
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF7F9FC),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.chevron_left,
-                              size: 20, color: AppColors.textSecondary),
-                        ),
-                      ),
-                      Text(
-                        DateFormat('MMMM yyyy', 'fr_FR').format(_displayedMonth),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: _nextMonth,
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF7F9FC),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.chevron_right,
-                              size: 20, color: AppColors.textSecondary),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Search bar
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF7F9FC),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
+          slivers: [
+            // ── Header ──────────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                child: Column(
+                  children: [
+                    // Navigation mois
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 14),
-                          child: Icon(Icons.search,
-                              color: AppColors.textSecondary, size: 20),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            onChanged: (v) => setState(() => _search = v),
-                            decoration: const InputDecoration(
-                              hintText: 'Rechercher...',
-                              hintStyle: TextStyle(
-                                  color: AppColors.textSecondary, fontSize: 14),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              contentPadding:
-                                  EdgeInsets.symmetric(vertical: 12),
-                              filled: false,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
                         GestureDetector(
-                          onTap: () =>
-                              _showFilterSheet(members, primaryColor),
+                          onTap: _prevMonth,
                           child: Container(
                             width: 36,
                             height: 36,
-                            margin: const EdgeInsets.only(right: 6),
                             decoration: BoxDecoration(
-                              color: _hasActiveFilters
-                                  ? primaryColor
-                                  : Colors.transparent,
+                              color: const Color(0xFFF7F9FC),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(
-                              Icons.tune_rounded,
-                              size: 18,
-                              color: _hasActiveFilters
-                                  ? Colors.white
-                                  : AppColors.textSecondary,
+                            child: const Icon(
+                              Icons.chevron_left,
+                              size: 20,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          DateFormat(
+                            'MMMM yyyy',
+                            'fr_FR',
+                          ).format(_displayedMonth),
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _nextMonth,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF7F9FC),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.chevron_right,
+                              size: 20,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Toggle vue
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF7F9FC),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        _ToggleButton(
-                          label: 'Mois',
-                          active: _viewMode == _ViewMode.month,
-                          onTap: () =>
-                              setState(() => _viewMode = _ViewMode.month),
-                        ),
-                        _ToggleButton(
-                          label: 'Agenda',
-                          active: _viewMode == _ViewMode.agenda,
-                          onTap: () =>
-                              setState(() => _viewMode = _ViewMode.agenda),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(
-            child: Divider(height: 1, color: AppColors.border),
-          ),
-
-          // ── Corps ────────────────────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                if (_viewMode == _ViewMode.month) ...[
-                  // Grille
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border),
-                      boxShadow: const [
-                        BoxShadow(
-                            color: Color(0x0A000000),
-                            blurRadius: 4,
-                            offset: Offset(0, 2))
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-                              .map((d) => Expanded(
-                                    child: Center(
-                                      child: Text(d,
-                                          style: const TextStyle(
-                                            color: AppColors.textSecondary,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w500,
-                                          )),
-                                    ),
-                                  ))
-                              .toList(),
-                        ),
-                        const SizedBox(height: 8),
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 7,
-                            childAspectRatio: 1,
-                            mainAxisSpacing: 4,
-                            crossAxisSpacing: 4,
-                          ),
-                          itemCount: leadingBlanks + daysInMonth,
-                          itemBuilder: (_, i) {
-                            if (i < leadingBlanks) return const SizedBox();
-                            final dayNum = i - leadingBlanks + 1;
-                            final cellDate = DateTime(_displayedMonth.year,
-                                _displayedMonth.month, dayNum);
-                            final isToday = _isSameDay(cellDate, today);
-                            final isSelected = _selectedDay != null &&
-                                _isSameDay(cellDate, _selectedDay!);
-                            final dayEvents = monthEvents
-                                .where((e) => _eventOnDay(e, cellDate))
-                                .toList();
-                            return GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () => setState(() {
-                                _selectedDay = cellDate;
-                              }),
-                              child: Container(
-                                decoration: isSelected
-                                    ? BoxDecoration(
-                                        color: primaryColor
-                                            .withValues(alpha: 0.12),
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                        border: Border.all(
-                                            color: primaryColor,
-                                            width: 1.5),
-                                      )
-                                    : isToday
-                                        ? BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                              colors: [
-                                                primaryColor,
-                                                _darken(primaryColor),
-                                              ],
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                  color: primaryColor.withValues(alpha: 0.2),
-                                                  blurRadius: 6,
-                                                  offset: const Offset(0, 2))
-                                            ],
-                                          )
-                                        : null,
-                                child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      '$dayNum',
-                                      style: TextStyle(
-                                        color: isToday
-                                            ? Colors.white
-                                            : isSelected
-                                                ? primaryColor
-                                                : AppColors.textPrimary,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    if (dayEvents.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 2),
-                                        child: displayMode == 'band'
-                                            ? Column(
-                                                children: dayEvents.take(2).map((e) =>
-                                                  Container(
-                                                    height: 3,
-                                                    margin: const EdgeInsets.only(bottom: 1),
-                                                    decoration: BoxDecoration(
-                                                      color: isToday
-                                                          ? Colors.white.withValues(alpha: 0.8)
-                                                          : _eventColor(e),
-                                                      borderRadius: BorderRadius.circular(2),
-                                                    ),
-                                                  ),
-                                                ).toList(),
-                                              )
-                                            : Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: dayEvents.take(3).map((e) =>
-                                                  Container(
-                                                    width: 4,
-                                                    height: 4,
-                                                    margin: const EdgeInsets.symmetric(horizontal: 1),
-                                                    decoration: BoxDecoration(
-                                                      color: isToday
-                                                          ? Colors.white
-                                                          : _eventColor(e),
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                  ),
-                                                ).toList(),
-                                              ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    _selectedDay != null
-                        ? DateFormat('d MMMM', 'fr_FR').format(_selectedDay!)
-                        : 'Événements du mois',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ] else ...[
-                  Text(
-                    DateFormat('MMMM yyyy', 'fr_FR').format(_displayedMonth),
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                // Events
-                if (eventsAsync.isLoading)
-                  const Center(child: CircularProgressIndicator())
-                else if (visibleEvents.isEmpty)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Column(
+                    const SizedBox(height: 12),
+                    // Search bar
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F9FC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Row(
                         children: [
-                          const Icon(Icons.event_outlined,
-                              size: 48, color: AppColors.textSecondary),
-                          const SizedBox(height: 12),
-                          const Text('Aucun événement',
-                              style:
-                                  TextStyle(color: AppColors.textSecondary)),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              foregroundColor: Colors.white,
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 14),
+                            child: Icon(
+                              Icons.search,
+                              color: AppColors.textSecondary,
+                              size: 20,
                             ),
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => EventFormScreen(
-                                    initialDate: _selectedDay ?? today),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              onChanged: (v) => setState(() => _search = v),
+                              decoration: const InputDecoration(
+                                hintText: 'Rechercher...',
+                                hintStyle: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 14,
+                                ),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                filled: false,
                               ),
                             ),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Ajouter un événement'),
+                          ),
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap: () =>
+                                _showFilterSheet(members, primaryColor),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              margin: const EdgeInsets.only(right: 6),
+                              decoration: BoxDecoration(
+                                color: _hasActiveFilters
+                                    ? primaryColor
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.tune_rounded,
+                                size: 18,
+                                color: _hasActiveFilters
+                                    ? Colors.white
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  )
-                else if (_viewMode == _ViewMode.agenda)
-                  ..._buildAgendaSections(visibleEvents, primaryColor)
-                else
-                  ...visibleEvents.map((e) => Padding(
+                    const SizedBox(height: 12),
+                    // Toggle vue
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F9FC),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          _ToggleButton(
+                            label: 'Mois',
+                            active: _viewMode == _ViewMode.month,
+                            onTap: () =>
+                                setState(() => _viewMode = _ViewMode.month),
+                          ),
+                          _ToggleButton(
+                            label: 'Agenda',
+                            active: _viewMode == _ViewMode.agenda,
+                            onTap: () =>
+                                setState(() => _viewMode = _ViewMode.agenda),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(
+              child: Divider(height: 1, color: AppColors.border),
+            ),
+
+            // ── Corps ────────────────────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.all(24),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  if (_viewMode == _ViewMode.month) ...[
+                    // Grille
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0A000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children:
+                                [
+                                      'Lun',
+                                      'Mar',
+                                      'Mer',
+                                      'Jeu',
+                                      'Ven',
+                                      'Sam',
+                                      'Dim',
+                                    ]
+                                    .map(
+                                      (d) => Expanded(
+                                        child: Center(
+                                          child: Text(
+                                            d,
+                                            style: const TextStyle(
+                                              color: AppColors.textSecondary,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                          ),
+                          const SizedBox(height: 8),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 7,
+                                  childAspectRatio: 1,
+                                  mainAxisSpacing: 4,
+                                  crossAxisSpacing: 4,
+                                ),
+                            itemCount: leadingBlanks + daysInMonth,
+                            itemBuilder: (_, i) {
+                              if (i < leadingBlanks) return const SizedBox();
+                              final dayNum = i - leadingBlanks + 1;
+                              final cellDate = DateTime(
+                                _displayedMonth.year,
+                                _displayedMonth.month,
+                                dayNum,
+                              );
+                              final isToday = _isSameDay(cellDate, today);
+                              final isSelected =
+                                  _selectedDay != null &&
+                                  _isSameDay(cellDate, _selectedDay!);
+                              final dayEvents = monthEvents
+                                  .where((e) => _eventOnDay(e, cellDate))
+                                  .toList();
+                              return GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => setState(() {
+                                  _selectedDay = cellDate;
+                                }),
+                                child: Container(
+                                  decoration: isSelected
+                                      ? BoxDecoration(
+                                          color: primaryColor.withValues(
+                                            alpha: 0.12,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          border: Border.all(
+                                            color: primaryColor,
+                                            width: 1.5,
+                                          ),
+                                        )
+                                      : isToday
+                                      ? BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              primaryColor,
+                                              _darken(primaryColor),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: primaryColor.withValues(
+                                                alpha: 0.2,
+                                              ),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        )
+                                      : null,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '$dayNum',
+                                        style: TextStyle(
+                                          color: isToday
+                                              ? Colors.white
+                                              : isSelected
+                                              ? primaryColor
+                                              : AppColors.textPrimary,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      if (dayEvents.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 2,
+                                          ),
+                                          child: displayMode == 'band'
+                                              ? Column(
+                                                  children: dayEvents
+                                                      .take(2)
+                                                      .map(
+                                                        (e) => Container(
+                                                          height: 3,
+                                                          margin:
+                                                              const EdgeInsets.only(
+                                                                bottom: 1,
+                                                              ),
+                                                          decoration: BoxDecoration(
+                                                            color: isToday
+                                                                ? Colors.white
+                                                                      .withValues(
+                                                                        alpha:
+                                                                            0.8,
+                                                                      )
+                                                                : _eventColor(
+                                                                    e,
+                                                                  ),
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  2,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      )
+                                                      .toList(),
+                                                )
+                                              : Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: dayEvents
+                                                      .take(3)
+                                                      .map(
+                                                        (e) => Container(
+                                                          width: 4,
+                                                          height: 4,
+                                                          margin:
+                                                              const EdgeInsets.symmetric(
+                                                                horizontal: 1,
+                                                              ),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                                color: isToday
+                                                                    ? Colors
+                                                                          .white
+                                                                    : _eventColor(
+                                                                        e,
+                                                                      ),
+                                                                shape: BoxShape
+                                                                    .circle,
+                                                              ),
+                                                        ),
+                                                      )
+                                                      .toList(),
+                                                ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      _selectedDay != null
+                          ? DateFormat('d MMMM', 'fr_FR').format(_selectedDay!)
+                          : 'Événements du mois',
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ] else ...[
+                    Text(
+                      DateFormat('MMMM yyyy', 'fr_FR').format(_displayedMonth),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // Events
+                  if (eventsAsync.isLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else if (visibleEvents.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.event_outlined,
+                              size: 48,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Aucun événement',
+                              style: TextStyle(color: AppColors.textSecondary),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => EventFormScreen(
+                                    initialDate: _selectedDay ?? today,
+                                  ),
+                                ),
+                              ),
+                              icon: const Icon(Icons.add),
+                              label: const Text('Ajouter un événement'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else if (_viewMode == _ViewMode.agenda)
+                    ..._buildAgendaSections(visibleEvents, primaryColor)
+                  else
+                    ...visibleEvents.map(
+                      (e) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _EventCard(event: e),
-                      )),
+                      ),
+                    ),
 
-                const SizedBox(height: 24),
-              ]),
+                  const SizedBox(height: 24),
+                ]),
+              ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );
@@ -702,8 +817,11 @@ class _ToggleButton extends StatelessWidget {
   final String label;
   final bool active;
   final VoidCallback onTap;
-  const _ToggleButton(
-      {required this.label, required this.active, required this.onTap});
+  const _ToggleButton({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -719,21 +837,24 @@ class _ToggleButton extends StatelessWidget {
             boxShadow: active
                 ? const [
                     BoxShadow(
-                        color: Color(0x0F000000),
-                        blurRadius: 4,
-                        offset: Offset(0, 1))
+                      color: Color(0x0F000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
+                    ),
                   ]
                 : null,
           ),
           child: Center(
-            child: Text(label,
-                style: TextStyle(
-                  color: active
-                      ? Theme.of(context).colorScheme.primary
-                      : AppColors.textSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                )),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: active
+                    ? Theme.of(context).colorScheme.primary
+                    : AppColors.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ),
       ),
@@ -750,9 +871,9 @@ class _EventCard extends ConsumerWidget {
     final color = _eventColor(event);
 
     void openEdit() {
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => EventFormScreen(event: event),
-      ));
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => EventFormScreen(event: event)));
     }
 
     final cardContent = GestureDetector(
@@ -765,7 +886,10 @@ class _EventCard extends ConsumerWidget {
           border: Border.all(color: AppColors.border),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
+              color: Color(0x0A000000),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
         child: Row(
@@ -775,7 +899,9 @@ class _EventCard extends ConsumerWidget {
               width: 4,
               height: 56,
               decoration: BoxDecoration(
-                  color: color, borderRadius: BorderRadius.circular(2)),
+                color: color,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -785,64 +911,97 @@ class _EventCard extends ConsumerWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(event.title,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            )),
+                        child: Text(
+                          event.title,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
                       ),
                       if (event.recurrence != null)
                         const Padding(
                           padding: EdgeInsets.only(left: 4),
-                          child: Icon(Icons.repeat,
-                              size: 14, color: AppColors.textSecondary),
+                          child: Icon(
+                            Icons.repeat,
+                            size: 14,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Row(children: [
-                    const Icon(Icons.access_time,
-                        size: 14, color: AppColors.textSecondary),
-                    const SizedBox(width: 6),
-                    Text(
-                      event.endDate != null
-                          ? '${_timeLabel(event.startDate)} → ${_timeLabel(event.endDate!)}'
-                          : _timeLabel(event.startDate),
-                      style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 12),
-                    ),
-                  ]),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        event.endDate != null
+                            ? '${_timeLabel(event.startDate)} → ${_timeLabel(event.endDate!)}'
+                            : _timeLabel(event.startDate),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                   if (event.location != null) ...[
                     const SizedBox(height: 4),
-                    Row(children: [
-                      const Icon(Icons.place_outlined,
-                          size: 14, color: AppColors.textSecondary),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(event.location!,
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.place_outlined,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            event.location!,
                             style: const TextStyle(
-                                color: AppColors.textSecondary, fontSize: 12),
-                            overflow: TextOverflow.ellipsis),
-                      ),
-                    ]),
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                   if (event.creatorName != null) ...[
                     const SizedBox(height: 4),
-                    Row(children: [
-                      const Icon(Icons.person_outline,
-                          size: 14, color: AppColors.textSecondary),
-                      const SizedBox(width: 6),
-                      Text(event.creatorName!,
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.person_outline,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          event.creatorName!,
                           style: const TextStyle(
-                              color: AppColors.textSecondary, fontSize: 12)),
-                    ]),
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ],
               ),
             ),
-            const Icon(Icons.edit_outlined,
-                size: 16, color: AppColors.textSecondary),
+            const Icon(
+              Icons.edit_outlined,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
           ],
         ),
       ),
@@ -861,9 +1020,9 @@ class _AgendaEventCard extends ConsumerWidget {
     final color = _eventColor(event);
 
     return GestureDetector(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => EventFormScreen(event: event),
-      )),
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => EventFormScreen(event: event))),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -872,7 +1031,10 @@ class _AgendaEventCard extends ConsumerWidget {
           border: Border(left: BorderSide(color: color, width: 4)),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
+              color: Color(0x0A000000),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
         child: Column(
@@ -881,58 +1043,89 @@ class _AgendaEventCard extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(event.title,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      )),
+                  child: Text(
+                    event.title,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
                 if (event.recurrence != null)
                   const Padding(
                     padding: EdgeInsets.only(right: 6),
-                    child: Icon(Icons.repeat,
-                        size: 14, color: AppColors.textSecondary),
+                    child: Icon(
+                      Icons.repeat,
+                      size: 14,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                const Icon(Icons.edit_outlined,
-                    size: 16, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.edit_outlined,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
               ],
             ),
             const SizedBox(height: 8),
-            Row(children: [
-              const Icon(Icons.access_time,
-                  size: 14, color: AppColors.textSecondary),
-              const SizedBox(width: 6),
-              Text(
-                event.endDate != null
-                    ? '${_timeLabel(event.startDate)} → ${_timeLabel(event.endDate!)}'
-                    : _timeLabel(event.startDate),
-                style:
-                    const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              ),
-              if (event.location != null) ...[
-                const SizedBox(width: 16),
-                const Icon(Icons.place_outlined,
-                    size: 14, color: AppColors.textSecondary),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(event.location!,
-                      style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 12),
-                      overflow: TextOverflow.ellipsis),
+            Row(
+              children: [
+                const Icon(
+                  Icons.access_time,
+                  size: 14,
+                  color: AppColors.textSecondary,
                 ),
+                const SizedBox(width: 6),
+                Text(
+                  event.endDate != null
+                      ? '${_timeLabel(event.startDate)} → ${_timeLabel(event.endDate!)}'
+                      : _timeLabel(event.startDate),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                if (event.location != null) ...[
+                  const SizedBox(width: 16),
+                  const Icon(
+                    Icons.place_outlined,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      event.location!,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ],
-            ]),
+            ),
             if (event.creatorName != null) ...[
               const SizedBox(height: 4),
-              Row(children: [
-                const Icon(Icons.person_outline,
-                    size: 14, color: AppColors.textSecondary),
-                const SizedBox(width: 6),
-                Text(event.creatorName!,
+              Row(
+                children: [
+                  const Icon(
+                    Icons.person_outline,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    event.creatorName!,
                     style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 12)),
-              ]),
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ],
         ),

@@ -58,10 +58,17 @@ class NotesSettingsScreen extends ConsumerWidget {
                   selected: settings.notesThemeColor,
                   extraColors: settings.customColors,
                   hiddenBaseColors: settings.hiddenBaseColors,
-                  onSelect: (hex) => _update(ref, settings, settings.copyWith(notesThemeColor: hex)),
+                  onSelect: (hex) => _update(
+                    ref,
+                    settings,
+                    settings.copyWith(notesThemeColor: hex),
+                  ),
                   onAddColor: (hex) => _update(
                     ref,
-                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
+                    settings,
+                    settings.copyWith(
+                      customColors: [...settings.customColors, hex],
+                    ),
                   ),
                   onDeleteColor: (hex) =>
                       _update(ref, settings, settings.withColorRemoved(hex)),

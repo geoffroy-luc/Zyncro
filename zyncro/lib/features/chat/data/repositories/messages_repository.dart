@@ -190,8 +190,9 @@ class MessagesRepository implements IMessagesRepository {
     required int durationSeconds,
   }) async {
     final ref = _col(groupId).doc();
-    final storageRef = FirebaseStorage.instance
-        .ref('audio/$groupId/${ref.id}.m4a');
+    final storageRef = FirebaseStorage.instance.ref(
+      'audio/$groupId/${ref.id}.m4a',
+    );
     final snapshot = await storageRef.putFile(
       File(filePath),
       SettableMetadata(contentType: 'audio/m4a'),
@@ -231,8 +232,9 @@ class MessagesRepository implements IMessagesRepository {
     final isVideo = mimeType.startsWith('video/');
     final ext = filePath.split('.').last;
     final ref = _col(groupId).doc();
-    final storageRef = FirebaseStorage.instance
-        .ref('media/$groupId/${ref.id}.$ext');
+    final storageRef = FirebaseStorage.instance.ref(
+      'media/$groupId/${ref.id}.$ext',
+    );
     final snapshot = await storageRef.putFile(
       File(filePath),
       SettableMetadata(contentType: mimeType),
@@ -276,8 +278,9 @@ class MessagesRepository implements IMessagesRepository {
         final index = entry.key;
         final media = entry.value;
         final ext = media.filePath.split('.').last;
-        final storageRef = FirebaseStorage.instance
-            .ref('media/$groupId/${ref.id}_$index.$ext');
+        final storageRef = FirebaseStorage.instance.ref(
+          'media/$groupId/${ref.id}_$index.$ext',
+        );
         final snapshot = await storageRef.putFile(
           File(media.filePath),
           SettableMetadata(contentType: media.mimeType),

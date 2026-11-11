@@ -29,8 +29,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _loadNotifPref() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
-      setState(() =>
-          _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true);
+      setState(
+        () => _notificationsEnabled =
+            prefs.getBool('notifications_enabled') ?? true,
+      );
     }
   }
 
@@ -64,7 +66,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     if (confirmed == true && controller.text.trim().isNotEmpty) {
-      await ref.read(authRepositoryProvider).updateDisplayName(controller.text.trim());
+      await ref
+          .read(authRepositoryProvider)
+          .updateDisplayName(controller.text.trim());
       if (mounted) setState(() {});
     }
   }
@@ -157,9 +161,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final msg = e.toString();
       if (msg.contains('cancelled')) return;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $msg')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $msg')));
       }
     } finally {
       if (mounted) setState(() => _loadingPhoto = false);
@@ -262,7 +266,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Supprimer',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -272,9 +279,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         await ref.read(authRepositoryProvider).deleteAccount();
       } on Exception catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur : $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
         }
       }
     }
@@ -286,8 +293,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // Watch authStateProvider so the avatar refreshes if the Firebase Auth user changes.
-    final user = ref.watch(authStateProvider).asData?.value
-        ?? ref.read(authRepositoryProvider).currentUser;
+    final user =
+        ref.watch(authStateProvider).asData?.value ??
+        ref.read(authRepositoryProvider).currentUser;
     final userDoc = ref.watch(userDocProvider).asData?.value;
 
     final displayName = user?.displayName ?? user?.email ?? 'Utilisateur';
@@ -319,10 +327,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                       )
                     : GestureDetector(
-                        onTap: () => _showPhotoOptions(
-                          customPhotoUrl,
-                          showProfilePhoto,
-                        ),
+                        onTap: () =>
+                            _showPhotoOptions(customPhotoUrl, showProfilePhoto),
                         child: UserAvatar(
                           photoUrl: effectivePhotoUrl,
                           showPhoto: showProfilePhoto,
@@ -332,10 +338,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                 if (!_loadingPhoto)
                   GestureDetector(
-                    onTap: () => _showPhotoOptions(
-                      customPhotoUrl,
-                      showProfilePhoto,
-                    ),
+                    onTap: () =>
+                        _showPhotoOptions(customPhotoUrl, showProfilePhoto),
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
@@ -369,7 +373,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _SectionHeader(label: 'Informations'),
           _Card(
             child: ListTile(
-              leading: const Icon(Icons.person_outline, color: AppColors.primary),
+              leading: const Icon(
+                Icons.person_outline,
+                color: AppColors.primary,
+              ),
               title: const Text('Pseudo'),
               subtitle: Text(displayName),
               trailing: IconButton(
@@ -400,8 +407,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     showProfilePhoto
                         ? 'Les autres voient ta photo'
                         : 'Les autres voient tes initiales',
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: AppColors.textSecondary),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   trailing: _loadingPhoto
                       ? const SizedBox(
@@ -415,7 +423,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           activeThumbColor: AppColors.primary,
                         ),
                 ),
-                Divider(height: 1, indent: 16, endIndent: 16, color: AppColors.border),
+                Divider(
+                  height: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: AppColors.border,
+                ),
                 ListTile(
                   leading: Icon(
                     _notificationsEnabled
@@ -446,19 +459,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.logout_outlined,
-                      color: AppColors.textSecondary),
+                  leading: const Icon(
+                    Icons.logout_outlined,
+                    color: AppColors.textSecondary,
+                  ),
                   title: const Text('Se déconnecter'),
                   onTap: _signOut,
                 ),
                 Divider(
-                    height: 1,
-                    indent: 16,
-                    endIndent: 16,
-                    color: AppColors.border),
+                  height: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: AppColors.border,
+                ),
                 ListTile(
-                  leading:
-                      const Icon(Icons.delete_outline, color: AppColors.error),
+                  leading: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.error,
+                  ),
                   title: const Text(
                     'Supprimer le compte',
                     style: TextStyle(color: AppColors.error),
@@ -487,10 +505,10 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.textSecondary,
-              letterSpacing: 0.8,
-              fontWeight: FontWeight.w600,
-            ),
+          color: AppColors.textSecondary,
+          letterSpacing: 0.8,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

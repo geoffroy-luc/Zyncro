@@ -79,9 +79,9 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
       );
       if (file == null) return;
 
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('chat_backgrounds/$groupId.jpg');
+      final ref = FirebaseStorage.instance.ref().child(
+        'chat_backgrounds/$groupId.jpg',
+      );
       await ref.putFile(
         File(file.path),
         SettableMetadata(contentType: 'image/jpeg'),
@@ -89,16 +89,21 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
       final url = await ref.getDownloadURL();
 
       final settings =
-          this.ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+          this.ref.read(tabSettingsProvider).asData?.value ??
+          TabSettings.defaults;
       await _update(
-        settings, settings.copyWith(chatBackgroundType: 'image', chatBackgroundValue: url),
+        settings,
+        settings.copyWith(
+          chatBackgroundType: 'image',
+          chatBackgroundValue: url,
+        ),
       );
     } on Exception catch (e) {
       if (e.toString().contains('cancelled')) return;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     } finally {
       if (mounted) setState(() => _loadingBg = false);
@@ -149,9 +154,13 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                   onSelect: (hex) =>
                       _update(settings, settings.copyWith(chatThemeColor: hex)),
                   onAddColor: (hex) => _update(
-                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
+                    settings,
+                    settings.copyWith(
+                      customColors: [...settings.customColors, hex],
+                    ),
                   ),
-                  onDeleteColor: (hex) => _update(settings, settings.withColorRemoved(hex)),
+                  onDeleteColor: (hex) =>
+                      _update(settings, settings.withColorRemoved(hex)),
                 ),
               ),
             ],
@@ -183,10 +192,14 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                   onSelectionChanged: (Set<String> sel) async {
                     final type = sel.first;
                     if (type == 'none') {
-                      await _update(settings, settings.copyWith(clearChatBackground: true));
+                      await _update(
+                        settings,
+                        settings.copyWith(clearChatBackground: true),
+                      );
                     } else if (type == 'color') {
                       await _update(
-                        settings, settings.copyWith(
+                        settings,
+                        settings.copyWith(
                           chatBackgroundType: 'color',
                           chatBackgroundValue:
                               settings.chatBackgroundValue ?? '#F7F9FC',
@@ -207,20 +220,25 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                     extraColors: settings.customColors,
                     hiddenBaseColors: settings.hiddenBaseColors,
                     onSelect: (hex) => _update(
-                      settings, settings.copyWith(
+                      settings,
+                      settings.copyWith(
                         chatBackgroundType: 'color',
                         chatBackgroundValue: hex,
                       ),
                     ),
                     onAddColor: (hex) => _update(
-                      settings, settings.copyWith(customColors: [...settings.customColors, hex]),
+                      settings,
+                      settings.copyWith(
+                        customColors: [...settings.customColors, hex],
+                      ),
                     ),
                     onDeleteColor: (hex) =>
                         _update(settings, settings.withColorRemoved(hex)),
                   ),
                 ),
               ],
-              if (bgType == 'image' && settings.chatBackgroundValue != null) ...[
+              if (bgType == 'image' &&
+                  settings.chatBackgroundValue != null) ...[
                 const SettingsDivider(),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),

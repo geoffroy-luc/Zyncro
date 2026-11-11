@@ -31,7 +31,11 @@ class GroupSettingsScreen extends ConsumerStatefulWidget {
 class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
   bool _generating = false;
 
-  Future<void> _editMyPseudo(BuildContext context, String groupId, String currentPseudo) async {
+  Future<void> _editMyPseudo(
+    BuildContext context,
+    String groupId,
+    String currentPseudo,
+  ) async {
     final controller = TextEditingController(text: currentPseudo);
     final formKey = GlobalKey<FormState>();
     final currentUser = ref.read(authStateProvider).asData?.value;
@@ -53,11 +57,13 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
               if (v == null || v.trim().isEmpty) return 'Champ requis';
               if (v.trim().length > 30) return '30 caractères maximum';
               final trimmed = v.trim().toLowerCase();
-              final isDuplicate = members.any((m) =>
-                m.uid != currentUser?.uid &&
-                m.displayName.toLowerCase() == trimmed,
+              final isDuplicate = members.any(
+                (m) =>
+                    m.uid != currentUser?.uid &&
+                    m.displayName.toLowerCase() == trimmed,
               );
-              if (isDuplicate) return 'Ce pseudo est déjà utilisé dans ce groupe';
+              if (isDuplicate)
+                return 'Ce pseudo est déjà utilisé dans ce groupe';
               return null;
             },
           ),
@@ -69,7 +75,8 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           ),
           FilledButton(
             onPressed: () {
-              if (formKey.currentState!.validate()) Navigator.pop(context, true);
+              if (formKey.currentState!.validate())
+                Navigator.pop(context, true);
             },
             child: const Text('Enregistrer'),
           ),
@@ -85,11 +92,9 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
     if (user == null) return;
 
     try {
-      await ref.read(groupsRepositoryProvider).updateMemberDisplayName(
-        groupId,
-        user.uid,
-        newPseudo,
-      );
+      await ref
+          .read(groupsRepositoryProvider)
+          .updateMemberDisplayName(groupId, user.uid, newPseudo);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -99,9 +104,16 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
     }
   }
 
-  Future<void> _editGroupInfo(BuildContext context, String groupId, String currentName, String? currentDescription) async {
+  Future<void> _editGroupInfo(
+    BuildContext context,
+    String groupId,
+    String currentName,
+    String? currentDescription,
+  ) async {
     final nameController = TextEditingController(text: currentName);
-    final descController = TextEditingController(text: currentDescription ?? '');
+    final descController = TextEditingController(
+      text: currentDescription ?? '',
+    );
     final formKey = GlobalKey<FormState>();
 
     final confirmed = await showDialog<bool>(
@@ -127,12 +139,15 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: descController,
-                decoration: const InputDecoration(labelText: 'Description (optionnel)'),
+                decoration: const InputDecoration(
+                  labelText: 'Description (optionnel)',
+                ),
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 150,
                 maxLines: 2,
                 validator: (v) {
-                  if (v != null && v.trim().length > 150) return '150 caractères maximum';
+                  if (v != null && v.trim().length > 150)
+                    return '150 caractères maximum';
                   return null;
                 },
               ),
@@ -146,7 +161,8 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           ),
           FilledButton(
             onPressed: () {
-              if (formKey.currentState!.validate()) Navigator.pop(context, true);
+              if (formKey.currentState!.validate())
+                Navigator.pop(context, true);
             },
             child: const Text('Enregistrer'),
           ),
@@ -157,14 +173,20 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
     if (confirmed != true) return;
 
     try {
-      await ref.read(groupsRepositoryProvider).updateGroupInfo(
-        groupId,
-        name: nameController.text.trim(),
-        description: descController.text.trim().isEmpty ? null : descController.text.trim(),
-      );
+      await ref
+          .read(groupsRepositoryProvider)
+          .updateGroupInfo(
+            groupId,
+            name: nameController.text.trim(),
+            description: descController.text.trim().isEmpty
+                ? null
+                : descController.text.trim(),
+          );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     }
   }
@@ -199,9 +221,9 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
       await ref.read(groupsRepositoryProvider).generateInviteCode(groupId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     } finally {
       if (mounted) setState(() => _generating = false);
@@ -339,10 +361,14 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                                 vertical: 12,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.06),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.06,
+                                ),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: AppColors.primary.withValues(alpha: 0.2),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.2,
+                                  ),
                                 ),
                               ),
                               child: Text(
@@ -364,9 +390,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                                 ClipboardData(text: group.inviteCode!),
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Code copié !'),
-                                ),
+                                const SnackBar(content: Text('Code copié !')),
                               );
                             },
                             icon: const Icon(Icons.copy),
@@ -437,8 +461,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                         color: avatarColorForUid(member.uid),
                       ),
                       title: Text(
-                        member.displayName +
-                            (isCurrentUser ? ' (moi)' : ''),
+                        member.displayName + (isCurrentUser ? ' (moi)' : ''),
                         style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
                       subtitle: Text(
@@ -452,9 +475,17 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                       ),
                       trailing: isCurrentUser
                           ? IconButton(
-                              icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.textSecondary),
+                              icon: const Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: AppColors.textSecondary,
+                              ),
                               tooltip: 'Changer mon pseudo',
-                              onPressed: () => _editMyPseudo(context, group.id, member.displayName),
+                              onPressed: () => _editMyPseudo(
+                                context,
+                                group.id,
+                                member.displayName,
+                              ),
                             )
                           : isOwner && !member.isOwner
                           ? PopupMenuButton<String>(
@@ -465,7 +496,11 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                               ),
                               onSelected: (action) {
                                 if (action == 'transfer') {
-                                  _confirmTransferOwnership(context, ref, member);
+                                  _confirmTransferOwnership(
+                                    context,
+                                    ref,
+                                    member,
+                                  );
                                 } else if (action == 'remove') {
                                   _confirmRemove(context, ref, member);
                                 }
@@ -475,7 +510,10 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                                   value: 'transfer',
                                   child: Row(
                                     children: [
-                                      Icon(Icons.workspace_premium_outlined, size: 18),
+                                      Icon(
+                                        Icons.workspace_premium_outlined,
+                                        size: 18,
+                                      ),
                                       SizedBox(width: 10),
                                       Text('Nommer propriétaire'),
                                     ],
@@ -485,9 +523,18 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
                                   value: 'remove',
                                   child: Row(
                                     children: [
-                                      Icon(Icons.person_remove_outlined, size: 18, color: AppColors.error),
+                                      Icon(
+                                        Icons.person_remove_outlined,
+                                        size: 18,
+                                        color: AppColors.error,
+                                      ),
                                       SizedBox(width: 10),
-                                      Text('Retirer du groupe', style: TextStyle(color: AppColors.error)),
+                                      Text(
+                                        'Retirer du groupe',
+                                        style: TextStyle(
+                                          color: AppColors.error,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -507,23 +554,25 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           TextButton.icon(
             onPressed: isOwner
                 ? () => showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Impossible de quitter'),
-                        content: const Text(
-                          'Tu es propriétaire du groupe. Transfère la propriété à un autre membre avant de quitter.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('OK'),
-                          ),
-                        ],
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Impossible de quitter'),
+                      content: const Text(
+                        'Tu es propriétaire du groupe. Transfère la propriété à un autre membre avant de quitter.',
                       ),
-                    )
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  )
                 : () => _confirmLeave(context, ref, currentUser?.uid),
             style: TextButton.styleFrom(
-              foregroundColor: isOwner ? AppColors.textSecondary : AppColors.error,
+              foregroundColor: isOwner
+                  ? AppColors.textSecondary
+                  : AppColors.error,
             ),
             icon: const Icon(Icons.exit_to_app_outlined),
             label: const Text('Quitter ce groupe'),
@@ -532,7 +581,8 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
           if (isOwner) ...[
             const Divider(height: 32),
             TextButton.icon(
-              onPressed: () => _confirmDeleteGroup(context, ref, group.id, group.inviteCode),
+              onPressed: () =>
+                  _confirmDeleteGroup(context, ref, group.id, group.inviteCode),
               style: TextButton.styleFrom(foregroundColor: AppColors.error),
               icon: const Icon(Icons.delete_forever_outlined),
               label: const Text('Supprimer le groupe'),
@@ -579,9 +629,9 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
       if (context.mounted) context.go('/groups');
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     }
   }
@@ -617,26 +667,28 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
     if (groupId == null || currentUser == null) return;
 
     try {
-      await ref.read(groupsRepositoryProvider).transferOwnership(
-        groupId,
-        currentUser.uid,
-        newOwner.uid,
-      );
-      final ownerName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+      await ref
+          .read(groupsRepositoryProvider)
+          .transferOwnership(groupId, currentUser.uid, newOwner.uid);
+      final ownerName =
+          ref.read(currentMemberProvider).asData?.value?.displayName ??
           currentUser.displayName ??
           currentUser.email ??
           'Quelqu\'un';
-      ref.read(messagesRepositoryProvider).sendSystemMessage(
-        groupId: groupId,
-        userId: currentUser.uid,
-        content: '👑 $ownerName a transféré la propriété du groupe à ${newOwner.displayName}',
-        notifScreen: 'chat',
-      );
+      ref
+          .read(messagesRepositoryProvider)
+          .sendSystemMessage(
+            groupId: groupId,
+            userId: currentUser.uid,
+            content:
+                '👑 $ownerName a transféré la propriété du groupe à ${newOwner.displayName}',
+            notifScreen: 'chat',
+          );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     }
   }
@@ -650,9 +702,7 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Retirer le membre'),
-        content: Text(
-          'Retirer ${member.displayName} du groupe ?',
-        ),
+        content: Text('Retirer ${member.displayName} du groupe ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -673,16 +723,19 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
     final currentUser = ref.read(authStateProvider).asData?.value;
     await ref.read(groupsRepositoryProvider).removeMember(groupId, member.uid);
     if (currentUser != null) {
-      final ownerName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+      final ownerName =
+          ref.read(currentMemberProvider).asData?.value?.displayName ??
           currentUser.displayName ??
           currentUser.email ??
           'Quelqu\'un';
-      ref.read(messagesRepositoryProvider).sendSystemMessage(
-        groupId: groupId,
-        userId: currentUser.uid,
-        content: '👋 $ownerName a retiré ${member.displayName} du groupe',
-        notifScreen: 'chat',
-      );
+      ref
+          .read(messagesRepositoryProvider)
+          .sendSystemMessage(
+            groupId: groupId,
+            userId: currentUser.uid,
+            content: '👋 $ownerName a retiré ${member.displayName} du groupe',
+            notifScreen: 'chat',
+          );
     }
   }
 
@@ -718,31 +771,35 @@ class _GroupSettingsScreenState extends ConsumerState<GroupSettingsScreen> {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
     final user = ref.read(authStateProvider).asData?.value;
-    final userName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+    final userName =
+        ref.read(currentMemberProvider).asData?.value?.displayName ??
         user?.displayName ??
         user?.email ??
         'Quelqu\'un';
 
     try {
       // Message inclus dans le même batch que le leave → atomique
-      await ref.read(groupsRepositoryProvider).leaveGroup(
-        groupId,
-        userId,
-        systemMessage: '👋 $userName a quitté le groupe',
-      );
+      await ref
+          .read(groupsRepositoryProvider)
+          .leaveGroup(
+            groupId,
+            userId,
+            systemMessage: '👋 $userName a quitté le groupe',
+          );
       await ref.read(selectedGroupIdProvider.notifier).select(null);
       if (context.mounted) context.go('/groups');
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Impossible de quitter le groupe. Vérifie les règles Firestore.'),
+            content: Text(
+              'Impossible de quitter le groupe. Vérifie les règles Firestore.',
+            ),
           ),
         );
       }
     }
   }
-
 }
 
 // ── Section widget ────────────────────────────────────────────────────────────

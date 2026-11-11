@@ -22,9 +22,9 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
   List<AssetEntity> _assets = [];
   final List<AssetEntity> _selected = [];
 
-  bool _loading = true;         // chargement initial
-  bool _loadingMore = false;    // chargement de la page suivante
-  bool _hasMore = true;         // encore des assets à charger
+  bool _loading = true; // chargement initial
+  bool _loadingMore = false; // chargement de la page suivante
+  bool _hasMore = true; // encore des assets à charger
   int _currentPage = 0;
 
   bool _permissionDenied = false;
@@ -57,7 +57,10 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
     final permission = await PhotoManager.requestPermissionExtend();
     if (!permission.hasAccess) {
       if (mounted) {
-        setState(() { _loading = false; _permissionDenied = true; });
+        setState(() {
+          _loading = false;
+          _permissionDenied = true;
+        });
       }
       return;
     }
@@ -65,9 +68,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
     final limited = permission == PermissionState.limited;
 
     final filterOption = FilterOptionGroup(
-      orders: [
-        const OrderOption(type: OrderOptionType.createDate, asc: false),
-      ],
+      orders: [const OrderOption(type: OrderOptionType.createDate, asc: false)],
     );
 
     final paths = await PhotoManager.getAssetPathList(
@@ -76,7 +77,11 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
       filterOption: filterOption,
     );
     if (paths.isEmpty) {
-      if (mounted) setState(() { _loading = false; _isLimited = limited; });
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _isLimited = limited;
+        });
       return;
     }
 
@@ -84,10 +89,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
     _currentPage = 0;
     _hasMore = true;
 
-    final assets = await _album!.getAssetListPaged(
-      page: 0,
-      size: _kPageSize,
-    );
+    final assets = await _album!.getAssetListPaged(page: 0, size: _kPageSize);
 
     if (mounted) {
       setState(() {
@@ -124,7 +126,11 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
     if (Platform.isIOS) {
       await PhotoManager.presentLimited();
       // Recharger après que l'utilisateur a modifié sa sélection
-      setState(() { _loading = true; _assets = []; _selected.clear(); });
+      setState(() {
+        _loading = true;
+        _assets = [];
+        _selected.clear();
+      });
       await _init();
     } else {
       await PhotoManager.openSetting();
@@ -149,7 +155,8 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
     for (final asset in _selected) {
       final file = await asset.originFile;
       if (file != null) {
-        final mimeType = asset.mimeType ??
+        final mimeType =
+            asset.mimeType ??
             (asset.type == AssetType.video ? 'video/mp4' : 'image/jpeg');
         result.add((path: file.path, mimeType: mimeType));
       }
@@ -221,236 +228,250 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
               child: CircularProgressIndicator(color: Color(0xFFE85D75)),
             )
           : _permissionDenied
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.lock_outline,
-                          color: Colors.white54, size: 52),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Accès à la galerie refusé',
-                        style: TextStyle(color: Colors.white, fontSize: 15),
-                      ),
-                      const SizedBox(height: 12),
-                      TextButton(
-                        onPressed: PhotoManager.openSetting,
-                        child: const Text(
-                          'Ouvrir les réglages',
-                          style: TextStyle(color: Color(0xFFE85D75)),
-                        ),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.lock_outline,
+                    color: Colors.white54,
+                    size: 52,
                   ),
-                )
-              : Column(
-                  children: [
-                    // Bannière accès limité (iOS / Android 14+)
-                    if (_isLimited)
-                      Container(
-                        width: double.infinity,
-                        color: const Color(0xFF1C1C1E),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.photo_library_outlined,
-                                color: Colors.white70, size: 18),
-                            const SizedBox(width: 10),
-                            const Expanded(
-                              child: Text(
-                                'Accès limité à certaines photos',
-                                style: TextStyle(
-                                    color: Colors.white70, fontSize: 13),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: _presentLimitedPicker,
-                              child: Text(
-                                Platform.isIOS ? 'Modifier' : 'Réglages',
-                                style: const TextStyle(
-                                  color: Color(0xFFE85D75),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            if (Platform.isIOS) ...[
-                              const SizedBox(width: 12),
-                              GestureDetector(
-                                onTap: PhotoManager.openSetting,
-                                child: const Text(
-                                  'Tout autoriser',
-                                  style: TextStyle(
-                                    color: Color(0xFFE85D75),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Accès à la galerie refusé',
+                    style: TextStyle(color: Colors.white, fontSize: 15),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: PhotoManager.openSetting,
+                    child: const Text(
+                      'Ouvrir les réglages',
+                      style: TextStyle(color: Color(0xFFE85D75)),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Column(
+              children: [
+                // Bannière accès limité (iOS / Android 14+)
+                if (_isLimited)
+                  Container(
+                    width: double.infinity,
+                    color: const Color(0xFF1C1C1E),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.photo_library_outlined,
+                          color: Colors.white70,
+                          size: 18,
                         ),
-                      ),
-
-                    // Grille des médias
-                    Expanded(
-                      child: _assets.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'Aucun média',
-                                style: TextStyle(color: Colors.white54),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Accès limité à certaines photos',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: _presentLimitedPicker,
+                          child: Text(
+                            Platform.isIOS ? 'Modifier' : 'Réglages',
+                            style: const TextStyle(
+                              color: Color(0xFFE85D75),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (Platform.isIOS) ...[
+                          const SizedBox(width: 12),
+                          GestureDetector(
+                            onTap: PhotoManager.openSetting,
+                            child: const Text(
+                              'Tout autoriser',
+                              style: TextStyle(
+                                color: Color(0xFFE85D75),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
                               ),
-                            )
-                          : GridView.builder(
-                              controller: _scrollController,
-                              padding: EdgeInsets.zero,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                // Grille des médias
+                Expanded(
+                  child: _assets.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Aucun média',
+                            style: TextStyle(color: Colors.white54),
+                          ),
+                        )
+                      : GridView.builder(
+                          controller: _scrollController,
+                          padding: EdgeInsets.zero,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 3,
                                 mainAxisSpacing: 1.5,
                                 crossAxisSpacing: 1.5,
                               ),
-                              // +1 pour le loader en bas si _loadingMore
-                              itemCount:
-                                  _assets.length + (_loadingMore ? 1 : 0),
-                              itemBuilder: (context, index) {
-                                // Indicateur de chargement en bas de grille
-                                if (index == _assets.length) {
-                                  return const Center(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(16),
-                                      child: SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                          color: Color(0xFFE85D75),
-                                          strokeWidth: 2,
+                          // +1 pour le loader en bas si _loadingMore
+                          itemCount: _assets.length + (_loadingMore ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            // Indicateur de chargement en bas de grille
+                            if (index == _assets.length) {
+                              return const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFFE85D75),
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+
+                            final asset = _assets[index];
+                            final selIdx = _selected.indexOf(asset);
+                            final isSelected = selIdx >= 0;
+                            final maxReached =
+                                _selected.length >= widget.maxCount;
+
+                            return GestureDetector(
+                              onTap: () {
+                                if (!isSelected && maxReached) return;
+                                _toggle(asset);
+                              },
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  // Thumbnail
+                                  _AssetThumbnail(asset: asset),
+
+                                  // Overlay grisé si quota atteint et non sélectionné
+                                  if (!isSelected && maxReached)
+                                    Container(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+
+                                  // Overlay sombre si sélectionné
+                                  if (isSelected)
+                                    Container(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                    ),
+
+                                  // Durée vidéo en bas à gauche
+                                  if (asset.type == AssetType.video)
+                                    Positioned(
+                                      bottom: 5,
+                                      left: 5,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.6,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.videocam,
+                                              color: Colors.white,
+                                              size: 11,
+                                            ),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              _fmtDuration(asset.videoDuration),
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
-                                  );
-                                }
 
-                                final asset = _assets[index];
-                                final selIdx = _selected.indexOf(asset);
-                                final isSelected = selIdx >= 0;
-                                final maxReached =
-                                    _selected.length >= widget.maxCount;
-
-                                return GestureDetector(
-                                  onTap: () {
-                                    if (!isSelected && maxReached) return;
-                                    _toggle(asset);
-                                  },
-                                  child: Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      // Thumbnail
-                                      _AssetThumbnail(asset: asset),
-
-                                      // Overlay grisé si quota atteint et non sélectionné
-                                      if (!isSelected && maxReached)
-                                        Container(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.5),
-                                        ),
-
-                                      // Overlay sombre si sélectionné
-                                      if (isSelected)
-                                        Container(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.2),
-                                        ),
-
-                                      // Durée vidéo en bas à gauche
-                                      if (asset.type == AssetType.video)
-                                        Positioned(
-                                          bottom: 5,
-                                          left: 5,
-                                          child: Container(
-                                            padding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 4,
-                                                    vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: Colors.black
-                                                  .withValues(alpha: 0.6),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Icon(Icons.videocam,
-                                                    color: Colors.white,
-                                                    size: 11),
-                                                const SizedBox(width: 2),
-                                                Text(
-                                                  _fmtDuration(
-                                                      asset.videoDuration),
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 10,
-                                                    fontWeight:
-                                                        FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-                                      // Badge de sélection (cercle haut-droite)
-                                      Positioned(
-                                        top: 6,
-                                        right: 6,
-                                        child: AnimatedContainer(
-                                          duration: const Duration(
-                                              milliseconds: 120),
-                                          width: 24,
-                                          height: 24,
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? const Color(0xFFE85D75)
-                                                : Colors.transparent,
-                                            border: Border.all(
-                                              color: Colors.white,
-                                              width: 2,
-                                            ),
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black
-                                                    .withValues(alpha: 0.3),
-                                                blurRadius: 3,
-                                              ),
-                                            ],
-                                          ),
-                                          child: isSelected
-                                              ? Center(
-                                                  child: Text(
-                                                    '${selIdx + 1}',
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                )
-                                              : null,
-                                        ),
+                                  // Badge de sélection (cercle haut-droite)
+                                  Positioned(
+                                    top: 6,
+                                    right: 6,
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 120,
                                       ),
-                                    ],
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? const Color(0xFFE85D75)
+                                            : Colors.transparent,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2,
+                                        ),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            blurRadius: 3,
+                                          ),
+                                        ],
+                                      ),
+                                      child: isSelected
+                                          ? Center(
+                                              child: Text(
+                                                '${selIdx + 1}',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                    ),
                                   ),
-                                );
-                              },
-                            ),
-                    ),
-                  ],
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                 ),
+              ],
+            ),
     );
   }
 }
@@ -497,7 +518,9 @@ class _AssetThumbnailState extends State<_AssetThumbnail> {
             width: 18,
             height: 18,
             child: CircularProgressIndicator(
-                strokeWidth: 1.5, color: Colors.white38),
+              strokeWidth: 1.5,
+              color: Colors.white38,
+            ),
           ),
         ),
       );

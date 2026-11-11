@@ -40,7 +40,9 @@ class SelectedGroupIdNotifier extends AsyncNotifier<String?> {
 
     // Vérifie une fois si le groupe stocké existe toujours
     final initialGroups = ref.read(userGroupsProvider).asData?.value;
-    if (storedId != null && initialGroups != null && !initialGroups.any((g) => g.id == storedId)) {
+    if (storedId != null &&
+        initialGroups != null &&
+        !initialGroups.any((g) => g.id == storedId)) {
       await prefs.remove(_kGroupIdKey);
       await prefs.remove(_kGroupUserKey);
       return null;
@@ -51,7 +53,9 @@ class SelectedGroupIdNotifier extends AsyncNotifier<String?> {
     ref.listen(userGroupsProvider, (_, next) {
       final groups = next.asData?.value;
       final currentId = state.asData?.value;
-      if (currentId != null && groups != null && !groups.any((g) => g.id == currentId)) {
+      if (currentId != null &&
+          groups != null &&
+          !groups.any((g) => g.id == currentId)) {
         select(null);
       }
     });
@@ -141,14 +145,13 @@ final currentMemberProvider = StreamProvider<GroupMember?>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
   final userId = ref.watch(authStateProvider).asData?.value?.uid;
   if (groupId == null || userId == null) return Stream.value(null);
-  return ref
-      .watch(groupsRepositoryProvider)
-      .watchMembers(groupId)
-      .map((members) {
-        try {
-          return members.firstWhere((m) => m.uid == userId);
-        } catch (_) {
-          return null;
-        }
-      });
+  return ref.watch(groupsRepositoryProvider).watchMembers(groupId).map((
+    members,
+  ) {
+    try {
+      return members.firstWhere((m) => m.uid == userId);
+    } catch (_) {
+      return null;
+    }
+  });
 });

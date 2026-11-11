@@ -38,11 +38,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _error = null;
     });
     try {
-      await ref.read(authRepositoryProvider).registerWithEmail(
-        _emailController.text.trim(),
-        _passwordController.text,
-        _nameController.text.trim(),
-      );
+      await ref
+          .read(authRepositoryProvider)
+          .registerWithEmail(
+            _emailController.text.trim(),
+            _passwordController.text,
+            _nameController.text.trim(),
+          );
     } on FirebaseAuthException catch (e) {
       setState(() => _error = _mapError(e.code));
     } finally {
@@ -75,10 +77,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 48),
-                Text(
-                  'Créer un compte',
-                  style: theme.textTheme.headlineMedium,
-                ),
+                Text('Créer un compte', style: theme.textTheme.headlineMedium),
                 const SizedBox(height: 8),
                 Text(
                   'Rejoins ou crée ton espace partagé',

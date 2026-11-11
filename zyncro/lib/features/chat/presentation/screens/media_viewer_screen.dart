@@ -16,9 +16,12 @@ class MediaDownloader {
   static Future<void> downloadImage(BuildContext context, String url) async {
     try {
       final response = await http.get(Uri.parse(url));
-      if (response.statusCode != 200) throw Exception('HTTP ${response.statusCode}');
+      if (response.statusCode != 200)
+        throw Exception('HTTP ${response.statusCode}');
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/zyncro_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      final file = File(
+        '${dir.path}/zyncro_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
       await file.writeAsBytes(response.bodyBytes);
       file.setLastModifiedSync(DateTime.now());
       await Gal.putImage(file.path);
@@ -29,9 +32,9 @@ class MediaDownloader {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur téléchargement : $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur téléchargement : $e')));
       }
     }
   }
@@ -39,9 +42,12 @@ class MediaDownloader {
   static Future<void> downloadVideo(BuildContext context, String url) async {
     try {
       final response = await http.get(Uri.parse(url));
-      if (response.statusCode != 200) throw Exception('HTTP ${response.statusCode}');
+      if (response.statusCode != 200)
+        throw Exception('HTTP ${response.statusCode}');
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/zyncro_${DateTime.now().millisecondsSinceEpoch}.mp4');
+      final file = File(
+        '${dir.path}/zyncro_${DateTime.now().millisecondsSinceEpoch}.mp4',
+      );
       await file.writeAsBytes(response.bodyBytes);
       file.setLastModifiedSync(DateTime.now());
       await Gal.putVideo(file.path);
@@ -52,9 +58,9 @@ class MediaDownloader {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur téléchargement : $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur téléchargement : $e')));
       }
     }
   }
@@ -67,7 +73,12 @@ class ImageViewerScreen extends StatefulWidget {
   final String? senderName;
   final DateTime? sentAt;
 
-  const ImageViewerScreen({super.key, required this.url, this.senderName, this.sentAt});
+  const ImageViewerScreen({
+    super.key,
+    required this.url,
+    this.senderName,
+    this.sentAt,
+  });
 
   @override
   State<ImageViewerScreen> createState() => _ImageViewerScreenState();
@@ -127,13 +138,17 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                         child: CircularProgressIndicator(
                           value: progress.expectedTotalBytes != null
                               ? progress.cumulativeBytesLoaded /
-                                  progress.expectedTotalBytes!
+                                    progress.expectedTotalBytes!
                               : null,
                           color: Colors.white,
                         ),
                       ),
                 errorBuilder: (_, __, ___) => const Center(
-                  child: Icon(Icons.broken_image, color: Colors.white54, size: 64),
+                  child: Icon(
+                    Icons.broken_image,
+                    color: Colors.white54,
+                    size: 64,
+                  ),
                 ),
               ),
             ),
@@ -160,7 +175,10 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                         Expanded(
@@ -204,7 +222,10 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                           )
                         else
                           IconButton(
-                            icon: const Icon(Icons.download_outlined, color: Colors.white),
+                            icon: const Icon(
+                              Icons.download_outlined,
+                              color: Colors.white,
+                            ),
                             tooltip: 'Enregistrer',
                             onPressed: _download,
                           ),
@@ -227,7 +248,12 @@ class VideoViewerScreen extends StatefulWidget {
   final String? senderName;
   final DateTime? sentAt;
 
-  const VideoViewerScreen({super.key, required this.url, this.senderName, this.sentAt});
+  const VideoViewerScreen({
+    super.key,
+    required this.url,
+    this.senderName,
+    this.sentAt,
+  });
 
   @override
   State<VideoViewerScreen> createState() => _VideoViewerScreenState();
@@ -334,7 +360,10 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                         Expanded(
@@ -378,7 +407,10 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
                           )
                         else
                           IconButton(
-                            icon: const Icon(Icons.download_outlined, color: Colors.white),
+                            icon: const Icon(
+                              Icons.download_outlined,
+                              color: Colors.white,
+                            ),
                             onPressed: _download,
                           ),
                       ],
@@ -415,14 +447,19 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
                             size: 28,
                           ),
                           onPressed: () {
-                            isPlaying ? _controller.pause() : _controller.play();
+                            isPlaying
+                                ? _controller.pause()
+                                : _controller.play();
                           },
                         ),
 
                         // Temps écoulé
                         Text(
                           _fmtDuration(position),
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
                         ),
 
                         // Slider seek
@@ -452,7 +489,10 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
                         // Durée totale
                         Text(
                           _fmtDuration(duration),
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -622,7 +662,10 @@ class _MediaSwipeViewerState extends State<MediaSwipeViewer> {
                       ),
                       Text(
                         '${_currentIndex + 1} / ${widget.messages.length}',
-                        style: const TextStyle(color: Colors.white70, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       if (_downloading)
@@ -639,8 +682,10 @@ class _MediaSwipeViewerState extends State<MediaSwipeViewer> {
                         )
                       else
                         IconButton(
-                          icon: const Icon(Icons.download_outlined,
-                              color: Colors.white),
+                          icon: const Icon(
+                            Icons.download_outlined,
+                            color: Colors.white,
+                          ),
                           onPressed: _download,
                         ),
                     ],
@@ -678,7 +723,7 @@ class _SwipeImagePage extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: progress.expectedTotalBytes != null
                         ? progress.cumulativeBytesLoaded /
-                            progress.expectedTotalBytes!
+                              progress.expectedTotalBytes!
                         : null,
                     color: Colors.white,
                   ),
@@ -807,20 +852,24 @@ class _SwipeVideoPageState extends State<_SwipeVideoPage> {
                           color: Colors.white,
                           size: 28,
                         ),
-                        onPressed: () =>
-                            isPlaying ? _controller.pause() : _controller.play(),
+                        onPressed: () => isPlaying
+                            ? _controller.pause()
+                            : _controller.play(),
                       ),
                       Text(
                         _fmtDuration(position),
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
                       ),
                       Expanded(
                         child: Slider(
                           value: duration.inMilliseconds > 0
-                              ? position.inMilliseconds
-                                  .toDouble()
-                                  .clamp(0, duration.inMilliseconds.toDouble())
+                              ? position.inMilliseconds.toDouble().clamp(
+                                  0,
+                                  duration.inMilliseconds.toDouble(),
+                                )
                               : 0,
                           min: 0,
                           max: duration.inMilliseconds > 0
@@ -829,14 +878,17 @@ class _SwipeVideoPageState extends State<_SwipeVideoPage> {
                           activeColor: Colors.white,
                           inactiveColor: Colors.white38,
                           thumbColor: Colors.white,
-                          onChanged: (v) => _controller
-                              .seekTo(Duration(milliseconds: v.toInt())),
+                          onChanged: (v) => _controller.seekTo(
+                            Duration(milliseconds: v.toInt()),
+                          ),
                         ),
                       ),
                       Text(
                         _fmtDuration(duration),
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -862,7 +914,7 @@ class AlbumSwipeViewer extends StatefulWidget {
   final List<Map<String, dynamic>> medias;
   final int initialIndex;
   final String? senderName; // fallback si l'item n'a pas 'senderName'
-  final DateTime? sentAt;   // fallback si l'item n'a pas 'sentAt'
+  final DateTime? sentAt; // fallback si l'item n'a pas 'sentAt'
 
   const AlbumSwipeViewer({
     super.key,
@@ -975,43 +1027,50 @@ class _AlbumSwipeViewerState extends State<AlbumSwipeViewer> {
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                       Expanded(
-                        child: Builder(builder: (_) {
-                          final cur = widget.medias[_currentIndex];
-                          final name = cur['senderName'] as String? ?? widget.senderName;
-                          final sentAtMs = cur['sentAt'] as int?;
-                          final sentAt = sentAtMs != null
-                              ? DateTime.fromMillisecondsSinceEpoch(sentAtMs)
-                              : widget.sentAt;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (name?.isNotEmpty == true)
-                                Text(
-                                  name!,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                        child: Builder(
+                          builder: (_) {
+                            final cur = widget.medias[_currentIndex];
+                            final name =
+                                cur['senderName'] as String? ??
+                                widget.senderName;
+                            final sentAtMs = cur['sentAt'] as int?;
+                            final sentAt = sentAtMs != null
+                                ? DateTime.fromMillisecondsSinceEpoch(sentAtMs)
+                                : widget.sentAt;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (name?.isNotEmpty == true)
+                                  Text(
+                                    name!,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              if (sentAt != null)
-                                Text(
-                                  _formatDateTime(sentAt),
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
+                                if (sentAt != null)
+                                  Text(
+                                    _formatDateTime(sentAt),
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                            ],
-                          );
-                        }),
+                              ],
+                            );
+                          },
+                        ),
                       ),
                       Text(
                         '${_currentIndex + 1} / ${widget.medias.length}',
-                        style: const TextStyle(color: Colors.white70, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       if (_downloading)
@@ -1028,8 +1087,10 @@ class _AlbumSwipeViewerState extends State<AlbumSwipeViewer> {
                         )
                       else
                         IconButton(
-                          icon: const Icon(Icons.download_outlined,
-                              color: Colors.white),
+                          icon: const Icon(
+                            Icons.download_outlined,
+                            color: Colors.white,
+                          ),
                           onPressed: _download,
                         ),
                     ],

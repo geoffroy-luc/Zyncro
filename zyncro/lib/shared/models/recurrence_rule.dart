@@ -18,21 +18,20 @@ class RecurrenceRule {
   });
 
   Map<String, dynamic> toMap() => {
-        'frequency': frequency.name,
-        'endType': endType.name,
-        if (count != null) 'count': count,
-        if (until != null) 'until': Timestamp.fromDate(until!),
-      };
+    'frequency': frequency.name,
+    'endType': endType.name,
+    if (count != null) 'count': count,
+    if (until != null) 'until': Timestamp.fromDate(until!),
+  };
 
   factory RecurrenceRule.fromMap(Map<String, dynamic> map) {
     return RecurrenceRule(
       frequency: RecurrenceFrequency.values.byName(map['frequency'] as String),
-      endType: RecurrenceEndType.values
-          .byName((map['endType'] as String?) ?? 'forever'),
+      endType: RecurrenceEndType.values.byName(
+        (map['endType'] as String?) ?? 'forever',
+      ),
       count: map['count'] as int?,
-      until: map['until'] != null
-          ? (map['until'] as Timestamp).toDate()
-          : null,
+      until: map['until'] != null ? (map['until'] as Timestamp).toDate() : null,
     );
   }
 

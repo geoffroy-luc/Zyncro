@@ -58,24 +58,26 @@ class ChatMessagesNotifier extends AsyncNotifier<ChatMessagesState> {
     final repo = ref.read(messagesRepositoryProvider);
     final completer = Completer<List<Message>>();
 
-    final sub = repo.watchMessages(groupId).listen(
-      (msgs) {
-        _live = msgs;
-        if (msgs.length < 50) _hasMore = false;
-        if (!completer.isCompleted) {
-          completer.complete(msgs);
-        } else {
-          state = AsyncData(_buildState());
-        }
-      },
-      onError: (Object e, StackTrace st) {
-        if (!completer.isCompleted) {
-          completer.completeError(e, st);
-        } else {
-          state = AsyncError(e, st);
-        }
-      },
-    );
+    final sub = repo
+        .watchMessages(groupId)
+        .listen(
+          (msgs) {
+            _live = msgs;
+            if (msgs.length < 50) _hasMore = false;
+            if (!completer.isCompleted) {
+              completer.complete(msgs);
+            } else {
+              state = AsyncData(_buildState());
+            }
+          },
+          onError: (Object e, StackTrace st) {
+            if (!completer.isCompleted) {
+              completer.completeError(e, st);
+            } else {
+              state = AsyncError(e, st);
+            }
+          },
+        );
 
     ref.onDispose(sub.cancel);
 
@@ -86,10 +88,7 @@ class ChatMessagesNotifier extends AsyncNotifier<ChatMessagesState> {
   ChatMessagesState _buildState() {
     final liveIds = _live.map((m) => m.id).toSet();
     return ChatMessagesState(
-      messages: [
-        ..._live,
-        ..._older.where((m) => !liveIds.contains(m.id)),
-      ],
+      messages: [..._live, ..._older.where((m) => !liveIds.contains(m.id))],
       hasMore: _hasMore,
       loadingMore: _loadingMore,
     );
@@ -122,8 +121,8 @@ class ChatMessagesNotifier extends AsyncNotifier<ChatMessagesState> {
 
 final chatMessagesProvider =
     AsyncNotifierProvider<ChatMessagesNotifier, ChatMessagesState>(
-  ChatMessagesNotifier.new,
-);
+      ChatMessagesNotifier.new,
+    );
 
 final mediaMessagesProvider = StreamProvider<List<Message>>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
@@ -139,8 +138,9 @@ class ChatTabActiveNotifier extends Notifier<bool> {
   void setActive(bool value) => state = value;
 }
 
-final isChatTabActiveProvider =
-    NotifierProvider<ChatTabActiveNotifier, bool>(ChatTabActiveNotifier.new);
+final isChatTabActiveProvider = NotifierProvider<ChatTabActiveNotifier, bool>(
+  ChatTabActiveNotifier.new,
+);
 
 /// True quand l'app est au premier plan (foreground).
 class AppInForegroundNotifier extends Notifier<bool> {
@@ -150,12 +150,15 @@ class AppInForegroundNotifier extends Notifier<bool> {
   void setForeground(bool value) => state = value;
 }
 
-final appInForegroundProvider =
-    NotifierProvider<AppInForegroundNotifier, bool>(AppInForegroundNotifier.new);
+final appInForegroundProvider = NotifierProvider<AppInForegroundNotifier, bool>(
+  AppInForegroundNotifier.new,
+);
 
 /// Stream du lastReadAt de l'utilisateur courant pour un groupe donné.
-final _memberLastReadAtProvider =
-    StreamProvider.family<DateTime?, String>((ref, groupId) {
+final _memberLastReadAtProvider = StreamProvider.family<DateTime?, String>((
+  ref,
+  groupId,
+) {
   final userId = ref.watch(authStateProvider).asData?.value?.uid;
   if (userId == null) return Stream.value(null);
   return FirebaseFirestore.instance
@@ -165,15 +168,17 @@ final _memberLastReadAtProvider =
       .doc(userId)
       .snapshots()
       .map((snap) {
-    final ts = snap.data()?['lastReadAt'] as Timestamp?;
-    return ts?.toDate();
-  });
+        final ts = snap.data()?['lastReadAt'] as Timestamp?;
+        return ts?.toDate();
+      });
 });
 
 /// Nombre de messages non lus pour l'utilisateur courant dans un groupe donné.
 final unreadCountProvider = StreamProvider.family<int, String>((ref, groupId) {
-  final lastReadAt =
-      ref.watch(_memberLastReadAtProvider(groupId)).asData?.value;
+  final lastReadAt = ref
+      .watch(_memberLastReadAtProvider(groupId))
+      .asData
+      ?.value;
   if (lastReadAt == null) return Stream.value(0);
   return FirebaseFirestore.instance
       .collection('groups')
@@ -188,8 +193,7 @@ final typingProvider = StreamProvider<List<String>>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
   final currentUserId = ref.watch(authStateProvider).asData?.value?.uid;
   if (groupId == null || currentUserId == null) return Stream.value([]);
-  return ref.watch(messagesRepositoryProvider).watchTyping(
-        groupId: groupId,
-        currentUserId: currentUserId,
-      );
+  return ref
+      .watch(messagesRepositoryProvider)
+      .watchTyping(groupId: groupId, currentUserId: currentUserId);
 });

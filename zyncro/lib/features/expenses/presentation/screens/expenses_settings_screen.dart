@@ -59,10 +59,11 @@ class _ExpensesSettingsScreenState
     await _update(settings, settings.copyWith(expensesCategories: categories));
   }
 
-  Future<void> _deleteCategory(TabSettings settings, ExpenseCategory cat) async {
-    final updated = settings.expensesCategories
-        .where((c) => c != cat)
-        .toList();
+  Future<void> _deleteCategory(
+    TabSettings settings,
+    ExpenseCategory cat,
+  ) async {
+    final updated = settings.expensesCategories.where((c) => c != cat).toList();
     await _update(settings, settings.copyWith(expensesCategories: updated));
   }
 
@@ -106,12 +107,18 @@ class _ExpensesSettingsScreenState
                   selected: settings.expensesThemeColor,
                   extraColors: settings.customColors,
                   hiddenBaseColors: settings.hiddenBaseColors,
-                  onSelect: (hex) =>
-                      _update(settings, settings.copyWith(expensesThemeColor: hex)),
-                  onAddColor: (hex) => _update(
-                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
+                  onSelect: (hex) => _update(
+                    settings,
+                    settings.copyWith(expensesThemeColor: hex),
                   ),
-                  onDeleteColor: (hex) => _update(settings, settings.withColorRemoved(hex)),
+                  onAddColor: (hex) => _update(
+                    settings,
+                    settings.copyWith(
+                      customColors: [...settings.customColors, hex],
+                    ),
+                  ),
+                  onDeleteColor: (hex) =>
+                      _update(settings, settings.withColorRemoved(hex)),
                 ),
               ),
             ],
@@ -120,7 +127,10 @@ class _ExpensesSettingsScreenState
             title: 'Devise',
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
@@ -146,7 +156,10 @@ class _ExpensesSettingsScreenState
                         .toList(),
                     onChanged: (val) {
                       if (val != null) {
-                        _update(settings, settings.copyWith(expensesCurrency: val));
+                        _update(
+                          settings,
+                          settings.copyWith(expensesCurrency: val),
+                        );
                       }
                     },
                   ),
@@ -164,13 +177,14 @@ class _ExpensesSettingsScreenState
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 20,
                       ),
-                      onTap: () =>
-                          _openCategoryEditor(settings, existing: cat),
+                      onTap: () => _openCategoryEditor(settings, existing: cat),
                       leading: Container(
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: hexToColor(cat.colorHex).withValues(alpha: 0.12),
+                          color: hexToColor(
+                            cat.colorHex,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(

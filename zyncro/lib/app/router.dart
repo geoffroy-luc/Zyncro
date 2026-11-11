@@ -101,10 +101,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/media-gallery',
         builder: (_, __) => const MediaGalleryScreen(),
       ),
-      GoRoute(
-        path: '/share',
-        builder: (_, __) => const ShareToGroupScreen(),
-      ),
+      GoRoute(path: '/share', builder: (_, __) => const ShareToGroupScreen()),
       GoRoute(
         path: '/settings/home',
         builder: (_, __) => const HomeSettingsScreen(),

@@ -12,10 +12,7 @@ String colorToHex(Color color) {
 
 // ── HSV Color Picker Dialog ───────────────────────────────────────────────────
 
-Future<String?> showGroupColorPicker(
-  BuildContext context, {
-  String? initial,
-}) {
+Future<String?> showGroupColorPicker(BuildContext context, {String? initial}) {
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
@@ -114,42 +111,44 @@ class _ColorPickerSheetState extends State<_ColorPickerSheet> {
           ),
 
           // ── SV square ────────────────────────────────────────────
-          LayoutBuilder(builder: (_, constraints) {
-            final size = Size(constraints.maxWidth, 200);
-            return GestureDetector(
-              onPanStart: (d) => _handleSVDrag(d.localPosition, size),
-              onPanUpdate: (d) => _handleSVDrag(d.localPosition, size),
-              onTapDown: (d) => _handleSVDrag(d.localPosition, size),
-              child: SizedBox(
-                key: _svKey,
-                width: size.width,
-                height: size.height,
-                child: CustomPaint(
-                  painter: _SVPainter(_hsv.hue, _svToLocal(size)),
+          LayoutBuilder(
+            builder: (_, constraints) {
+              final size = Size(constraints.maxWidth, 200);
+              return GestureDetector(
+                onPanStart: (d) => _handleSVDrag(d.localPosition, size),
+                onPanUpdate: (d) => _handleSVDrag(d.localPosition, size),
+                onTapDown: (d) => _handleSVDrag(d.localPosition, size),
+                child: SizedBox(
+                  key: _svKey,
+                  width: size.width,
+                  height: size.height,
+                  child: CustomPaint(
+                    painter: _SVPainter(_hsv.hue, _svToLocal(size)),
+                  ),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
 
           const SizedBox(height: 16),
 
           // ── Hue bar ──────────────────────────────────────────────
-          LayoutBuilder(builder: (_, constraints) {
-            final size = Size(constraints.maxWidth, 24);
-            return GestureDetector(
-              onPanStart: (d) => _handleHueDrag(d.localPosition, size),
-              onPanUpdate: (d) => _handleHueDrag(d.localPosition, size),
-              onTapDown: (d) => _handleHueDrag(d.localPosition, size),
-              child: SizedBox(
-                key: _hueKey,
-                width: size.width,
-                height: size.height,
-                child: CustomPaint(
-                  painter: _HuePainter(_hsv.hue / 360),
+          LayoutBuilder(
+            builder: (_, constraints) {
+              final size = Size(constraints.maxWidth, 24);
+              return GestureDetector(
+                onPanStart: (d) => _handleHueDrag(d.localPosition, size),
+                onPanUpdate: (d) => _handleHueDrag(d.localPosition, size),
+                onTapDown: (d) => _handleHueDrag(d.localPosition, size),
+                child: SizedBox(
+                  key: _hueKey,
+                  width: size.width,
+                  height: size.height,
+                  child: CustomPaint(painter: _HuePainter(_hsv.hue / 360)),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
 
           const SizedBox(height: 20),
 
@@ -214,8 +213,7 @@ class _ColorPickerSheetState extends State<_ColorPickerSheet> {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
-                  onPressed: () =>
-                      Navigator.pop(context, colorToHex(color)),
+                  onPressed: () => Navigator.pop(context, colorToHex(color)),
                   child: const Text('Ajouter'),
                 ),
               ),
@@ -266,8 +264,7 @@ class _SVPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SVPainter old) =>
-      old.hue != hue || old.cursor != cursor;
+  bool shouldRepaint(_SVPainter old) => old.hue != hue || old.cursor != cursor;
 }
 
 class _HuePainter extends CustomPainter {
@@ -293,8 +290,7 @@ class _HuePainter extends CustomPainter {
     // Rainbow gradient
     canvas.drawRRect(
       rrect,
-      Paint()
-        ..shader = LinearGradient(colors: _hueColors).createShader(rect),
+      Paint()..shader = LinearGradient(colors: _hueColors).createShader(rect),
     );
 
     // Cursor line
@@ -350,9 +346,7 @@ class ColorPickerRow extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Supprimer cette couleur ?'),
-        content: const Text(
-          'Cette couleur sera retirée de la palette.',
-        ),
+        content: const Text('Cette couleur sera retirée de la palette.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -360,7 +354,10 @@ class ColorPickerRow extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Supprimer', style: TextStyle(color: AppColors.error)),
+            child: const Text(
+              'Supprimer',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -370,8 +367,9 @@ class ColorPickerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final base = (basePalette ?? AppColors.tabPalette)
-        .where((hex) => !hiddenBaseColors.contains(hex));
+    final base = (basePalette ?? AppColors.tabPalette).where(
+      (hex) => !hiddenBaseColors.contains(hex),
+    );
     final all = [...base, ...extraColors];
     final canAdd = onAddColor != null && all.length < maxColors;
 
@@ -379,18 +377,23 @@ class ColorPickerRow extends StatelessWidget {
       spacing: 10,
       runSpacing: 10,
       children: [
-        ...all.map((hex) => _ColorCircle(
-              hex: hex,
-              isSelected: selected == hex,
-              onTap: () => onSelect(hex),
-              onLongPress: onDeleteColor != null
-                  ? () => _confirmDelete(context, hex)
-                  : null,
-            )),
+        ...all.map(
+          (hex) => _ColorCircle(
+            hex: hex,
+            isSelected: selected == hex,
+            onTap: () => onSelect(hex),
+            onLongPress: onDeleteColor != null
+                ? () => _confirmDelete(context, hex)
+                : null,
+          ),
+        ),
         if (canAdd)
           GestureDetector(
             onTap: () async {
-              final hex = await showGroupColorPicker(context, initial: selected);
+              final hex = await showGroupColorPicker(
+                context,
+                initial: selected,
+              );
               if (hex != null) onAddColor!(hex);
             },
             child: Container(
@@ -401,7 +404,11 @@ class ColorPickerRow extends StatelessWidget {
                 border: Border.all(color: AppColors.border, width: 1.5),
                 color: AppColors.background,
               ),
-              child: const Icon(Icons.add, size: 16, color: AppColors.textSecondary),
+              child: const Icon(
+                Icons.add,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
       ],

@@ -138,10 +138,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     if (result == null) return;
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    await FirebaseFirestore.instance
-        .collection('groups')
-        .doc(groupId)
-        .update({'emoji': result.isEmpty ? '🏠' : result});
+    await FirebaseFirestore.instance.collection('groups').doc(groupId).update({
+      'emoji': result.isEmpty ? '🏠' : result,
+    });
   }
 
   Future<void> _pickGroupPhoto(ImageSource source, TabSettings settings) async {
@@ -157,9 +156,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
         maxHeight: 512,
       );
       if (file == null) return;
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('group_photos/$groupId.jpg');
+      final storageRef = FirebaseStorage.instance.ref().child(
+        'group_photos/$groupId.jpg',
+      );
       await storageRef.putFile(
         File(file.path),
         SettableMetadata(contentType: 'image/jpeg'),
@@ -167,18 +166,17 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
       final url = await storageRef.getDownloadURL();
       // Sauvegarde sur le doc groupe (pour l'affichage partout) ET tabSettings
       await Future.wait([
-        FirebaseFirestore.instance
-            .collection('groups')
-            .doc(groupId)
-            .update({'photoUrl': url}),
+        FirebaseFirestore.instance.collection('groups').doc(groupId).update({
+          'photoUrl': url,
+        }),
         _updateTabSettings(settings, settings.copyWith(homePhotoUrl: url)),
       ]);
     } on Exception catch (e) {
       if (e.toString().contains('cancelled')) return;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     } finally {
       if (mounted) setState(() => _loadingPhoto = false);
@@ -195,19 +193,24 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           .delete();
     } catch (_) {}
     await Future.wait([
-      FirebaseFirestore.instance
-          .collection('groups')
-          .doc(groupId)
-          .update({'photoUrl': null}),
+      FirebaseFirestore.instance.collection('groups').doc(groupId).update({
+        'photoUrl': null,
+      }),
       _updateTabSettings(settings, settings.copyWith(clearHomePhotoUrl: true)),
     ]);
   }
 
   // ── Group info ───────────────────────────────────────────────────────────────
 
-  Future<void> _editGroupInfo(String groupId, String currentName, String? currentDescription) async {
+  Future<void> _editGroupInfo(
+    String groupId,
+    String currentName,
+    String? currentDescription,
+  ) async {
     final nameController = TextEditingController(text: currentName);
-    final descController = TextEditingController(text: currentDescription ?? '');
+    final descController = TextEditingController(
+      text: currentDescription ?? '',
+    );
     final formKey = GlobalKey<FormState>();
 
     final confirmed = await showDialog<bool>(
@@ -233,12 +236,15 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: descController,
-                decoration: const InputDecoration(labelText: 'Description (optionnel)'),
+                decoration: const InputDecoration(
+                  labelText: 'Description (optionnel)',
+                ),
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 150,
                 maxLines: 2,
                 validator: (v) {
-                  if (v != null && v.trim().length > 150) return '150 caractères maximum';
+                  if (v != null && v.trim().length > 150)
+                    return '150 caractères maximum';
                   return null;
                 },
               ),
@@ -252,7 +258,8 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           ),
           FilledButton(
             onPressed: () {
-              if (formKey.currentState!.validate()) Navigator.pop(context, true);
+              if (formKey.currentState!.validate())
+                Navigator.pop(context, true);
             },
             child: const Text('Enregistrer'),
           ),
@@ -262,14 +269,20 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
 
     if (confirmed != true) return;
     try {
-      await ref.read(groupsRepositoryProvider).updateGroupInfo(
-        groupId,
-        name: nameController.text.trim(),
-        description: descController.text.trim().isEmpty ? null : descController.text.trim(),
-      );
+      await ref
+          .read(groupsRepositoryProvider)
+          .updateGroupInfo(
+            groupId,
+            name: nameController.text.trim(),
+            description: descController.text.trim().isEmpty
+                ? null
+                : descController.text.trim(),
+          );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     }
   }
@@ -296,11 +309,13 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
               if (v == null || v.trim().isEmpty) return 'Champ requis';
               if (v.trim().length > 30) return '30 caractères maximum';
               final trimmed = v.trim().toLowerCase();
-              final isDuplicate = members.any((m) =>
-                m.uid != currentUser?.uid &&
-                m.displayName.toLowerCase() == trimmed,
+              final isDuplicate = members.any(
+                (m) =>
+                    m.uid != currentUser?.uid &&
+                    m.displayName.toLowerCase() == trimmed,
               );
-              if (isDuplicate) return 'Ce pseudo est déjà utilisé dans ce groupe';
+              if (isDuplicate)
+                return 'Ce pseudo est déjà utilisé dans ce groupe';
               return null;
             },
           ),
@@ -312,7 +327,8 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           ),
           FilledButton(
             onPressed: () {
-              if (formKey.currentState!.validate()) Navigator.pop(context, true);
+              if (formKey.currentState!.validate())
+                Navigator.pop(context, true);
             },
             child: const Text('Enregistrer'),
           ),
@@ -327,9 +343,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     final user = ref.read(authStateProvider).asData?.value;
     if (user == null) return;
     try {
-      await ref.read(groupsRepositoryProvider).updateMemberDisplayName(
-        groupId, user.uid, newPseudo,
-      );
+      await ref
+          .read(groupsRepositoryProvider)
+          .updateMemberDisplayName(groupId, user.uid, newPseudo);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -369,7 +385,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
       await ref.read(groupsRepositoryProvider).generateInviteCode(groupId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     } finally {
       if (mounted) setState(() => _generating = false);
@@ -384,9 +402,14 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Quitter le groupe'),
-        content: const Text('Es-tu sûr de vouloir quitter ce groupe ? Tu ne pourras plus accéder à son contenu.'),
+        content: const Text(
+          'Es-tu sûr de vouloir quitter ce groupe ? Tu ne pourras plus accéder à son contenu.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
@@ -400,12 +423,19 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
     final user = ref.read(authStateProvider).asData?.value;
-    final userName = ref.read(currentMemberProvider).asData?.value?.displayName ??
-        user?.displayName ?? user?.email ?? 'Quelqu\'un';
+    final userName =
+        ref.read(currentMemberProvider).asData?.value?.displayName ??
+        user?.displayName ??
+        user?.email ??
+        'Quelqu\'un';
     try {
-      await ref.read(groupsRepositoryProvider).leaveGroup(
-        groupId, userId, systemMessage: '👋 $userName a quitté le groupe',
-      );
+      await ref
+          .read(groupsRepositoryProvider)
+          .leaveGroup(
+            groupId,
+            userId,
+            systemMessage: '👋 $userName a quitté le groupe',
+          );
       await ref.read(selectedGroupIdProvider.notifier).select(null);
       if (context.mounted) context.go('/groups');
     } catch (_) {
@@ -422,9 +452,14 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Supprimer le groupe'),
-        content: const Text('Cette action est irréversible. Tout le contenu du groupe sera perdu.'),
+        content: const Text(
+          'Cette action est irréversible. Tout le contenu du groupe sera perdu.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
@@ -440,7 +475,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
       if (context.mounted) context.go('/groups');
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     }
   }
@@ -450,10 +487,18 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Transférer la propriété'),
-        content: Text('Nommer ${newOwner.displayName} propriétaire du groupe ? Tu deviendras simple membre.'),
+        content: Text(
+          'Nommer ${newOwner.displayName} propriétaire du groupe ? Tu deviendras simple membre.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Transférer')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Transférer'),
+          ),
         ],
       ),
     );
@@ -463,18 +508,28 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     final currentUser = ref.read(authStateProvider).asData?.value;
     if (groupId == null || currentUser == null) return;
     try {
-      await ref.read(groupsRepositoryProvider).transferOwnership(groupId, currentUser.uid, newOwner.uid);
-      final ownerName = ref.read(currentMemberProvider).asData?.value?.displayName ??
-          currentUser.displayName ?? currentUser.email ?? 'Quelqu\'un';
-      ref.read(messagesRepositoryProvider).sendSystemMessage(
-        groupId: groupId,
-        userId: currentUser.uid,
-        content: '👑 $ownerName a transféré la propriété du groupe à ${newOwner.displayName}',
-        notifScreen: 'chat',
-      );
+      await ref
+          .read(groupsRepositoryProvider)
+          .transferOwnership(groupId, currentUser.uid, newOwner.uid);
+      final ownerName =
+          ref.read(currentMemberProvider).asData?.value?.displayName ??
+          currentUser.displayName ??
+          currentUser.email ??
+          'Quelqu\'un';
+      ref
+          .read(messagesRepositoryProvider)
+          .sendSystemMessage(
+            groupId: groupId,
+            userId: currentUser.uid,
+            content:
+                '👑 $ownerName a transféré la propriété du groupe à ${newOwner.displayName}',
+            notifScreen: 'chat',
+          );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     }
   }
@@ -486,7 +541,10 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
         title: const Text('Retirer le membre'),
         content: Text('Retirer ${member.displayName} du groupe ?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
@@ -502,14 +560,19 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
     final currentUser = ref.read(authStateProvider).asData?.value;
     await ref.read(groupsRepositoryProvider).removeMember(groupId, member.uid);
     if (currentUser != null) {
-      final ownerName = ref.read(currentMemberProvider).asData?.value?.displayName ??
-          currentUser.displayName ?? currentUser.email ?? 'Quelqu\'un';
-      ref.read(messagesRepositoryProvider).sendSystemMessage(
-        groupId: groupId,
-        userId: currentUser.uid,
-        content: '👋 $ownerName a retiré ${member.displayName} du groupe',
-        notifScreen: 'chat',
-      );
+      final ownerName =
+          ref.read(currentMemberProvider).asData?.value?.displayName ??
+          currentUser.displayName ??
+          currentUser.email ??
+          'Quelqu\'un';
+      ref
+          .read(messagesRepositoryProvider)
+          .sendSystemMessage(
+            groupId: groupId,
+            userId: currentUser.uid,
+            content: '👋 $ownerName a retiré ${member.displayName} du groupe',
+            notifScreen: 'chat',
+          );
     }
   }
 
@@ -558,7 +621,6 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-
           // ── Espace ──────────────────────────────────────────────────
           _Section(
             title: 'Espace',
@@ -582,24 +644,26 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                         child: _loadingPhoto
                             ? const Padding(
                                 padding: EdgeInsets.all(14),
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : photoUrl != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(14),
-                                    child: Image.network(
-                                      photoUrl,
-                                      width: 56,
-                                      height: 56,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : Center(
-                                    child: Text(
-                                      emoji,
-                                      style: const TextStyle(fontSize: 26),
-                                    ),
-                                  ),
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(14),
+                                child: Image.network(
+                                  photoUrl,
+                                  width: 56,
+                                  height: 56,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Center(
+                                child: Text(
+                                  emoji,
+                                  style: const TextStyle(fontSize: 26),
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -635,7 +699,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                     if (isOwner)
                       IconButton(
                         onPressed: () => _editGroupInfo(
-                          group.id, group.name, group.description,
+                          group.id,
+                          group.name,
+                          group.description,
                         ),
                         icon: const Icon(Icons.edit_outlined, size: 20),
                         color: AppColors.textSecondary,
@@ -657,12 +723,17 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                   children: [
                     const Text(
                       'Partage le lien ou le code pour inviter quelqu\'un dans ce groupe.',
-                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     if (group.inviteCode == null)
                       ElevatedButton.icon(
-                        onPressed: _generating ? null : () => _generateCode(group.id),
+                        onPressed: _generating
+                            ? null
+                            : () => _generateCode(group.id),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primary,
                           foregroundColor: Colors.white,
@@ -671,7 +742,10 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : const Icon(Icons.vpn_key_outlined, size: 18),
                         label: const Text('Générer un code'),
@@ -681,11 +755,16 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                         children: [
                           Expanded(
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                               decoration: BoxDecoration(
                                 color: primary.withValues(alpha: 0.06),
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: primary.withValues(alpha: 0.2)),
+                                border: Border.all(
+                                  color: primary.withValues(alpha: 0.2),
+                                ),
                               ),
                               child: Text(
                                 group.inviteCode!,
@@ -702,7 +781,9 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                           const SizedBox(width: 12),
                           IconButton.filled(
                             onPressed: () {
-                              Clipboard.setData(ClipboardData(text: group.inviteCode!));
+                              Clipboard.setData(
+                                ClipboardData(text: group.inviteCode!),
+                              );
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Code copié !')),
                               );
@@ -742,13 +823,13 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Icon(Icons.refresh, size: 18),
                           label: const Text('Régénérer le lien'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: primary,
-                          ),
+                          style: TextButton.styleFrom(foregroundColor: primary),
                         ),
                       ),
                     ],
@@ -768,13 +849,20 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                   selected: settings.homeThemeColor,
                   extraColors: settings.customColors,
                   hiddenBaseColors: settings.hiddenBaseColors,
-                  onSelect: (hex) =>
-                      _updateTabSettings(settings, settings.copyWith(homeThemeColor: hex)),
-                  onAddColor: (hex) => _updateTabSettings(
-                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
+                  onSelect: (hex) => _updateTabSettings(
+                    settings,
+                    settings.copyWith(homeThemeColor: hex),
                   ),
-                  onDeleteColor: (hex) =>
-                      _updateTabSettings(settings, settings.withColorRemoved(hex)),
+                  onAddColor: (hex) => _updateTabSettings(
+                    settings,
+                    settings.copyWith(
+                      customColors: [...settings.customColors, hex],
+                    ),
+                  ),
+                  onDeleteColor: (hex) => _updateTabSettings(
+                    settings,
+                    settings.withColorRemoved(hex),
+                  ),
                 ),
               ),
             ),
@@ -813,16 +901,22 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                       ),
                       trailing: isCurrentUser
                           ? IconButton(
-                              icon: const Icon(Icons.edit_outlined,
-                                  size: 18, color: AppColors.textSecondary),
+                              icon: const Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: AppColors.textSecondary,
+                              ),
                               tooltip: 'Changer mon pseudo',
                               onPressed: () =>
                                   _editMyPseudo(group.id, member.displayName),
                             )
                           : isOwner && !member.isOwner
                           ? PopupMenuButton<String>(
-                              icon: const Icon(Icons.more_vert,
-                                  color: AppColors.textSecondary, size: 20),
+                              icon: const Icon(
+                                Icons.more_vert,
+                                color: AppColors.textSecondary,
+                                size: 20,
+                              ),
                               onSelected: (action) {
                                 if (action == 'transfer') {
                                   _confirmTransferOwnership(member);
@@ -835,7 +929,10 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                                   value: 'transfer',
                                   child: Row(
                                     children: [
-                                      Icon(Icons.workspace_premium_outlined, size: 18),
+                                      Icon(
+                                        Icons.workspace_premium_outlined,
+                                        size: 18,
+                                      ),
                                       SizedBox(width: 10),
                                       Text('Nommer propriétaire'),
                                     ],
@@ -845,11 +942,18 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                                   value: 'remove',
                                   child: Row(
                                     children: [
-                                      Icon(Icons.person_remove_outlined,
-                                          size: 18, color: AppColors.error),
+                                      Icon(
+                                        Icons.person_remove_outlined,
+                                        size: 18,
+                                        color: AppColors.error,
+                                      ),
                                       SizedBox(width: 10),
-                                      Text('Retirer du groupe',
-                                          style: TextStyle(color: AppColors.error)),
+                                      Text(
+                                        'Retirer du groupe',
+                                        style: TextStyle(
+                                          color: AppColors.error,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -869,23 +973,25 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           TextButton.icon(
             onPressed: isOwner
                 ? () => showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Impossible de quitter'),
-                        content: const Text(
-                          'Tu es propriétaire du groupe. Transfère la propriété à un autre membre avant de quitter.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('OK'),
-                          ),
-                        ],
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Impossible de quitter'),
+                      content: const Text(
+                        'Tu es propriétaire du groupe. Transfère la propriété à un autre membre avant de quitter.',
                       ),
-                    )
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  )
                 : () => _confirmLeave(currentUser?.uid),
             style: TextButton.styleFrom(
-              foregroundColor: isOwner ? AppColors.textSecondary : AppColors.error,
+              foregroundColor: isOwner
+                  ? AppColors.textSecondary
+                  : AppColors.error,
             ),
             icon: const Icon(Icons.exit_to_app_outlined),
             label: const Text('Quitter ce groupe'),

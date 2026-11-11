@@ -17,47 +17,63 @@ void main() {
   Future<Map<String, dynamic>> stored() async =>
       (await db.doc(path).get()).data() ?? {};
 
-  test('ne réécrit pas les modifications concurrentes d\'un autre membre (G1)', () async {
-    // État vu par Alice à l'ouverture de l'écran.
-    const seenByAlice = TabSettings(chatThemeColor: '#E85D75');
-    await db.doc(path).set(seenByAlice.toMap());
-    // Bob modifie entre-temps la devise.
-    await db.doc(path).set({'expensesCurrency': 'USD'}, SetOptions(merge: true));
+  test(
+    'ne réécrit pas les modifications concurrentes d\'un autre membre (G1)',
+    () async {
+      // État vu par Alice à l'ouverture de l'écran.
+      const seenByAlice = TabSettings(chatThemeColor: '#E85D75');
+      await db.doc(path).set(seenByAlice.toMap());
+      // Bob modifie entre-temps la devise.
+      await db.doc(path).set({
+        'expensesCurrency': 'USD',
+      }, SetOptions(merge: true));
 
-    // Alice change la couleur des notes depuis son instantané (devise = EUR).
-    await repo.updateSettings(
-      'g1',
-      from: seenByAlice,
-      to: seenByAlice.copyWith(notesThemeColor: '#2BB8A5'),
-    );
+      // Alice change la couleur des notes depuis son instantané (devise = EUR).
+      await repo.updateSettings(
+        'g1',
+        from: seenByAlice,
+        to: seenByAlice.copyWith(notesThemeColor: '#2BB8A5'),
+      );
 
-    final data = await stored();
-    expect(data['notesThemeColor'], '#2BB8A5');
-    expect(data['expensesCurrency'], 'USD', reason: 'la modification de Bob est conservée');
-    expect(data['chatThemeColor'], '#E85D75');
-  });
+      final data = await stored();
+      expect(data['notesThemeColor'], '#2BB8A5');
+      expect(
+        data['expensesCurrency'],
+        'USD',
+        reason: 'la modification de Bob est conservée',
+      );
+      expect(data['chatThemeColor'], '#E85D75');
+    },
+  );
 
-  test('une écriture faite depuis les défauts (chargement) ne réinitialise rien (G1)', () async {
-    await db.doc(path).set(const TabSettings(
-      chatBackgroundType: 'image',
-      chatBackgroundValue: 'https://bg',
-      calendarDisplayMode: 'dot',
-      customColors: ['#123456'],
-    ).toMap());
+  test(
+    'une écriture faite depuis les défauts (chargement) ne réinitialise rien (G1)',
+    () async {
+      await db
+          .doc(path)
+          .set(
+            const TabSettings(
+              chatBackgroundType: 'image',
+              chatBackgroundValue: 'https://bg',
+              calendarDisplayMode: 'dot',
+              customColors: ['#123456'],
+            ).toMap(),
+          );
 
-    await repo.updateSettings(
-      'g1',
-      from: TabSettings.defaults,
-      to: TabSettings.defaults.copyWith(homeThemeColor: '#9B59B6'),
-    );
+      await repo.updateSettings(
+        'g1',
+        from: TabSettings.defaults,
+        to: TabSettings.defaults.copyWith(homeThemeColor: '#9B59B6'),
+      );
 
-    final data = await stored();
-    expect(data['homeThemeColor'], '#9B59B6');
-    expect(data['chatBackgroundType'], 'image');
-    expect(data['chatBackgroundValue'], 'https://bg');
-    expect(data['calendarDisplayMode'], 'dot');
-    expect(data['customColors'], ['#123456']);
-  });
+      final data = await stored();
+      expect(data['homeThemeColor'], '#9B59B6');
+      expect(data['chatBackgroundType'], 'image');
+      expect(data['chatBackgroundValue'], 'https://bg');
+      expect(data['calendarDisplayMode'], 'dot');
+      expect(data['customColors'], ['#123456']);
+    },
+  );
 
   test('crée le document s\'il n\'existe pas', () async {
     await repo.updateSettings(
@@ -69,7 +85,11 @@ void main() {
   });
 
   test('aucun changement → aucune écriture', () async {
-    await repo.updateSettings('g1', from: TabSettings.defaults, to: TabSettings.defaults);
+    await repo.updateSettings(
+      'g1',
+      from: TabSettings.defaults,
+      to: TabSettings.defaults,
+    );
     expect((await db.doc(path).get()).exists, isFalse);
   });
 

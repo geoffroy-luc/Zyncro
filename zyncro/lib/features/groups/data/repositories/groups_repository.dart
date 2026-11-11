@@ -46,25 +46,19 @@ class GroupsRepository implements IGroupsRepository {
 
     final batch = _db.batch();
     batch.set(groupRef, group.toMap());
-    batch.set(
-      groupRef.collection('members').doc(userId),
-      {
-        'uid': userId,
-        'displayName': displayName,
-        'role': 'owner',
-        'joinedAt': FieldValue.serverTimestamp(),
-        'photoUrl': photoUrl,
-        'showProfilePhoto': showProfilePhoto,
-      },
-    );
-    batch.set(
-      _db.collection('invite_codes').doc(code),
-      {
-        'groupId': groupRef.id,
-        'groupName': name,
-        'groupEmoji': emoji,
-      },
-    );
+    batch.set(groupRef.collection('members').doc(userId), {
+      'uid': userId,
+      'displayName': displayName,
+      'role': 'owner',
+      'joinedAt': FieldValue.serverTimestamp(),
+      'photoUrl': photoUrl,
+      'showProfilePhoto': showProfilePhoto,
+    });
+    batch.set(_db.collection('invite_codes').doc(code), {
+      'groupId': groupRef.id,
+      'groupName': name,
+      'groupEmoji': emoji,
+    });
     await batch.commit();
 
     return group;
@@ -83,17 +77,14 @@ class GroupsRepository implements IGroupsRepository {
     batch.update(groupRef, {
       'memberIds': FieldValue.arrayUnion([userId]),
     });
-    batch.set(
-      groupRef.collection('members').doc(userId),
-      {
-        'uid': userId,
-        'displayName': displayName,
-        'role': 'member',
-        'joinedAt': FieldValue.serverTimestamp(),
-        'photoUrl': photoUrl,
-        'showProfilePhoto': showProfilePhoto,
-      },
-    );
+    batch.set(groupRef.collection('members').doc(userId), {
+      'uid': userId,
+      'displayName': displayName,
+      'role': 'member',
+      'joinedAt': FieldValue.serverTimestamp(),
+      'photoUrl': photoUrl,
+      'showProfilePhoto': showProfilePhoto,
+    });
     await batch.commit();
   }
 
@@ -190,8 +181,12 @@ class GroupsRepository implements IGroupsRepository {
     final groupRef = _db.collection('groups').doc(groupId);
     final batch = _db.batch();
     batch.update(groupRef, {'createdBy': newOwnerId});
-    batch.update(groupRef.collection('members').doc(newOwnerId), {'role': 'owner'});
-    batch.update(groupRef.collection('members').doc(currentOwnerId), {'role': 'member'});
+    batch.update(groupRef.collection('members').doc(newOwnerId), {
+      'role': 'owner',
+    });
+    batch.update(groupRef.collection('members').doc(currentOwnerId), {
+      'role': 'member',
+    });
     await batch.commit();
   }
 
@@ -230,14 +225,11 @@ class GroupsRepository implements IGroupsRepository {
       batch.delete(_db.collection('invite_codes').doc(oldCode));
     }
     batch.update(_db.collection('groups').doc(groupId), {'inviteCode': code});
-    batch.set(
-      _db.collection('invite_codes').doc(code),
-      {
-        'groupId': groupId,
-        'groupName': groupData?['name'],
-        'groupEmoji': groupData?['emoji'],
-      },
-    );
+    batch.set(_db.collection('invite_codes').doc(code), {
+      'groupId': groupId,
+      'groupName': groupData?['name'],
+      'groupEmoji': groupData?['emoji'],
+    });
     await batch.commit();
     return code;
   }
@@ -279,11 +271,16 @@ class GroupsRepository implements IGroupsRepository {
     String userId,
     String displayName,
   ) async {
-    final membersRef = _db.collection('groups').doc(groupId).collection('members');
+    final membersRef = _db
+        .collection('groups')
+        .doc(groupId)
+        .collection('members');
     final snapshot = await membersRef.get();
-    final conflict = snapshot.docs.any((doc) =>
-      doc.id != userId &&
-      (doc.data()['displayName'] as String?)?.toLowerCase() == displayName.toLowerCase(),
+    final conflict = snapshot.docs.any(
+      (doc) =>
+          doc.id != userId &&
+          (doc.data()['displayName'] as String?)?.toLowerCase() ==
+              displayName.toLowerCase(),
     );
     if (conflict) {
       throw Exception('Ce pseudo est déjà utilisé dans ce groupe.');

@@ -6,8 +6,10 @@ class ChecklistItem {
 
   const ChecklistItem({required this.text, this.done = false});
 
-  factory ChecklistItem.fromMap(Map<String, dynamic> map) =>
-      ChecklistItem(text: map['text'] as String, done: map['done'] as bool? ?? false);
+  factory ChecklistItem.fromMap(Map<String, dynamic> map) => ChecklistItem(
+    text: map['text'] as String,
+    done: map['done'] as bool? ?? false,
+  );
 
   Map<String, dynamic> toMap() => {'text': text, 'done': done};
 
@@ -54,7 +56,8 @@ class Note {
       isPinned: map['isPinned'] as bool? ?? false,
       color: map['color'] as String?,
       isChecklist: map['isChecklist'] as bool? ?? false,
-      checklist: rawChecklist
+      checklist:
+          rawChecklist
               ?.map((e) => ChecklistItem.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],

@@ -65,12 +65,18 @@ class _CalendarSettingsScreenState
                   selected: settings.calendarThemeColor,
                   extraColors: settings.customColors,
                   hiddenBaseColors: settings.hiddenBaseColors,
-                  onSelect: (hex) =>
-                      _update(settings, settings.copyWith(calendarThemeColor: hex)),
-                  onAddColor: (hex) => _update(
-                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
+                  onSelect: (hex) => _update(
+                    settings,
+                    settings.copyWith(calendarThemeColor: hex),
                   ),
-                  onDeleteColor: (hex) => _update(settings, settings.withColorRemoved(hex)),
+                  onAddColor: (hex) => _update(
+                    settings,
+                    settings.copyWith(
+                      customColors: [...settings.customColors, hex],
+                    ),
+                  ),
+                  onDeleteColor: (hex) =>
+                      _update(settings, settings.withColorRemoved(hex)),
                 ),
               ),
             ],
@@ -94,8 +100,10 @@ class _CalendarSettingsScreenState
                     ),
                   ],
                   selected: {settings.calendarDisplayMode},
-                  onSelectionChanged: (Set<String> sel) =>
-                      _update(settings, settings.copyWith(calendarDisplayMode: sel.first)),
+                  onSelectionChanged: (Set<String> sel) => _update(
+                    settings,
+                    settings.copyWith(calendarDisplayMode: sel.first),
+                  ),
                 ),
               ),
             ],

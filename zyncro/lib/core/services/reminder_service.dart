@@ -41,7 +41,10 @@ class ReminderService {
 
   /// Schedules (or cancels) the local notification reminder for [event].
   /// Pass [reminderMinutes] = null to remove the reminder.
-  static Future<void> scheduleReminder(Event event, int? reminderMinutes) async {
+  static Future<void> scheduleReminder(
+    Event event,
+    int? reminderMinutes,
+  ) async {
     await cancelReminder(event.id);
 
     if (reminderMinutes == null) {
@@ -55,8 +58,9 @@ class ReminderService {
     map[event.id] = reminderMinutes;
     await _saveMap(map);
 
-    final scheduledDate =
-        event.startDate.subtract(Duration(minutes: reminderMinutes));
+    final scheduledDate = event.startDate.subtract(
+      Duration(minutes: reminderMinutes),
+    );
     if (!scheduledDate.isAfter(DateTime.now())) return;
 
     final tzDate = tz.TZDateTime.from(scheduledDate, tz.local);
@@ -64,7 +68,8 @@ class ReminderService {
     const android = AndroidNotificationDetails(
       'event_reminders',
       'Rappels d\'événements',
-      channelDescription: 'Notifications de rappel pour les événements du calendrier',
+      channelDescription:
+          'Notifications de rappel pour les événements du calendrier',
       importance: Importance.high,
       priority: Priority.high,
     );

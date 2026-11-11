@@ -156,7 +156,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const ExpenseFormScreen()),
               ),
-              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.85),
               shape: const CircleBorder(
                 side: BorderSide(color: Colors.white24, width: 2),
               ),
@@ -166,94 +168,99 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       body: SafeArea(
         top: true,
         child: Column(
-        children: [
-          // ── Tab bar ──────────────────────────────────────────────
-          Container(
-            color: Colors.white,
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: Theme.of(context).colorScheme.primary,
-              indicatorWeight: 3,
-              dividerColor: AppColors.border,
-              labelColor: Theme.of(context).colorScheme.primary,
-              unselectedLabelColor: AppColors.textSecondary,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w400,
-                fontSize: 14,
-              ),
-              tabs: const [
-                Tab(text: 'Dépenses'),
-                Tab(text: 'Équilibre'),
-              ],
-            ),
-          ),
-
-          // ── Search bar ──────────────────────────────────────────
-          if (_currentTab == 0)
+          children: [
+            // ── Tab bar ──────────────────────────────────────────────
             Container(
               color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: Theme.of(context).colorScheme.primary,
+                indicatorWeight: 3,
+                dividerColor: AppColors.border,
+                labelColor: Theme.of(context).colorScheme.primary,
+                unselectedLabelColor: AppColors.textSecondary,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
                 ),
-                child: Row(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 14),
-                      child: Icon(Icons.search,
-                          color: AppColors.textSecondary, size: 20),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        onChanged: (v) => setState(() => _search = v),
-                        decoration: const InputDecoration(
-                          hintText: 'Rechercher une dépense...',
-                          hintStyle: TextStyle(
-                              color: AppColors.textSecondary, fontSize: 14),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 12),
-                          filled: false,
-                        ),
-                      ),
-                    ),
-                  ],
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 14,
                 ),
+                tabs: const [
+                  Tab(text: 'Dépenses'),
+                  Tab(text: 'Équilibre'),
+                ],
               ),
             ),
 
-          // ── Tabs ─────────────────────────────────────────────────
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // ── Tab 0 : Dépenses ─────────────────────────────
-                _DepensesTab(
-                  expenses: expenses,
-                  total: total,
-                  myShare: myShare,
-                  currentUid: currentUid,
+            // ── Search bar ──────────────────────────────────────────
+            if (_currentTab == 0)
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 14),
+                        child: Icon(
+                          Icons.search,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                        ),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          onChanged: (v) => setState(() => _search = v),
+                          decoration: const InputDecoration(
+                            hintText: 'Rechercher une dépense...',
+                            hintStyle: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 12),
+                            filled: false,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                // ── Tab 1 : Équilibre ────────────────────────────
-                _EquilibreTab(
-                  myBalance: myBalance,
-                  balances: balances,
-                  nameByUid: nameByUid,
-                  currentUid: currentUid,
-                  members: members,
-                ),
-              ],
+              ),
+
+            // ── Tabs ─────────────────────────────────────────────────
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // ── Tab 0 : Dépenses ─────────────────────────────
+                  _DepensesTab(
+                    expenses: expenses,
+                    total: total,
+                    myShare: myShare,
+                    currentUid: currentUid,
+                  ),
+                  // ── Tab 1 : Équilibre ────────────────────────────
+                  _EquilibreTab(
+                    myBalance: myBalance,
+                    balances: balances,
+                    nameByUid: nameByUid,
+                    currentUid: currentUid,
+                    members: members,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );
@@ -277,7 +284,8 @@ class _DepensesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currency = ref.watch(tabSettingsProvider).asData?.value.expensesCurrency ?? 'EUR';
+    final currency =
+        ref.watch(tabSettingsProvider).asData?.value.expensesCurrency ?? 'EUR';
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
       child: Column(
@@ -395,7 +403,8 @@ class _EquilibreTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currency = ref.watch(tabSettingsProvider).asData?.value.expensesCurrency ?? 'EUR';
+    final currency =
+        ref.watch(tabSettingsProvider).asData?.value.expensesCurrency ?? 'EUR';
     final settlements = _computeSettlements(balances);
 
     return SingleChildScrollView(
@@ -498,7 +507,9 @@ class _EquilibreTab extends ConsumerWidget {
                       children: balances.entries.map((entry) {
                         final isPos = entry.value >= 0;
                         final name = _name(entry.key);
-                        final member = members.where((m) => m.uid == entry.key).firstOrNull;
+                        final member = members
+                            .where((m) => m.uid == entry.key)
+                            .firstOrNull;
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Row(
@@ -534,7 +545,10 @@ class _EquilibreTab extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    _formatAmount(entry.value.abs(), currency: currency),
+                                    _formatAmount(
+                                      entry.value.abs(),
+                                      currency: currency,
+                                    ),
                                     style: TextStyle(
                                       color: isPos
                                           ? const Color(0xFF2BB8A5)
@@ -605,7 +619,10 @@ class _EquilibreTab extends ConsumerWidget {
                                           ),
                                           const TextSpan(text: ' doit '),
                                           TextSpan(
-                                            text: _formatAmount(s.amount, currency: currency),
+                                            text: _formatAmount(
+                                              s.amount,
+                                              currency: currency,
+                                            ),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                               color: Color(0xFFFF6B6B),
@@ -768,8 +785,10 @@ class _ExpenseCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currency = ref.watch(tabSettingsProvider).asData?.value.expensesCurrency ?? 'EUR';
-    final categories = ref.watch(tabSettingsProvider).asData?.value.expensesCategories ??
+    final currency =
+        ref.watch(tabSettingsProvider).asData?.value.expensesCurrency ?? 'EUR';
+    final categories =
+        ref.watch(tabSettingsProvider).asData?.value.expensesCategories ??
         defaultExpenseCategories;
     final color = expense.expenseType == ExpenseType.reimbursement
         ? const Color(0xFF27AE60)
@@ -915,9 +934,7 @@ class _ExpenseCard extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ExpenseFormScreen(expense: expense),
-        ),
+        MaterialPageRoute(builder: (_) => ExpenseFormScreen(expense: expense)),
       ),
       child: cardContent,
     );

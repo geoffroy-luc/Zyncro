@@ -58,7 +58,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         _endTime = TimeOfDay.fromDateTime(e.endDate!);
       } else {
         _endDate = _startDate;
-        _endTime = TimeOfDay(hour: _startTime.hour + 1, minute: _startTime.minute);
+        _endTime = TimeOfDay(
+          hour: _startTime.hour + 1,
+          minute: _startTime.minute,
+        );
       }
       _loadReminder(e.id);
       _recurrence = e.recurrence;
@@ -66,7 +69,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     } else {
       _startDate = widget.initialDate ?? DateTime.now();
       _endDate = _startDate;
-      _endTime = TimeOfDay(hour: _startTime.hour + 1, minute: _startTime.minute);
+      _endTime = TimeOfDay(
+        hour: _startTime.hour + 1,
+        minute: _startTime.minute,
+      );
     }
   }
 
@@ -133,8 +139,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Supprimer',
-                style: TextStyle(color: AppColors.error)),
+            child: const Text(
+              'Supprimer',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -145,23 +153,28 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       final groupId = ref.read(selectedGroupIdProvider).asData?.value;
       if (groupId == null) return;
       try {
-        await ref.read(eventsRepositoryProvider).deleteEvent(groupId, widget.event!.id);
+        await ref
+            .read(eventsRepositoryProvider)
+            .deleteEvent(groupId, widget.event!.id);
         await ReminderService.cancelReminder(widget.event!.id);
         final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
         if (user != null) {
-          ref.read(messagesRepositoryProvider).sendSystemMessage(
-            groupId: groupId,
-            userId: user.uid,
-            content: '📅 $userName a supprimé un événement « ${widget.event!.title} »',
-            notifScreen: 'calendar',
-          );
+          ref
+              .read(messagesRepositoryProvider)
+              .sendSystemMessage(
+                groupId: groupId,
+                userId: user.uid,
+                content:
+                    '📅 $userName a supprimé un événement « ${widget.event!.title} »',
+                notifScreen: 'calendar',
+              );
         }
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Permission refusée')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Permission refusée')));
         }
       }
     }
@@ -175,15 +188,15 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     if (user == null || groupId == null) return;
 
     final startDt = _combine(_startDate, _startTime);
-    final endDt =
-        _hasEndDate && _endDate != null && _endTime != null
-            ? _combine(_endDate!, _endTime!)
-            : null;
+    final endDt = _hasEndDate && _endDate != null && _endTime != null
+        ? _combine(_endDate!, _endTime!)
+        : null;
 
     if (endDt != null && endDt.isBefore(startDt)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('La date de fin doit être après la date de début')),
+          content: Text('La date de fin doit être après la date de début'),
+        ),
       );
       return;
     }
@@ -229,22 +242,28 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         );
         await ReminderService.scheduleReminder(created, _reminderMinutes);
       }
-      final userName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+      final userName =
+          ref.read(currentMemberProvider).asData?.value?.displayName ??
           user.displayName ??
           user.email ??
           'Quelqu\'un';
-      final action = isCreating ? 'a créé un événement' : 'a modifié l\'événement';
-      ref.read(messagesRepositoryProvider).sendSystemMessage(
-        groupId: groupId,
-        userId: user.uid,
-        content: '📅 $userName $action « $title »',
-        notifScreen: 'calendar',
-      );
+      final action = isCreating
+          ? 'a créé un événement'
+          : 'a modifié l\'événement';
+      ref
+          .read(messagesRepositoryProvider)
+          .sendSystemMessage(
+            groupId: groupId,
+            userId: user.uid,
+            content: '📅 $userName $action « $title »',
+            notifScreen: 'calendar',
+          );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -255,10 +274,12 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
 
   Future<void> _showRecurrencePicker() async {
     RecurrenceFrequency? selectedFreq = _recurrence?.frequency;
-    RecurrenceEndType endType = _recurrence?.endType ?? RecurrenceEndType.forever;
+    RecurrenceEndType endType =
+        _recurrence?.endType ?? RecurrenceEndType.forever;
     int countValue = _recurrence?.count ?? 4;
     final countController = TextEditingController(text: '$countValue');
-    DateTime untilDate = _recurrence?.until ?? _startDate.add(const Duration(days: 30));
+    DateTime untilDate =
+        _recurrence?.until ?? _startDate.add(const Duration(days: 30));
     final untilController = TextEditingController(
       text: DateFormat('d/M/yyyy').format(untilDate),
     );
@@ -292,8 +313,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                     child: Text(
                       'Répétition',
-                      style: Theme.of(context).textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   // Aucune
@@ -319,9 +341,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                     return ListTile(
                       leading: Icon(
                         Icons.repeat,
-                        color: isSelected
-                            ? primary
-                            : AppColors.textSecondary,
+                        color: isSelected ? primary : AppColors.textSecondary,
                       ),
                       title: Text(label),
                       trailing: isSelected
@@ -376,7 +396,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                                       isDense: true,
                                       border: OutlineInputBorder(),
                                       contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 8),
+                                        horizontal: 8,
+                                        vertical: 8,
+                                      ),
                                     ),
                                     inputFormatters: [
                                       FilteringTextInputFormatter.digitsOnly,
@@ -415,23 +437,32 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                                     if (picked != null) {
                                       setSt(() {
                                         untilDate = picked;
-                                        untilController.text =
-                                            DateFormat('d/M/yyyy').format(picked);
+                                        untilController.text = DateFormat(
+                                          'd/M/yyyy',
+                                        ).format(picked);
                                       });
                                     }
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 6),
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
                                     decoration: BoxDecoration(
-                                      border: Border.all(color: AppColors.border),
+                                      border: Border.all(
+                                        color: AppColors.border,
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
-                                      DateFormat('d MMM yyyy', 'fr_FR')
-                                          .format(untilDate),
+                                      DateFormat(
+                                        'd MMM yyyy',
+                                        'fr_FR',
+                                      ).format(untilDate),
                                       style: TextStyle(
-                                          color: primary, fontSize: 13),
+                                        color: primary,
+                                        fontSize: 13,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -466,9 +497,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                           });
                           Navigator.pop(ctx);
                         },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: primary,
-                        ),
+                        style: FilledButton.styleFrom(backgroundColor: primary),
                         child: const Text('Confirmer'),
                       ),
                     ),
@@ -508,8 +537,11 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right,
-                size: 20, color: AppColors.textSecondary),
+            const Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: AppColors.textSecondary,
+            ),
           ],
         ),
       ),
@@ -549,45 +581,47 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-              child: Text(
-                'Rappel',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                child: Text(
+                  'Rappel',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ),
-            ...presets.map((p) {
-              final (minutes, label, icon) = p;
-              final selected = _reminderMinutes == minutes;
-              final primary = Theme.of(ctx).colorScheme.primary;
-              return ListTile(
-                leading: Icon(icon,
-                    color: selected ? primary : AppColors.textSecondary),
-                title: Text(label),
-                trailing: selected
-                    ? Icon(Icons.check, color: primary)
-                    : null,
+              ...presets.map((p) {
+                final (minutes, label, icon) = p;
+                final selected = _reminderMinutes == minutes;
+                final primary = Theme.of(ctx).colorScheme.primary;
+                return ListTile(
+                  leading: Icon(
+                    icon,
+                    color: selected ? primary : AppColors.textSecondary,
+                  ),
+                  title: Text(label),
+                  trailing: selected ? Icon(Icons.check, color: primary) : null,
+                  onTap: () {
+                    setState(() => _reminderMinutes = minutes);
+                    Navigator.pop(ctx);
+                  },
+                );
+              }),
+              ListTile(
+                leading: const Icon(
+                  Icons.tune_outlined,
+                  color: AppColors.textSecondary,
+                ),
+                title: const Text('Personnalisé…'),
                 onTap: () {
-                  setState(() => _reminderMinutes = minutes);
                   Navigator.pop(ctx);
+                  _showCustomReminderDialog();
                 },
-              );
-            }),
-            ListTile(
-              leading: const Icon(Icons.tune_outlined,
-                  color: AppColors.textSecondary),
-              title: const Text('Personnalisé…'),
-              onTap: () {
-                Navigator.pop(ctx);
-                _showCustomReminderDialog();
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -669,8 +703,11 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.notifications_outlined,
-                size: 20, color: AppColors.textSecondary),
+            const Icon(
+              Icons.notifications_outlined,
+              size: 20,
+              color: AppColors.textSecondary,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -683,8 +720,11 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right,
-                size: 20, color: AppColors.textSecondary),
+            const Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: AppColors.textSecondary,
+            ),
           ],
         ),
       ),
@@ -700,11 +740,14 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500)),
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -712,8 +755,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
               child: GestureDetector(
                 onTap: () => _pickDate(isStart: isStart),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -721,13 +766,18 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today_outlined,
-                          size: 16, color: AppColors.textSecondary),
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         DateFormat('d MMM yyyy', 'fr_FR').format(date),
                         style: const TextStyle(
-                            color: AppColors.textPrimary, fontSize: 13),
+                          color: AppColors.textPrimary,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -738,8 +788,10 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
             GestureDetector(
               onTap: () => _pickTime(isStart: isStart),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -747,13 +799,18 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.access_time,
-                        size: 16, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       time.format(context),
                       style: const TextStyle(
-                          color: AppColors.textPrimary, fontSize: 13),
+                        color: AppColors.textPrimary,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -768,33 +825,44 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   Future<void> _addCustomColor(String hex) async {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    final settings = ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
-    await ref.read(tabSettingsRepositoryProvider).updateSettings(
-      groupId,
-      from: settings,
-      to: settings.copyWith(customColors: [...settings.customColors, hex]),
-    );
+    final settings =
+        ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    await ref
+        .read(tabSettingsRepositoryProvider)
+        .updateSettings(
+          groupId,
+          from: settings,
+          to: settings.copyWith(customColors: [...settings.customColors, hex]),
+        );
   }
 
   Future<void> _deleteCustomColor(String hex) async {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    final settings = ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
-    await ref.read(tabSettingsRepositoryProvider).updateSettings(
-      groupId,
-      from: settings,
-      to: settings.withColorRemoved(hex),
-    );
+    final settings =
+        ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    await ref
+        .read(tabSettingsRepositoryProvider)
+        .updateSettings(
+          groupId,
+          from: settings,
+          to: settings.withColorRemoved(hex),
+        );
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(currentMemberProvider); // garde le provider actif pour ref.read() dans les méthodes async
-    final tabSettings = ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    ref.watch(
+      currentMemberProvider,
+    ); // garde le provider actif pour ref.read() dans les méthodes async
+    final tabSettings =
+        ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(widget.event != null ? 'Modifier l\'événement' : 'Nouvel événement'),
+        title: Text(
+          widget.event != null ? 'Modifier l\'événement' : 'Nouvel événement',
+        ),
         actions: [
           if (widget.event != null)
             IconButton(
@@ -854,11 +922,14 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 maxLines: 3,
               ),
               const SizedBox(height: 24),
-              Text('Couleur',
-                  style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500)),
+              Text(
+                'Couleur',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const SizedBox(height: 10),
               ColorPickerRow(
                 basePalette: AppColors.itemPalette,
@@ -894,81 +965,105 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
               ],
               const SizedBox(height: 24),
               // Participants
-              Builder(builder: (context) {
-                final members = ref.watch(groupMembersProvider).asData?.value ?? [];
-                final currentUid = ref.watch(authStateProvider).asData?.value?.uid;
-                if (members.isEmpty) return const SizedBox.shrink();
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Participants',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+              Builder(
+                builder: (context) {
+                  final members =
+                      ref.watch(groupMembersProvider).asData?.value ?? [];
+                  final currentUid = ref
+                      .watch(authStateProvider)
+                      .asData
+                      ?.value
+                      ?.uid;
+                  if (members.isEmpty) return const SizedBox.shrink();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Participants',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: members.map((m) {
-                        final isSelected = _selectedParticipantIds.contains(m.uid);
-                        final color = avatarColorForUid(m.uid);
-                        final label = m.uid == currentUid ? 'Vous' : m.displayName;
-                        return GestureDetector(
-                          onTap: () => setState(() {
-                            if (isSelected) {
-                              _selectedParticipantIds.remove(m.uid);
-                            } else {
-                              _selectedParticipantIds.add(m.uid);
-                            }
-                          }),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isSelected ? color.withValues(alpha: 0.10) : Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isSelected ? color : AppColors.border,
-                                width: isSelected ? 1.5 : 1,
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: members.map((m) {
+                          final isSelected = _selectedParticipantIds.contains(
+                            m.uid,
+                          );
+                          final color = avatarColorForUid(m.uid);
+                          final label = m.uid == currentUid
+                              ? 'Vous'
+                              : m.displayName;
+                          return GestureDetector(
+                            onTap: () => setState(() {
+                              if (isSelected) {
+                                _selectedParticipantIds.remove(m.uid);
+                              } else {
+                                _selectedParticipantIds.add(m.uid);
+                              }
+                            }),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? color.withValues(alpha: 0.10)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected ? color : AppColors.border,
+                                  width: isSelected ? 1.5 : 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  UserAvatar(
+                                    photoUrl: m.photoUrl,
+                                    showPhoto: m.showProfilePhoto,
+                                    displayName: m.displayName,
+                                    radius: 14,
+                                    color: color,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    label,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                      color: isSelected
+                                          ? color
+                                          : AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  if (isSelected) ...[
+                                    const SizedBox(width: 6),
+                                    Icon(
+                                      Icons.check_circle_rounded,
+                                      size: 14,
+                                      color: color,
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                UserAvatar(
-                                  photoUrl: m.photoUrl,
-                                  showPhoto: m.showProfilePhoto,
-                                  displayName: m.displayName,
-                                  radius: 14,
-                                  color: color,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  label,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                                    color: isSelected ? color : AppColors.textPrimary,
-                                  ),
-                                ),
-                                if (isSelected) ...[
-                                  const SizedBox(width: 6),
-                                  Icon(Icons.check_circle_rounded, size: 14, color: color),
-                                ],
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                );
-              }),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  );
+                },
+              ),
               Text(
                 'Répétition',
                 style: const TextStyle(

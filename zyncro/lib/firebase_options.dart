@@ -54,8 +54,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1010364828673',
     projectId: 'zyncro-f5fdd',
     storageBucket: 'zyncro-f5fdd.firebasestorage.app',
-    androidClientId: '1010364828673-ih2fcmdvkc7o4mesm1s8uj1na6a1p5b2.apps.googleusercontent.com',
-    iosClientId: '1010364828673-hf0fivaoor45ssecejupc9flmm30gre2.apps.googleusercontent.com',
+    androidClientId:
+        '1010364828673-ih2fcmdvkc7o4mesm1s8uj1na6a1p5b2.apps.googleusercontent.com',
+    iosClientId:
+        '1010364828673-hf0fivaoor45ssecejupc9flmm30gre2.apps.googleusercontent.com',
     iosBundleId: 'com.zyncro.app',
   );
 
@@ -75,8 +77,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1010364828673',
     projectId: 'zyncro-f5fdd',
     storageBucket: 'zyncro-f5fdd.firebasestorage.app',
-    androidClientId: '1010364828673-ih2fcmdvkc7o4mesm1s8uj1na6a1p5b2.apps.googleusercontent.com',
-    iosClientId: '1010364828673-8v4bp0cr6dtatbmqi0drm0qf1e9nil5n.apps.googleusercontent.com',
+    androidClientId:
+        '1010364828673-ih2fcmdvkc7o4mesm1s8uj1na6a1p5b2.apps.googleusercontent.com',
+    iosClientId:
+        '1010364828673-8v4bp0cr6dtatbmqi0drm0qf1e9nil5n.apps.googleusercontent.com',
     iosBundleId: 'com.example.zyncro',
   );
 
@@ -89,5 +93,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'zyncro-f5fdd.firebasestorage.app',
     measurementId: 'G-0EFRN83KE0',
   );
-
 }

@@ -15,8 +15,11 @@ class NotesRepository implements INotesRepository {
         .orderBy('updatedAt', descending: true)
         .snapshots()
         .map((snap) {
-          final notes =
-              mapDocsSafely(snap.docs, Note.fromMap, label: 'watchNotes');
+          final notes = mapDocsSafely(
+            snap.docs,
+            Note.fromMap,
+            label: 'watchNotes',
+          );
           // Tri côté client : épinglées en premier, puis par date
           notes.sort((a, b) {
             if (a.isPinned != b.isPinned) return a.isPinned ? -1 : 1;

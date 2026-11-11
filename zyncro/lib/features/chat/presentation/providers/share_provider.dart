@@ -106,7 +106,10 @@ class IncomingShareNotifier extends Notifier<PendingShare?> {
 
     // Partage 100 % texte / lien.
     if (files.every(isText)) {
-      final text = files.map((f) => f.path).where((s) => s.isNotEmpty).join('\n');
+      final text = files
+          .map((f) => f.path)
+          .where((s) => s.isNotEmpty)
+          .join('\n');
       if (text.isEmpty) return null;
       return PendingShare.text(text: text, preselectedGroupId: groupId);
     }
@@ -182,7 +185,8 @@ class ShareShortcutsController extends Notifier<void> {
 
   Future<Uint8List?> _iconFor(Group g) async {
     final url = g.photoUrl;
-    if (url == null || url.isEmpty) return null; // le natif dessinera l'initiale
+    if (url == null || url.isEmpty)
+      return null; // le natif dessinera l'initiale
     if (_iconCache.containsKey(url)) return _iconCache[url];
     try {
       final resp = await http

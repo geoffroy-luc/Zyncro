@@ -34,10 +34,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     _startLoading(_LoadingType.email);
     try {
-      await ref.read(authRepositoryProvider).signInWithEmail(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+      await ref
+          .read(authRepositoryProvider)
+          .signInWithEmail(
+            _emailController.text.trim(),
+            _passwordController.text,
+          );
     } on FirebaseAuthException catch (e) {
       _setError(_mapEmailError(e.code));
     } finally {
@@ -63,7 +65,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref.read(authRepositoryProvider).signInWithApple();
     } on FirebaseAuthException catch (e) {
-      debugPrint('Apple sign-in FirebaseAuthException: ${e.code} - ${e.message}');
+      debugPrint(
+        'Apple sign-in FirebaseAuthException: ${e.code} - ${e.message}',
+      );
       if (e.code != 'sign-in-cancelled') _setError('Connexion Apple échouée.');
     } catch (e) {
       debugPrint('Apple sign-in error: $e');
@@ -130,7 +134,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   });
 
   void _stopLoading() {
-    if (mounted) setState(() { _loading = false; _loadingType = null; });
+    if (mounted)
+      setState(() {
+        _loading = false;
+        _loadingType = null;
+      });
   }
 
   void _setError(String msg) {
@@ -170,7 +178,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text('Retrouve ton espace partagé', style: theme.textTheme.bodyMedium),
+              Text(
+                'Retrouve ton espace partagé',
+                style: theme.textTheme.bodyMedium,
+              ),
               const SizedBox(height: 48),
 
               // ── Email / password form ──────────────────────────────
@@ -187,8 +198,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      validator: (v) =>
-                          v == null || !v.contains('@') ? 'Email invalide' : null,
+                      validator: (v) => v == null || !v.contains('@')
+                          ? 'Email invalide'
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -210,8 +222,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _signIn(),
-                      validator: (v) =>
-                          v == null || v.length < 6 ? 'Minimum 6 caractères' : null,
+                      validator: (v) => v == null || v.length < 6
+                          ? 'Minimum 6 caractères'
+                          : null,
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 12),
@@ -264,10 +277,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const Expanded(child: Divider(color: AppColors.border)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'ou',
-                        style: theme.textTheme.bodySmall,
-                      ),
+                      child: Text('ou', style: theme.textTheme.bodySmall),
                     ),
                     const Expanded(child: Divider(color: AppColors.border)),
                   ],
@@ -384,7 +394,10 @@ class _GuestPseudoSheetState extends State<_GuestPseudoSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Continuer sans compte', style: theme.textTheme.titleLarge),
+                Text(
+                  'Continuer sans compte',
+                  style: theme.textTheme.titleLarge,
+                ),
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.of(context).pop(),
@@ -410,16 +423,14 @@ class _GuestPseudoSheetState extends State<_GuestPseudoSheet> {
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => _submit(),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Le pseudo est requis';
+                if (v == null || v.trim().isEmpty)
+                  return 'Le pseudo est requis';
                 if (v.trim().length < 2) return 'Minimum 2 caractères';
                 return null;
               },
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _submit,
-              child: const Text('Continuer'),
-            ),
+            ElevatedButton(onPressed: _submit, child: const Text('Continuer')),
           ],
         ),
       ),

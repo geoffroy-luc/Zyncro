@@ -41,12 +41,16 @@ class UpdateService {
       final String storeUrl;
 
       if (Platform.isIOS) {
-        minimumVersion = (data['ios_minimum_version'] as String?) ?? fallbackMinimum;
-        latestVersion = (data['ios_latest_version'] as String?) ?? fallbackLatest;
+        minimumVersion =
+            (data['ios_minimum_version'] as String?) ?? fallbackMinimum;
+        latestVersion =
+            (data['ios_latest_version'] as String?) ?? fallbackLatest;
         storeUrl = iosUrl;
       } else {
-        minimumVersion = (data['android_minimum_version'] as String?) ?? fallbackMinimum;
-        latestVersion = (data['android_latest_version'] as String?) ?? fallbackLatest;
+        minimumVersion =
+            (data['android_minimum_version'] as String?) ?? fallbackMinimum;
+        latestVersion =
+            (data['android_latest_version'] as String?) ?? fallbackLatest;
         storeUrl = androidUrl;
       }
 

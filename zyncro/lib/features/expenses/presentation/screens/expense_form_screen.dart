@@ -18,7 +18,6 @@ import '../../../groups/presentation/providers/groups_provider.dart';
 import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../providers/expenses_provider.dart';
 
-
 class ExpenseFormScreen extends ConsumerStatefulWidget {
   final Expense? expense;
   const ExpenseFormScreen({super.key, this.expense});
@@ -66,8 +65,12 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
-    for (final c in _amountSplitControllers.values) { c.dispose(); }
-    for (final c in _percentageSplitControllers.values) { c.dispose(); }
+    for (final c in _amountSplitControllers.values) {
+      c.dispose();
+    }
+    for (final c in _percentageSplitControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -89,20 +92,24 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
 
   void _ensureSplitControllers(List<GroupMember> members) {
     final ids = members.map((m) => m.uid).toSet();
-    for (final uid in _amountSplitControllers.keys
-        .where((k) => !ids.contains(k))
-        .toList()) {
+    for (final uid
+        in _amountSplitControllers.keys
+            .where((k) => !ids.contains(k))
+            .toList()) {
       _amountSplitControllers.remove(uid)?.dispose();
     }
-    for (final uid in _percentageSplitControllers.keys
-        .where((k) => !ids.contains(k))
-        .toList()) {
+    for (final uid
+        in _percentageSplitControllers.keys
+            .where((k) => !ids.contains(k))
+            .toList()) {
       _percentageSplitControllers.remove(uid)?.dispose();
     }
     for (final m in members) {
       _amountSplitControllers.putIfAbsent(m.uid, () => TextEditingController());
       _percentageSplitControllers.putIfAbsent(
-          m.uid, () => TextEditingController());
+        m.uid,
+        () => TextEditingController(),
+      );
     }
   }
 
@@ -111,7 +118,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     if (_recalculating) return;
     _recalculating = true;
     final entered = _parseDouble(rawValue) ?? 0;
-    final others = _selectedMemberUids.where((uid) => uid != editingUid).toList();
+    final others = _selectedMemberUids
+        .where((uid) => uid != editingUid)
+        .toList();
     if (others.isEmpty) {
       _recalculating = false;
       return;
@@ -120,8 +129,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
       final remaining = (100 - entered).clamp(0.0, 100.0);
       final perOther = remaining / others.length;
       for (final uid in others) {
-        _percentageSplitControllers[uid]?.text =
-            perOther.toStringAsFixed(2);
+        _percentageSplitControllers[uid]?.text = perOther.toStringAsFixed(2);
       }
     } else if (_splitType == SplitType.amount) {
       final total = _parseDouble(_amountController.text) ?? 0;
@@ -139,7 +147,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
   }
 
   void _fillDefaults(List<GroupMember> members, double total) {
-    final selected = members.where((m) => _selectedMemberUids.contains(m.uid)).toList();
+    final selected = members
+        .where((m) => _selectedMemberUids.contains(m.uid))
+        .toList();
     if (selected.isEmpty) return;
     final perAmount = total / selected.length;
     final perPct = 100 / selected.length;
@@ -157,7 +167,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     required List<GroupMember> members,
     required double total,
   }) {
-    final selected = members.where((m) => _selectedMemberUids.contains(m.uid)).toList();
+    final selected = members
+        .where((m) => _selectedMemberUids.contains(m.uid))
+        .toList();
     if (selected.isEmpty) {
       _splitError = 'Sélectionnez au moins un membre.';
       return null;
@@ -208,10 +220,12 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
 
   Future<void> _showRecurrencePicker() async {
     RecurrenceFrequency? selectedFreq = _recurrence?.frequency;
-    RecurrenceEndType endType = _recurrence?.endType ?? RecurrenceEndType.forever;
+    RecurrenceEndType endType =
+        _recurrence?.endType ?? RecurrenceEndType.forever;
     int countValue = _recurrence?.count ?? 4;
     final countController = TextEditingController(text: '$countValue');
-    DateTime untilDate = _recurrence?.until ?? _date.add(const Duration(days: 30));
+    DateTime untilDate =
+        _recurrence?.until ?? _date.add(const Duration(days: 30));
 
     await showModalBottomSheet<void>(
       context: context,
@@ -230,34 +244,47 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           ];
           return SafeArea(
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-                    child: Text('Répétition',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600)),
+                    child: Text(
+                      'Répétition',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                   ListTile(
-                    leading: Icon(Icons.block_outlined,
-                        color: selectedFreq == null ? primary : AppColors.textSecondary),
+                    leading: Icon(
+                      Icons.block_outlined,
+                      color: selectedFreq == null
+                          ? primary
+                          : AppColors.textSecondary,
+                    ),
                     title: const Text('Aucune'),
                     trailing: selectedFreq == null
-                        ? Icon(Icons.check, color: primary) : null,
+                        ? Icon(Icons.check, color: primary)
+                        : null,
                     onTap: () => setSt(() => selectedFreq = null),
                   ),
                   ...frequencies.map((f) {
                     final (freq, label) = f;
                     final isSelected = selectedFreq == freq;
                     return ListTile(
-                      leading: Icon(Icons.repeat,
-                          color: isSelected ? primary : AppColors.textSecondary),
+                      leading: Icon(
+                        Icons.repeat,
+                        color: isSelected ? primary : AppColors.textSecondary,
+                      ),
                       title: Text(label),
                       trailing: isSelected
-                          ? Icon(Icons.check, color: primary) : null,
+                          ? Icon(Icons.check, color: primary)
+                          : null,
                       onTap: () => setSt(() => selectedFreq = freq),
                     );
                   }),
@@ -265,11 +292,14 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                     const Divider(height: 24),
                     const Padding(
                       padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
-                      child: Text('Fin de la répétition',
-                          style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500)),
+                      child: Text(
+                        'Fin de la répétition',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
                     RadioListTile<RecurrenceEndType>(
                       value: RecurrenceEndType.forever,
@@ -284,33 +314,39 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       onChanged: (v) => setSt(() => endType = v!),
                       activeColor: primary,
                       title: endType == RecurrenceEndType.count
-                          ? Row(children: [
-                              const Text('Nombre de fois :'),
-                              const SizedBox(width: 12),
-                              SizedBox(
-                                width: 72,
-                                child: TextField(
-                                  controller: countController,
-                                  keyboardType: TextInputType.number,
-                                  textAlign: TextAlign.center,
-                                  maxLength: 3,
-                                  decoration: const InputDecoration(
-                                    counterText: '',
-                                    isDense: true,
-                                    border: OutlineInputBorder(),
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 8),
+                          ? Row(
+                              children: [
+                                const Text('Nombre de fois :'),
+                                const SizedBox(width: 12),
+                                SizedBox(
+                                  width: 72,
+                                  child: TextField(
+                                    controller: countController,
+                                    keyboardType: TextInputType.number,
+                                    textAlign: TextAlign.center,
+                                    maxLength: 3,
+                                    decoration: const InputDecoration(
+                                      counterText: '',
+                                      isDense: true,
+                                      border: OutlineInputBorder(),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 8,
+                                      ),
+                                    ),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                    onChanged: (v) {
+                                      final n = int.tryParse(v);
+                                      if (n != null && n >= 1 && n <= 999) {
+                                        setSt(() => countValue = n);
+                                      }
+                                    },
                                   ),
-                                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                                  onChanged: (v) {
-                                    final n = int.tryParse(v);
-                                    if (n != null && n >= 1 && n <= 999) {
-                                      setSt(() => countValue = n);
-                                    }
-                                  },
                                 ),
-                              ),
-                            ])
+                              ],
+                            )
                           : const Text('Nombre de fois'),
                     ),
                     RadioListTile<RecurrenceEndType>(
@@ -319,38 +355,49 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       onChanged: (v) => setSt(() => endType = v!),
                       activeColor: primary,
                       title: endType == RecurrenceEndType.until
-                          ? Row(children: [
-                              const Text('Jusqu\'au :'),
-                              const SizedBox(width: 12),
-                              GestureDetector(
-                                onTap: () async {
-                                  final picked = await showDatePicker(
-                                    context: ctx,
-                                    initialDate: untilDate,
-                                    firstDate: _date,
-                                    lastDate: DateTime(2100),
-                                  );
-                                  if (picked != null) {
-                                    setSt(() {
-                                      untilDate = picked;
-                                    });
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: AppColors.border),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    DateFormat('d MMM yyyy', 'fr_FR').format(untilDate),
-                                    style: TextStyle(
-                                        color: primary, fontSize: 13),
+                          ? Row(
+                              children: [
+                                const Text('Jusqu\'au :'),
+                                const SizedBox(width: 12),
+                                GestureDetector(
+                                  onTap: () async {
+                                    final picked = await showDatePicker(
+                                      context: ctx,
+                                      initialDate: untilDate,
+                                      firstDate: _date,
+                                      lastDate: DateTime(2100),
+                                    );
+                                    if (picked != null) {
+                                      setSt(() {
+                                        untilDate = picked;
+                                      });
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: AppColors.border,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      DateFormat(
+                                        'd MMM yyyy',
+                                        'fr_FR',
+                                      ).format(untilDate),
+                                      style: TextStyle(
+                                        color: primary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ])
+                              ],
+                            )
                           : const Text('Jusqu\'au'),
                     ),
                   ],
@@ -367,8 +414,12 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                               _recurrence = RecurrenceRule(
                                 frequency: selectedFreq!,
                                 endType: endType,
-                                count: endType == RecurrenceEndType.count ? countValue : null,
-                                until: endType == RecurrenceEndType.until ? untilDate : null,
+                                count: endType == RecurrenceEndType.count
+                                    ? countValue
+                                    : null,
+                                until: endType == RecurrenceEndType.until
+                                    ? untilDate
+                                    : null,
                               );
                             }
                           });
@@ -407,12 +458,18 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
               child: Text(
                 label,
                 style: TextStyle(
-                  color: _recurrence != null ? AppColors.textPrimary : AppColors.textSecondary,
+                  color: _recurrence != null
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
                   fontSize: 14,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, size: 20, color: AppColors.textSecondary),
+            const Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: AppColors.textSecondary,
+            ),
           ],
         ),
       ),
@@ -451,7 +508,8 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
       final effectivePaidByName = effectivePaidByUid == user.uid
           ? (currentMemberName ?? user.displayName ?? _paidByName ?? 'Moi')
           : (_paidByName ?? 'Membre');
-      final userName = currentMemberName ?? user.displayName ?? user.email ?? 'Quelqu\'un';
+      final userName =
+          currentMemberName ?? user.displayName ?? user.email ?? 'Quelqu\'un';
 
       if (widget.expense != null) {
         final updated = widget.expense!.copyWith(
@@ -468,43 +526,52 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           recurrence: _recurrence,
           clearRecurrence: _recurrence == null,
         );
-        await ref.read(expensesRepositoryProvider).updateExpense(groupId, updated);
-        ref.read(messagesRepositoryProvider).sendSystemMessage(
-          groupId: groupId,
-          userId: user.uid,
-          content:
-              '💰 $userName a modifié la dépense « $title » (${amount.toStringAsFixed(2)} €)',
-          notifScreen: 'expenses',
-        );
+        await ref
+            .read(expensesRepositoryProvider)
+            .updateExpense(groupId, updated);
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: groupId,
+              userId: user.uid,
+              content:
+                  '💰 $userName a modifié la dépense « $title » (${amount.toStringAsFixed(2)} €)',
+              notifScreen: 'expenses',
+            );
       } else {
-        await ref.read(expensesRepositoryProvider).createExpense(
-          groupId: groupId,
-          title: title,
-          amount: amount,
-          paidBy: effectivePaidByUid,
-          paidByName: effectivePaidByName,
-          splitWith: splitAmounts.keys.toList(),
-          expenseType: ExpenseType.expense,
-          splitType: _splitType,
-          splitAmounts: splitAmounts,
-          category: _selectedCategory,
-          date: _date,
-          userId: user.uid,
-          recurrence: _recurrence,
-        );
-        ref.read(messagesRepositoryProvider).sendSystemMessage(
-          groupId: groupId,
-          userId: user.uid,
-          content:
-              '💰 $userName a ajouté une dépense « $title » (${amount.toStringAsFixed(2)} €)',
-          notifScreen: 'expenses',
-        );
+        await ref
+            .read(expensesRepositoryProvider)
+            .createExpense(
+              groupId: groupId,
+              title: title,
+              amount: amount,
+              paidBy: effectivePaidByUid,
+              paidByName: effectivePaidByName,
+              splitWith: splitAmounts.keys.toList(),
+              expenseType: ExpenseType.expense,
+              splitType: _splitType,
+              splitAmounts: splitAmounts,
+              category: _selectedCategory,
+              date: _date,
+              userId: user.uid,
+              recurrence: _recurrence,
+            );
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: groupId,
+              userId: user.uid,
+              content:
+                  '💰 $userName a ajouté une dépense « $title » (${amount.toStringAsFixed(2)} €)',
+              notifScreen: 'expenses',
+            );
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -524,8 +591,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Supprimer',
-                style: TextStyle(color: AppColors.error)),
+            child: const Text(
+              'Supprimer',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -541,20 +610,22 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
             .deleteExpense(groupId, widget.expense!.firestoreId);
         final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
         if (user != null) {
-          ref.read(messagesRepositoryProvider).sendSystemMessage(
-            groupId: groupId,
-            userId: user.uid,
-            content:
-                '💰 $userName a supprimé une dépense « ${widget.expense!.title} »',
-            notifScreen: 'expenses',
-          );
+          ref
+              .read(messagesRepositoryProvider)
+              .sendSystemMessage(
+                groupId: groupId,
+                userId: user.uid,
+                content:
+                    '💰 $userName a supprimé une dépense « ${widget.expense!.title} »',
+                notifScreen: 'expenses',
+              );
         }
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Permission refusée')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Permission refusée')));
         }
       }
     }
@@ -583,7 +654,8 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
   Widget build(BuildContext context) {
     final members = ref.watch(expenseMembersProvider).asData?.value ?? [];
     final currentUid = ref.watch(authStateProvider).asData?.value?.uid;
-    final categories = ref.watch(tabSettingsProvider).asData?.value.expensesCategories ??
+    final categories =
+        ref.watch(tabSettingsProvider).asData?.value.expensesCategories ??
         defaultExpenseCategories;
     _ensureSplitControllers(members);
 
@@ -593,8 +665,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
       if (widget.expense == null) {
         _selectedMemberUids = members.map((m) => m.uid).toSet();
         if (_paidByUid == null && currentUid != null) {
-          final me = members.firstWhere((m) => m.uid == currentUid,
-              orElse: () => members.first);
+          final me = members.firstWhere(
+            (m) => m.uid == currentUid,
+            orElse: () => members.first,
+          );
           _paidByUid = me.uid;
           _paidByName = me.displayName;
         }
@@ -608,21 +682,24 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
             if (e.splitType == SplitType.amount) {
               _amountSplitControllers[uid]?.text = v.toStringAsFixed(2);
             } else {
-              _percentageSplitControllers[uid]?.text =
-                  (v / e.amount * 100).toStringAsFixed(2);
+              _percentageSplitControllers[uid]?.text = (v / e.amount * 100)
+                  .toStringAsFixed(2);
             }
           }
         }
       }
     }
 
-    final selectedMembers =
-        members.where((m) => _selectedMemberUids.contains(m.uid)).toList();
+    final selectedMembers = members
+        .where((m) => _selectedMemberUids.contains(m.uid))
+        .toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(widget.expense != null ? 'Modifier la dépense' : 'Nouvelle dépense'),
+        title: Text(
+          widget.expense != null ? 'Modifier la dépense' : 'Nouvelle dépense',
+        ),
         actions: [
           if (widget.expense != null)
             IconButton(
@@ -672,8 +749,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   labelText: 'Montant (€)',
                   prefixIcon: Icon(Icons.euro_outlined),
                 ),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 onChanged: (_) => setState(() {
                   if (_splitType != SplitType.equal) {
                     final total = _parseDouble(_amountController.text) ?? 0;
@@ -686,7 +764,8 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   if (v == null || v.trim().isEmpty) return 'Champ requis';
                   final p = _parseDouble(v);
                   if (p == null || p <= 0) return 'Montant invalide';
-                  if (p > 999999.99) return 'Montant trop élevé (max 999 999,99 €)';
+                  if (p > 999999.99)
+                    return 'Montant trop élevé (max 999 999,99 €)';
                   return null;
                 },
               ),
@@ -706,7 +785,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                 onTap: _pickDate,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -714,13 +795,18 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today_outlined,
-                          size: 18, color: AppColors.textSecondary),
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 18,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: 12),
                       Text(
                         DateFormat('d MMMM yyyy', 'fr_FR').format(_date),
                         style: const TextStyle(
-                            color: AppColors.textPrimary, fontSize: 14),
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -753,7 +839,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 150),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? color.withValues(alpha: 0.10)
@@ -782,14 +870,16 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                               fontWeight: isSelected
                                   ? FontWeight.w600
                                   : FontWeight.w400,
-                              color:
-                                  isSelected ? color : AppColors.textPrimary,
+                              color: isSelected ? color : AppColors.textPrimary,
                             ),
                           ),
                           if (isSelected) ...[
                             const SizedBox(width: 6),
-                            Icon(Icons.check_circle_rounded,
-                                size: 14, color: color),
+                            Icon(
+                              Icons.check_circle_rounded,
+                              size: 14,
+                              color: color,
+                            ),
                           ],
                         ],
                       ),
@@ -831,8 +921,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                           if (total > 0) {
                             _fillDefaults(
                               members
-                                  .where((x) =>
-                                      _selectedMemberUids.contains(x.uid))
+                                  .where(
+                                    (x) => _selectedMemberUids.contains(x.uid),
+                                  )
                                   .toList(),
                               total,
                             );
@@ -843,7 +934,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 150),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? color.withValues(alpha: 0.10)
@@ -872,15 +965,16 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                               fontWeight: isSelected
                                   ? FontWeight.w600
                                   : FontWeight.w400,
-                              color: isSelected
-                                  ? color
-                                  : AppColors.textPrimary,
+                              color: isSelected ? color : AppColors.textPrimary,
                             ),
                           ),
                           if (isSelected) ...[
                             const SizedBox(width: 6),
-                            Icon(Icons.check_circle_rounded,
-                                size: 14, color: color),
+                            Icon(
+                              Icons.check_circle_rounded,
+                              size: 14,
+                              color: color,
+                            ),
                           ],
                         ],
                       ),
@@ -929,97 +1023,105 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   ),
                 ],
               ),
-              Builder(builder: (_) {
-                final total = _parseDouble(_amountController.text) ?? 0;
-                final n = selectedMembers.length;
-                if (_splitType == SplitType.equal && total > 0 && n > 0) {
-                  final share = total / n;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 14),
-                      ...selectedMembers.map((m) {
-                        final color = avatarColorForUid(m.uid);
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            children: [
-                              UserAvatar(
-                                photoUrl: m.photoUrl,
-                                showPhoto: m.showProfilePhoto,
-                                displayName: m.displayName,
-                                radius: 14,
-                                color: color,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  _memberLabel(m, currentUid),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textPrimary,
+              Builder(
+                builder: (_) {
+                  final total = _parseDouble(_amountController.text) ?? 0;
+                  final n = selectedMembers.length;
+                  if (_splitType == SplitType.equal && total > 0 && n > 0) {
+                    final share = total / n;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 14),
+                        ...selectedMembers.map((m) {
+                          final color = avatarColorForUid(m.uid);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                UserAvatar(
+                                  photoUrl: m.photoUrl,
+                                  showPhoto: m.showProfilePhoto,
+                                  displayName: m.displayName,
+                                  radius: 14,
+                                  color: color,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    _memberLabel(m, currentUid),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textPrimary,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Text(
-                                '${share.toStringAsFixed(2)} €',
-                                style: TextStyle(
-                                  fontSize: 14,
+                                Text(
+                                  '${share.toStringAsFixed(2)} €',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: color,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+                    );
+                  }
+                  if (_splitType != SplitType.equal) {
+                    return Column(
+                      children: [
+                        const SizedBox(height: 14),
+                        ...selectedMembers.map((m) {
+                          final ctrl = _splitType == SplitType.amount
+                              ? _amountSplitControllers[m.uid]!
+                              : _percentageSplitControllers[m.uid]!;
+                          final suffix = _splitType == SplitType.amount
+                              ? '€'
+                              : '%';
+                          final color = avatarColorForUid(m.uid);
+                          // Montant réel calculé pour le mode pourcentage
+                          String? realAmount;
+                          if (_splitType == SplitType.percentage && total > 0) {
+                            final pct = _parseDouble(ctrl.text) ?? 0;
+                            realAmount =
+                                '${(total * pct / 100).toStringAsFixed(2)} €';
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: TextField(
+                              controller: ctrl,
+                              decoration: InputDecoration(
+                                labelText:
+                                    '${_memberLabel(m, currentUid)} ($suffix)',
+                                prefixIcon: const Icon(Icons.tune),
+                                suffixText: realAmount,
+                                suffixStyle: TextStyle(
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   color: color,
                                 ),
                               ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
-                  );
-                }
-                if (_splitType != SplitType.equal) {
-                  return Column(
-                    children: [
-                      const SizedBox(height: 14),
-                      ...selectedMembers.map((m) {
-                        final ctrl = _splitType == SplitType.amount
-                            ? _amountSplitControllers[m.uid]!
-                            : _percentageSplitControllers[m.uid]!;
-                        final suffix = _splitType == SplitType.amount ? '€' : '%';
-                        final color = avatarColorForUid(m.uid);
-                        // Montant réel calculé pour le mode pourcentage
-                        String? realAmount;
-                        if (_splitType == SplitType.percentage && total > 0) {
-                          final pct = _parseDouble(ctrl.text) ?? 0;
-                          realAmount = '${(total * pct / 100).toStringAsFixed(2)} €';
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: TextField(
-                            controller: ctrl,
-                            decoration: InputDecoration(
-                              labelText: '${_memberLabel(m, currentUid)} ($suffix)',
-                              prefixIcon: const Icon(Icons.tune),
-                              suffixText: realAmount,
-                              suffixStyle: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: color,
-                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              onChanged: (v) {
+                                _recalculateFrom(m.uid, v);
+                                setState(() {});
+                              },
                             ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            onChanged: (v) {
-                              _recalculateFrom(m.uid, v);
-                              setState(() {});
-                            },
-                          ),
-                        );
-                      }),
-                    ],
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
+                          );
+                        }),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
               const SizedBox(height: 24),
 
               // Répétition
@@ -1058,7 +1160,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       onTap: () => setState(() => _selectedCategory = label),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: selected
                               ? color.withValues(alpha: 0.12)
@@ -1072,11 +1176,11 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(icon,
-                                size: 16,
-                                color: selected
-                                    ? color
-                                    : AppColors.textSecondary),
+                            Icon(
+                              icon,
+                              size: 16,
+                              color: selected ? color : AppColors.textSecondary,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               label,
@@ -1099,7 +1203,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                     onTap: _addCategory,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -1108,8 +1214,11 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.add,
-                              size: 16, color: AppColors.textSecondary),
+                          Icon(
+                            Icons.add,
+                            size: 16,
+                            color: AppColors.textSecondary,
+                          ),
                           SizedBox(width: 6),
                           Text(
                             'Nouvelle catégorie',
@@ -1128,9 +1237,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
 
               if (_splitError != null) ...[
                 const SizedBox(height: 16),
-                Text(_splitError!,
-                    style: const TextStyle(
-                        color: AppColors.error, fontSize: 13)),
+                Text(
+                  _splitError!,
+                  style: const TextStyle(color: AppColors.error, fontSize: 13),
+                ),
               ],
             ],
           ),

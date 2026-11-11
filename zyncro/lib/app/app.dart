@@ -44,9 +44,7 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
         canPop: !info.isMandatory,
         child: AlertDialog(
           title: Text(
-            info.isMandatory
-                ? 'Mise à jour requise'
-                : 'Mise à jour disponible',
+            info.isMandatory ? 'Mise à jour requise' : 'Mise à jour disponible',
           ),
           content: Text(
             info.isMandatory
@@ -124,10 +122,7 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('fr', 'FR'),
-        Locale('en', 'US'),
-      ],
+      supportedLocales: const [Locale('fr', 'FR'), Locale('en', 'US')],
       locale: const Locale('fr', 'FR'),
       builder: (context, child) =>
           NotificationBanner(child: child ?? const SizedBox.shrink()),

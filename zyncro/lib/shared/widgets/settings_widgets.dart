@@ -5,7 +5,11 @@ class SettingsSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
 
-  const SettingsSection({super.key, required this.title, required this.children});
+  const SettingsSection({
+    super.key,
+    required this.title,
+    required this.children,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +103,8 @@ class SettingsTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (trailing != null) trailing!
+                if (trailing != null)
+                  trailing!
                 else if (onTap != null && showChevron)
                   const Icon(
                     Icons.chevron_right_rounded,
@@ -108,10 +113,7 @@ class SettingsTile extends StatelessWidget {
                   ),
               ],
             ),
-            if (child != null) ...[
-              const SizedBox(height: 12),
-              child!,
-            ],
+            if (child != null) ...[const SizedBox(height: 12), child!],
           ],
         ),
       ),

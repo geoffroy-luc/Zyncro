@@ -209,9 +209,9 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _sending = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Échec du partage : $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Échec du partage : $e')));
     }
   }
 

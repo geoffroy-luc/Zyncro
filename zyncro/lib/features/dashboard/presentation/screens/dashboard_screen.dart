@@ -20,7 +20,6 @@ import '../../../notes/presentation/screens/note_editor_screen.dart';
 import '../../../groups/presentation/providers/tab_settings_provider.dart';
 import '../../../../shared/models/tab_settings.dart';
 
-
 Color _darken(Color color) {
   final hsl = HSLColor.fromColor(color);
   return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
@@ -52,9 +51,11 @@ bool _isToday(DateTime dt) {
   return dt.year == now.year && dt.month == now.month && dt.day == now.day;
 }
 
-String _formatAmount(double v) =>
-    NumberFormat.currency(locale: 'fr_FR', symbol: '€', decimalDigits: 2)
-        .format(v);
+String _formatAmount(double v) => NumberFormat.currency(
+  locale: 'fr_FR',
+  symbol: '€',
+  decimalDigits: 2,
+).format(v);
 
 String _timeAgo(DateTime dt) {
   final diff = DateTime.now().difference(dt);
@@ -62,8 +63,6 @@ String _timeAgo(DateTime dt) {
   if (diff.inHours < 24) return 'Il y a ${diff.inHours} h';
   return 'Il y a ${diff.inDays} j';
 }
-
-
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -76,19 +75,22 @@ class DashboardScreen extends ConsumerWidget {
     final allNotes = ref.watch(notesProvider).asData?.value ?? [];
     final allExpenses = ref.watch(expensesProvider).asData?.value ?? [];
     final balances = ref.watch(balancesProvider);
-    final allMessages = ref.watch(chatMessagesProvider).asData?.value.messages ?? [];
+    final allMessages =
+        ref.watch(chatMessagesProvider).asData?.value.messages ?? [];
     final members = ref.watch(expenseMembersProvider).asData?.value ?? [];
     final memberNames = {for (final m in members) m.uid: m.displayName};
 
     final now = DateTime.now();
 
     // Prochains événements (à partir d'aujourd'hui, triés)
-    final upcomingEvents = (allEvents
-          ..sort((a, b) => a.startDate.compareTo(b.startDate)))
-        .where((e) => !e.startDate.isBefore(
-            DateTime(now.year, now.month, now.day)))
-        .take(3)
-        .toList();
+    final upcomingEvents =
+        (allEvents..sort((a, b) => a.startDate.compareTo(b.startDate)))
+            .where(
+              (e) =>
+                  !e.startDate.isBefore(DateTime(now.year, now.month, now.day)),
+            )
+            .take(3)
+            .toList();
 
     // Note épinglée
     final pinnedNote = allNotes.where((n) => n.isPinned).isNotEmpty
@@ -96,10 +98,8 @@ class DashboardScreen extends ConsumerWidget {
         : null;
 
     // Résumé dépenses
-    final totalExpenses =
-        allExpenses.fold(0.0, (s, e) => s + e.amount);
-    final myBalance =
-        currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
+    final totalExpenses = allExpenses.fold(0.0, (s, e) => s + e.amount);
+    final myBalance = currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
     // Derniers messages (activité récente)
     final recentMessages = allMessages.take(3).toList();
 
@@ -107,7 +107,8 @@ class DashboardScreen extends ConsumerWidget {
     final allMedia = ref.watch(mediaMessagesProvider).asData?.value ?? [];
     final previewMedia = allMedia.take(6).toList();
 
-    final tabSettings = ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final tabSettings =
+        ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
     final homeColor = _colorForTab(0, tabSettings);
     final calendarColor = _colorForTab(1, tabSettings);
     final notesColor = _colorForTab(2, tabSettings);
@@ -116,255 +117,283 @@ class DashboardScreen extends ConsumerWidget {
       body: SafeArea(
         top: true,
         child: SingleChildScrollView(
-        child: Column(
-          children: [
-            // ── Contenu ──────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Prochains événements
-                  _Card(
-                    child: Column(
-                      children: [
-                        _CardHeader(
-                          icon: Icons.calendar_today,
-                          iconColor: homeColor,
-                          title: 'Prochains événements',
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                          child: upcomingEvents.isEmpty
-                              ? _EmptyHint(
-                                  label: 'Aucun événement à venir',
-                                  onTap: () => Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                        builder: (_) =>
-                                            const EventFormScreen()),
-                                  ),
-                                )
-                              : Column(
-                                  children: upcomingEvents
-                                      .map((e) => Padding(
-                                            padding: const EdgeInsets.only(
-                                                bottom: 12),
-                                            child: _EventRow(event: e),
-                                          ))
-                                      .toList(),
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Note épinglée
-                  if (pinnedNote != null) ...[
-                    _PinnedNoteCard(note: pinnedNote, color: notesColor),
-                    const SizedBox(height: 12),
-                  ],
-
-                  // Résumé dépenses
-                  _Card(
-                    child: Column(
-                      children: [
-                        _CardHeader(
-                          icon: Icons.trending_up,
-                          iconColor: homeColor,
-                          title: 'Résumé des dépenses',
-                        ),
-                        Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: [
-                                  Text(
-                                    _formatAmount(totalExpenses),
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    'total du groupe',
-                                    style: TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              const Divider(
-                                  height: 1, color: AppColors.border),
-                              _ExpenseRow(
-                                label: 'Votre solde',
-                                value: myBalance >= 0
-                                    ? '+${_formatAmount(myBalance)}'
-                                    : _formatAmount(myBalance),
-                                valueColor: myBalance >= 0
-                                    ? const Color(0xFF2BB8A5)
-                                    : AppColors.error,
-                              ),
-                              const SizedBox(height: 4),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Activité récente (messages)
-                  if (recentMessages.isNotEmpty) ...[
+          child: Column(
+            children: [
+              // ── Contenu ──────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Prochains événements
                     _Card(
                       child: Column(
                         children: [
                           _CardHeader(
-                            icon: Icons.chat_bubble_outline,
+                            icon: Icons.calendar_today,
                             iconColor: homeColor,
-                            title: 'Activité récente',
+                            title: 'Prochains événements',
                           ),
                           Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                            child: Column(
-                              children: recentMessages
-                                  .map((m) => Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 12),
-                                        child: _MessageRow(
-                                            message: m,
-                                            isMe: m.senderId == currentUid,
-                                            memberNames: memberNames,
-                                            members: members),
-                                      ))
-                                  .toList(),
-                            ),
+                            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                            child: upcomingEvents.isEmpty
+                                ? _EmptyHint(
+                                    label: 'Aucun événement à venir',
+                                    onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const EventFormScreen(),
+                                      ),
+                                    ),
+                                  )
+                                : Column(
+                                    children: upcomingEvents
+                                        .map(
+                                          (e) => Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 12,
+                                            ),
+                                            child: _EventRow(event: e),
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
-                  ] else
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
-                  // Médias partagés
-                  if (previewMedia.isNotEmpty) ...[
+                    // Note épinglée
+                    if (pinnedNote != null) ...[
+                      _PinnedNoteCard(note: pinnedNote, color: notesColor),
+                      const SizedBox(height: 12),
+                    ],
+
+                    // Résumé dépenses
                     _Card(
                       child: Column(
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: homeColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(Icons.photo_library_outlined,
-                                      size: 16, color: homeColor),
-                                ),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  'Médias partagés',
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                const Spacer(),
-                                TextButton(
-                                  onPressed: () => context.push('/media-gallery'),
-                                  child: const Text('Voir tout',
-                                      style: TextStyle(fontSize: 13)),
-                                ),
-                              ],
-                            ),
+                          _CardHeader(
+                            icon: Icons.trending_up,
+                            iconColor: homeColor,
+                            title: 'Résumé des dépenses',
                           ),
-                          const Divider(height: 1, color: AppColors.border),
-                          SizedBox(
-                            height: 88,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              itemCount: previewMedia.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(width: 8),
-                              itemBuilder: (_, i) =>
-                                  MediaPreviewTile(message: previewMedia[i]),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(
+                                      _formatAmount(totalExpenses),
+                                      style: const TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'total du groupe',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                const Divider(
+                                  height: 1,
+                                  color: AppColors.border,
+                                ),
+                                _ExpenseRow(
+                                  label: 'Votre solde',
+                                  value: myBalance >= 0
+                                      ? '+${_formatAmount(myBalance)}'
+                                      : _formatAmount(myBalance),
+                                  valueColor: myBalance >= 0
+                                      ? const Color(0xFF2BB8A5)
+                                      : AppColors.error,
+                                ),
+                                const SizedBox(height: 4),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 12),
-                  ],
 
-                  // Actions rapides
-                  const Text(
-                    'Actions rapides',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _QuickActionButton(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [calendarColor, _darken(calendarColor)],
-                          ),
-                          icon: Icons.calendar_today,
-                          label: 'Ajouter un événement',
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const EventFormScreen()),
-                          ),
+                    // Activité récente (messages)
+                    if (recentMessages.isNotEmpty) ...[
+                      _Card(
+                        child: Column(
+                          children: [
+                            _CardHeader(
+                              icon: Icons.chat_bubble_outline,
+                              iconColor: homeColor,
+                              title: 'Activité récente',
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                12,
+                                20,
+                                20,
+                              ),
+                              child: Column(
+                                children: recentMessages
+                                    .map(
+                                      (m) => Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        child: _MessageRow(
+                                          message: m,
+                                          isMe: m.senderId == currentUid,
+                                          memberNames: memberNames,
+                                          members: members,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _QuickActionButton(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [notesColor, _darken(notesColor)],
-                          ),
-                          icon: Icons.sticky_note_2_outlined,
-                          label: 'Nouvelle note',
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const NoteEditorScreen()),
-                          ),
+                      const SizedBox(height: 20),
+                    ] else
+                      const SizedBox(height: 8),
+
+                    // Médias partagés
+                    if (previewMedia.isNotEmpty) ...[
+                      _Card(
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                16,
+                                12,
+                                12,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: homeColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.photo_library_outlined,
+                                      size: 16,
+                                      color: homeColor,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Médias partagés',
+                                    style: TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  TextButton(
+                                    onPressed: () =>
+                                        context.push('/media-gallery'),
+                                    child: const Text(
+                                      'Voir tout',
+                                      style: TextStyle(fontSize: 13),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Divider(height: 1, color: AppColors.border),
+                            SizedBox(
+                              height: 88,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                itemCount: previewMedia.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 8),
+                                itemBuilder: (_, i) =>
+                                    MediaPreviewTile(message: previewMedia[i]),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      const SizedBox(height: 12),
                     ],
-                  ),
-                ],
+
+                    // Actions rapides
+                    const Text(
+                      'Actions rapides',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _QuickActionButton(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [calendarColor, _darken(calendarColor)],
+                            ),
+                            icon: Icons.calendar_today,
+                            label: 'Ajouter un événement',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const EventFormScreen(),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _QuickActionButton(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [notesColor, _darken(notesColor)],
+                            ),
+                            icon: Icons.sticky_note_2_outlined,
+                            label: 'Nouvelle note',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const NoteEditorScreen(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ), // SafeArea
     );
   }
@@ -384,7 +413,11 @@ class _Card extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: const [
-          BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
       child: child,
@@ -397,8 +430,11 @@ class _CardHeader extends StatelessWidget {
   final Color iconColor;
   final String title;
 
-  const _CardHeader(
-      {required this.icon, required this.iconColor, required this.title});
+  const _CardHeader({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -443,9 +479,10 @@ class _EmptyHint extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style: const TextStyle(
-                color: AppColors.textSecondary, fontSize: 13)),
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
         TextButton.icon(
           onPressed: onTap,
           icon: const Icon(Icons.add, size: 16),
@@ -463,7 +500,9 @@ class _EventRow extends StatelessWidget {
   Color _parseEventColor() {
     if (event.color == null) return const Color(0xFF4F7CFF);
     try {
-      return Color(int.parse('FF${event.color!.replaceAll('#', '')}', radix: 16));
+      return Color(
+        int.parse('FF${event.color!.replaceAll('#', '')}', radix: 16),
+      );
     } catch (_) {
       return const Color(0xFF4F7CFF);
     }
@@ -474,12 +513,15 @@ class _EventRow extends StatelessWidget {
     final isToday = _isToday(event.startDate);
 
     final baseColor = _parseEventColor();
-    final colorPair = [baseColor, Color.fromARGB(
-      (baseColor.a * 255.0).round() & 0xff,
-      ((baseColor.r * 255.0).round() & 0xff) * 4 ~/ 5,
-      ((baseColor.g * 255.0).round() & 0xff) * 4 ~/ 5,
-      ((baseColor.b * 255.0).round() & 0xff) * 4 ~/ 5,
-    )];
+    final colorPair = [
+      baseColor,
+      Color.fromARGB(
+        (baseColor.a * 255.0).round() & 0xff,
+        ((baseColor.r * 255.0).round() & 0xff) * 4 ~/ 5,
+        ((baseColor.g * 255.0).round() & 0xff) * 4 ~/ 5,
+        ((baseColor.b * 255.0).round() & 0xff) * 4 ~/ 5,
+      ),
+    ];
 
     String dateLabel;
     if (isToday) {
@@ -513,9 +555,10 @@ class _EventRow extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                DateFormat('MMM', 'fr_FR')
-                    .format(event.startDate)
-                    .toUpperCase(),
+                DateFormat(
+                  'MMM',
+                  'fr_FR',
+                ).format(event.startDate).toUpperCase(),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 10,
@@ -552,7 +595,9 @@ class _EventRow extends StatelessWidget {
               Text(
                 dateLabel,
                 style: const TextStyle(
-                    color: AppColors.textSecondary, fontSize: 12),
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -574,12 +619,19 @@ class _PinnedNoteCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [color.withValues(alpha: 0.05), color.withValues(alpha: 0.10)],
+          colors: [
+            color.withValues(alpha: 0.05),
+            color.withValues(alpha: 0.10),
+          ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.2)),
         boxShadow: const [
-          BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -657,8 +709,11 @@ class _ExpenseRow extends StatelessWidget {
   final String value;
   final Color valueColor;
 
-  const _ExpenseRow(
-      {required this.label, required this.value, required this.valueColor});
+  const _ExpenseRow({
+    required this.label,
+    required this.value,
+    required this.valueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -667,14 +722,21 @@ class _ExpenseRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: const TextStyle(
-                  color: AppColors.textSecondary, fontSize: 13)),
-          Text(value,
-              style: TextStyle(
-                  color: valueColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
         ],
       ),
     );
@@ -695,7 +757,9 @@ class _MessageRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedName = isMe ? 'Vous' : (memberNames[message.senderId] ?? message.senderName ?? '?');
+    final resolvedName = isMe
+        ? 'Vous'
+        : (memberNames[message.senderId] ?? message.senderName ?? '?');
     final name = resolvedName;
     final member = members.where((m) => m.uid == message.senderId).firstOrNull;
     return Row(
@@ -715,16 +779,22 @@ class _MessageRow extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text(name,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                      )),
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                    ),
+                  ),
                   const SizedBox(width: 8),
-                  Text(_timeAgo(message.timestamp),
-                      style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 11)),
+                  Text(
+                    _timeAgo(message.timestamp),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 2),
@@ -732,14 +802,16 @@ class _MessageRow extends StatelessWidget {
                 message.type == MessageType.image
                     ? 'a envoyé une photo'
                     : message.type == MessageType.file
-                        ? 'a envoyé un fichier'
-                        : message.type == MessageType.audio
-                            ? 'a envoyé un audio'
-                            : message.type == MessageType.poll
-                                ? 'a créé un sondage'
-                                : message.content,
+                    ? 'a envoyé un fichier'
+                    : message.type == MessageType.audio
+                    ? 'a envoyé un audio'
+                    : message.type == MessageType.poll
+                    ? 'a créé un sondage'
+                    : message.content,
                 style: const TextStyle(
-                    color: AppColors.textSecondary, fontSize: 13),
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -793,18 +865,21 @@ class _QuickActionButton extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Icon(icon, color: Colors.white, size: 20),
               ),
               const SizedBox(height: 12),
-              Text(label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
-                  )),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                ),
+              ),
             ],
           ),
         ),

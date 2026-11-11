@@ -52,7 +52,8 @@ class NotificationService {
     );
     await FlutterLocalNotificationsPlugin()
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
   }
 
@@ -140,10 +141,10 @@ class NotificationService {
 
   static Future<void> _saveToken(String userId, String token) async {
     try {
-      await _db.collection('users').doc(userId).set(
-        {'fcmToken': token, 'updatedAt': FieldValue.serverTimestamp()},
-        SetOptions(merge: true),
-      );
+      await _db.collection('users').doc(userId).set({
+        'fcmToken': token,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       debugPrint('[FCM] token saved for $userId');
     } on FirebaseException catch (e) {
       debugPrint('[FCM] token save FAILED: ${e.code} — ${e.message}');
@@ -214,8 +215,12 @@ class _NotificationBannerState extends ConsumerState<NotificationBanner> {
     _pending.clear();
 
     // Filtrer les messages dont on est déjà sur l'écran
-    final currentPath =
-        ref.read(routerProvider).routeInformationProvider.value.uri.path;
+    final currentPath = ref
+        .read(routerProvider)
+        .routeInformationProvider
+        .value
+        .uri
+        .path;
     final visible = messages.where((m) {
       final screen = m.data['screen'] as String?;
       return screen == null || currentPath != '/$screen';
@@ -233,8 +238,10 @@ class _NotificationBannerState extends ConsumerState<NotificationBanner> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (notif.title != null)
-              Text(notif.title!,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                notif.title!,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
             if (notif.body != null) Text(notif.body!),
           ],
         ),

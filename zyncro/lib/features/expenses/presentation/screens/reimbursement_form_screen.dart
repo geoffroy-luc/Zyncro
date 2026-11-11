@@ -9,7 +9,6 @@ import '../../../chat/presentation/providers/messages_provider.dart';
 import '../../../groups/presentation/providers/groups_provider.dart';
 import '../providers/expenses_provider.dart';
 
-
 class ReimbursementFormScreen extends ConsumerStatefulWidget {
   final String? initialToUid;
   final double? initialAmount;
@@ -40,8 +39,9 @@ class _ReimbursementFormScreenState
     super.initState();
     _toUid = widget.initialToUid;
     if (widget.initialAmount != null) {
-      _amountController.text =
-          widget.initialAmount!.toStringAsFixed(2).replaceAll('.', ',');
+      _amountController.text = widget.initialAmount!
+          .toStringAsFixed(2)
+          .replaceAll('.', ',');
     }
   }
 
@@ -90,34 +90,44 @@ class _ReimbursementFormScreenState
           ? 'Remboursement'
           : _titleController.text.trim();
 
-      await ref.read(expensesRepositoryProvider).createExpense(
-        groupId: groupId,
-        title: title,
-        amount: amount,
-        paidBy: user.uid,
-        paidByName: nameByUid[user.uid] ?? user.displayName ?? user.email ?? user.uid,
-        splitWith: [_toUid!],
-        expenseType: ExpenseType.reimbursement,
-        splitType: SplitType.amount,
-        splitAmounts: {_toUid!: amount},
-        category: null,
-        date: _date,
-        userId: user.uid,
-      );
+      await ref
+          .read(expensesRepositoryProvider)
+          .createExpense(
+            groupId: groupId,
+            title: title,
+            amount: amount,
+            paidBy: user.uid,
+            paidByName:
+                nameByUid[user.uid] ??
+                user.displayName ??
+                user.email ??
+                user.uid,
+            splitWith: [_toUid!],
+            expenseType: ExpenseType.reimbursement,
+            splitType: SplitType.amount,
+            splitAmounts: {_toUid!: amount},
+            category: null,
+            date: _date,
+            userId: user.uid,
+          );
 
-      final userName = nameByUid[user.uid] ?? user.displayName ?? user.email ?? 'Quelqu\'un';
-      ref.read(messagesRepositoryProvider).sendSystemMessage(
-        groupId: groupId,
-        userId: user.uid,
-        content:
-            '💸 $userName a remboursé ${nameByUid[_toUid] ?? ''} (${amount.toStringAsFixed(2)} €)',
-        notifScreen: 'expenses',
-      );
+      final userName =
+          nameByUid[user.uid] ?? user.displayName ?? user.email ?? 'Quelqu\'un';
+      ref
+          .read(messagesRepositoryProvider)
+          .sendSystemMessage(
+            groupId: groupId,
+            userId: user.uid,
+            content:
+                '💸 $userName a remboursé ${nameByUid[_toUid] ?? ''} (${amount.toStringAsFixed(2)} €)',
+            notifScreen: 'expenses',
+          );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -170,8 +180,9 @@ class _ReimbursementFormScreenState
                   labelText: 'Montant (€)',
                   prefixIcon: Icon(Icons.euro_outlined),
                 ),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Champ requis';
                   final p = _parseDouble(v);
@@ -194,7 +205,9 @@ class _ReimbursementFormScreenState
                 onTap: _pickDate,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -202,13 +215,18 @@ class _ReimbursementFormScreenState
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today_outlined,
-                          size: 18, color: AppColors.textSecondary),
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 18,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: 12),
                       Text(
                         DateFormat('d MMMM yyyy', 'fr_FR').format(_date),
                         style: const TextStyle(
-                            color: AppColors.textPrimary, fontSize: 14),
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -236,7 +254,9 @@ class _ReimbursementFormScreenState
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 150),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? color.withValues(alpha: 0.10)
@@ -270,8 +290,11 @@ class _ReimbursementFormScreenState
                           ),
                           if (isSelected) ...[
                             const SizedBox(width: 8),
-                            Icon(Icons.check_circle_rounded,
-                                size: 16, color: color),
+                            Icon(
+                              Icons.check_circle_rounded,
+                              size: 16,
+                              color: color,
+                            ),
                           ],
                         ],
                       ),
@@ -282,9 +305,10 @@ class _ReimbursementFormScreenState
 
               if (_error != null) ...[
                 const SizedBox(height: 16),
-                Text(_error!,
-                    style: const TextStyle(
-                        color: AppColors.error, fontSize: 13)),
+                Text(
+                  _error!,
+                  style: const TextStyle(color: AppColors.error, fontSize: 13),
+                ),
               ],
             ],
           ),
