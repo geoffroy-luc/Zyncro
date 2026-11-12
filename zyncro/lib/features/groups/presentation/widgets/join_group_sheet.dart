@@ -115,7 +115,10 @@ class _JoinGroupSheetState extends ConsumerState<JoinGroupSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Rejoindre un espace', style: theme.textTheme.titleLarge),
+              Text(
+                context.l10n.groupsRejoindreUnEspace,
+                style: theme.textTheme.titleLarge,
+              ),
               IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.of(context).pop(),
@@ -124,14 +127,14 @@ class _JoinGroupSheetState extends ConsumerState<JoinGroupSheet> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Entre le code partagé par un membre du groupe.',
+            context.l10n.groupsEntreLeCodePartagePar,
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 20),
           TextField(
             controller: _controller,
             decoration: InputDecoration(
-              labelText: "Code d'invitation",
+              labelText: context.l10n.groupsCodeDInvitation,
               prefixIcon: const Icon(Icons.vpn_key_outlined),
               errorText: _error,
             ),
@@ -151,7 +154,7 @@ class _JoinGroupSheetState extends ConsumerState<JoinGroupSheet> {
                       strokeWidth: 2,
                     ),
                   )
-                : const Text('Rejoindre'),
+                : Text(context.l10n.groupsRejoindre),
           ),
         ],
       ),

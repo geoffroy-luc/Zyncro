@@ -115,6 +115,7 @@ class RecentNoteCard extends StatelessWidget {
                                 alignment: Alignment.topLeft,
                                 maxHeight: double.infinity,
                                 child: notesBuildChecklistPreview(
+                                  context,
                                   note.checklist,
                                   color,
                                 ),

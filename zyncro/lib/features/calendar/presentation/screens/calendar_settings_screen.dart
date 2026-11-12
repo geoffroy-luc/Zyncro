@@ -41,7 +41,7 @@ class _CalendarSettingsScreenState
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Paramètres Calendrier',
+          context.l10n.calendarParametresCalendrier,
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
@@ -57,7 +57,7 @@ class _CalendarSettingsScreenState
         padding: const EdgeInsets.all(16),
         children: [
           SettingsSection(
-            title: 'Apparence',
+            title: context.l10n.calendarApparence,
             children: [
               SettingsTile(
                 title: 'Couleur du thème',
@@ -82,21 +82,21 @@ class _CalendarSettingsScreenState
             ],
           ),
           SettingsSection(
-            title: 'Affichage',
+            title: context.l10n.calendarAffichage,
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                 child: SegmentedButton<String>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: 'band',
-                      label: Text('Bande'),
-                      icon: Icon(Icons.view_agenda_outlined, size: 16),
+                      label: Text(context.l10n.calendarBande),
+                      icon: const Icon(Icons.view_agenda_outlined, size: 16),
                     ),
                     ButtonSegment(
                       value: 'dot',
-                      label: Text('Point'),
-                      icon: Icon(Icons.circle, size: 8),
+                      label: Text(context.l10n.calendarPoint),
+                      icon: const Icon(Icons.circle, size: 8),
                     ),
                   ],
                   selected: {settings.calendarDisplayMode},

@@ -103,6 +103,7 @@ class PinnedNoteCard extends StatelessWidget {
                   // Contenu
                   if (note.isChecklist && note.checklist.isNotEmpty)
                     notesBuildChecklistPreview(
+                      context,
                       note.checklist,
                       color,
                       maxItems: 4,

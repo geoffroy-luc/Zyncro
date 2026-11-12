@@ -38,8 +38,10 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Impossible d\'épingler : permission refusée.'),
+          SnackBar(
+            content: Text(
+              context.l10n.notesImpossibleDEpinglerPermissionRefusee,
+            ),
           ),
         );
       }
@@ -66,7 +68,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
       body: SafeArea(
         child: notesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Erreur: $e')),
+          error: (e, _) => Center(child: Text(context.l10n.notesErreur(e))),
           data: (allNotes) {
             final searchLower = _search.toLowerCase();
             final filtered = _search.isEmpty
@@ -117,7 +119,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                                 child: TextField(
                                   onChanged: (v) => setState(() => _search = v),
                                   decoration: InputDecoration(
-                                    hintText: 'Rechercher...',
+                                    hintText: context.l10n.notesRechercher,
                                     hintStyle: TextStyle(
                                       color: context.colors.textSecondary,
                                       fontSize: 14,
@@ -157,7 +159,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Aucune note',
+                            context.l10n.notesAucuneNote,
                             style: TextStyle(
                               color: context.colors.textSecondary,
                             ),
@@ -166,7 +168,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                           ElevatedButton.icon(
                             onPressed: _openEditor,
                             icon: const Icon(Icons.add),
-                            label: const Text('Créer une note'),
+                            label: Text(context.l10n.notesCreerUneNote),
                           ),
                         ],
                       ),
@@ -188,7 +190,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Épinglées',
+                                context.l10n.notesEpinglees,
                                 style: TextStyle(
                                   color: context.colors.textPrimary,
                                   fontWeight: FontWeight.w600,
@@ -214,7 +216,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                         // Récentes
                         if (recent.isNotEmpty) ...[
                           Text(
-                            'Récentes',
+                            context.l10n.notesRecentes,
                             style: TextStyle(
                               color: context.colors.textPrimary,
                               fontWeight: FontWeight.w600,

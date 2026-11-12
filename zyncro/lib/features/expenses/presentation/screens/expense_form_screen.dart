@@ -177,9 +177,9 @@ class _ExpenseFormScreenState extends _ExpenseFormScreenStateBase
               // Titre
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Titre',
-                  prefixIcon: Icon(Icons.receipt_outlined),
+                decoration: InputDecoration(
+                  labelText: context.l10n.expensesTitre,
+                  prefixIcon: const Icon(Icons.receipt_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 50,
@@ -194,9 +194,9 @@ class _ExpenseFormScreenState extends _ExpenseFormScreenStateBase
               // Montant
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Montant (€)',
-                  prefixIcon: Icon(Icons.euro_outlined),
+                decoration: InputDecoration(
+                  labelText: context.l10n.expensesMontant,
+                  prefixIcon: const Icon(Icons.euro_outlined),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -223,7 +223,7 @@ class _ExpenseFormScreenState extends _ExpenseFormScreenStateBase
 
               // Date
               Text(
-                'Date',
+                context.l10n.expensesDate,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,
@@ -266,7 +266,7 @@ class _ExpenseFormScreenState extends _ExpenseFormScreenStateBase
 
               // Payé par
               Text(
-                'Payé par',
+                context.l10n.expensesPayePar,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,
@@ -343,7 +343,7 @@ class _ExpenseFormScreenState extends _ExpenseFormScreenStateBase
 
               // Membres
               Text(
-                'Partager avec',
+                context.l10n.expensesPartagerAvec,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,
@@ -440,7 +440,7 @@ class _ExpenseFormScreenState extends _ExpenseFormScreenStateBase
 
               // Répartition
               Text(
-                'Répartition',
+                context.l10n.expensesRepartition,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,
@@ -452,13 +452,13 @@ class _ExpenseFormScreenState extends _ExpenseFormScreenStateBase
                 spacing: 10,
                 children: [
                   ChoiceChip(
-                    label: const Text('Équitable'),
+                    label: Text(context.l10n.expensesEquitable),
                     selected: _splitType == SplitType.equal,
                     onSelected: (_) =>
                         setState(() => _splitType = SplitType.equal),
                   ),
                   ChoiceChip(
-                    label: const Text('Par montant'),
+                    label: Text(context.l10n.expensesParMontant),
                     selected: _splitType == SplitType.amount,
                     onSelected: (_) {
                       final total = _parseDouble(_amountController.text) ?? 0;
@@ -467,7 +467,7 @@ class _ExpenseFormScreenState extends _ExpenseFormScreenStateBase
                     },
                   ),
                   ChoiceChip(
-                    label: const Text('Par pourcentage'),
+                    label: Text(context.l10n.expensesParPourcentage),
                     selected: _splitType == SplitType.percentage,
                     onSelected: (_) {
                       final total = _parseDouble(_amountController.text) ?? 0;
@@ -580,7 +580,7 @@ class _ExpenseFormScreenState extends _ExpenseFormScreenStateBase
 
               // Répétition
               Text(
-                'Répétition',
+                context.l10n.expensesRepetition,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,
@@ -593,7 +593,7 @@ class _ExpenseFormScreenState extends _ExpenseFormScreenStateBase
 
               // Catégorie
               Text(
-                'Catégorie',
+                context.l10n.expensesCategorie,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,
@@ -677,7 +677,7 @@ class _ExpenseFormScreenState extends _ExpenseFormScreenStateBase
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Nouvelle catégorie',
+                            context.l10n.expensesNouvelleCategorie,
                             style: TextStyle(
                               color: context.colors.textSecondary,
                               fontSize: 13,

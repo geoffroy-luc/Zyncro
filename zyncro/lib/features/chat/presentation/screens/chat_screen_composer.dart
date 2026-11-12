@@ -10,9 +10,9 @@ mixin _ChatComposer on _ChatScreenStateBase {
     final index = messages.indexWhere((m) => m.id == id);
     if (index == -1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Message introuvable'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(context.l10n.chatMessageIntrouvable),
+          duration: const Duration(seconds: 2),
         ),
       );
       return;
@@ -149,7 +149,9 @@ mixin _ChatComposer on _ChatScreenStateBase {
       } catch (_) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Impossible de modifier le message.')),
+          SnackBar(
+            content: Text(context.l10n.chatImpossibleDeModifierLeMessage),
+          ),
         );
       } finally {
         if (mounted) setState(() => _sending = false);

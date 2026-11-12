@@ -125,9 +125,9 @@ class PollCard extends StatelessWidget {
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Text(
-                          'Choix multiples',
-                          style: TextStyle(
+                        child: Text(
+                          context.l10n.chatChoixMultiples,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
                             fontWeight: FontWeight.w500,
@@ -235,9 +235,13 @@ class PollCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
                 child: Text(
-                  '$totalVotes vote${totalVotes != 1 ? 's' : ''}'
-                  '${message.senderName != null ? ' · ${isMe ? 'Votre sondage' : message.senderName!}' : ''}'
-                  '${message.editedAt != null ? ' · modifié' : ''}',
+                  context.l10n.chatPollVoteCount(totalVotes) +
+                      (message.senderName != null
+                          ? ' · ${isMe ? context.l10n.chatPollYours : message.senderName!}'
+                          : '') +
+                      (message.editedAt != null
+                          ? context.l10n.chatPollEditedSuffix
+                          : ''),
                   style: TextStyle(
                     color: context.colors.textSecondary,
                     fontSize: 11,

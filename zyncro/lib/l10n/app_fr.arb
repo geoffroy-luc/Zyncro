@@ -1,31 +1,512 @@
 {
   "@@locale": "fr",
-
   "tabHomeTitle": "Accueil",
   "tabCalendarTitle": "Calendrier",
   "tabNotesTitle": "Notes",
   "tabExpensesTitle": "Dépenses",
   "tabChatTitle": "Chat",
-  "@tabHomeTitle": { "description": "Titre de l'onglet dans la barre du haut du shell" },
-
+  "@tabHomeTitle": {
+    "description": "Titre de l'onglet dans la barre du haut du shell"
+  },
   "navHome": "Home",
   "navCalendar": "Calendar",
   "navNotes": "Notes",
   "navExpenses": "Expenses",
   "navChat": "Chat",
-  "@navHome": { "description": "Libellé de la barre de navigation du bas (anglais historique, conservé à l'identique — Y-03)" },
-
+  "@navHome": {
+    "description": "Libellé de la barre de navigation du bas (anglais historique, conservé à l'identique — Y-03)"
+  },
   "updateRequiredTitle": "Mise à jour requise",
   "updateAvailableTitle": "Mise à jour disponible",
   "updateRequiredBody": "Cette version de Zyncro n'est plus supportée. Veuillez mettre à jour l'application pour continuer.",
   "updateAvailableBody": "La version {version} est disponible. Voulez-vous mettre à jour ?",
-  "@updateAvailableBody": { "placeholders": { "version": { "type": "String" } } },
+  "@updateAvailableBody": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateLater": "Plus tard",
   "updateNow": "Mettre à jour",
-
   "newNotificationsCount": "{count} nouvelles notifications",
   "@newNotificationsCount": {
     "description": "Bandeau in-app quand plusieurs notifications arrivent ensemble (toujours ≥ 2)",
-    "placeholders": { "count": { "type": "int" } }
-  }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "authEmailDeReinitialisationEnvoye": "Email de réinitialisation envoyé !",
+  "authZyncro": "Zyncro",
+  "authRetrouveTonEspacePartage": "Retrouve ton espace partagé",
+  "authMotDePasseOublie": "Mot de passe oublié ?",
+  "authSeConnecter": "Se connecter",
+  "authOu": "ou",
+  "authContinuerAvecGoogle": "Continuer avec Google",
+  "authContinuerAvecApple": "Continuer avec Apple",
+  "authContinuerSansCompte": "Continuer sans compte",
+  "authPasEncoreDeCompteS": "Pas encore de compte ? S'inscrire",
+  "authEmail": "Email",
+  "authMotDePasse": "Mot de passe",
+  "authModifierLePseudo": "Modifier le pseudo",
+  "authAnnuler": "Annuler",
+  "authEnregistrer": "Enregistrer",
+  "authPrendreUnePhoto": "Prendre une photo",
+  "authChoisirDepuisLaGalerie": "Choisir depuis la galerie",
+  "authReinitialiserAvecLaPhotoGoogle": "Réinitialiser avec la photo Google/Apple",
+  "authErreur": "Erreur : {p0}",
+  "@authErreur": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "authSeDeconnecter": "Se déconnecter",
+  "authConfirmesTuLaDeconnexion": "Confirmes-tu la déconnexion ?",
+  "authDeconnecter": "Déconnecter",
+  "authSupprimerLeCompte": "Supprimer le compte",
+  "authCetteActionEstIrreversibleTon": "Cette action est irréversible. Ton compte et toutes tes données seront définitivement supprimés.",
+  "authSupprimer": "Supprimer",
+  "authMonProfil": "Mon profil",
+  "authPseudo": "Pseudo",
+  "authAfficherMaPhotoDeProfil": "Afficher ma photo de profil",
+  "authNotifications": "Notifications",
+  "authInformations": "Informations",
+  "authPreferences": "Préférences",
+  "authCompte": "Compte",
+  "authCreerUnCompte": "Créer un compte",
+  "authRejoinsOuCreeTonEspace": "Rejoins ou crée ton espace partagé",
+  "authSInscrire": "S'inscrire",
+  "authDejaUnCompteSeConnecter": "Déjà un compte ? Se connecter",
+  "authPrenomOuPseudo": "Prénom ou pseudo",
+  "authConfirmerLeMotDePasse": "Confirmer le mot de passe",
+  "authG": "G",
+  "authEntreUnPseudoPourEtre": "Entre un pseudo pour être identifié dans ton groupe.",
+  "authContinuer": "Continuer",
+  "calendarAucunEvenement": "Aucun événement",
+  "calendarAjouterUnEvenement": "Ajouter un événement",
+  "calendarRechercher": "Rechercher...",
+  "calendarMois": "Mois",
+  "calendarAgenda": "Agenda",
+  "calendarFiltres": "Filtres",
+  "calendarReinitialiser": "Réinitialiser",
+  "calendarParticipants": "Participants",
+  "calendarRecurrentsUniquement": "Récurrents uniquement",
+  "calendarAppliquer": "Appliquer",
+  "calendarParametresCalendrier": "Paramètres Calendrier",
+  "calendarBande": "Bande",
+  "calendarPoint": "Point",
+  "calendarApparence": "Apparence",
+  "calendarAffichage": "Affichage",
+  "calendarSupprimerLEvenement": "Supprimer l'événement",
+  "calendarCetteActionEstIrreversible": "Cette action est irréversible.",
+  "calendarAnnuler": "Annuler",
+  "calendarSupprimer": "Supprimer",
+  "calendarPermissionRefusee": "Permission refusée",
+  "calendarLaDateDeFinDoit": "La date de fin doit être après la date de début",
+  "calendarErreur": "Erreur: {p0}",
+  "@calendarErreur": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "calendarRepetition": "Répétition",
+  "calendarAucune": "Aucune",
+  "calendarFinDeLaRepetition": "Fin de la répétition",
+  "calendarToujours": "Toujours",
+  "calendarNombreDeFois": "Nombre de fois :",
+  "calendarNombreDeFois2": "Nombre de fois",
+  "calendarJusquAu": "Jusqu'au :",
+  "calendarJusquAu2": "Jusqu'au",
+  "calendarConfirmer": "Confirmer",
+  "calendarRappel": "Rappel",
+  "calendarPersonnalise": "Personnalisé…",
+  "calendarRappelPersonnalise": "Rappel personnalisé",
+  "calendarMin": "min",
+  "calendarH": "h",
+  "calendarJ": "j",
+  "calendarOk": "OK",
+  "calendarCouleur": "Couleur",
+  "calendarAjouterUneHeureDeFin": "Ajouter une heure de fin",
+  "calendarTitre": "Titre",
+  "calendarLieuOptionnel": "Lieu (optionnel)",
+  "calendarDescriptionOptionnel": "Description (optionnel)",
+  "calendarDebut": "Début",
+  "calendarFin": "Fin",
+  "chatErreur": "Erreur: {p0}",
+  "@chatErreur": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatAucunMessageSoyezLePremier": "Aucun message. Soyez le premier !",
+  "chatModifierLeMessage": "Modifier le message",
+  "chatEnregistrement": "Enregistrement…",
+  "chatRechercherDansLeChat": "Rechercher dans le chat...",
+  "chatEcrireUnMessage": "Écrire un message...",
+  "chatMessageIntrouvable": "Message introuvable",
+  "chatImpossibleDeModifierLeMessage": "Impossible de modifier le message.",
+  "chatErreurEnvoiMedia": "Erreur envoi média : {p0}",
+  "@chatErreurEnvoiMedia": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatRepondre": "Répondre",
+  "chatCopier": "Copier",
+  "chatModifier": "Modifier",
+  "chatModifierLeSondage": "Modifier le sondage",
+  "chatTelecharger": "Télécharger",
+  "chatSupprimer": "Supprimer",
+  "chatMessageCopie": "Message copié",
+  "chatImpossibleDeModifierLeSondage": "Impossible de modifier le sondage.",
+  "chatSupprimerLeMessage": "Supprimer le message",
+  "chatCeMessageSeraSupprimeDefinitivement": "Ce message sera supprimé définitivement.",
+  "chatAnnuler": "Annuler",
+  "chatImpossibleDeSupprimerLeMessage": "Impossible de supprimer le message.",
+  "chatPermissionMicrophoneRefusee": "Permission microphone refusée.",
+  "chatAudioError": "Audio error: {p0}",
+  "@chatAudioError": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatPrendreUnePhoto": "Prendre une photo",
+  "chatChoisirDepuisLaGalerie": "Choisir depuis la galerie",
+  "chatErreur2": "Erreur : {p0}",
+  "@chatErreur2": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatParametresChat": "Paramètres Chat",
+  "chatAucun": "Aucun",
+  "chatCouleur": "Couleur",
+  "chatImage": "Image",
+  "chatApparence": "Apparence",
+  "chatCouleurDuTheme": "Couleur du thème",
+  "chatBackgroundDuChat": "Background du chat",
+  "chatCouleurDuFond": "Couleur du fond",
+  "chatChangerLImage": "Changer l'image",
+  "chatPhotosVideosPartagees": "Photos & vidéos partagées",
+  "chatVoirTousLesMediasDu": "Voir tous les médias du groupe",
+  "chatMediasPartages": "Médias partagés",
+  "chatAucunMediaPartage": "Aucun média partagé",
+  "chatEnvoyer": "Envoyer ({p0})",
+  "@chatEnvoyer": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatAccesALaGalerieRefuse": "Accès à la galerie refusé",
+  "chatOuvrirLesReglages": "Ouvrir les réglages",
+  "chatAccesLimiteACertainesPhotos": "Accès limité à certaines photos",
+  "chatToutAutoriser": "Tout autoriser",
+  "chatAucunMedia": "Aucun média",
+  "chatImageEnregistreeDansLaGalerie": "Image enregistrée dans la galerie",
+  "chatErreurTelechargement": "Erreur téléchargement : {p0}",
+  "@chatErreurTelechargement": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatVideoEnregistreeDansLaGalerie": "Vidéo enregistrée dans la galerie",
+  "chatEnregistrer": "Enregistrer",
+  "chatPartagerVers": "Partager vers…",
+  "chatVousNAvezEncoreAucun": "Vous n'avez encore aucun groupe.\nCréez-en un pour pouvoir partager.",
+  "chatEchecDuPartage": "Échec du partage : {p0}",
+  "@chatEchecDuPartage": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatCreerUnSondage": "Créer un sondage",
+  "chatOptions": "Options",
+  "chatAjouterUneOption": "Ajouter une option",
+  "chatReponsesMultiples": "Réponses multiples",
+  "chatLesParticipantsPeuventVoterPour": "Les participants peuvent voter pour plusieurs options",
+  "chatCreer": "Créer",
+  "chatQuestion": "Question",
+  "chatPosezVotreQuestion": "Posez votre question…",
+  "chatOption": "Option {p0}",
+  "@chatOption": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatLesVotesExistantsSerontReinitialises": "Les votes existants seront réinitialisés.",
+  "chatAudio": "🎵 Audio",
+  "chatImage2": "🖼️ Image",
+  "chatMedia": "🖼️ Média",
+  "chatChoixMultiples": "Choix multiples",
+  "chatReactions": "Réactions",
+  "dashboardTotalDuGroupe": "total du groupe",
+  "dashboardMediasPartages": "Médias partagés",
+  "dashboardVoirTout": "Voir tout",
+  "dashboardActionsRapides": "Actions rapides",
+  "dashboardProchainsEvenements": "Prochains événements",
+  "dashboardAucunEvenementAVenir": "Aucun événement à venir",
+  "dashboardResumeDesDepenses": "Résumé des dépenses",
+  "dashboardVotreSolde": "Votre solde",
+  "dashboardAjouterUnEvenement": "Ajouter un événement",
+  "dashboardNouvelleNote": "Nouvelle note",
+  "dashboardChoisirUnEmoji": "Choisir un emoji",
+  "dashboardChoisirUnePhoto": "Choisir une photo",
+  "dashboardPrendreUnePhoto": "Prendre une photo",
+  "dashboardSupprimerLaPhoto": "Supprimer la photo",
+  "dashboardEmojiDuGroupe": "Emoji du groupe",
+  "dashboardAnnuler": "Annuler",
+  "dashboardEnregistrer": "Enregistrer",
+  "dashboardErreur": "Erreur : {p0}",
+  "@dashboardErreur": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashboardModifierLeGroupe": "Modifier le groupe",
+  "dashboardNom": "Nom",
+  "dashboardDescriptionOptionnel": "Description (optionnel)",
+  "dashboardMonPseudoDansCeGroupe": "Mon pseudo dans ce groupe",
+  "dashboardRegenererLeLien": "Régénérer le lien ?",
+  "dashboardRegenerer": "Régénérer",
+  "dashboardQuitterLeGroupe": "Quitter le groupe",
+  "dashboardEsTuSurDeVouloir": "Es-tu sûr de vouloir quitter ce groupe ? Tu ne pourras plus accéder à son contenu.",
+  "dashboardQuitter": "Quitter",
+  "dashboardImpossibleDeQuitterLeGroupe": "Impossible de quitter le groupe.",
+  "dashboardSupprimerLeGroupe": "Supprimer le groupe",
+  "dashboardCetteActionEstIrreversibleTout": "Cette action est irréversible. Tout le contenu du groupe sera perdu.",
+  "dashboardSupprimer": "Supprimer",
+  "dashboardTransfererLaPropriete": "Transférer la propriété",
+  "dashboardNommerProprietaireDuGroupeTu": "Nommer {p0} propriétaire du groupe ? Tu deviendras simple membre.",
+  "@dashboardNommerProprietaireDuGroupeTu": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashboardTransferer": "Transférer",
+  "dashboardRetirerLeMembre": "Retirer le membre",
+  "dashboardRetirerDuGroupe": "Retirer {p0} du groupe ?",
+  "@dashboardRetirerDuGroupe": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "dashboardRetirer": "Retirer",
+  "dashboardPseudo": "Pseudo",
+  "dashboardParametresAccueil": "Paramètres Accueil",
+  "dashboardPartageLeLienOuLe": "Partage le lien ou le code pour inviter quelqu'un dans ce groupe.",
+  "dashboardGenererUnCode": "Générer un code",
+  "dashboardCodeCopie": "Code copié !",
+  "dashboardPartagerLeLienDInvitation": "Partager le lien d'invitation",
+  "dashboardRegenererLeLien2": "Régénérer le lien",
+  "dashboardNommerProprietaire": "Nommer propriétaire",
+  "dashboardRetirerDuGroupe2": "Retirer du groupe",
+  "dashboardImpossibleDeQuitter": "Impossible de quitter",
+  "dashboardTuEsProprietaireDuGroupe": "Tu es propriétaire du groupe. Transfère la propriété à un autre membre avant de quitter.",
+  "dashboardOk": "OK",
+  "dashboardQuitterCeGroupe": "Quitter ce groupe",
+  "dashboardEspace": "Espace",
+  "dashboardCouleurDuTheme": "Couleur du thème",
+  "dashboardMembres": "Membres",
+  "dashboardChangerMonPseudo": "Changer mon pseudo",
+  "dashboardAjouter": "Ajouter",
+  "dashboardNoteEpinglee": "Note épinglée",
+  "dashboardModifie": "Modifié {p0}",
+  "@dashboardModifie": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "expensesErreur": "Erreur: {p0}",
+  "@expensesErreur": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "expensesSupprimerLaDepense": "Supprimer la dépense",
+  "expensesCetteActionEstIrreversible": "Cette action est irréversible.",
+  "expensesAnnuler": "Annuler",
+  "expensesSupprimer": "Supprimer",
+  "expensesPermissionRefusee": "Permission refusée",
+  "expensesRepetition": "Répétition",
+  "expensesAucune": "Aucune",
+  "expensesFinDeLaRepetition": "Fin de la répétition",
+  "expensesToujours": "Toujours",
+  "expensesNombreDeFois": "Nombre de fois :",
+  "expensesNombreDeFois2": "Nombre de fois",
+  "expensesJusquAu": "Jusqu'au :",
+  "expensesJusquAu2": "Jusqu'au",
+  "expensesConfirmer": "Confirmer",
+  "expensesDate": "Date",
+  "expensesPayePar": "Payé par",
+  "expensesPartagerAvec": "Partager avec",
+  "expensesRepartition": "Répartition",
+  "expensesEquitable": "Équitable",
+  "expensesParMontant": "Par montant",
+  "expensesParPourcentage": "Par pourcentage",
+  "expensesCategorie": "Catégorie",
+  "expensesNouvelleCategorie": "Nouvelle catégorie",
+  "expensesTitre": "Titre",
+  "expensesMontant": "Montant (€)",
+  "expensesRechercherUneDepense": "Rechercher une dépense...",
+  "expensesParametresDepenses": "Paramètres Dépenses",
+  "expensesApparence": "Apparence",
+  "expensesDevise": "Devise",
+  "expensesCategories": "Catégories",
+  "expensesAjouterUneCategorie": "Ajouter une catégorie",
+  "expensesRemboursement": "Remboursement",
+  "expensesJeRembourseA": "Je rembourse à",
+  "expensesLibelleOptionnel": "Libellé (optionnel)",
+  "expensesApercuDuGroupe": "Aperçu du groupe",
+  "expensesAucuneDepense": "Aucune dépense",
+  "expensesAjouter": "Ajouter",
+  "expensesDepensesRecentes": "Dépenses récentes",
+  "expensesTotalDepenses": "Total dépenses",
+  "expensesVotrePart": "Votre part",
+  "expensesVotreSolde": "Votre solde",
+  "expensesSoldes": "Soldes",
+  "expensesARegler": "À régler",
+  "expensesRembourser": "Rembourser",
+  "expensesLesComptesSontEquilibres": "Les comptes sont équilibrés",
+  "groupsMesEspaces": "Mes espaces",
+  "groupsMonProfil": "Mon profil",
+  "groupsNouvelEspace": "Nouvel espace",
+  "groupsCreer": "Créer",
+  "groupsNomDeLEspace": "Nom de l'espace",
+  "groupsDescriptionOptionnel": "Description (optionnel)",
+  "groupsRejoindre": "Rejoindre",
+  "groupsAucunEspace": "Aucun espace",
+  "groupsCreeOuRejoinsUnEspace": "Crée ou rejoins un espace partagé pour commencer.",
+  "groupsCreerUnEspace": "Créer un espace",
+  "groupsRejoindreAvecUnCode": "Rejoindre avec un code",
+  "groupsReessayer": "Réessayer",
+  "groupsCodeCopie": "Code {p0} copié !",
+  "@groupsCodeCopie": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "groupsOuvrirCetEspace": "Ouvrir cet espace",
+  "groupsRejoindreUnEspace": "Rejoindre un espace",
+  "groupsEntreLeCodePartagePar": "Entre le code partagé par un membre du groupe.",
+  "groupsCodeDInvitation": "Code d'invitation",
+  "groupsLienInvalide": "Lien invalide",
+  "groupsFermer": "Fermer",
+  "notesErreur": "Erreur: {p0}",
+  "@notesErreur": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "notesSupprimerLaNote": "Supprimer la note",
+  "notesCetteActionEstIrreversible": "Cette action est irréversible.",
+  "notesAnnuler": "Annuler",
+  "notesSupprimer": "Supprimer",
+  "notesPermissionRefusee": "Permission refusée",
+  "notesCouleur": "Couleur",
+  "notesAjouterUnElement": "Ajouter un élément",
+  "notesTitre": "Titre",
+  "notesEpingler": "Épingler",
+  "notesChecklist": "Checklist",
+  "notesContenuOptionnel": "Contenu (optionnel)",
+  "notesElement": "Élément {p0}…",
+  "@notesElement": {
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
+  "notesImpossibleDEpinglerPermissionRefusee": "Impossible d'épingler : permission refusée.",
+  "notesAucuneNote": "Aucune note",
+  "notesCreerUneNote": "Créer une note",
+  "notesEpinglees": "Épinglées",
+  "notesRecentes": "Récentes",
+  "notesRechercher": "Rechercher...",
+  "notesParametresNotes": "Paramètres Notes",
+  "notesApparence": "Apparence",
+  "notesCouleurDuTheme": "Couleur du thème",
+  "commonIcone": "Icône",
+  "commonCouleur": "Couleur",
+  "commonAnnuler": "Annuler",
+  "commonNom": "Nom",
+  "commonExSanteEducation": "Ex : Santé, Éducation...",
+  "commonAjouter": "Ajouter",
+  "commonSupprimerCetteCouleur": "Supprimer cette couleur ?",
+  "commonCetteCouleurSeraRetireeDe": "Cette couleur sera retirée de la palette.",
+  "commonSupprimer": "Supprimer",
+  "commonRrggbb": "RRGGBB",
+  "commonMemberCount": "{count, plural, =0{0 membre} =1{1 membre} other{{count} membres}}",
+  "@commonMemberCount": {
+    "description": "Nombre de membres d'un espace (pluriel identique à l'historique : « s » à partir de 2)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "groupsInvalidInviteLinkBody": "Ce lien d'invitation est invalide ou a expiré. Demande un nouveau lien à un membre du groupe.",
+  "dashboardRegenerateCodeBody": "Un nouveau code sera créé. Les liens et codes déjà partagés cesseront de fonctionner.",
+  "notesMoreItems": "{count, plural, =0{+ 0 autre} =1{+ 1 autre} other{+ {count} autres}}",
+  "@notesMoreItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "expensesPaidByYou": "Payé par vous",
+  "expensesPaidBy": "Payé par {name}",
+  "@expensesPaidBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatPollVoteCount": "{count, plural, =0{0 votes} =1{1 vote} other{{count} votes}}",
+  "@chatPollVoteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatPollYours": "Votre sondage",
+  "chatPollEditedSuffix": " · modifié"
 }

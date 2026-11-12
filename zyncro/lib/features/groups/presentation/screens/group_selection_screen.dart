@@ -23,11 +23,11 @@ class GroupSelectionScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: const Text('Mes espaces'),
+        title: Text(context.l10n.groupsMesEspaces),
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle_outlined),
-            tooltip: 'Mon profil',
+            tooltip: context.l10n.groupsMonProfil,
             onPressed: () => context.push(AppRoutes.profile),
           ),
         ],

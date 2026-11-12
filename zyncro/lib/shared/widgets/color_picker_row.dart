@@ -181,7 +181,7 @@ class _ColorPickerSheetState extends State<_ColorPickerSheet> {
                       horizontal: 12,
                       vertical: 12,
                     ),
-                    hintText: 'RRGGBB',
+                    hintText: context.l10n.commonRrggbb,
                   ),
                   style: const TextStyle(
                     fontFamily: 'monospace',
@@ -201,14 +201,14 @@ class _ColorPickerSheetState extends State<_ColorPickerSheet> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Annuler'),
+                  child: Text(context.l10n.commonAnnuler),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
                   onPressed: () => Navigator.pop(context, colorToHex(color)),
-                  child: const Text('Ajouter'),
+                  child: Text(context.l10n.commonAjouter),
                 ),
               ),
             ],
@@ -340,17 +340,17 @@ class ColorPickerRow extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Supprimer cette couleur ?'),
-        content: const Text('Cette couleur sera retirée de la palette.'),
+        title: Text(context.l10n.commonSupprimerCetteCouleur),
+        content: Text(context.l10n.commonCetteCouleurSeraRetireeDe),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.commonAnnuler),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
-              'Supprimer',
+              context.l10n.commonSupprimer,
               style: TextStyle(color: context.colors.error),
             ),
           ),

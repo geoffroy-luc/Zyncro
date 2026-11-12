@@ -174,7 +174,7 @@ class _CalendarScreenState extends _CalendarScreenStateBase
                             child: TextField(
                               onChanged: (v) => setState(() => _search = v),
                               decoration: InputDecoration(
-                                hintText: 'Rechercher...',
+                                hintText: context.l10n.calendarRechercher,
                                 hintStyle: TextStyle(
                                   color: context.colors.textSecondary,
                                   fontSize: 14,
@@ -226,13 +226,13 @@ class _CalendarScreenState extends _CalendarScreenStateBase
                       child: Row(
                         children: [
                           CalendarToggleButton(
-                            label: 'Mois',
+                            label: context.l10n.calendarMois,
                             active: _viewMode == ViewMode.month,
                             onTap: () =>
                                 setState(() => _viewMode = ViewMode.month),
                           ),
                           CalendarToggleButton(
-                            label: 'Agenda',
+                            label: context.l10n.calendarAgenda,
                             active: _viewMode == ViewMode.agenda,
                             onTap: () =>
                                 setState(() => _viewMode = ViewMode.agenda),
@@ -494,7 +494,7 @@ class _CalendarScreenState extends _CalendarScreenStateBase
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'Aucun événement',
+                              context.l10n.calendarAucunEvenement,
                               style: TextStyle(
                                 color: context.colors.textSecondary,
                               ),
@@ -513,7 +513,9 @@ class _CalendarScreenState extends _CalendarScreenStateBase
                                 ),
                               ),
                               icon: const Icon(Icons.add),
-                              label: const Text('Ajouter un événement'),
+                              label: Text(
+                                context.l10n.calendarAjouterUnEvenement,
+                              ),
                             ),
                           ],
                         ),

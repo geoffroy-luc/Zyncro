@@ -89,7 +89,7 @@ class _EditPollDialogState extends State<EditPollDialog> {
             size: 20,
           ),
           const SizedBox(width: 8),
-          const Text('Modifier le sondage'),
+          Text(context.l10n.chatModifierLeSondage),
         ],
       ),
       content: SingleChildScrollView(
@@ -102,16 +102,16 @@ class _EditPollDialogState extends State<EditPollDialog> {
               autofocus: true,
               maxLines: 2,
               minLines: 1,
-              decoration: const InputDecoration(
-                labelText: 'Question',
-                hintText: 'Posez votre question…',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n.chatQuestion,
+                hintText: context.l10n.chatPosezVotreQuestion,
+                border: const OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 16),
             Text(
-              'Options',
+              context.l10n.chatOptions,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
@@ -128,7 +128,7 @@ class _EditPollDialogState extends State<EditPollDialog> {
                       child: TextField(
                         controller: _optionControllers[i],
                         decoration: InputDecoration(
-                          hintText: 'Option ${i + 1}',
+                          hintText: context.l10n.chatOption(i + 1),
                           border: const OutlineInputBorder(),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -155,7 +155,7 @@ class _EditPollDialogState extends State<EditPollDialog> {
               TextButton.icon(
                 onPressed: _addOption,
                 icon: const Icon(Icons.add, size: 16),
-                label: const Text('Ajouter une option'),
+                label: Text(context.l10n.chatAjouterUneOption),
                 style: TextButton.styleFrom(
                   foregroundColor: Theme.of(context).colorScheme.primary,
                   padding: EdgeInsets.zero,
@@ -164,13 +164,13 @@ class _EditPollDialogState extends State<EditPollDialog> {
             SwitchListTile(
               value: _multipleChoice,
               onChanged: (v) => setState(() => _multipleChoice = v),
-              title: const Text(
-                'Réponses multiples',
-                style: TextStyle(fontSize: 14),
+              title: Text(
+                context.l10n.chatReponsesMultiples,
+                style: const TextStyle(fontSize: 14),
               ),
-              subtitle: const Text(
-                'Les participants peuvent voter pour plusieurs options',
-                style: TextStyle(fontSize: 11),
+              subtitle: Text(
+                context.l10n.chatLesParticipantsPeuventVoterPour,
+                style: const TextStyle(fontSize: 11),
               ),
               activeThumbColor: Theme.of(context).colorScheme.primary,
               contentPadding: EdgeInsets.zero,
@@ -184,18 +184,21 @@ class _EditPollDialogState extends State<EditPollDialog> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.warning_amber_outlined,
                     color: Colors.orange,
                     size: 16,
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Les votes existants seront réinitialisés.',
-                      style: TextStyle(fontSize: 12, color: Colors.orange),
+                      context.l10n.chatLesVotesExistantsSerontReinitialises,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.orange,
+                      ),
                     ),
                   ),
                 ],
@@ -207,11 +210,11 @@ class _EditPollDialogState extends State<EditPollDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Annuler'),
+          child: Text(context.l10n.chatAnnuler),
         ),
         FilledButton(
           onPressed: _isValid ? _submit : null,
-          child: const Text('Modifier'),
+          child: Text(context.l10n.chatModifier),
         ),
       ],
     );

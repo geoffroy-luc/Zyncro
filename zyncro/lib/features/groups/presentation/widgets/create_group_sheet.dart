@@ -104,7 +104,10 @@ class _CreateGroupSheetState extends ConsumerState<CreateGroupSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Nouvel espace', style: theme.textTheme.titleLarge),
+                Text(
+                  context.l10n.groupsNouvelEspace,
+                  style: theme.textTheme.titleLarge,
+                ),
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.of(context).pop(),
@@ -152,7 +155,9 @@ class _CreateGroupSheetState extends ConsumerState<CreateGroupSheet> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: "Nom de l'espace"),
+              decoration: InputDecoration(
+                labelText: context.l10n.groupsNomDeLEspace,
+              ),
               textCapitalization: TextCapitalization.sentences,
               maxLength: 30,
               validator: (v) {
@@ -164,8 +169,8 @@ class _CreateGroupSheetState extends ConsumerState<CreateGroupSheet> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description (optionnel)',
+              decoration: InputDecoration(
+                labelText: context.l10n.groupsDescriptionOptionnel,
               ),
               maxLength: 150,
               maxLines: 2,
@@ -188,7 +193,7 @@ class _CreateGroupSheetState extends ConsumerState<CreateGroupSheet> {
                         strokeWidth: 2,
                       ),
                     )
-                  : const Text('Créer'),
+                  : Text(context.l10n.groupsCreer),
             ),
           ],
         ),

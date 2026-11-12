@@ -47,7 +47,7 @@ class _GuestPseudoSheetState extends State<GuestPseudoSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Continuer sans compte',
+                  context.l10n.authContinuerSansCompte,
                   style: theme.textTheme.titleLarge,
                 ),
                 IconButton(
@@ -58,7 +58,7 @@ class _GuestPseudoSheetState extends State<GuestPseudoSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Entre un pseudo pour être identifié dans ton groupe.',
+              context.l10n.authEntreUnPseudoPourEtre,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: context.colors.textSecondary,
               ),
@@ -67,9 +67,9 @@ class _GuestPseudoSheetState extends State<GuestPseudoSheet> {
             TextFormField(
               controller: _controller,
               autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Pseudo',
-                prefixIcon: Icon(Icons.person_outline),
+              decoration: InputDecoration(
+                labelText: context.l10n.authPseudo,
+                prefixIcon: const Icon(Icons.person_outline),
               ),
               textCapitalization: TextCapitalization.words,
               textInputAction: TextInputAction.done,
@@ -83,7 +83,10 @@ class _GuestPseudoSheetState extends State<GuestPseudoSheet> {
               },
             ),
             const SizedBox(height: 20),
-            ElevatedButton(onPressed: _submit, child: const Text('Continuer')),
+            ElevatedButton(
+              onPressed: _submit,
+              child: Text(context.l10n.authContinuer),
+            ),
           ],
         ),
       ),

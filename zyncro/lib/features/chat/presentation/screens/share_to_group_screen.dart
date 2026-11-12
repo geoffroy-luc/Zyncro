@@ -60,7 +60,7 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
           onPressed: _sending ? null : _cancel,
         ),
         title: Text(
-          'Partager vers…',
+          context.l10n.chatPartagerVers,
           style: TextStyle(
             color: context.colors.textPrimary,
             fontSize: 17,
@@ -78,7 +78,7 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        "Vous n'avez encore aucun groupe.\nCréez-en un pour pouvoir partager.",
+                        context.l10n.chatVousNAvezEncoreAucun,
                         textAlign: TextAlign.center,
                         style: TextStyle(color: context.colors.textSecondary),
                       ),
@@ -211,9 +211,9 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _sending = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Échec du partage : $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.chatEchecDuPartage(e))),
+      );
     }
   }
 

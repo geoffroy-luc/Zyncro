@@ -18,15 +18,14 @@ class JoinLinkInvalidLink extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         Text(
-          'Lien invalide',
+          context.l10n.groupsLienInvalide,
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Ce lien d\'invitation est invalide ou a expiré. Demande un nouveau '
-          'lien à un membre du groupe.',
+          context.l10n.groupsInvalidInviteLinkBody,
           style: TextStyle(color: context.colors.textSecondary),
           textAlign: TextAlign.center,
         ),
@@ -35,7 +34,7 @@ class JoinLinkInvalidLink extends StatelessWidget {
           width: double.infinity,
           child: OutlinedButton(
             onPressed: onClose,
-            child: const Text('Fermer'),
+            child: Text(context.l10n.groupsFermer),
           ),
         ),
       ],

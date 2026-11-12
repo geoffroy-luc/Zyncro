@@ -74,7 +74,7 @@ class EquilibreTab extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Votre solde',
+                  context.l10n.expensesVotreSolde,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.85),
                     fontSize: 13,
@@ -125,7 +125,7 @@ class EquilibreTab extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                     child: Text(
-                      'Soldes',
+                      context.l10n.expensesSoldes,
                       style: TextStyle(
                         color: context.colors.textPrimary,
                         fontWeight: FontWeight.w600,
@@ -212,7 +212,7 @@ class EquilibreTab extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                     child: Text(
-                      'À régler',
+                      context.l10n.expensesARegler,
                       style: TextStyle(
                         color: context.colors.textPrimary,
                         fontWeight: FontWeight.w600,
@@ -297,9 +297,9 @@ class EquilibreTab extends ConsumerWidget {
                                       ),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'Rembourser',
-                                    style: TextStyle(fontSize: 12),
+                                  child: Text(
+                                    context.l10n.expensesRembourser,
+                                    style: const TextStyle(fontSize: 12),
                                   ),
                                 ),
                               ],
@@ -333,7 +333,7 @@ class EquilibreTab extends ConsumerWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Les comptes sont équilibrés',
+                      context.l10n.expensesLesComptesSontEquilibres,
                       style: TextStyle(
                         color: context.colors.textPrimary,
                         fontSize: 14,

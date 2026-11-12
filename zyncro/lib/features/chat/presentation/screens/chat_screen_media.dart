@@ -88,9 +88,9 @@ mixin _ChatMediaSending on _ChatScreenStateBase {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erreur envoi média : $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.chatErreurEnvoiMedia(e))),
+      );
     } finally {
       if (mounted) setState(() => _isUploadingMedia = false);
     }
@@ -168,9 +168,9 @@ mixin _ChatMediaSending on _ChatScreenStateBase {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erreur envoi média : $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.chatErreurEnvoiMedia(e))),
+      );
     } finally {
       if (mounted) setState(() => _isUploadingMedia = false);
     }

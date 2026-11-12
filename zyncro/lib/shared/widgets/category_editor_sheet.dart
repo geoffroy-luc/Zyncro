@@ -100,15 +100,15 @@ class _CategoryEditorSheetState extends State<CategoryEditorSheet> {
               controller: _nameCtrl,
               autofocus: !isEditing,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Nom',
-                hintText: 'Ex : Santé, Éducation...',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n.commonNom,
+                hintText: context.l10n.commonExSanteEducation,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 20),
             Text(
-              'Icône',
+              context.l10n.commonIcone,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -147,7 +147,7 @@ class _CategoryEditorSheetState extends State<CategoryEditorSheet> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Couleur',
+              context.l10n.commonCouleur,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -166,7 +166,7 @@ class _CategoryEditorSheetState extends State<CategoryEditorSheet> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Annuler'),
+                    child: Text(context.l10n.commonAnnuler),
                   ),
                 ),
                 const SizedBox(width: 12),

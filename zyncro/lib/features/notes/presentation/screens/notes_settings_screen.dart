@@ -34,7 +34,7 @@ class NotesSettingsScreen extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Paramètres Notes',
+          context.l10n.notesParametresNotes,
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
@@ -50,10 +50,10 @@ class NotesSettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           SettingsSection(
-            title: 'Apparence',
+            title: context.l10n.notesApparence,
             children: [
               SettingsTile(
-                title: 'Couleur du thème',
+                title: context.l10n.notesCouleurDuTheme,
                 child: ColorPickerRow(
                   selected: settings.notesThemeColor,
                   extraColors: settings.customColors,

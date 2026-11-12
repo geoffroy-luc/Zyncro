@@ -268,7 +268,9 @@ class _ChatScreenState extends _ChatScreenStateBase
                                       onChanged: (v) =>
                                           setState(() => _search = v),
                                       decoration: InputDecoration(
-                                        hintText: 'Rechercher dans le chat...',
+                                        hintText: context
+                                            .l10n
+                                            .chatRechercherDansLeChat,
                                         hintStyle: TextStyle(
                                           color: context.colors.textSecondary,
                                           fontSize: 14,
@@ -308,7 +310,8 @@ class _ChatScreenState extends _ChatScreenStateBase
                     child: chatAsync.when(
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Center(child: Text('Erreur: $e')),
+                      error: (e, _) =>
+                          Center(child: Text(context.l10n.chatErreur(e))),
                       data: (chatState) {
                         final allMessages = chatState.messages;
                         final messages = _search.isEmpty
@@ -325,7 +328,7 @@ class _ChatScreenState extends _ChatScreenStateBase
                         if (messages.isEmpty) {
                           return Center(
                             child: Text(
-                              'Aucun message. Soyez le premier !',
+                              context.l10n.chatAucunMessageSoyezLePremier,
                               style: TextStyle(
                                 color: context.colors.textSecondary,
                               ),
@@ -515,7 +518,7 @@ class _ChatScreenState extends _ChatScreenStateBase
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'Modifier le message',
+                              context.l10n.chatModifierLeMessage,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.primary,
                                 fontSize: 12,
@@ -664,7 +667,7 @@ class _ChatScreenState extends _ChatScreenStateBase
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'Enregistrement…',
+                                      context.l10n.chatEnregistrement,
                                       style: TextStyle(
                                         color: context.colors.textSecondary,
                                         fontSize: 13,
@@ -733,7 +736,8 @@ class _ChatScreenState extends _ChatScreenStateBase
                                     controller: _controller,
                                     focusNode: _inputFocusNode,
                                     decoration: InputDecoration(
-                                      hintText: 'Écrire un message...',
+                                      hintText:
+                                          context.l10n.chatEcrireUnMessage,
                                       hintStyle: TextStyle(
                                         color: context.colors.textSecondary,
                                         fontSize: 14,

@@ -99,7 +99,7 @@ class GroupsGroupTile extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     Text(
-                      '${group.memberIds.length} membre${group.memberIds.length > 1 ? 's' : ''}',
+                      context.l10n.commonMemberCount(group.memberIds.length),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: context.colors.secondary,
                       ),
@@ -115,7 +115,9 @@ class GroupsGroupTile extends ConsumerWidget {
                     );
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Code ${group.inviteCode} copié !'),
+                        content: Text(
+                          context.l10n.groupsCodeCopie('${group.inviteCode}'),
+                        ),
                       ),
                     );
                   },

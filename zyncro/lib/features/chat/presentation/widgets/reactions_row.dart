@@ -45,7 +45,7 @@ class ReactionsRow extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Réactions',
+                context.l10n.chatReactions,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

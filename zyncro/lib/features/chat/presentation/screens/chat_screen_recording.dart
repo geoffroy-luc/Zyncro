@@ -12,7 +12,7 @@ mixin _ChatRecording on _ChatScreenStateBase {
     if (!await _recorder.hasPermission()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Permission microphone refusée.')),
+          SnackBar(content: Text(context.l10n.chatPermissionMicrophoneRefusee)),
         );
       }
       return;
@@ -90,7 +90,7 @@ mixin _ChatRecording on _ChatScreenStateBase {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Audio error: $e')));
+      ).showSnackBar(SnackBar(content: Text(context.l10n.chatAudioError(e))));
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }

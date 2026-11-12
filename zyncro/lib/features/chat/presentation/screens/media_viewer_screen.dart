@@ -7,7 +7,7 @@ import 'package:gal/gal.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
-
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/chat/presentation/widgets/swipe_image_page.dart';
 import 'package:zyncro/features/chat/presentation/widgets/swipe_video_page.dart';
 
@@ -29,14 +29,16 @@ class MediaDownloader {
       await Gal.putImage(file.path);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image enregistrée dans la galerie')),
+          SnackBar(
+            content: Text(context.l10n.chatImageEnregistreeDansLaGalerie),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur téléchargement : $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.chatErreurTelechargement(e))),
+        );
       }
     }
   }
@@ -56,14 +58,16 @@ class MediaDownloader {
       await Gal.putVideo(file.path);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vidéo enregistrée dans la galerie')),
+          SnackBar(
+            content: Text(context.l10n.chatVideoEnregistreeDansLaGalerie),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur téléchargement : $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.chatErreurTelechargement(e))),
+        );
       }
     }
   }
@@ -231,7 +235,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                               Icons.download_outlined,
                               color: Colors.white,
                             ),
-                            tooltip: 'Enregistrer',
+                            tooltip: context.l10n.chatEnregistrer,
                             onPressed: _download,
                           ),
                       ],

@@ -86,7 +86,7 @@ class MessageBubble extends StatelessWidget {
         );
       } catch (_) {
         return Text(
-          '🎵 Audio',
+          context.l10n.chatAudio,
           style: TextStyle(
             color: isMe ? Colors.white : context.colors.textPrimary,
             fontSize: 14,
@@ -161,7 +161,7 @@ class MessageBubble extends StatelessWidget {
                       ),
                     ),
               errorBuilder: (_, __, ___) => Text(
-                '🖼️ Image',
+                context.l10n.chatImage2,
                 style: TextStyle(
                   color: isMe ? Colors.white : context.colors.textPrimary,
                   fontSize: 14,
@@ -172,7 +172,7 @@ class MessageBubble extends StatelessWidget {
         );
       } catch (_) {
         return Text(
-          '🖼️ Média',
+          context.l10n.chatMedia,
           style: TextStyle(
             color: isMe ? Colors.white : context.colors.textPrimary,
             fontSize: 14,

@@ -53,7 +53,7 @@ class GroupsErrorView extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Réessayer'),
+              label: Text(context.l10n.groupsReessayer),
             ),
           ],
         ),

@@ -77,7 +77,7 @@ abstract class _HomeSettingsScreenStateBase
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Paramètres Accueil',
+          context.l10n.dashboardParametresAccueil,
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
@@ -94,7 +94,7 @@ abstract class _HomeSettingsScreenStateBase
         children: [
           // ── Espace ──────────────────────────────────────────────────
           HomeSettingsSection(
-            title: 'Espace',
+            title: context.l10n.dashboardEspace,
             child: Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -158,7 +158,9 @@ abstract class _HomeSettingsScreenStateBase
                               ),
                             ),
                           Text(
-                            '${group.memberIds.length} membre${group.memberIds.length > 1 ? 's' : ''}',
+                            context.l10n.commonMemberCount(
+                              group.memberIds.length,
+                            ),
                             style: TextStyle(
                               fontSize: 12,
                               color: context.colors.secondary,
@@ -193,7 +195,7 @@ abstract class _HomeSettingsScreenStateBase
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Partage le lien ou le code pour inviter quelqu\'un dans ce groupe.',
+                      context.l10n.dashboardPartageLeLienOuLe,
                       style: TextStyle(
                         fontSize: 13,
                         color: context.colors.textSecondary,
@@ -219,7 +221,7 @@ abstract class _HomeSettingsScreenStateBase
                                 ),
                               )
                             : const Icon(Icons.vpn_key_outlined, size: 18),
-                        label: const Text('Générer un code'),
+                        label: Text(context.l10n.dashboardGenererUnCode),
                       )
                     else ...[
                       Row(
@@ -258,7 +260,11 @@ abstract class _HomeSettingsScreenStateBase
                                 ),
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Code copié !')),
+                                SnackBar(
+                                  content: Text(
+                                    context.l10n.dashboardCodeCopie,
+                                  ),
+                                ),
                               );
                             },
                             icon: const Icon(Icons.copy),
@@ -282,7 +288,9 @@ abstract class _HomeSettingsScreenStateBase
                             foregroundColor: Colors.white,
                           ),
                           icon: const Icon(Icons.ios_share, size: 18),
-                          label: const Text('Partager le lien d\'invitation'),
+                          label: Text(
+                            context.l10n.dashboardPartagerLeLienDInvitation,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -301,7 +309,7 @@ abstract class _HomeSettingsScreenStateBase
                                   ),
                                 )
                               : const Icon(Icons.refresh, size: 18),
-                          label: const Text('Régénérer le lien'),
+                          label: Text(context.l10n.dashboardRegenererLeLien2),
                           style: TextButton.styleFrom(foregroundColor: primary),
                         ),
                       ),
@@ -314,7 +322,7 @@ abstract class _HomeSettingsScreenStateBase
 
           // ── Couleur du thème ─────────────────────────────────────────
           HomeSettingsSection(
-            title: 'Couleur du thème',
+            title: context.l10n.dashboardCouleurDuTheme,
             child: Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -343,10 +351,10 @@ abstract class _HomeSettingsScreenStateBase
 
           // ── Membres ──────────────────────────────────────────────────
           HomeSettingsSection(
-            title: 'Membres',
+            title: context.l10n.dashboardMembres,
             child: membersAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text('Erreur : $e'),
+              error: (e, _) => Text(context.l10n.dashboardErreur(e)),
               data: (members) => Card(
                 child: Column(
                   children: members.map((member) {
@@ -378,7 +386,7 @@ abstract class _HomeSettingsScreenStateBase
                                 size: 18,
                                 color: context.colors.textSecondary,
                               ),
-                              tooltip: 'Changer mon pseudo',
+                              tooltip: context.l10n.dashboardChangerMonPseudo,
                               onPressed: () =>
                                   _editMyPseudo(group.id, member.displayName),
                             )
@@ -397,16 +405,20 @@ abstract class _HomeSettingsScreenStateBase
                                 }
                               },
                               itemBuilder: (_) => [
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                   value: 'transfer',
                                   child: Row(
                                     children: [
-                                      Icon(
+                                      const Icon(
                                         Icons.workspace_premium_outlined,
                                         size: 18,
                                       ),
-                                      SizedBox(width: 10),
-                                      Text('Nommer propriétaire'),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        context
+                                            .l10n
+                                            .dashboardNommerProprietaire,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -421,7 +433,7 @@ abstract class _HomeSettingsScreenStateBase
                                       ),
                                       const SizedBox(width: 10),
                                       Text(
-                                        'Retirer du groupe',
+                                        context.l10n.dashboardRetirerDuGroupe2,
                                         style: TextStyle(
                                           color: context.colors.error,
                                         ),
@@ -447,14 +459,14 @@ abstract class _HomeSettingsScreenStateBase
                 ? () => showDialog<void>(
                     context: context,
                     builder: (_) => AlertDialog(
-                      title: const Text('Impossible de quitter'),
-                      content: const Text(
-                        'Tu es propriétaire du groupe. Transfère la propriété à un autre membre avant de quitter.',
+                      title: Text(context.l10n.dashboardImpossibleDeQuitter),
+                      content: Text(
+                        context.l10n.dashboardTuEsProprietaireDuGroupe,
                       ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('OK'),
+                          child: Text(context.l10n.dashboardOk),
                         ),
                       ],
                     ),
@@ -466,7 +478,7 @@ abstract class _HomeSettingsScreenStateBase
                   : context.colors.error,
             ),
             icon: const Icon(Icons.exit_to_app_outlined),
-            label: const Text('Quitter ce groupe'),
+            label: Text(context.l10n.dashboardQuitterCeGroupe),
           ),
 
           if (isOwner) ...[
@@ -477,7 +489,7 @@ abstract class _HomeSettingsScreenStateBase
                 foregroundColor: context.colors.error,
               ),
               icon: const Icon(Icons.delete_forever_outlined),
-              label: const Text('Supprimer le groupe'),
+              label: Text(context.l10n.dashboardSupprimerLeGroupe),
             ),
           ],
 

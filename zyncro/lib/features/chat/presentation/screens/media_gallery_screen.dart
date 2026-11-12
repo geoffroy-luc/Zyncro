@@ -20,7 +20,7 @@ class MediaGalleryScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: const Text('Médias partagés'),
+        title: Text(context.l10n.chatMediasPartages),
         backgroundColor: Colors.white,
         foregroundColor: context.colors.textPrimary,
         elevation: 0,
@@ -32,7 +32,7 @@ class MediaGalleryScreen extends ConsumerWidget {
       ),
       body: mediaAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Erreur : $e')),
+        error: (e, _) => Center(child: Text(context.l10n.chatErreur2(e))),
         data: (messages) {
           final items = galleryBuildItems(messages);
           if (items.isEmpty) {
@@ -47,7 +47,7 @@ class MediaGalleryScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Aucun média partagé',
+                    context.l10n.chatAucunMediaPartage,
                     style: TextStyle(
                       color: context.colors.textSecondary,
                       fontSize: 16,

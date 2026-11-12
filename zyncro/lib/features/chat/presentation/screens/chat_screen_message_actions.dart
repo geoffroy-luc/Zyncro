@@ -73,13 +73,13 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.reply_outlined),
-              title: const Text('Répondre'),
+              title: Text(context.l10n.chatRepondre),
               onTap: () => Navigator.of(ctx).pop('reply'),
             ),
             if (message.type == MessageType.text)
               ListTile(
                 leading: const Icon(Icons.content_copy_outlined),
-                title: const Text('Copier'),
+                title: Text(context.l10n.chatCopier),
                 onTap: () => Navigator.of(ctx).pop('copy'),
               ),
             if (isMe &&
@@ -87,28 +87,28 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
                 message.type != MessageType.audio)
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
-                title: const Text('Modifier'),
+                title: Text(context.l10n.chatModifier),
                 onTap: () => Navigator.of(ctx).pop('edit'),
               ),
             if (isMe && message.type == MessageType.poll)
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
-                title: const Text('Modifier le sondage'),
+                title: Text(context.l10n.chatModifierLeSondage),
                 onTap: () => Navigator.of(ctx).pop('edit_poll'),
               ),
             if (message.type == MessageType.image ||
                 message.type == MessageType.file)
               ListTile(
                 leading: const Icon(Icons.download_outlined),
-                title: const Text('Télécharger'),
+                title: Text(context.l10n.chatTelecharger),
                 onTap: () => Navigator.of(ctx).pop('download'),
               ),
             if (isMe)
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
-                title: const Text(
-                  'Supprimer',
-                  style: TextStyle(color: Colors.red),
+                title: Text(
+                  context.l10n.chatSupprimer,
+                  style: const TextStyle(color: Colors.red),
                 ),
                 onTap: () => Navigator.of(ctx).pop('delete'),
               ),
@@ -123,9 +123,9 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
       await Clipboard.setData(ClipboardData(text: message.content));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Message copié'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(context.l10n.chatMessageCopie),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -230,7 +230,7 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Impossible de modifier le sondage.')),
+        SnackBar(content: Text(context.l10n.chatImpossibleDeModifierLeSondage)),
       );
     }
   }
@@ -242,17 +242,17 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Supprimer le message'),
-        content: const Text('Ce message sera supprimé définitivement.'),
+        title: Text(context.l10n.chatSupprimerLeMessage),
+        content: Text(context.l10n.chatCeMessageSeraSupprimeDefinitivement),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.chatAnnuler),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Supprimer'),
+            child: Text(context.l10n.chatSupprimer),
           ),
         ],
       ),
@@ -267,7 +267,9 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Impossible de supprimer le message.')),
+        SnackBar(
+          content: Text(context.l10n.chatImpossibleDeSupprimerLeMessage),
+        ),
       );
     }
   }

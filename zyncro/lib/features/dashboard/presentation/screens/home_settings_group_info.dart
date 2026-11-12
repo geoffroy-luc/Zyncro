@@ -26,7 +26,7 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.emoji_emotions_outlined),
-              title: const Text('Choisir un emoji'),
+              title: Text(context.l10n.dashboardChoisirUnEmoji),
               onTap: () {
                 Navigator.pop(ctx);
                 unawaited(_pickEmoji(groupEmoji));
@@ -34,7 +34,7 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Choisir une photo'),
+              title: Text(context.l10n.dashboardChoisirUnePhoto),
               onTap: () {
                 Navigator.pop(ctx);
                 unawaited(_pickGroupPhoto(MediaSource.gallery, settings));
@@ -42,7 +42,7 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Prendre une photo'),
+              title: Text(context.l10n.dashboardPrendreUnePhoto),
               onTap: () {
                 Navigator.pop(ctx);
                 unawaited(_pickGroupPhoto(MediaSource.camera, settings));
@@ -55,7 +55,7 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
                   color: context.colors.error,
                 ),
                 title: Text(
-                  'Supprimer la photo',
+                  context.l10n.dashboardSupprimerLaPhoto,
                   style: TextStyle(color: context.colors.error),
                 ),
                 onTap: () {
@@ -75,7 +75,7 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
     final result = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Emoji du groupe'),
+        title: Text(context.l10n.dashboardEmojiDuGroupe),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -90,11 +90,11 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.dashboardAnnuler),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Enregistrer'),
+            child: Text(context.l10n.dashboardEnregistrer),
           ),
         ],
       ),
@@ -136,9 +136,9 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
     } on Exception catch (e) {
       if (e.toString().contains('cancelled')) return;
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.dashboardErreur(e))),
+        );
       }
     } finally {
       if (mounted) setState(() => _loadingPhoto = false);
@@ -175,7 +175,7 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Modifier le groupe'),
+        title: Text(context.l10n.dashboardModifierLeGroupe),
         content: Form(
           key: formKey,
           child: Column(
@@ -183,7 +183,9 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Nom'),
+                decoration: InputDecoration(
+                  labelText: context.l10n.dashboardNom,
+                ),
                 maxLength: 30,
                 textCapitalization: TextCapitalization.sentences,
                 validator: (v) {
@@ -195,8 +197,8 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
               const SizedBox(height: 8),
               TextFormField(
                 controller: descController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (optionnel)',
+                decoration: InputDecoration(
+                  labelText: context.l10n.dashboardDescriptionOptionnel,
                 ),
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 150,
@@ -214,7 +216,7 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.dashboardAnnuler),
           ),
           FilledButton(
             onPressed: () {
@@ -222,7 +224,7 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
                 Navigator.pop(context, true);
               }
             },
-            child: const Text('Enregistrer'),
+            child: Text(context.l10n.dashboardEnregistrer),
           ),
         ],
       ),
@@ -241,9 +243,9 @@ mixin _HomeSettingsGroupInfo on _HomeSettingsScreenStateBase {
           );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.dashboardErreur(e))),
+        );
       }
     }
   }
