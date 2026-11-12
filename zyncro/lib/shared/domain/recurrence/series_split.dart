@@ -27,10 +27,19 @@ RecurrenceRule? truncateBefore(
       count: index,
     );
   }
+  // Fin du jour précédent : exclue l'occurrence avec la règle « jour
+  // inclus » comme avec la comparaison stricte des versions publiées.
   return RecurrenceRule(
     frequency: rule.frequency,
     endType: RecurrenceEndType.until,
-    until: occurrence.subtract(const Duration(seconds: 1)),
+    until: DateTime(
+      occurrence.year,
+      occurrence.month,
+      occurrence.day,
+      0,
+      0,
+      -1,
+    ),
   );
 }
 

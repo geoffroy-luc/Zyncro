@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/error/failure.dart';
+import 'package:zyncro/core/error/failure_mapper.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/calendar/data/services/reminder_service.dart';
@@ -15,13 +17,15 @@ import 'package:zyncro/features/groups/presentation/providers/groups_provider.da
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 import 'package:zyncro/shared/domain/recurrence/recurrence_rule.dart';
+import 'package:zyncro/shared/domain/recurrence/series_split.dart';
 import 'package:zyncro/shared/presentation/recurrence_rule_label.dart';
 import 'package:zyncro/shared/widgets/color_picker_row.dart';
+import 'package:zyncro/shared/widgets/series_scope_dialog.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
 
+part 'event_form_actions.dart';
 part 'event_form_recurrence.dart';
 part 'event_form_reminder.dart';
-part 'event_form_actions.dart';
 
 class EventFormScreen extends ConsumerStatefulWidget {
   final DateTime? initialDate;

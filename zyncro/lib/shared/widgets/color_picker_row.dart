@@ -339,16 +339,19 @@ class ColorPickerRow extends StatelessWidget {
   Future<void> _confirmDelete(BuildContext context, String hex) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      // BUG K3 (a) corrigé : on ferme le dialog avec SON contexte. Le
+      // contexte de la ligne visait le navigator de branche et fermait le
+      // formulaire (dialog sur le navigator racine).
+      builder: (dialogContext) => AlertDialog(
         title: Text(context.l10n.commonSupprimerCetteCouleur),
         content: Text(context.l10n.commonCetteCouleurSeraRetireeDe),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(context.l10n.commonAnnuler),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
               context.l10n.commonSupprimer,
               style: TextStyle(color: context.colors.error),

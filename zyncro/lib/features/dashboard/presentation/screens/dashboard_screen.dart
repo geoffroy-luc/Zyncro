@@ -32,7 +32,8 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUid = ref.watch(authStateProvider).asData?.value?.uid;
 
-    final allEvents = ref.watch(eventsProvider).asData?.value ?? [];
+    // BUG K2 (5) / G12 corrigés : occurrences des séries comprises.
+    final allEvents = ref.watch(expandedEventsProvider).asData?.value ?? [];
     final allNotes = ref.watch(notesProvider).asData?.value ?? [];
     final allExpenses = ref.watch(expensesProvider).asData?.value ?? [];
     final balances = ref.watch(balancesProvider);
@@ -43,13 +44,13 @@ class DashboardScreen extends ConsumerWidget {
 
     final now = DateTime.now();
 
-    // Prochains événements (à partir d'aujourd'hui, triés)
+    // Prochains événements (en cours ou à venir à partir d'aujourd'hui).
+    // BUG G12 corrigé : un événement multi-jours en cours est inclus ;
+    // BUG CA10 corrigé : tri d'une copie, plus de la liste du provider.
+    final today = DateTime(now.year, now.month, now.day);
     final upcomingEvents =
-        (allEvents..sort((a, b) => a.startDate.compareTo(b.startDate)))
-            .where(
-              (e) =>
-                  !e.startDate.isBefore(DateTime(now.year, now.month, now.day)),
-            )
+        ([...allEvents]..sort((a, b) => a.startDate.compareTo(b.startDate)))
+            .where((e) => !(e.endDate ?? e.startDate).isBefore(today))
             .take(3)
             .toList();
 

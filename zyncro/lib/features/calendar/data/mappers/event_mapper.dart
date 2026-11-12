@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:zyncro/features/calendar/domain/entities/event.dart';
 import 'package:zyncro/shared/data/mappers/firestore_codec.dart';
 import 'package:zyncro/shared/data/mappers/recurrence_rule_mapper.dart';
@@ -67,5 +68,15 @@ abstract final class EventMapper {
         event.recurrence!,
       ),
     EventFields.participantIds: event.participantIds,
+  };
+
+  /// Carte d'`update()` : comme [toFirestore], mais une couleur ou une
+  /// répétition retirée est **supprimée** du document (BUG K3 (b) / CA2
+  /// corrigés : la clé omise était conservée par la fusion d'`update`).
+  /// Les versions publiées lisent une clé absente comme `null`.
+  static Map<String, dynamic> toFirestoreUpdate(Event event) => {
+    ...toFirestore(event),
+    if (event.color == null) EventFields.color: FieldValue.delete(),
+    if (event.recurrence == null) EventFields.recurrence: FieldValue.delete(),
   };
 }

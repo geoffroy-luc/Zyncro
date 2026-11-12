@@ -62,7 +62,9 @@ class FirestoreEventsRepository implements EventsRepository {
 
   @override
   Future<void> updateEvent(String groupId, Event event) async {
-    await _col(groupId).doc(event.id).update(EventMapper.toFirestore(event));
+    await _col(
+      groupId,
+    ).doc(event.id).update(EventMapper.toFirestoreUpdate(event));
   }
 
   @override

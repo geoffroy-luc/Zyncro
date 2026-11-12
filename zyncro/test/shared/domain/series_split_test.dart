@@ -9,7 +9,7 @@ void main() {
   test('arrêt avant l’occurrence : until juste avant, count = index', () {
     final cut = truncateBefore(weekly, index: 2, occurrence: occ)!;
     expect(cut.endType, RecurrenceEndType.until);
-    expect(cut.until, DateTime(2026, 11, 16, 8, 59, 59));
+    expect(cut.until, DateTime(2026, 11, 15, 23, 59, 59));
     final byCount = truncateBefore(
       const RecurrenceRule(
         frequency: RecurrenceFrequency.weekly,

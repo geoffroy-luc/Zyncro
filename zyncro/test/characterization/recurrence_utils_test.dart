@@ -125,7 +125,7 @@ void main() {
       ]);
     });
 
-    test('BUG K1 : dérive mensuelle à partir du 31', () {
+    test('BUG K1 corrigé : mensuel au 31 → dernier jour des mois courts', () {
       final out = expandEvents(
         [
           event(
@@ -142,35 +142,38 @@ void main() {
       );
       expect(starts(out), [
         DateTime(2026, 1, 31, 9),
-        DateTime(2026, 3, 3, 9),
-        DateTime(2026, 4, 3, 9),
-        DateTime(2026, 5, 3, 9),
+        DateTime(2026, 2, 28, 9),
+        DateTime(2026, 3, 31, 9),
+        DateTime(2026, 4, 30, 9),
       ]);
     });
 
-    test('BUG : 29 février annuel → 1er mars puis dérive', () {
-      final out = expandEvents(
-        [
-          event(
-            DateTime(2024, 2, 29),
-            rule: const RecurrenceRule(
-              frequency: RecurrenceFrequency.yearly,
-              endType: RecurrenceEndType.count,
-              count: 3,
+    test(
+      'BUG corrigé : 29 février annuel → 28 février, puis 29 en bissextile',
+      () {
+        final out = expandEvents(
+          [
+            event(
+              DateTime(2024, 2, 29),
+              rule: const RecurrenceRule(
+                frequency: RecurrenceFrequency.yearly,
+                endType: RecurrenceEndType.count,
+                count: 3,
+              ),
             ),
-          ),
-        ],
-        rangeStart: DateTime(2024),
-        rangeEnd: DateTime(2030),
-      );
-      expect(starts(out), [
-        DateTime(2024, 2, 29),
-        DateTime(2025, 3),
-        DateTime(2026, 3),
-      ]);
-    });
+          ],
+          rangeStart: DateTime(2024),
+          rangeEnd: DateTime(2030),
+        );
+        expect(starts(out), [
+          DateTime(2024, 2, 29),
+          DateTime(2025, 2, 28),
+          DateTime(2026, 2, 28),
+        ]);
+      },
+    );
 
-    test('BUG K2 : until à minuit exclut le dernier jour', () {
+    test('BUG K2 corrigé : le jour until est inclus', () {
       final out = expandEvents(
         [
           event(
@@ -185,10 +188,10 @@ void main() {
         rangeStart: window.start,
         rangeEnd: window.end,
       );
-      expect(starts(out).map((d) => d.day), [2, 9]);
+      expect(starts(out).map((d) => d.day), [2, 9, 16]);
     });
 
-    test('BUG K2 : les occurrences perdent participantIds', () {
+    test('BUG K2 corrigé : les occurrences gardent participantIds', () {
       final out = expandEvents(
         [
           event(
@@ -204,7 +207,25 @@ void main() {
         rangeStart: window.start,
         rangeEnd: window.end,
       );
-      expect(out.map((e) => e.participantIds), everyElement(isEmpty));
+      expect(out.map((e) => e.participantIds), everyElement(['a', 'b']));
+    });
+
+    test('BUG CA3 corrigé : l’heure murale est conservée (heure d’été)', () {
+      final out = expandEvents(
+        [
+          event(
+            DateTime(2026, 10, 19, 9),
+            rule: const RecurrenceRule(
+              frequency: RecurrenceFrequency.weekly,
+              endType: RecurrenceEndType.count,
+              count: 3,
+            ),
+          ),
+        ],
+        rangeStart: window.start,
+        rangeEnd: window.end,
+      );
+      expect(starts(out).map((d) => d.hour), everyElement(9));
     });
 
     test('forever : arrêt à la fin de la fenêtre', () {
