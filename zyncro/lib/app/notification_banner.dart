@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/app/router.dart';
 import 'package:zyncro/core/notifications/notification_providers.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 
 /// Widget that shows a temporary in-app banner when a foreground message arrives.
 /// Multiple messages arriving within 600 ms are grouped into one snackbar.
@@ -72,7 +73,7 @@ class _NotificationBannerState extends ConsumerState<NotificationBanner> {
       );
     } else {
       snackBar = SnackBar(
-        content: Text('${visible.length} nouvelles notifications'),
+        content: Text(context.l10n.newNotificationsCount(visible.length)),
       );
     }
 

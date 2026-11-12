@@ -11,11 +11,13 @@ import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/core/notifications/local_notifications.dart';
 import 'package:zyncro/core/notifications/notification_providers.dart';
 import 'package:zyncro/core/theme/app_theme.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/share_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/invite_link_provider.dart';
+import 'package:zyncro/l10n/generated/app_localizations.dart';
 
 class ZyncroApp extends ConsumerStatefulWidget {
   const ZyncroApp({super.key});
@@ -53,24 +55,24 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
           child: AlertDialog(
             title: Text(
               info.isMandatory
-                  ? 'Mise à jour requise'
-                  : 'Mise à jour disponible',
+                  ? dialogCtx.l10n.updateRequiredTitle
+                  : dialogCtx.l10n.updateAvailableTitle,
             ),
             content: Text(
               info.isMandatory
-                  ? "Cette version de Zyncro n'est plus supportée. Veuillez mettre à jour l'application pour continuer."
-                  : 'La version ${info.latestVersion} est disponible. Voulez-vous mettre à jour ?',
+                  ? dialogCtx.l10n.updateRequiredBody
+                  : dialogCtx.l10n.updateAvailableBody(info.latestVersion),
             ),
             actions: [
               if (!info.isMandatory)
                 TextButton(
                   onPressed: () => Navigator.of(dialogCtx).pop(),
-                  child: const Text('Plus tard'),
+                  child: Text(dialogCtx.l10n.updateLater),
                 ),
               TextButton(
                 onPressed: () =>
                     ref.read(appUpdateServiceProvider).openStore(info.storeUrl),
-                child: const Text('Mettre à jour'),
+                child: Text(dialogCtx.l10n.updateNow),
               ),
             ],
           ),
@@ -156,6 +158,7 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

@@ -1,0 +1,31 @@
+{
+  "@@locale": "fr",
+
+  "tabHomeTitle": "Accueil",
+  "tabCalendarTitle": "Calendrier",
+  "tabNotesTitle": "Notes",
+  "tabExpensesTitle": "Dépenses",
+  "tabChatTitle": "Chat",
+  "@tabHomeTitle": { "description": "Titre de l'onglet dans la barre du haut du shell" },
+
+  "navHome": "Home",
+  "navCalendar": "Calendar",
+  "navNotes": "Notes",
+  "navExpenses": "Expenses",
+  "navChat": "Chat",
+  "@navHome": { "description": "Libellé de la barre de navigation du bas (anglais historique, conservé à l'identique — Y-03)" },
+
+  "updateRequiredTitle": "Mise à jour requise",
+  "updateAvailableTitle": "Mise à jour disponible",
+  "updateRequiredBody": "Cette version de Zyncro n'est plus supportée. Veuillez mettre à jour l'application pour continuer.",
+  "updateAvailableBody": "La version {version} est disponible. Voulez-vous mettre à jour ?",
+  "@updateAvailableBody": { "placeholders": { "version": { "type": "String" } } },
+  "updateLater": "Plus tard",
+  "updateNow": "Mettre à jour",
+
+  "newNotificationsCount": "{count} nouvelles notifications",
+  "@newNotificationsCount": {
+    "description": "Bandeau in-app quand plusieurs notifications arrivent ensemble (toujours ≥ 2)",
+    "placeholders": { "count": { "type": "int" } }
+  }
+}

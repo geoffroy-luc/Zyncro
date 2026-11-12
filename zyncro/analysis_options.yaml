@@ -18,6 +18,7 @@ analyzer:
     todo: ignore
   exclude:
     - lib/firebase_options.dart
+    - lib/l10n/generated/**
     - build/**
     - packages/**
 

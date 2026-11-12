@@ -9,6 +9,7 @@ import 'package:zyncro/features/chat/presentation/providers/messages_provider.da
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/l10n/generated/app_localizations.dart';
 // ── Default tab gradients ────────────────────────────────────────────────────
 
 const _defaultTabGradients = [
@@ -33,7 +34,21 @@ List<Color> _gradientForTab(int idx, TabSettings settings) {
   return [base, darken(base)];
 }
 
-const _tabTitles = ['Accueil', 'Calendrier', 'Notes', 'Dépenses', 'Chat'];
+List<String> _tabTitles(AppLocalizations l10n) => [
+  l10n.tabHomeTitle,
+  l10n.tabCalendarTitle,
+  l10n.tabNotesTitle,
+  l10n.tabExpensesTitle,
+  l10n.tabChatTitle,
+];
+
+List<String> _navLabels(AppLocalizations l10n) => [
+  l10n.navHome,
+  l10n.navCalendar,
+  l10n.navNotes,
+  l10n.navExpenses,
+  l10n.navChat,
+];
 
 // ── App shell ────────────────────────────────────────────────────────────────
 
@@ -50,19 +65,11 @@ class _AppShellState extends ConsumerState<AppShell> {
   StatefulNavigationShell get shell => widget.shell;
 
   static const _navItems = [
-    _NavItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
-    _NavItem(
-      Icons.calendar_month_outlined,
-      Icons.calendar_month_rounded,
-      'Calendar',
-    ),
-    _NavItem(Icons.description_outlined, Icons.description_rounded, 'Notes'),
-    _NavItem(Icons.attach_money, Icons.attach_money, 'Expenses'),
-    _NavItem(
-      Icons.chat_bubble_outline_rounded,
-      Icons.chat_bubble_rounded,
-      'Chat',
-    ),
+    _NavItem(Icons.home_outlined, Icons.home_rounded),
+    _NavItem(Icons.calendar_month_outlined, Icons.calendar_month_rounded),
+    _NavItem(Icons.description_outlined, Icons.description_rounded),
+    _NavItem(Icons.attach_money, Icons.attach_money),
+    _NavItem(Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded),
   ];
 
   @override
@@ -99,7 +106,8 @@ class _AppShellState extends ConsumerState<AppShell> {
     final idx = shell.currentIndex;
     final gradientColors = _gradientForTab(idx, settings);
     final primaryColor = gradientColors.first;
-    final tabTitle = _tabTitles[idx];
+    final tabTitle = _tabTitles(context.l10n)[idx];
+    final navLabels = _navLabels(context.l10n);
 
     // Photo du groupe — lue depuis le modèle Group (visible partout)
     final groupPhotoUrl = group?.photoUrl;
@@ -303,7 +311,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                item.label,
+                                navLabels[i],
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: isActive
@@ -333,7 +341,6 @@ class _AppShellState extends ConsumerState<AppShell> {
 class _NavItem {
   final IconData icon;
   final IconData activeIcon;
-  final String label;
 
-  const _NavItem(this.icon, this.activeIcon, this.label);
+  const _NavItem(this.icon, this.activeIcon);
 }
