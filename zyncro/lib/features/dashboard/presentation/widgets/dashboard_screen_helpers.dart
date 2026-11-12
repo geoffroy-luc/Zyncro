@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/tokens/brand_palette.dart';
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 
-const dashboardDefaultTabColors = [
-  Color(0xFF9B59B6), // Home
-  Color(0xFF4F7CFF), // Calendrier
-  Color(0xFF2BB8A5), // Notes
-  Color(0xFFFFB86B), // Dépenses
-  Color(0xFFE85D75), // Chat
-];
+const dashboardDefaultTabColors = TabPalette.colors;
 
 Color dashboardColorForTab(int idx, TabSettings settings) {
   final hex = switch (idx) {

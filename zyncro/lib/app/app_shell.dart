@@ -5,6 +5,7 @@ import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/core/theme/app_theme.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/design_system/tokens/brand_palette.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
@@ -12,13 +13,7 @@ import 'package:zyncro/features/settings/presentation/providers/tab_settings_pro
 import 'package:zyncro/l10n/generated/app_localizations.dart';
 // ── Default tab gradients ────────────────────────────────────────────────────
 
-const _defaultTabGradients = [
-  [Color(0xFF9B59B6), Color(0xFF7D3C98)], // Accueil - violet
-  [Color(0xFF4F7CFF), Color(0xFF315FEA)], // Calendrier - bleu
-  [Color(0xFF2BB8A5), Color(0xFF1A9B88)], // Notes - vert
-  [Color(0xFFFFB86B), Color(0xFFF5A855)], // Dépenses - orange
-  [Color(0xFFE85D75), Color(0xFFC94060)], // Chat - rose
-];
+const _defaultTabGradients = TabPalette.gradients;
 
 List<Color> _gradientForTab(int idx, TabSettings settings) {
   final hex = switch (idx) {

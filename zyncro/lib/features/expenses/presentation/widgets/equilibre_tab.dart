@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/design_system/tokens/brand_palette.dart';
 import 'package:zyncro/features/expenses/domain/services/settlement_planner.dart';
 import 'package:zyncro/features/expenses/presentation/screens/reimbursement_form_screen.dart';
 import 'package:zyncro/features/expenses/presentation/widgets/expenses_screen_helpers.dart';
@@ -54,16 +55,22 @@ class EquilibreTab extends ConsumerWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: myBalance >= 0
-                    ? const [Color(0xFF2BB8A5), Color(0xFF1E9B8A)]
-                    : const [Color(0xFFFF6B6B), Color(0xFFE85D75)],
+                    ? const [
+                        BalancePalette.positive,
+                        BalancePalette.positiveDeep,
+                      ]
+                    : const [
+                        BalancePalette.negative,
+                        BalancePalette.negativeDeep,
+                      ],
               ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
                   color:
                       (myBalance >= 0
-                              ? const Color(0xFF2BB8A5)
-                              : const Color(0xFFFF6B6B))
+                              ? BalancePalette.positive
+                              : BalancePalette.negative)
                           .withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
@@ -172,8 +179,8 @@ class EquilibreTab extends ConsumerWidget {
                                         : Icons.arrow_downward,
                                     size: 16,
                                     color: isPos
-                                        ? const Color(0xFF2BB8A5)
-                                        : const Color(0xFFFF6B6B),
+                                        ? BalancePalette.positive
+                                        : BalancePalette.negative,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
@@ -183,8 +190,8 @@ class EquilibreTab extends ConsumerWidget {
                                     ),
                                     style: TextStyle(
                                       color: isPos
-                                          ? const Color(0xFF2BB8A5)
-                                          : const Color(0xFFFF6B6B),
+                                          ? BalancePalette.positive
+                                          : BalancePalette.negative,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14,
                                     ),
@@ -257,7 +264,7 @@ class EquilibreTab extends ConsumerWidget {
                                             ),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
-                                              color: Color(0xFFFF6B6B),
+                                              color: BalancePalette.negative,
                                             ),
                                           ),
                                           const TextSpan(text: ' à '),
@@ -285,7 +292,8 @@ class EquilibreTab extends ConsumerWidget {
                                     ),
                                   ),
                                   style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFF4F7CFF),
+                                    foregroundColor:
+                                        BalancePalette.settleAction,
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 12,
                                       vertical: 6,
@@ -293,7 +301,7 @@ class EquilibreTab extends ConsumerWidget {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                       side: const BorderSide(
-                                        color: Color(0xFF4F7CFF),
+                                        color: BalancePalette.settleAction,
                                       ),
                                     ),
                                   ),
@@ -322,13 +330,13 @@ class EquilibreTab extends ConsumerWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2BB8A5).withValues(alpha: 0.1),
+                        color: BalancePalette.positive.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.check,
                         size: 18,
-                        color: Color(0xFF2BB8A5),
+                        color: BalancePalette.positive,
                       ),
                     ),
                     const SizedBox(width: 12),

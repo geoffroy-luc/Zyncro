@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/design_system/tokens/brand_palette.dart';
 import 'package:zyncro/features/chat/presentation/widgets/asset_thumbnail.dart';
 import 'package:zyncro/features/chat/presentation/widgets/media_picker_screen_helpers.dart';
 
@@ -216,7 +217,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                       child: Text(
                         context.l10n.chatEnvoyer(_selected.length),
                         style: const TextStyle(
-                          color: Color(0xFFE85D75),
+                          color: TabPalette.chat,
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
                         ),
@@ -227,7 +228,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
       ),
       body: _loading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFFE85D75)),
+              child: CircularProgressIndicator(color: TabPalette.chat),
             )
           : _permissionDenied
           ? Center(
@@ -249,7 +250,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                     onPressed: PhotoManager.openSetting,
                     child: Text(
                       context.l10n.chatOuvrirLesReglages,
-                      style: const TextStyle(color: Color(0xFFE85D75)),
+                      style: const TextStyle(color: TabPalette.chat),
                     ),
                   ),
                 ],
@@ -289,7 +290,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                           child: Text(
                             Platform.isIOS ? 'Modifier' : 'Réglages',
                             style: const TextStyle(
-                              color: Color(0xFFE85D75),
+                              color: TabPalette.chat,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -302,7 +303,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                             child: Text(
                               context.l10n.chatToutAutoriser,
                               style: const TextStyle(
-                                color: Color(0xFFE85D75),
+                                color: TabPalette.chat,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -343,7 +344,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                                     width: 24,
                                     height: 24,
                                     child: CircularProgressIndicator(
-                                      color: Color(0xFFE85D75),
+                                      color: TabPalette.chat,
                                       strokeWidth: 2,
                                     ),
                                   ),
@@ -436,7 +437,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                                       height: 24,
                                       decoration: BoxDecoration(
                                         color: isSelected
-                                            ? const Color(0xFFE85D75)
+                                            ? TabPalette.chat
                                             : Colors.transparent,
                                         border: Border.all(
                                           color: Colors.white,
