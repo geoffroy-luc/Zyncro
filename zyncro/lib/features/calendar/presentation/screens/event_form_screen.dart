@@ -156,9 +156,9 @@ class _EventFormScreenState extends _EventFormScreenStateBase
             children: [
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Titre',
-                  prefixIcon: Icon(Icons.event_outlined),
+                decoration: InputDecoration(
+                  labelText: context.l10n.calendarTitre,
+                  prefixIcon: const Icon(Icons.event_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 50,
@@ -171,25 +171,25 @@ class _EventFormScreenState extends _EventFormScreenStateBase
               const SizedBox(height: 16),
               TextFormField(
                 controller: _locationController,
-                decoration: const InputDecoration(
-                  labelText: 'Lieu (optionnel)',
-                  prefixIcon: Icon(Icons.place_outlined),
+                decoration: InputDecoration(
+                  labelText: context.l10n.calendarLieuOptionnel,
+                  prefixIcon: const Icon(Icons.place_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (optionnel)',
-                  prefixIcon: Icon(Icons.notes_outlined),
+                decoration: InputDecoration(
+                  labelText: context.l10n.calendarDescriptionOptionnel,
+                  prefixIcon: const Icon(Icons.notes_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
                 maxLines: 3,
               ),
               const SizedBox(height: 24),
               Text(
-                'Couleur',
+                context.l10n.calendarCouleur,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,
@@ -208,7 +208,7 @@ class _EventFormScreenState extends _EventFormScreenStateBase
               ),
               const SizedBox(height: 24),
               _dateTimeRow(
-                label: 'Début',
+                label: context.l10n.calendarDebut,
                 date: _startDate,
                 time: _startTime,
                 isStart: true,
@@ -217,13 +217,13 @@ class _EventFormScreenState extends _EventFormScreenStateBase
               SwitchListTile(
                 value: _hasEndDate,
                 onChanged: (v) => setState(() => _hasEndDate = v),
-                title: const Text('Ajouter une heure de fin'),
+                title: Text(context.l10n.calendarAjouterUneHeureDeFin),
                 contentPadding: EdgeInsets.zero,
               ),
               if (_hasEndDate) ...[
                 const SizedBox(height: 8),
                 _dateTimeRow(
-                  label: 'Fin',
+                  label: context.l10n.calendarFin,
                   date: _endDate ?? _startDate,
                   time: _endTime ?? _startTime,
                   isStart: false,
@@ -245,7 +245,7 @@ class _EventFormScreenState extends _EventFormScreenStateBase
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Participants',
+                        context.l10n.calendarParticipants,
                         style: TextStyle(
                           color: context.colors.textSecondary,
                           fontSize: 13,
@@ -333,7 +333,7 @@ class _EventFormScreenState extends _EventFormScreenStateBase
                 },
               ),
               Text(
-                'Répétition',
+                context.l10n.calendarRepetition,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,
@@ -344,7 +344,7 @@ class _EventFormScreenState extends _EventFormScreenStateBase
               _buildRecurrenceRow(),
               const SizedBox(height: 24),
               Text(
-                'Rappel',
+                context.l10n.calendarRappel,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,

@@ -10,12 +10,20 @@ abstract interface class MessagesRepository {
     DateTime before, {
     int limit = 50,
   });
-  Stream<List<Message>> watchMediaMessages(String groupId);
 
   /// Les [limit] messages photo / vidéo les plus récents (aperçu du
-  /// tableau de bord). Index composite (type, timestamp desc) requis.
+  /// tableau de bord, fenêtre live de la galerie). Index composite
+  /// (type, timestamp desc) requis.
   Stream<List<Message>> watchRecentMediaMessages(
     String groupId, {
+    required int limit,
+  });
+
+  /// Page de messages photo / vidéo strictement antérieurs à [before]
+  /// (galerie, même index composite).
+  Future<List<Message>> fetchMediaMessagesBefore(
+    String groupId,
+    DateTime before, {
     required int limit,
   });
   Future<void> sendMessage({

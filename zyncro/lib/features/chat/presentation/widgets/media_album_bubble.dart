@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zyncro/features/chat/presentation/screens/media_viewer_screen.dart';
+import 'package:zyncro/features/chat/presentation/screens/album_swipe_viewer.dart';
 
 // ── Album multi-médias style Instagram ───────────────────────────────────────
 class MediaAlbumBubble extends StatelessWidget {

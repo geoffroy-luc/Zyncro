@@ -22,7 +22,7 @@ class DashboardEmptyHint extends StatelessWidget {
         TextButton.icon(
           onPressed: onTap,
           icon: const Icon(Icons.add, size: 16),
-          label: const Text('Ajouter'),
+          label: Text(context.l10n.dashboardAjouter),
         ),
       ],
     );

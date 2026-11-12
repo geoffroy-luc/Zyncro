@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:zyncro/core/media/media_source.dart';
 import 'package:zyncro/core/notifications/notification_providers.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
@@ -42,21 +42,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Modifier le pseudo'),
+        title: Text(context.l10n.authModifierLePseudo),
         content: TextField(
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(labelText: 'Pseudo'),
+          decoration: InputDecoration(labelText: context.l10n.authPseudo),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.authAnnuler),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Enregistrer'),
+            child: Text(context.l10n.authEnregistrer),
           ),
         ],
       ),
@@ -101,24 +101,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Prendre une photo'),
+              title: Text(context.l10n.authPrendreUnePhoto),
               onTap: () {
                 Navigator.of(ctx).pop();
-                unawaited(_pickPhoto(ImageSource.camera));
+                unawaited(_pickPhoto(MediaSource.camera));
               },
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Choisir depuis la galerie'),
+              title: Text(context.l10n.authChoisirDepuisLaGalerie),
               onTap: () {
                 Navigator.of(ctx).pop();
-                unawaited(_pickPhoto(ImageSource.gallery));
+                unawaited(_pickPhoto(MediaSource.gallery));
               },
             ),
             if (hasProviderPhoto && hasCustomPhoto)
               ListTile(
                 leading: const Icon(Icons.refresh_outlined),
-                title: const Text('Réinitialiser avec la photo Google/Apple'),
+                title: Text(context.l10n.authReinitialiserAvecLaPhotoGoogle),
                 onTap: () {
                   Navigator.of(ctx).pop();
                   unawaited(_resetToProviderPhoto());
@@ -150,7 +150,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Future<void> _pickPhoto(ImageSource source) async {
+  Future<void> _pickPhoto(MediaSource source) async {
     setState(() => _loadingPhoto = true);
     try {
       await ref.read(userProfileServiceProvider).uploadPhoto(source);
@@ -160,7 +160,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erreur : $msg')));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.authErreur(msg))));
       }
     } finally {
       if (mounted) setState(() => _loadingPhoto = false);
@@ -212,16 +212,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Se déconnecter'),
-        content: const Text('Confirmes-tu la déconnexion ?'),
+        title: Text(context.l10n.authSeDeconnecter),
+        content: Text(context.l10n.authConfirmesTuLaDeconnexion),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.authAnnuler),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Déconnecter'),
+            child: Text(context.l10n.authDeconnecter),
           ),
         ],
       ),
@@ -235,23 +235,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Supprimer le compte'),
-        content: const Text(
-          'Cette action est irréversible. Ton compte et toutes tes données seront définitivement supprimés.',
-        ),
+        title: Text(context.l10n.authSupprimerLeCompte),
+        content: Text(context.l10n.authCetteActionEstIrreversibleTon),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.authAnnuler),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.error,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
-              'Supprimer',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              context.l10n.authSupprimer,
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -264,7 +262,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+          ).showSnackBar(SnackBar(content: Text(context.l10n.authErreur(e))));
         }
       }
     }
@@ -291,7 +289,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(title: const Text('Mon profil')),
+      appBar: AppBar(title: Text(context.l10n.authMonProfil)),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 24),
         children: [
@@ -353,14 +351,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 32),
 
           // ── Section : Infos ──────────────────────────────────────────────
-          const ProfileSectionHeader(label: 'Informations'),
+          ProfileSectionHeader(label: context.l10n.authInformations),
           ProfileCard(
             child: ListTile(
               leading: Icon(
                 Icons.person_outline,
                 color: context.colors.primary,
               ),
-              title: const Text('Pseudo'),
+              title: Text(context.l10n.authPseudo),
               subtitle: Text(displayName),
               trailing: IconButton(
                 icon: Icon(
@@ -374,7 +372,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
 
           // ── Section : Préférences ────────────────────────────────────────
-          const ProfileSectionHeader(label: 'Préférences'),
+          ProfileSectionHeader(label: context.l10n.authPreferences),
           ProfileCard(
             child: Column(
               children: [
@@ -385,7 +383,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         : Icons.account_circle_outlined,
                     color: context.colors.primary,
                   ),
-                  title: const Text('Afficher ma photo de profil'),
+                  title: Text(context.l10n.authAfficherMaPhotoDeProfil),
                   subtitle: Text(
                     showProfilePhoto
                         ? 'Les autres voient ta photo'
@@ -419,7 +417,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         : Icons.notifications_off_outlined,
                     color: context.colors.primary,
                   ),
-                  title: const Text('Notifications'),
+                  title: Text(context.l10n.authNotifications),
                   trailing: _loadingNotif
                       ? const SizedBox(
                           width: 20,
@@ -437,7 +435,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
 
           // ── Section : Compte ─────────────────────────────────────────────
-          const ProfileSectionHeader(label: 'Compte'),
+          ProfileSectionHeader(label: context.l10n.authCompte),
           ProfileCard(
             child: Column(
               children: [
@@ -446,7 +444,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     Icons.logout_outlined,
                     color: context.colors.textSecondary,
                   ),
-                  title: const Text('Se déconnecter'),
+                  title: Text(context.l10n.authSeDeconnecter),
                   onTap: _signOut,
                 ),
                 Divider(
@@ -461,7 +459,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: context.colors.error,
                   ),
                   title: Text(
-                    'Supprimer le compte',
+                    context.l10n.authSupprimerLeCompte,
                     style: TextStyle(color: context.colors.error),
                   ),
                   onTap: _deleteAccount,

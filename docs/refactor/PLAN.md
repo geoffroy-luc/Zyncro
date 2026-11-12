@@ -7,24 +7,24 @@
 
 | Étape | État |
 |---|---|
-| S1 rules | ✅ Firestore déployé · ⏸️ Storage prêt, en attente du rôle IAM cross-service |
-| S2 App Check client, logs, page d'invitation | ✅ code (branche `fix/client-hotfixes`), à publier |
+| S1 rules | ✅ Firestore et Storage déployés, vérifiés (= dépôt) |
+| S2 App Check client, logs, page d'invitation | ✅ fusionné dans `main` (local), à publier |
 | S3 fermeture complète (mise à jour forcée) | ⏳ non démarré |
 | Voie rapide G1, D1, D2 | ✅ |
 | 0 Hygiène, CI | ✅ |
 | 1 Lints stricts | ✅ 0 issue |
-| 2 Filets (injection, caractérisation, bout en bout) | ✅ |
+| 2 Filets (injection, caractérisation, bout en bout) | ✅ (bout en bout étendu : galerie, réglages de l'accueil) |
 | 3 Fondations core | ✅ |
 | 4 Domaine / data | ✅ |
-| 5 Services transverses | ✅ (compression média du chat encore dans l'écran) |
-| 6 Design system | 🟡 tokens + 454 usages migrés ; littéraux restants (`Colors.white`…) |
-| 7 l10n | 🟡 infrastructure + shell ; reste des chaînes à migrer |
-| 8 Découpage des écrans | 🟡 widgets et mixins extraits (max 882 lignes) ; `build` encore longs, pas encore de controllers Notifier |
+| 5 Services transverses | ✅ (média : compression, galerie, enregistreur, sélecteur, aperçus de liens ; règle vérifiée par test) |
+| 6 Design system | 🟡 tokens + palettes d'identité ; restent `Colors.white` (170), 35 littéraux, `TextStyle(` (263) |
+| 7 l10n | 🟡 tous les `Text('…')` migrés (333 clés) ; ~120 chaînes hors `Text` |
+| 8 Découpage des écrans | 🟡 max 514 lignes, `build` découpés en widgets et sections ; pas encore de controllers `Notifier` |
 | 9 Navigation | ✅ (bouton retour : politique prête, non branchée) |
-| 10 Performance | 🟡 non-lus et aperçu médias bornés + index ; galerie paginée à faire |
+| 10 Performance | 🟡 non-lus, aperçu médias, galerie paginée (D9), frappe limitée, cache des aperçus de lien ; restent `cacheWidth`, cache disque, `autoDispose` |
 | 11 Cloud Functions | ✅ découpées, Node 22, déployées |
 | 12 Documentation | ✅ |
-| 13 Corrections de bugs | ⏳ (hors G1/D1/D2) |
+| 13 Corrections de bugs | ⏳ (hors G1/D1/D2), à valider bug par bug |
 
 ## 1. Principes et garde-fous
 

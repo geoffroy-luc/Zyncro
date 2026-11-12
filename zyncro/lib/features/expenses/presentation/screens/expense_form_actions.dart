@@ -111,7 +111,7 @@ mixin _ExpenseFormActions on _ExpenseFormScreenStateBase {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.expensesErreur(e))));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -122,17 +122,17 @@ mixin _ExpenseFormActions on _ExpenseFormScreenStateBase {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Supprimer la dépense'),
-        content: const Text('Cette action est irréversible.'),
+        title: Text(context.l10n.expensesSupprimerLaDepense),
+        content: Text(context.l10n.expensesCetteActionEstIrreversible),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.expensesAnnuler),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
-              'Supprimer',
+              context.l10n.expensesSupprimer,
               style: TextStyle(color: context.colors.error),
             ),
           ),
@@ -165,9 +165,9 @@ mixin _ExpenseFormActions on _ExpenseFormScreenStateBase {
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Permission refusée')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.expensesPermissionRefusee)),
+          );
         }
       }
     }

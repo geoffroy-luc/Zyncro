@@ -46,7 +46,7 @@ Rules:
 - Serialization lives in `data/mappers/<x>_mapper.dart` (`XMapper.fromFirestore/toFirestore`) with field names in `XFields`. No raw field strings elsewhere.
 - Repository interface `XRepository` in `domain/repositories/`; implementation `FirestoreXRepository` in `data/repositories/`, receiving Firebase instances by constructor (from `core/firebase/firebase_providers.dart`).
 - Read lists with `mapDocsSafely` (an unreadable document is skipped and logged, never breaks the stream).
-- `presentation/` never imports `cloud_firestore` / `firebase_storage`; widgets never call Firebase or plugins directly (use services in `core/`).
+- `presentation/` never imports `cloud_firestore` / `firebase_storage`; widgets never call Firebase or plugins directly (use services in `core/`). Media / network plugins (`http`, `gal`, `path_provider`, `image_picker`, `record`, `flutter_image_compress`) are only imported by `core/media` or a feature's `data/services/` (enforced by test).
 - Features don't import each other, except the session context (`auth`, `groups`). Compose in `app/` or use ports in `shared/domain`.
 - Map technical errors with `FailureMapper.from(e)`; check `Failure` subtypes in UI, never Firebase error codes.
 - Avoid large monolithic files (target ≤ 300 lines; screens compose, widgets render).
@@ -70,7 +70,7 @@ Rules:
 - Prefer small reusable widgets over duplicated UI blocks.
 - Keep screens focused on composition, not implementation details.
 - Use consistent spacing, rounded cards, and strong readability.
-- Colors come from the theme: `context.colors.<role>` (`design_system/`). Never add a hard-coded color in a widget.
+- Colors come from the theme: `context.colors.<role>` (`design_system/`). Fixed identity colors (tab colors, balance colors) come from `TabPalette` / `BalancePalette` (`design_system/tokens/brand_palette.dart`). Never add a hard-coded color in a widget.
 - Keep the UI modern, clean, warm, and product-oriented.
 
 ## Product rules

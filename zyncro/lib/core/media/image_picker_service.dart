@@ -9,4 +9,7 @@ abstract interface class ImagePickerService {
     double? maxWidth,
     double? maxHeight,
   });
+
+  /// Vidéo (caméra ou galerie). Chemin local, ou `null` si annulé.
+  Future<String?> pickVideo({required MediaSource source});
 }

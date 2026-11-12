@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/design_system/tokens/brand_palette.dart';
 import 'package:zyncro/features/chat/presentation/widgets/asset_thumbnail.dart';
 import 'package:zyncro/features/chat/presentation/widgets/media_picker_screen_helpers.dart';
 
@@ -214,9 +215,9 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                   : TextButton(
                       onPressed: _confirm,
                       child: Text(
-                        'Envoyer (${_selected.length})',
+                        context.l10n.chatEnvoyer(_selected.length),
                         style: const TextStyle(
-                          color: Color(0xFFE85D75),
+                          color: TabPalette.chat,
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
                         ),
@@ -227,25 +228,29 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
       ),
       body: _loading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFFE85D75)),
+              child: CircularProgressIndicator(color: TabPalette.chat),
             )
           : _permissionDenied
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.lock_outline, color: Colors.white54, size: 52),
-                  SizedBox(height: 16),
-                  Text(
-                    'Accès à la galerie refusé',
-                    style: TextStyle(color: Colors.white, fontSize: 15),
+                  const Icon(
+                    Icons.lock_outline,
+                    color: Colors.white54,
+                    size: 52,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  Text(
+                    context.l10n.chatAccesALaGalerieRefuse,
+                    style: const TextStyle(color: Colors.white, fontSize: 15),
+                  ),
+                  const SizedBox(height: 12),
                   TextButton(
                     onPressed: PhotoManager.openSetting,
                     child: Text(
-                      'Ouvrir les réglages',
-                      style: TextStyle(color: Color(0xFFE85D75)),
+                      context.l10n.chatOuvrirLesReglages,
+                      style: const TextStyle(color: TabPalette.chat),
                     ),
                   ),
                 ],
@@ -270,10 +275,10 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                           size: 18,
                         ),
                         const SizedBox(width: 10),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Accès limité à certaines photos',
-                            style: TextStyle(
+                            context.l10n.chatAccesLimiteACertainesPhotos,
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 13,
                             ),
@@ -285,7 +290,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                           child: Text(
                             Platform.isIOS ? 'Modifier' : 'Réglages',
                             style: const TextStyle(
-                              color: Color(0xFFE85D75),
+                              color: TabPalette.chat,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -295,10 +300,10 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                           const SizedBox(width: 12),
                           GestureDetector(
                             onTap: PhotoManager.openSetting,
-                            child: const Text(
-                              'Tout autoriser',
-                              style: TextStyle(
-                                color: Color(0xFFE85D75),
+                            child: Text(
+                              context.l10n.chatToutAutoriser,
+                              style: const TextStyle(
+                                color: TabPalette.chat,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -312,10 +317,10 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                 // Grille des médias
                 Expanded(
                   child: _assets.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            'Aucun média',
-                            style: TextStyle(color: Colors.white54),
+                            context.l10n.chatAucunMedia,
+                            style: const TextStyle(color: Colors.white54),
                           ),
                         )
                       : GridView.builder(
@@ -339,7 +344,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                                     width: 24,
                                     height: 24,
                                     child: CircularProgressIndicator(
-                                      color: Color(0xFFE85D75),
+                                      color: TabPalette.chat,
                                       strokeWidth: 2,
                                     ),
                                   ),
@@ -432,7 +437,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                                       height: 24,
                                       decoration: BoxDecoration(
                                         color: isSelected
-                                            ? const Color(0xFFE85D75)
+                                            ? TabPalette.chat
                                             : Colors.transparent,
                                         border: Border.all(
                                           color: Colors.white,

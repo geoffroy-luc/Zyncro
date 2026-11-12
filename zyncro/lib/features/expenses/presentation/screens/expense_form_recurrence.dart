@@ -38,7 +38,7 @@ mixin _ExpenseFormRecurrence on _ExpenseFormScreenStateBase {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                     child: Text(
-                      'Répétition',
+                      context.l10n.expensesRepetition,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -51,7 +51,7 @@ mixin _ExpenseFormRecurrence on _ExpenseFormScreenStateBase {
                           ? primary
                           : context.colors.textSecondary,
                     ),
-                    title: const Text('Aucune'),
+                    title: Text(context.l10n.expensesAucune),
                     trailing: selectedFreq == null
                         ? Icon(Icons.check, color: primary)
                         : null,
@@ -79,7 +79,7 @@ mixin _ExpenseFormRecurrence on _ExpenseFormScreenStateBase {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
                       child: Text(
-                        'Fin de la répétition',
+                        context.l10n.expensesFinDeLaRepetition,
                         style: TextStyle(
                           color: context.colors.textSecondary,
                           fontSize: 12,
@@ -95,7 +95,7 @@ mixin _ExpenseFormRecurrence on _ExpenseFormScreenStateBase {
                         children: [
                           RadioListTile<RecurrenceEndType>(
                             value: RecurrenceEndType.forever,
-                            title: const Text('Toujours'),
+                            title: Text(context.l10n.expensesToujours),
                             activeColor: primary,
                           ),
                           RadioListTile<RecurrenceEndType>(
@@ -104,7 +104,7 @@ mixin _ExpenseFormRecurrence on _ExpenseFormScreenStateBase {
                             title: endType == RecurrenceEndType.count
                                 ? Row(
                                     children: [
-                                      const Text('Nombre de fois :'),
+                                      Text(context.l10n.expensesNombreDeFois),
                                       const SizedBox(width: 12),
                                       SizedBox(
                                         width: 72,
@@ -139,7 +139,7 @@ mixin _ExpenseFormRecurrence on _ExpenseFormScreenStateBase {
                                       ),
                                     ],
                                   )
-                                : const Text('Nombre de fois'),
+                                : Text(context.l10n.expensesNombreDeFois2),
                           ),
                           RadioListTile<RecurrenceEndType>(
                             value: RecurrenceEndType.until,
@@ -147,7 +147,7 @@ mixin _ExpenseFormRecurrence on _ExpenseFormScreenStateBase {
                             title: endType == RecurrenceEndType.until
                                 ? Row(
                                     children: [
-                                      const Text('Jusqu\'au :'),
+                                      Text(context.l10n.expensesJusquAu),
                                       const SizedBox(width: 12),
                                       GestureDetector(
                                         onTap: () async {
@@ -190,7 +190,7 @@ mixin _ExpenseFormRecurrence on _ExpenseFormScreenStateBase {
                                       ),
                                     ],
                                   )
-                                : const Text('Jusqu\'au'),
+                                : Text(context.l10n.expensesJusquAu2),
                           ),
                         ],
                       ),
@@ -221,7 +221,7 @@ mixin _ExpenseFormRecurrence on _ExpenseFormScreenStateBase {
                           Navigator.pop(ctx);
                         },
                         style: FilledButton.styleFrom(backgroundColor: primary),
-                        child: const Text('Confirmer'),
+                        child: Text(context.l10n.expensesConfirmer),
                       ),
                     ),
                   ),

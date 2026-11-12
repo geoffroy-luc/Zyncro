@@ -10,9 +10,9 @@ mixin _ChatComposer on _ChatScreenStateBase {
     final index = messages.indexWhere((m) => m.id == id);
     if (index == -1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Message introuvable'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(context.l10n.chatMessageIntrouvable),
+          duration: const Duration(seconds: 2),
         ),
       );
       return;
@@ -86,23 +86,26 @@ mixin _ChatComposer on _ChatScreenStateBase {
     _currentUserId = user.uid;
     _repo = repo;
 
-    unawaited(
-      repo.setTyping(
-        groupId: groupId,
-        userId: user.uid,
-        userName:
-            ref.read(currentMemberProvider).asData?.value?.displayName ??
-            user.displayName ??
-            user.email ??
-            'Anonyme',
-      ),
-    );
+    if (_typingThrottle.shouldSend()) {
+      unawaited(
+        repo.setTyping(
+          groupId: groupId,
+          userId: user.uid,
+          userName:
+              ref.read(currentMemberProvider).asData?.value?.displayName ??
+              user.displayName ??
+              user.email ??
+              'Anonyme',
+        ),
+      );
+    }
 
     _typingTimer?.cancel();
     _typingTimer = Timer(const Duration(seconds: 4), _clearTyping);
   }
 
   void _clearTyping() {
+    _typingThrottle.reset();
     final groupId = _currentGroupId;
     final userId = _currentUserId;
     final repo = _repo;
@@ -149,7 +152,9 @@ mixin _ChatComposer on _ChatScreenStateBase {
       } catch (_) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Impossible de modifier le message.')),
+          SnackBar(
+            content: Text(context.l10n.chatImpossibleDeModifierLeMessage),
+          ),
         );
       } finally {
         if (mounted) setState(() => _sending = false);

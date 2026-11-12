@@ -7,7 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';
-import 'package:zyncro/features/chat/presentation/screens/media_viewer_screen.dart';
+import 'package:zyncro/features/chat/presentation/screens/image_viewer_screen.dart';
+import 'package:zyncro/features/chat/presentation/screens/video_viewer_screen.dart';
 import 'package:zyncro/features/chat/presentation/widgets/audio_player_widget.dart';
 import 'package:zyncro/features/chat/presentation/widgets/link_preview_widget.dart';
 import 'package:zyncro/features/chat/presentation/widgets/linked_text.dart';
@@ -86,7 +87,7 @@ class MessageBubble extends StatelessWidget {
         );
       } catch (_) {
         return Text(
-          '🎵 Audio',
+          context.l10n.chatAudio,
           style: TextStyle(
             color: isMe ? Colors.white : context.colors.textPrimary,
             fontSize: 14,
@@ -161,7 +162,7 @@ class MessageBubble extends StatelessWidget {
                       ),
                     ),
               errorBuilder: (_, __, ___) => Text(
-                '🖼️ Image',
+                context.l10n.chatImage2,
                 style: TextStyle(
                   color: isMe ? Colors.white : context.colors.textPrimary,
                   fontSize: 14,
@@ -172,7 +173,7 @@ class MessageBubble extends StatelessWidget {
         );
       } catch (_) {
         return Text(
-          '🖼️ Média',
+          context.l10n.chatMedia,
           style: TextStyle(
             color: isMe ? Colors.white : context.colors.textPrimary,
             fontSize: 14,

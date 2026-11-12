@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:zyncro/core/media/media_source.dart';
 
 /// Handles all profile-photo logic.
 ///
@@ -37,13 +38,16 @@ class UserProfileService {
 
   /// Picks an image from [source], uploads it to Storage, updates Firestore
   /// and propagates to all group member docs.
-  Future<String> uploadPhoto(ImageSource source) async {
+  Future<String> uploadPhoto(MediaSource source) async {
     final uid = _user?.uid;
     if (uid == null) throw Exception('Not authenticated');
 
     final picker = ImagePicker();
     final XFile? file = await picker.pickImage(
-      source: source,
+      source: switch (source) {
+        MediaSource.camera => ImageSource.camera,
+        MediaSource.gallery => ImageSource.gallery,
+      },
       imageQuality: 85,
       maxWidth: 512,
       maxHeight: 512,

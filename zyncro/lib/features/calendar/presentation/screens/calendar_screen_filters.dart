@@ -42,9 +42,12 @@ mixin _CalendarFilterActions on _CalendarScreenStateBase {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Filtres',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+                  Text(
+                    context.l10n.calendarFiltres,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 17,
+                    ),
                   ),
                   if (tempParticipants.isNotEmpty || tempRecurrence[0])
                     TextButton(
@@ -53,7 +56,7 @@ mixin _CalendarFilterActions on _CalendarScreenStateBase {
                         tempRecurrence[0] = false;
                       }),
                       child: Text(
-                        'Réinitialiser',
+                        context.l10n.calendarReinitialiser,
                         style: TextStyle(color: context.colors.error),
                       ),
                     ),
@@ -62,7 +65,7 @@ mixin _CalendarFilterActions on _CalendarScreenStateBase {
               if (members.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Text(
-                  'Participants',
+                  context.l10n.calendarParticipants,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -106,9 +109,9 @@ mixin _CalendarFilterActions on _CalendarScreenStateBase {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Récurrents uniquement',
-                    style: TextStyle(fontSize: 15),
+                  Text(
+                    context.l10n.calendarRecurrentsUniquement,
+                    style: const TextStyle(fontSize: 15),
                   ),
                   Switch(
                     value: tempRecurrence[0],
@@ -131,7 +134,7 @@ mixin _CalendarFilterActions on _CalendarScreenStateBase {
                     });
                     Navigator.pop(ctx);
                   },
-                  child: const Text('Appliquer'),
+                  child: Text(context.l10n.calendarAppliquer),
                 ),
               ),
             ],

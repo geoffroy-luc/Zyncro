@@ -55,12 +55,12 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Prendre une photo'),
+              title: Text(context.l10n.chatPrendreUnePhoto),
               onTap: () => Navigator.pop(ctx, MediaSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Choisir depuis la galerie'),
+              title: Text(context.l10n.chatChoisirDepuisLaGalerie),
               onTap: () => Navigator.pop(ctx, MediaSource.gallery),
             ),
             const SizedBox(height: 8),
@@ -99,7 +99,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.chatErreur2(e))));
       }
     } finally {
       if (mounted) setState(() => _loadingBg = false);
@@ -123,7 +123,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Paramètres Chat',
+          context.l10n.chatParametresChat,
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
@@ -139,10 +139,10 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           SettingsSection(
-            title: 'Apparence',
+            title: context.l10n.chatApparence,
             children: [
               SettingsTile(
-                title: 'Couleur du thème',
+                title: context.l10n.chatCouleurDuTheme,
                 child: ColorPickerRow(
                   selected: settings.chatThemeColor,
                   extraColors: settings.customColors,
@@ -162,26 +162,26 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
             ],
           ),
           SettingsSection(
-            title: 'Background du chat',
+            title: context.l10n.chatBackgroundDuChat,
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                 child: SegmentedButton<String>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: 'none',
-                      label: Text('Aucun'),
-                      icon: Icon(Icons.block, size: 16),
+                      label: Text(context.l10n.chatAucun),
+                      icon: const Icon(Icons.block, size: 16),
                     ),
                     ButtonSegment(
                       value: 'color',
-                      label: Text('Couleur'),
-                      icon: Icon(Icons.palette_outlined, size: 16),
+                      label: Text(context.l10n.chatCouleur),
+                      icon: const Icon(Icons.palette_outlined, size: 16),
                     ),
                     ButtonSegment(
                       value: 'image',
-                      label: Text('Image'),
-                      icon: Icon(Icons.image_outlined, size: 16),
+                      label: Text(context.l10n.chatImage),
+                      icon: const Icon(Icons.image_outlined, size: 16),
                     ),
                   ],
                   selected: {bgType ?? 'none'},
@@ -210,7 +210,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
               if (bgType == 'color') ...[
                 const SettingsDivider(),
                 SettingsTile(
-                  title: 'Couleur du fond',
+                  title: context.l10n.chatCouleurDuFond,
                   child: ColorPickerRow(
                     selected: settings.chatBackgroundValue,
                     extraColors: settings.customColors,
@@ -249,7 +249,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                   ),
                 ),
                 SettingsTile(
-                  title: 'Changer l\'image',
+                  title: context.l10n.chatChangerLImage,
                   onTap: _loadingBg ? null : _pickBackgroundImage,
                   trailing: _loadingBg
                       ? const SizedBox(
@@ -266,8 +266,8 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
             title: 'Médias',
             children: [
               SettingsTile(
-                title: 'Photos & vidéos partagées',
-                subtitle: 'Voir tous les médias du groupe',
+                title: context.l10n.chatPhotosVideosPartagees,
+                subtitle: context.l10n.chatVoirTousLesMediasDu,
                 onTap: () => context.push(AppRoutes.mediaGallery),
               ),
             ],

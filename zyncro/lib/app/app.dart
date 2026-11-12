@@ -153,6 +153,7 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     });
 
     return MaterialApp.router(
+      // Nom de l'app : littéral, le contexte est AU-DESSUS des Localizations.
       title: 'Zyncro',
       theme: AppTheme.light,
       routerConfig: router,

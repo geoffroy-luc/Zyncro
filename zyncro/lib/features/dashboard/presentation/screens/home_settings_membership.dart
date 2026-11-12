@@ -12,12 +12,14 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Mon pseudo dans ce groupe'),
+        title: Text(context.l10n.dashboardMonPseudoDansCeGroupe),
         content: Form(
           key: formKey,
           child: TextFormField(
             controller: controller,
-            decoration: const InputDecoration(labelText: 'Pseudo'),
+            decoration: InputDecoration(
+              labelText: context.l10n.dashboardPseudo,
+            ),
             maxLength: 30,
             autofocus: true,
             textCapitalization: TextCapitalization.words,
@@ -40,7 +42,7 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.dashboardAnnuler),
           ),
           FilledButton(
             onPressed: () {
@@ -48,7 +50,7 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
                 Navigator.pop(context, true);
               }
             },
-            child: const Text('Enregistrer'),
+            child: Text(context.l10n.dashboardEnregistrer),
           ),
         ],
       ),
@@ -78,19 +80,16 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Régénérer le lien ?'),
-        content: const Text(
-          'Un nouveau code sera créé. Les liens et codes déjà partagés '
-          'cesseront de fonctionner.',
-        ),
+        title: Text(context.l10n.dashboardRegenererLeLien),
+        content: Text(context.l10n.dashboardRegenerateCodeBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.dashboardAnnuler),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text('Régénérer'),
+            child: Text(context.l10n.dashboardRegenerer),
           ),
         ],
       ),
@@ -105,9 +104,9 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
       await ref.read(groupsRepositoryProvider).generateInviteCode(groupId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.dashboardErreur(e))),
+        );
       }
     } finally {
       if (mounted) setState(() => _generating = false);
@@ -121,19 +120,17 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Quitter le groupe'),
-        content: const Text(
-          'Es-tu sûr de vouloir quitter ce groupe ? Tu ne pourras plus accéder à son contenu.',
-        ),
+        title: Text(context.l10n.dashboardQuitterLeGroupe),
+        content: Text(context.l10n.dashboardEsTuSurDeVouloir),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.dashboardAnnuler),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: context.colors.error),
-            child: const Text('Quitter'),
+            child: Text(context.l10n.dashboardQuitter),
           ),
         ],
       ),
@@ -161,7 +158,9 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Impossible de quitter le groupe.')),
+          SnackBar(
+            content: Text(context.l10n.dashboardImpossibleDeQuitterLeGroupe),
+          ),
         );
       }
     }
@@ -172,21 +171,19 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Supprimer le groupe'),
-        content: const Text(
-          'Cette action est irréversible. Tout le contenu du groupe sera perdu.',
-        ),
+        title: Text(context.l10n.dashboardSupprimerLeGroupe),
+        content: Text(context.l10n.dashboardCetteActionEstIrreversibleTout),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.dashboardAnnuler),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
               backgroundColor: context.colors.error,
             ),
-            child: const Text('Supprimer'),
+            child: Text(context.l10n.dashboardSupprimer),
           ),
         ],
       ),
@@ -198,9 +195,9 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
       if (mounted) context.go(AppRoutes.groups);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.dashboardErreur(e))),
+        );
       }
     }
   }
@@ -210,18 +207,20 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Transférer la propriété'),
+        title: Text(context.l10n.dashboardTransfererLaPropriete),
         content: Text(
-          'Nommer ${newOwner.displayName} propriétaire du groupe ? Tu deviendras simple membre.',
+          context.l10n.dashboardNommerProprietaireDuGroupeTu(
+            newOwner.displayName,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.dashboardAnnuler),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Transférer'),
+            child: Text(context.l10n.dashboardTransferer),
           ),
         ],
       ),
@@ -253,9 +252,9 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.dashboardErreur(e))),
+        );
       }
     }
   }
@@ -265,17 +264,19 @@ mixin _HomeSettingsMembership on _HomeSettingsScreenStateBase {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Retirer le membre'),
-        content: Text('Retirer ${member.displayName} du groupe ?'),
+        title: Text(context.l10n.dashboardRetirerLeMembre),
+        content: Text(
+          context.l10n.dashboardRetirerDuGroupe(member.displayName),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.dashboardAnnuler),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: context.colors.error),
-            child: const Text('Retirer'),
+            child: Text(context.l10n.dashboardRetirer),
           ),
         ],
       ),

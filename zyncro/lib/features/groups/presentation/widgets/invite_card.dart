@@ -85,7 +85,7 @@ class InviteCard extends StatelessWidget {
               ? ElevatedButton.icon(
                   onPressed: onOpen,
                   icon: const Icon(Icons.login),
-                  label: const Text('Ouvrir cet espace'),
+                  label: Text(context.l10n.groupsOuvrirCetEspace),
                 )
               : ElevatedButton(
                   onPressed: joining ? null : onJoin,
@@ -98,7 +98,7 @@ class InviteCard extends StatelessWidget {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text('Rejoindre'),
+                      : Text(context.l10n.groupsRejoindre),
                 ),
         ),
       ],

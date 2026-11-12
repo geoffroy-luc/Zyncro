@@ -78,18 +78,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 48),
-                Text('Créer un compte', style: theme.textTheme.headlineMedium),
+                Text(
+                  context.l10n.authCreerUnCompte,
+                  style: theme.textTheme.headlineMedium,
+                ),
                 const SizedBox(height: 8),
                 Text(
-                  'Rejoins ou crée ton espace partagé',
+                  context.l10n.authRejoinsOuCreeTonEspace,
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 40),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Prénom ou pseudo',
-                    prefixIcon: Icon(Icons.person_outline),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.authPrenomOuPseudo,
+                    prefixIcon: const Icon(Icons.person_outline),
                   ),
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
@@ -99,9 +102,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.authEmail,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -112,7 +115,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextFormField(
                   controller: _passwordController,
                   decoration: InputDecoration(
-                    labelText: 'Mot de passe',
+                    labelText: context.l10n.authMotDePasse,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -132,9 +135,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _confirmPasswordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirmer le mot de passe',
-                    prefixIcon: Icon(Icons.lock_outline),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.authConfirmerLeMotDePasse,
+                    prefixIcon: const Icon(Icons.lock_outline),
                   ),
                   obscureText: true,
                   textInputAction: TextInputAction.done,
@@ -171,12 +174,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text("S'inscrire"),
+                      : Text(context.l10n.authSInscrire),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => context.go(AppRoutes.login),
-                  child: const Text('Déjà un compte ? Se connecter'),
+                  child: Text(context.l10n.authDejaUnCompteSeConnecter),
                 ),
               ],
             ),

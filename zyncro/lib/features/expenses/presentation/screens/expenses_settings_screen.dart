@@ -86,7 +86,7 @@ class _ExpensesSettingsScreenState
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Paramètres Dépenses',
+          context.l10n.expensesParametresDepenses,
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
@@ -102,7 +102,7 @@ class _ExpensesSettingsScreenState
         padding: const EdgeInsets.all(16),
         children: [
           SettingsSection(
-            title: 'Apparence',
+            title: context.l10n.expensesApparence,
             children: [
               SettingsTile(
                 title: 'Couleur du thème',
@@ -127,7 +127,7 @@ class _ExpensesSettingsScreenState
             ],
           ),
           SettingsSection(
-            title: 'Devise',
+            title: context.l10n.expensesDevise,
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -173,7 +173,7 @@ class _ExpensesSettingsScreenState
             ],
           ),
           SettingsSection(
-            title: 'Catégories',
+            title: context.l10n.expensesCategories,
             children: [
               for (final cat in settings.expensesCategories)
                 Column(
@@ -212,7 +212,7 @@ class _ExpensesSettingsScreenState
                   ],
                 ),
               SettingsTile(
-                title: 'Ajouter une catégorie',
+                title: context.l10n.expensesAjouterUneCategorie,
                 trailing: Icon(
                   Icons.add_circle_outline,
                   color: hexToColor(settings.expensesThemeColor ?? '#FFB86B'),

@@ -30,7 +30,7 @@ mixin _EventFormReminder on _EventFormScreenStateBase {
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                 child: Text(
-                  'Rappel',
+                  context.l10n.calendarRappel,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -58,7 +58,7 @@ mixin _EventFormReminder on _EventFormScreenStateBase {
                   Icons.tune_outlined,
                   color: context.colors.textSecondary,
                 ),
-                title: const Text('Personnalisé…'),
+                title: Text(context.l10n.calendarPersonnalise),
                 onTap: () {
                   Navigator.pop(ctx);
                   unawaited(_showCustomReminderDialog());
@@ -81,7 +81,7 @@ mixin _EventFormReminder on _EventFormScreenStateBase {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSt) => AlertDialog(
-          title: const Text('Rappel personnalisé'),
+          title: Text(context.l10n.calendarRappelPersonnalise),
           content: Row(
             children: [
               Expanded(
@@ -98,10 +98,19 @@ mixin _EventFormReminder on _EventFormScreenStateBase {
               const SizedBox(width: 12),
               DropdownButton<String>(
                 value: unit,
-                items: const [
-                  DropdownMenuItem(value: 'min', child: Text('min')),
-                  DropdownMenuItem(value: 'h', child: Text('h')),
-                  DropdownMenuItem(value: 'j', child: Text('j')),
+                items: [
+                  DropdownMenuItem(
+                    value: 'min',
+                    child: Text(context.l10n.calendarMin),
+                  ),
+                  DropdownMenuItem(
+                    value: 'h',
+                    child: Text(context.l10n.calendarH),
+                  ),
+                  DropdownMenuItem(
+                    value: 'j',
+                    child: Text(context.l10n.calendarJ),
+                  ),
                 ],
                 onChanged: (v) {
                   if (v != null) setSt(() => unit = v);
@@ -112,7 +121,7 @@ mixin _EventFormReminder on _EventFormScreenStateBase {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Annuler'),
+              child: Text(context.l10n.calendarAnnuler),
             ),
             TextButton(
               onPressed: () {
@@ -124,7 +133,7 @@ mixin _EventFormReminder on _EventFormScreenStateBase {
                 };
                 Navigator.pop(ctx, minutes);
               },
-              child: const Text('OK'),
+              child: Text(context.l10n.calendarOk),
             ),
           ],
         ),

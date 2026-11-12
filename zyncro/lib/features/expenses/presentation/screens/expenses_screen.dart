@@ -134,7 +134,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         child: TextField(
                           onChanged: (v) => setState(() => _search = v),
                           decoration: InputDecoration(
-                            hintText: 'Rechercher une dépense...',
+                            hintText: context.l10n.expensesRechercherUneDepense,
                             hintStyle: TextStyle(
                               color: context.colors.textSecondary,
                               fontSize: 14,

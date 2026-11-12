@@ -40,17 +40,17 @@ mixin _EventFormActions on _EventFormScreenStateBase {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Supprimer l\'événement'),
-        content: const Text('Cette action est irréversible.'),
+        title: Text(context.l10n.calendarSupprimerLEvenement),
+        content: Text(context.l10n.calendarCetteActionEstIrreversible),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.calendarAnnuler),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
-              'Supprimer',
+              context.l10n.calendarSupprimer,
               style: TextStyle(color: context.colors.error),
             ),
           ),
@@ -84,9 +84,9 @@ mixin _EventFormActions on _EventFormScreenStateBase {
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Permission refusée')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.calendarPermissionRefusee)),
+          );
         }
       }
     }
@@ -106,9 +106,7 @@ mixin _EventFormActions on _EventFormScreenStateBase {
 
     if (endDt != null && endDt.isBefore(startDt)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('La date de fin doit être après la date de début'),
-        ),
+        SnackBar(content: Text(context.l10n.calendarLaDateDeFinDoit)),
       );
       return;
     }
@@ -177,7 +175,7 @@ mixin _EventFormActions on _EventFormScreenStateBase {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.calendarErreur(e))));
       }
     } finally {
       if (mounted) setState(() => _saving = false);

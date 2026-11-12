@@ -47,7 +47,7 @@ class PinnedNoteCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Note épinglée',
+                  context.l10n.dashboardNoteEpinglee,
                   style: TextStyle(
                     color: context.colors.textPrimary,
                     fontWeight: FontWeight.w600,
@@ -88,7 +88,9 @@ class PinnedNoteCard extends StatelessWidget {
                 ],
                 const SizedBox(height: 12),
                 Text(
-                  'Modifié ${dashboardTimeAgo(note.updatedAt)}',
+                  context.l10n.dashboardModifie(
+                    dashboardTimeAgo(note.updatedAt),
+                  ),
                   style: TextStyle(color: color, fontSize: 11),
                 ),
               ],

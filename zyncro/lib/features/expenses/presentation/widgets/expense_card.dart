@@ -85,7 +85,7 @@ class ExpenseCard extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(100),
                                 ),
                                 child: Text(
-                                  'Remboursement',
+                                  context.l10n.expensesRemboursement,
                                   style: TextStyle(
                                     color: context.colors.success,
                                     fontSize: 10,
@@ -98,7 +98,11 @@ class ExpenseCard extends ConsumerWidget {
                             Row(
                               children: [
                                 Text(
-                                  'Payé par ${isMe ? 'vous' : expense.paidByName}',
+                                  isMe
+                                      ? context.l10n.expensesPaidByYou
+                                      : context.l10n.expensesPaidBy(
+                                          expense.paidByName,
+                                        ),
                                   style: TextStyle(
                                     color: context.colors.textSecondary,
                                     fontSize: 12,

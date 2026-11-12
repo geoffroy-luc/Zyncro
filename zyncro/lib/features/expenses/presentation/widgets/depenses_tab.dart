@@ -42,7 +42,7 @@ class DepensesTab extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Aperçu du groupe',
+                    context.l10n.expensesApercuDuGroupe,
                     style: TextStyle(
                       color: context.colors.textPrimary,
                       fontWeight: FontWeight.w600,
@@ -53,13 +53,13 @@ class DepensesTab extends ConsumerWidget {
                   Divider(height: 1, color: context.colors.border),
                   const SizedBox(height: 16),
                   ExpensesOverviewRow(
-                    label: 'Total dépenses',
+                    label: context.l10n.expensesTotalDepenses,
                     value: expensesFormatAmount(total, currency: currency),
                     bold: true,
                   ),
                   const SizedBox(height: 12),
                   ExpensesOverviewRow(
-                    label: 'Votre part',
+                    label: context.l10n.expensesVotrePart,
                     value: expensesFormatAmount(myShare, currency: currency),
                     bold: true,
                   ),
@@ -82,7 +82,7 @@ class DepensesTab extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Aucune dépense',
+                      context.l10n.expensesAucuneDepense,
                       style: TextStyle(color: context.colors.textSecondary),
                     ),
                     const SizedBox(height: 16),
@@ -93,7 +93,7 @@ class DepensesTab extends ConsumerWidget {
                         ),
                       ),
                       icon: const Icon(Icons.add),
-                      label: const Text('Ajouter'),
+                      label: Text(context.l10n.expensesAjouter),
                     ),
                   ],
                 ),
@@ -101,7 +101,7 @@ class DepensesTab extends ConsumerWidget {
             )
           else ...[
             Text(
-              'Dépenses récentes',
+              context.l10n.expensesDepensesRecentes,
               style: TextStyle(
                 color: context.colors.textPrimary,
                 fontWeight: FontWeight.w600,

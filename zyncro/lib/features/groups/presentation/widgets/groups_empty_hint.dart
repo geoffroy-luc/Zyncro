@@ -35,10 +35,13 @@ class GroupsEmptyHint extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            Text('Aucun espace', style: theme.textTheme.titleLarge),
+            Text(
+              context.l10n.groupsAucunEspace,
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
-              'Crée ou rejoins un espace partagé pour commencer.',
+              context.l10n.groupsCreeOuRejoinsUnEspace,
               style: theme.textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -46,13 +49,13 @@ class GroupsEmptyHint extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onCreateTap,
               icon: const Icon(Icons.add),
-              label: const Text('Créer un espace'),
+              label: Text(context.l10n.groupsCreerUnEspace),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: onJoinTap,
               icon: const Icon(Icons.group_add_outlined),
-              label: const Text('Rejoindre avec un code'),
+              label: Text(context.l10n.groupsRejoindreAvecUnCode),
             ),
           ],
         ),

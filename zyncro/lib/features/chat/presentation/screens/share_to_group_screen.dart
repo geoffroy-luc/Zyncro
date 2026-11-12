@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:zyncro/core/media/media_providers.dart';
 import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
@@ -60,7 +59,7 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
           onPressed: _sending ? null : _cancel,
         ),
         title: Text(
-          'Partager vers…',
+          context.l10n.chatPartagerVers,
           style: TextStyle(
             color: context.colors.textPrimary,
             fontSize: 17,
@@ -78,7 +77,7 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        "Vous n'avez encore aucun groupe.\nCréez-en un pour pouvoir partager.",
+                        context.l10n.chatVousNAvezEncoreAucun,
                         textAlign: TextAlign.center,
                         style: TextStyle(color: context.colors.textSecondary),
                       ),
@@ -211,34 +210,15 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _sending = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Échec du partage : $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.chatEchecDuPartage(e))),
+      );
     }
   }
 
   /// Compresse les images (comme dans le chat) ; laisse les vidéos telles quelles.
   Future<List<({String filePath, String mimeType})>> _compress(
     List<({String path, String mimeType})> medias,
-  ) async {
-    final dir = await getTemporaryDirectory();
-    final ts = DateTime.now().millisecondsSinceEpoch;
-    return Future.wait(
-      medias.asMap().entries.map((e) async {
-        final index = e.key;
-        final m = e.value;
-        if (m.mimeType.startsWith('image/')) {
-          final targetPath = '${dir.path}/share_${ts}_$index.jpg';
-          final result = await FlutterImageCompress.compressAndGetFile(
-            m.path,
-            targetPath,
-            quality: 85,
-            minHeight: 1920,
-          );
-          return (filePath: result?.path ?? m.path, mimeType: 'image/jpeg');
-        }
-        return (filePath: m.path, mimeType: m.mimeType);
-      }),
-    );
-  }
+  ) =>
+      ref.read(mediaPreparerProvider).prepareBatch(medias, filePrefix: 'share');
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zyncro/features/chat/presentation/screens/media_viewer_screen.dart';
+import 'package:zyncro/features/chat/presentation/screens/album_swipe_viewer.dart';
 import 'package:zyncro/features/chat/presentation/widgets/gallery_image_thumb.dart';
 import 'package:zyncro/features/chat/presentation/widgets/gallery_item.dart';
 import 'package:zyncro/features/chat/presentation/widgets/gallery_video_thumb.dart';

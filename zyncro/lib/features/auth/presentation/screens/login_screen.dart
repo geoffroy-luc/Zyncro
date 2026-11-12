@@ -95,7 +95,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authRepositoryProvider).resetPassword(email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email de réinitialisation envoyé !')),
+          SnackBar(
+            content: Text(context.l10n.authEmailDeReinitialisationEnvoye),
+          ),
         );
       }
     } on FirebaseAuthException catch (e) {
@@ -181,7 +183,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               const SizedBox(height: 64),
               Text(
-                'Zyncro',
+                context.l10n.authZyncro,
                 style: theme.textTheme.headlineLarge?.copyWith(
                   color: context.colors.primary,
                   letterSpacing: -0.5,
@@ -189,7 +191,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Retrouve ton espace partagé',
+                context.l10n.authRetrouveTonEspacePartage,
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 48),
@@ -202,9 +204,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined),
+                      decoration: InputDecoration(
+                        labelText: context.l10n.authEmail,
+                        prefixIcon: const Icon(Icons.email_outlined),
                       ),
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
@@ -216,7 +218,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextFormField(
                       controller: _passwordController,
                       decoration: InputDecoration(
-                        labelText: 'Mot de passe',
+                        labelText: context.l10n.authMotDePasse,
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -262,9 +264,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           minimumSize: const Size(0, 32),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text(
-                          'Mot de passe oublié ?',
-                          style: TextStyle(fontSize: 13),
+                        child: Text(
+                          context.l10n.authMotDePasseOublie,
+                          style: const TextStyle(fontSize: 13),
                         ),
                       ),
                     ),
@@ -273,7 +275,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: _loading ? null : _signIn,
                       child: _loadingType == LoadingType.email
                           ? const Spinner()
-                          : const Text('Se connecter'),
+                          : Text(context.l10n.authSeConnecter),
                     ),
                   ],
                 ),
@@ -287,7 +289,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Expanded(child: Divider(color: context.colors.border)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('ou', style: theme.textTheme.bodySmall),
+                      child: Text(
+                        context.l10n.authOu,
+                        style: theme.textTheme.bodySmall,
+                      ),
                     ),
                     Expanded(child: Divider(color: context.colors.border)),
                   ],
@@ -300,7 +305,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 icon: _loadingType == LoadingType.google
                     ? Spinner(color: context.colors.primary)
                     : const GoogleIcon(),
-                label: const Text('Continuer avec Google'),
+                label: Text(context.l10n.authContinuerAvecGoogle),
               ),
               const SizedBox(height: 12),
 
@@ -311,7 +316,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   icon: _loadingType == LoadingType.apple
                       ? Spinner(color: context.colors.primary)
                       : const AppleIcon(),
-                  label: const Text('Continuer avec Apple'),
+                  label: Text(context.l10n.authContinuerAvecApple),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -326,13 +331,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 icon: _loadingType == LoadingType.anonymous
                     ? Spinner(color: context.colors.textSecondary)
                     : const Icon(Icons.person_outline, size: 20),
-                label: const Text('Continuer sans compte'),
+                label: Text(context.l10n.authContinuerSansCompte),
               ),
 
               const SizedBox(height: 24),
               TextButton(
                 onPressed: () => context.go(AppRoutes.register),
-                child: const Text("Pas encore de compte ? S'inscrire"),
+                child: Text(context.l10n.authPasEncoreDeCompteS),
               ),
               const SizedBox(height: 24),
             ],

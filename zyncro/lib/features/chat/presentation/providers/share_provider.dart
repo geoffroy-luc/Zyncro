@@ -3,10 +3,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:zyncro/app/router.dart';
 import 'package:zyncro/core/constants/invite.dart';
+import 'package:zyncro/core/media/media_providers.dart';
 import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/core/services/share_shortcuts_service.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
@@ -190,10 +190,9 @@ class ShareShortcutsController extends Notifier<void> {
     }
     if (_iconCache.containsKey(url)) return _iconCache[url];
     try {
-      final resp = await http
-          .get(Uri.parse(url))
-          .timeout(const Duration(seconds: 8));
-      final bytes = resp.statusCode == 200 ? resp.bodyBytes : null;
+      final bytes = await ref
+          .read(networkBytesLoaderProvider)
+          .load(url, timeout: const Duration(seconds: 8));
       _iconCache[url] = bytes;
       return bytes;
     } catch (_) {

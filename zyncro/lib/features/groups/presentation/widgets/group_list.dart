@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/groups/domain/entities/group.dart';
 import 'package:zyncro/features/groups/presentation/widgets/groups_empty_hint.dart';
 import 'package:zyncro/features/groups/presentation/widgets/groups_group_tile.dart';
@@ -62,7 +63,7 @@ class GroupList extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onCreateTap,
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Créer'),
+                  label: Text(context.l10n.groupsCreer),
                 ),
               ),
               const SizedBox(width: 12),
@@ -70,7 +71,7 @@ class GroupList extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onJoinTap,
                   icon: const Icon(Icons.group_add_outlined, size: 18),
-                  label: const Text('Rejoindre'),
+                  label: Text(context.l10n.groupsRejoindre),
                 ),
               ),
             ],

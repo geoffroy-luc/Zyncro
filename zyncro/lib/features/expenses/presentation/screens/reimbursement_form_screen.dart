@@ -130,7 +130,7 @@ class _ReimbursementFormScreenState
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.expensesErreur(e))));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -146,7 +146,7 @@ class _ReimbursementFormScreenState
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: const Text('Remboursement'),
+        title: Text(context.l10n.expensesRemboursement),
         actions: [
           IconButton(
             icon: _saving
@@ -169,9 +169,9 @@ class _ReimbursementFormScreenState
             children: [
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Libellé (optionnel)',
-                  prefixIcon: Icon(Icons.receipt_outlined),
+                decoration: InputDecoration(
+                  labelText: context.l10n.expensesLibelleOptionnel,
+                  prefixIcon: const Icon(Icons.receipt_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
               ),
@@ -179,9 +179,9 @@ class _ReimbursementFormScreenState
 
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Montant (€)',
-                  prefixIcon: Icon(Icons.euro_outlined),
+                decoration: InputDecoration(
+                  labelText: context.l10n.expensesMontant,
+                  prefixIcon: const Icon(Icons.euro_outlined),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -196,7 +196,7 @@ class _ReimbursementFormScreenState
               const SizedBox(height: 24),
 
               Text(
-                'Date',
+                context.l10n.expensesDate,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,
@@ -238,7 +238,7 @@ class _ReimbursementFormScreenState
               const SizedBox(height: 24),
 
               Text(
-                'Je rembourse à',
+                context.l10n.expensesJeRembourseA,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,

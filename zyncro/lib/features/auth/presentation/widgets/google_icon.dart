@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 
 class GoogleIcon extends StatelessWidget {
   const GoogleIcon({super.key});
@@ -9,10 +10,10 @@ class GoogleIcon extends StatelessWidget {
       width: 20,
       height: 20,
       decoration: const BoxDecoration(shape: BoxShape.circle),
-      child: const Text(
-        'G',
+      child: Text(
+        context.l10n.authG,
         textAlign: TextAlign.center,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w700,
           color: Color(0xFF4285F4),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/app_colors.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/notes/domain/entities/note.dart';
 
 Color notesHexToColor(String? hex) {
@@ -22,6 +23,7 @@ String notesFormatDate(DateTime dt) {
 // ── Aperçu checklist ──────────────────────────────────────────────────────────
 
 Widget notesBuildChecklistPreview(
+  BuildContext context,
   List<ChecklistItem> items,
   Color accentColor, {
   int maxItems = 3,
@@ -100,7 +102,7 @@ Widget notesBuildChecklistPreview(
         Padding(
           padding: const EdgeInsets.only(top: 2),
           child: Text(
-            '+ $remaining autre${remaining > 1 ? 's' : ''}',
+            context.l10n.notesMoreItems(remaining),
             style: TextStyle(
               fontSize: fontSize - 1,
               color: AppColors.textSecondary,

@@ -44,7 +44,7 @@ mixin _EventFormRecurrence on _EventFormScreenStateBase {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                     child: Text(
-                      'Répétition',
+                      context.l10n.calendarRepetition,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -58,7 +58,7 @@ mixin _EventFormRecurrence on _EventFormScreenStateBase {
                           ? primary
                           : context.colors.textSecondary,
                     ),
-                    title: const Text('Aucune'),
+                    title: Text(context.l10n.calendarAucune),
                     trailing: selectedFreq == null
                         ? Icon(Icons.check, color: primary)
                         : null,
@@ -91,7 +91,7 @@ mixin _EventFormRecurrence on _EventFormScreenStateBase {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
                       child: Text(
-                        'Fin de la répétition',
+                        context.l10n.calendarFinDeLaRepetition,
                         style: TextStyle(
                           color: context.colors.textSecondary,
                           fontSize: 12,
@@ -108,7 +108,7 @@ mixin _EventFormRecurrence on _EventFormScreenStateBase {
                           // Toujours
                           RadioListTile<RecurrenceEndType>(
                             value: RecurrenceEndType.forever,
-                            title: const Text('Toujours'),
+                            title: Text(context.l10n.calendarToujours),
                             activeColor: primary,
                           ),
                           // Nombre de fois
@@ -118,7 +118,7 @@ mixin _EventFormRecurrence on _EventFormScreenStateBase {
                             title: endType == RecurrenceEndType.count
                                 ? Row(
                                     children: [
-                                      const Text('Nombre de fois :'),
+                                      Text(context.l10n.calendarNombreDeFois),
                                       const SizedBox(width: 12),
                                       SizedBox(
                                         width: 72,
@@ -153,7 +153,7 @@ mixin _EventFormRecurrence on _EventFormScreenStateBase {
                                       ),
                                     ],
                                   )
-                                : const Text('Nombre de fois'),
+                                : Text(context.l10n.calendarNombreDeFois2),
                           ),
                           // Jusqu'au
                           RadioListTile<RecurrenceEndType>(
@@ -162,7 +162,7 @@ mixin _EventFormRecurrence on _EventFormScreenStateBase {
                             title: endType == RecurrenceEndType.until
                                 ? Row(
                                     children: [
-                                      const Text('Jusqu\'au :'),
+                                      Text(context.l10n.calendarJusquAu),
                                       const SizedBox(width: 12),
                                       GestureDetector(
                                         onTap: () async {
@@ -208,7 +208,7 @@ mixin _EventFormRecurrence on _EventFormScreenStateBase {
                                       ),
                                     ],
                                   )
-                                : const Text('Jusqu\'au'),
+                                : Text(context.l10n.calendarJusquAu2),
                           ),
                         ],
                       ),
@@ -241,7 +241,7 @@ mixin _EventFormRecurrence on _EventFormScreenStateBase {
                           Navigator.pop(ctx);
                         },
                         style: FilledButton.styleFrom(backgroundColor: primary),
-                        child: const Text('Confirmer'),
+                        child: Text(context.l10n.calendarConfirmer),
                       ),
                     ),
                   ),

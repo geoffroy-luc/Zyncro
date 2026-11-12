@@ -28,28 +28,9 @@ mixin _ChatMediaSending on _ChatScreenStateBase {
       _replyingTo = null;
     });
     try {
-      final dir = await getTemporaryDirectory();
-      final ts = DateTime.now().millisecondsSinceEpoch;
-      final compressed = await Future.wait(
-        picked.asMap().entries.map((e) async {
-          final index = e.key;
-          final media = e.value;
-          if (media.mimeType.startsWith('image/')) {
-            final targetPath = '${dir.path}/compressed_${ts}_$index.jpg';
-            final result = await FlutterImageCompress.compressAndGetFile(
-              media.path,
-              targetPath,
-              quality: 85,
-              minHeight: 1920,
-            );
-            return (
-              filePath: result?.path ?? media.path,
-              mimeType: 'image/jpeg',
-            );
-          }
-          return (filePath: media.path, mimeType: media.mimeType);
-        }),
-      );
+      final compressed = await ref
+          .read(mediaPreparerProvider)
+          .prepareBatch(picked, filePrefix: 'compressed');
 
       if (picked.length == 1) {
         await ref
@@ -88,9 +69,9 @@ mixin _ChatMediaSending on _ChatScreenStateBase {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erreur envoi média : $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.chatErreurEnvoiMedia(e))),
+      );
     } finally {
       if (mounted) setState(() => _isUploadingMedia = false);
     }
@@ -108,19 +89,19 @@ mixin _ChatMediaSending on _ChatScreenStateBase {
         'Anonyme';
     final reply = _replyingTo;
 
-    final picker = ImagePicker();
-    XFile? file;
+    final picker = ref.read(imagePickerServiceProvider);
+    String? filePath;
     String mimeType;
     if (video) {
-      file = await picker.pickVideo(source: ImageSource.camera);
-      if (file == null || !mounted) return;
+      filePath = await picker.pickVideo(source: MediaSource.camera);
+      if (filePath == null || !mounted) return;
       mimeType = 'video/mp4';
     } else {
-      file = await picker.pickImage(
-        source: ImageSource.camera,
+      filePath = await picker.pickImage(
+        source: MediaSource.camera,
         imageQuality: 85,
       );
-      if (file == null || !mounted) return;
+      if (filePath == null || !mounted) return;
       mimeType = 'image/jpeg';
     }
 
@@ -129,22 +110,11 @@ mixin _ChatMediaSending on _ChatScreenStateBase {
       _replyingTo = null;
     });
     try {
-      String uploadPath = file.path;
-      if (mimeType.startsWith('image/')) {
-        final dir = await getTemporaryDirectory();
-        final targetPath =
-            '${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final result = await FlutterImageCompress.compressAndGetFile(
-          file.path,
-          targetPath,
-          quality: 85,
-          minHeight: 1920,
-        );
-        if (result != null) {
-          uploadPath = result.path;
-          mimeType = 'image/jpeg';
-        }
-      }
+      final prepared = await ref
+          .read(mediaPreparerProvider)
+          .prepareSingle(filePath, mimeType);
+      final uploadPath = prepared.filePath;
+      mimeType = prepared.mimeType;
       await ref
           .read(messagesRepositoryProvider)
           .sendMedia(
@@ -168,9 +138,9 @@ mixin _ChatMediaSending on _ChatScreenStateBase {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erreur envoi média : $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.chatErreurEnvoiMedia(e))),
+      );
     } finally {
       if (mounted) setState(() => _isUploadingMedia = false);
     }

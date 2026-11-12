@@ -91,13 +91,15 @@ class DashboardScreen extends ConsumerWidget {
                           DashboardCardHeader(
                             icon: Icons.calendar_today,
                             iconColor: homeColor,
-                            title: 'Prochains événements',
+                            title: context.l10n.dashboardProchainsEvenements,
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                             child: upcomingEvents.isEmpty
                                 ? DashboardEmptyHint(
-                                    label: 'Aucun événement à venir',
+                                    label: context
+                                        .l10n
+                                        .dashboardAucunEvenementAVenir,
                                     onTap: () => Navigator.of(context).push(
                                       MaterialPageRoute<void>(
                                         builder: (_) => const EventFormScreen(),
@@ -135,7 +137,7 @@ class DashboardScreen extends ConsumerWidget {
                           DashboardCardHeader(
                             icon: Icons.trending_up,
                             iconColor: homeColor,
-                            title: 'Résumé des dépenses',
+                            title: context.l10n.dashboardResumeDesDepenses,
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
@@ -157,7 +159,7 @@ class DashboardScreen extends ConsumerWidget {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'total du groupe',
+                                      context.l10n.dashboardTotalDuGroupe,
                                       style: TextStyle(
                                         color: context.colors.textSecondary,
                                         fontSize: 13,
@@ -171,7 +173,7 @@ class DashboardScreen extends ConsumerWidget {
                                   color: context.colors.border,
                                 ),
                                 ExpenseRow(
-                                  label: 'Votre solde',
+                                  label: context.l10n.dashboardVotreSolde,
                                   value: myBalance >= 0
                                       ? '+${dashboardFormatAmount(myBalance)}'
                                       : dashboardFormatAmount(myBalance),
@@ -259,7 +261,7 @@ class DashboardScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Médias partagés',
+                                    context.l10n.dashboardMediasPartages,
                                     style: TextStyle(
                                       color: context.colors.textPrimary,
                                       fontWeight: FontWeight.w600,
@@ -270,9 +272,9 @@ class DashboardScreen extends ConsumerWidget {
                                   TextButton(
                                     onPressed: () =>
                                         context.push(AppRoutes.mediaGallery),
-                                    child: const Text(
-                                      'Voir tout',
-                                      style: TextStyle(fontSize: 13),
+                                    child: Text(
+                                      context.l10n.dashboardVoirTout,
+                                      style: const TextStyle(fontSize: 13),
                                     ),
                                   ),
                                 ],
@@ -302,7 +304,7 @@ class DashboardScreen extends ConsumerWidget {
 
                     // Actions rapides
                     Text(
-                      'Actions rapides',
+                      context.l10n.dashboardActionsRapides,
                       style: TextStyle(
                         color: context.colors.textPrimary,
                         fontWeight: FontWeight.w600,
@@ -320,7 +322,7 @@ class DashboardScreen extends ConsumerWidget {
                               colors: [calendarColor, darken(calendarColor)],
                             ),
                             icon: Icons.calendar_today,
-                            label: 'Ajouter un événement',
+                            label: context.l10n.dashboardAjouterUnEvenement,
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute<void>(
                                 builder: (_) => const EventFormScreen(),
@@ -337,7 +339,7 @@ class DashboardScreen extends ConsumerWidget {
                               colors: [notesColor, darken(notesColor)],
                             ),
                             icon: Icons.sticky_note_2_outlined,
-                            label: 'Nouvelle note',
+                            label: context.l10n.dashboardNouvelleNote,
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute<void>(
                                 builder: (_) => const NoteEditorScreen(),

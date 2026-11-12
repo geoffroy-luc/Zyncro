@@ -200,7 +200,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.notesErreur(e))));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -214,17 +214,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Supprimer la note'),
-        content: const Text('Cette action est irréversible.'),
+        title: Text(context.l10n.notesSupprimerLaNote),
+        content: Text(context.l10n.notesCetteActionEstIrreversible),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
+            child: Text(context.l10n.notesAnnuler),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
-              'Supprimer',
+              context.l10n.notesSupprimer,
               style: TextStyle(color: context.colors.error),
             ),
           ),
@@ -259,9 +259,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Permission refusée')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.notesPermissionRefusee)),
+          );
         }
       }
     }
@@ -337,9 +337,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               // Titre
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Titre',
-                  prefixIcon: Icon(Icons.sticky_note_2_outlined),
+                decoration: InputDecoration(
+                  labelText: context.l10n.notesTitre,
+                  prefixIcon: const Icon(Icons.sticky_note_2_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 50,
@@ -353,7 +353,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
               // Couleur
               Text(
-                'Couleur',
+                context.l10n.notesCouleur,
                 style: TextStyle(
                   color: context.colors.textSecondary,
                   fontSize: 13,
@@ -377,7 +377,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 children: [
                   OptionChip(
                     icon: _isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                    label: 'Épingler',
+                    label: context.l10n.notesEpingler,
                     selected: _isPinned,
                     accentColor: accentColor,
                     onTap: () => setState(() => _isPinned = !_isPinned),
@@ -387,7 +387,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     icon: _isChecklist
                         ? Icons.checklist_rounded
                         : Icons.checklist_outlined,
-                    label: 'Checklist',
+                    label: context.l10n.notesChecklist,
                     selected: _isChecklist,
                     accentColor: accentColor,
                     onTap: () {
@@ -409,9 +409,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _contentController,
-                  decoration: const InputDecoration(
-                    labelText: 'Contenu (optionnel)',
-                    prefixIcon: Icon(Icons.notes_outlined),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.notesContenuOptionnel,
+                    prefixIcon: const Icon(Icons.notes_outlined),
                     alignLabelWithHint: true,
                   ),
                   textCapitalization: TextCapitalization.sentences,
@@ -456,7 +456,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                               controller: _itemControllers[i],
                               focusNode: _itemFocusNodes[i],
                               decoration: InputDecoration(
-                                hintText: 'Élément ${i + 1}…',
+                                hintText: context.l10n.notesElement(i + 1),
                                 hintStyle: TextStyle(
                                   color: context.colors.textSecondary,
                                 ),
@@ -498,7 +498,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 TextButton.icon(
                   onPressed: _addChecklistItem,
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Ajouter un élément'),
+                  label: Text(context.l10n.notesAjouterUnElement),
                   style: TextButton.styleFrom(
                     foregroundColor: accentColor,
                     padding: const EdgeInsets.symmetric(horizontal: 4),
