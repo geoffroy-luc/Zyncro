@@ -1,33 +1,42 @@
-import { onDocumentDeleted } from "firebase-functions/v2/firestore";
+import { onDocumentDeletedWithAuthContext } from "firebase-functions/v2/firestore";
 import { admin, db } from "../shared/firebase";
 import { asString } from "../shared/guards";
 import { paths } from "../shared/paths";
 
 /** Notifie un membre quand il est retiré d'un groupe.
- *  ⚠️ Déclenché aussi quand on quitte soi-même ou à la suppression du groupe
- *  (BUGS_FOUND G7, G8) — comportement conservé. */
-export const onMemberRemoved = onDocumentDeleted("groups/{groupId}/members/{userId}", async (event) => {
-  const { groupId, userId } = event.params;
+ *  - BUG G8 corrigé : rien quand on quitte soi-même le groupe (l'auteur de
+ *    la suppression est le membre lui-même) ;
+ *  - BUG G7 corrigé : rien pendant la purge qui suit la suppression du
+ *    groupe (le document du groupe n'existe plus ; « Le groupe a été
+ *    supprimé » est déjà envoyé par onGroupDeleted). */
+export const onMemberRemoved = onDocumentDeletedWithAuthContext(
+  "groups/{groupId}/members/{userId}",
+  async (event) => {
+    const { groupId, userId } = event.params;
+    if (event.authId === userId) return;
 
-  const userDoc = await db().doc(paths.user(userId)).get();
-  const token = asString(userDoc.data()?.fcmToken);
-  if (!token) return;
+    const groupDoc = await db().doc(paths.group(groupId)).get();
+    if (!groupDoc.exists) return;
 
-  const groupDoc = await db().doc(paths.group(groupId)).get();
-  const groupName = asString(groupDoc.data()?.name) ?? "le groupe";
+    const userDoc = await db().doc(paths.user(userId)).get();
+    const token = asString(userDoc.data()?.fcmToken);
+    if (!token) return;
 
-  await admin.messaging().send({
-    token,
-    notification: { title: groupName, body: "Tu as été retiré du groupe." },
-    data: { groupId },
-    android: {
-      priority: "high",
-      collapseKey: groupId,
-      notification: { tag: groupId },
-    },
-    apns: {
-      headers: { "apns-collapse-id": groupId },
-      payload: { aps: { sound: "default", threadId: groupId } },
-    },
-  });
-});
+    const groupName = asString(groupDoc.data()?.name) ?? "le groupe";
+
+    await admin.messaging().send({
+      token,
+      notification: { title: groupName, body: "Tu as été retiré du groupe." },
+      data: { groupId },
+      android: {
+        priority: "high",
+        collapseKey: groupId,
+        notification: { tag: groupId },
+      },
+      apns: {
+        headers: { "apns-collapse-id": groupId },
+        payload: { aps: { sound: "default", threadId: groupId } },
+      },
+    });
+  },
+);

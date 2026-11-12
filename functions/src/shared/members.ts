@@ -47,3 +47,12 @@ export async function getGroupTokens(
   const tokens = await getUsersTokens(memberIds.filter((uid) => uid !== excludeUid));
   return { tokens, groupName };
 }
+
+/** Auteur d'une écriture (trigger « WithAuthContext ») s'il est membre du
+ *  groupe : `authId` n'est un uid que pour un utilisateur de l'app (pour un
+ *  compte de service, c'est son e-mail). `undefined` sinon. */
+export async function memberActor(groupId: string, authId: string | undefined): Promise<string | undefined> {
+  if (!authId) return undefined;
+  const groupDoc = await db().doc(paths.group(groupId)).get();
+  return asStringArray(groupDoc.data()?.memberIds).includes(authId) ? authId : undefined;
+}

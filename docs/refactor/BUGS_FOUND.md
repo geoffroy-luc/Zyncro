@@ -121,8 +121,8 @@
 | G4 🟠 | Déconnexion d'un compte invité (anonyme) | Le compte est perdu définitivement, sans avertissement (PR:244-246) |
 | G5 🟠 | Rejoindre un groupe dont on est déjà membre | `set` sans merge : `role` repasse à member et le pseudo est réinitialisé (GR:86-95). Unicité du pseudo non contrôlée au join ; contrôle non transactionnel ailleurs (GR:279-288) |
 | G6 🟠 | Codes d'invitation | Régénération sans transaction (GR:218-239) ; aucun test de collision (`group.dart:28-32`) : en cas de collision, la création du groupe **échoue** (les rules n'autorisent pas l'`update` d'un code existant, vérifié sur émulateur) au lieu d'écraser l'autre code ; nom et emoji non répercutés dans `invite_codes` (GR:206-215 ; HS:139-142) |
-| G7 🟠 | Suppression de groupe | La purge de `members` déclenche `onMemberRemoved` : chaque membre reçoit en plus « Tu as été retiré du groupe » (FN:52-66, 71-104). `config` n'est pas purgé (FN:52), le Storage non plus |
-| G8 🟠 | Quitter un groupe | Celui qui part reçoit « Tu as été retiré du groupe » (FN:71-104 + GR:155-179) |
+| G7 🟠 ✅ | Suppression de groupe | La purge de `members` déclenche `onMemberRemoved` : chaque membre reçoit en plus « Tu as été retiré du groupe » (FN:52-66, 71-104). `config` n'est pas purgé (FN:52), le Storage non plus |
+| G8 🟠 ✅ | Quitter un groupe | Celui qui part reçoit « Tu as été retiré du groupe » (FN:71-104 + GR:155-179) |
 | G9 🟡 | Spinner infini sur `/settings/*` après suppression du groupe ou retrait | La redirection ne couvre que le shell (GP:51-57 ; RT:72-79 ; HS:525-527) |
 | G10 🟠 | Bouton retour Android | Ferme l'app depuis un onglet : aucun `PopScope`, uniquement des `go` (RT ; GSEL:50 ; JL:46). Feature à venir, à ne pas corriger pendant le refactor |
 | G11 🟠 | Perte de mise à jour des notes | `copyWith` sur l'instantané d'ouverture puis `update(toMap())` complet (NE:153-164 ; `notes_repository.dart:62-64`). Épingler modifie `updatedAt` côté client (`note.dart:104`) |
@@ -138,8 +138,8 @@
 
 | ID | Bug | Cause probable / fichier |
 |---|---|---|
-| F1 🟡 | Suppression d'événement ou de note mal attribuée | Attribuée au créateur et non à l'auteur ; l'auteur est notifié aussi (FN:304-318, 360-374) |
-| F2 🟡 | `onEventUpdated` notifie même sans changement réel | (FN:288-302) |
+| F1 🟡 ✅ | Suppression d'événement ou de note mal attribuée | Attribuée au créateur et non à l'auteur ; l'auteur est notifié aussi (FN:304-318, 360-374) |
+| F2 🟡 ✅ | `onEventUpdated` notifie même sans changement réel | (FN:288-302) |
 | F3 🟡 | Tokens FCM invalides jamais nettoyés | (FN:215-237) |
 | F4 🟡 | Notifications en double possibles | Triggers *at-least-once* sans idempotence |
 
