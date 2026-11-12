@@ -178,5 +178,17 @@ void main() {
     // ── Retour à l'accueil (dashboard) ────────────────────────────────────
     await tapAndPump(tester, navTab('Home'));
     await pumpUntil(tester, find.text('Événement E2E'));
+
+    // ── Paramètres de l'accueil (sections espace / invitation / membres) ──
+    unawaited(
+      GoRouter.of(
+        tester.element(find.text('Événement E2E').first),
+      ).push(AppRoutes.settingsHome),
+    );
+    await pumpUntil(tester, find.text('Paramètres Accueil'));
+    await pumpUntil(tester, find.text(groupName));
+    await pumpUntil(tester, find.textContaining('Testeur'));
+    GoRouter.of(tester.element(find.text('Paramètres Accueil'))).pop();
+    await pumpUntilGone(tester, find.text('Paramètres Accueil'));
   });
 }

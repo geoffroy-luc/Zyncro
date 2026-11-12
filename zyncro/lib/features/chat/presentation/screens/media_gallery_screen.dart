@@ -6,7 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';
 import 'package:zyncro/features/chat/presentation/providers/media_gallery_provider.dart';
-import 'package:zyncro/features/chat/presentation/screens/media_viewer_screen.dart';
+import 'package:zyncro/features/chat/presentation/screens/album_swipe_viewer.dart';
+import 'package:zyncro/features/chat/presentation/screens/image_viewer_screen.dart';
+import 'package:zyncro/features/chat/presentation/screens/video_viewer_screen.dart';
 import 'package:zyncro/features/chat/presentation/widgets/gallery_media_tile.dart';
 import 'package:zyncro/features/chat/presentation/widgets/media_gallery_screen_helpers.dart';
 
