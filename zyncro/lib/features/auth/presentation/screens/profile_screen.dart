@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:zyncro/core/media/media_source.dart';
 import 'package:zyncro/core/notifications/notification_providers.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
@@ -104,7 +104,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               title: Text(context.l10n.authPrendreUnePhoto),
               onTap: () {
                 Navigator.of(ctx).pop();
-                unawaited(_pickPhoto(ImageSource.camera));
+                unawaited(_pickPhoto(MediaSource.camera));
               },
             ),
             ListTile(
@@ -112,7 +112,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               title: Text(context.l10n.authChoisirDepuisLaGalerie),
               onTap: () {
                 Navigator.of(ctx).pop();
-                unawaited(_pickPhoto(ImageSource.gallery));
+                unawaited(_pickPhoto(MediaSource.gallery));
               },
             ),
             if (hasProviderPhoto && hasCustomPhoto)
@@ -150,7 +150,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Future<void> _pickPhoto(ImageSource source) async {
+  Future<void> _pickPhoto(MediaSource source) async {
     setState(() => _loadingPhoto = true);
     try {
       await ref.read(userProfileServiceProvider).uploadPhoto(source);

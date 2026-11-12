@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/core/firebase/firebase_providers.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/data/repositories/firestore_messages_repository.dart';
+import 'package:zyncro/features/chat/data/services/link_preview_service.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';
 import 'package:zyncro/features/chat/domain/repositories/messages_repository.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
@@ -199,3 +200,8 @@ final typingProvider = StreamProvider<List<String>>((ref) {
       .watch(messagesRepositoryProvider)
       .watchTyping(groupId: groupId, currentUserId: currentUserId);
 });
+
+/// Aperçus de liens (cache mémoire partagé par toutes les bulles).
+final linkPreviewServiceProvider = Provider<LinkPreviewService>(
+  (_) => LinkPreviewService(),
+);

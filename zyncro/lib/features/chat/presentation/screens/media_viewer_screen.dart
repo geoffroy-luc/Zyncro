@@ -1,67 +1,45 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:gal/gal.dart';
-import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
+import 'package:zyncro/core/media/gallery_saver.dart';
+import 'package:zyncro/core/media/media_providers.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/chat/presentation/widgets/swipe_image_page.dart';
 import 'package:zyncro/features/chat/presentation/widgets/swipe_video_page.dart';
+import 'package:zyncro/l10n/generated/app_localizations.dart';
 
 // ── Utilitaire de téléchargement partagé ─────────────────────────────────────
 
+/// Enregistrement d'un média dans la galerie, avec retour à l'utilisateur.
+/// La partie technique est dans core/media (GallerySaver).
 class MediaDownloader {
-  static Future<void> downloadImage(BuildContext context, String url) async {
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode}');
-      }
-      final dir = await getTemporaryDirectory();
-      final file = File(
-        '${dir.path}/zyncro_${DateTime.now().millisecondsSinceEpoch}.jpg',
-      );
-      await file.writeAsBytes(response.bodyBytes);
-      file.setLastModifiedSync(DateTime.now());
-      await Gal.putImage(file.path);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.chatImageEnregistreeDansLaGalerie),
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.chatErreurTelechargement(e))),
-        );
-      }
-    }
-  }
+  static Future<void> downloadImage(BuildContext context, String url) => _save(
+    context,
+    (saver) => saver.saveImageFromUrl(url),
+    (l10n) => l10n.chatImageEnregistreeDansLaGalerie,
+  );
 
-  static Future<void> downloadVideo(BuildContext context, String url) async {
+  static Future<void> downloadVideo(BuildContext context, String url) => _save(
+    context,
+    (saver) => saver.saveVideoFromUrl(url),
+    (l10n) => l10n.chatVideoEnregistreeDansLaGalerie,
+  );
+
+  static Future<void> _save(
+    BuildContext context,
+    Future<void> Function(GallerySaver saver) save,
+    String Function(AppLocalizations l10n) successMessage,
+  ) async {
+    final saver = ProviderScope.containerOf(context).read(gallerySaverProvider);
     try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode}');
-      }
-      final dir = await getTemporaryDirectory();
-      final file = File(
-        '${dir.path}/zyncro_${DateTime.now().millisecondsSinceEpoch}.mp4',
-      );
-      await file.writeAsBytes(response.bodyBytes);
-      file.setLastModifiedSync(DateTime.now());
-      await Gal.putVideo(file.path);
+      await save(saver);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.chatVideoEnregistreeDansLaGalerie),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(successMessage(context.l10n))));
       }
     } catch (e) {
       if (context.mounted) {

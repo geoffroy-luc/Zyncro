@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:zyncro/core/media/media_providers.dart';
 import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
@@ -220,25 +219,6 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
   /// Compresse les images (comme dans le chat) ; laisse les vidéos telles quelles.
   Future<List<({String filePath, String mimeType})>> _compress(
     List<({String path, String mimeType})> medias,
-  ) async {
-    final dir = await getTemporaryDirectory();
-    final ts = DateTime.now().millisecondsSinceEpoch;
-    return Future.wait(
-      medias.asMap().entries.map((e) async {
-        final index = e.key;
-        final m = e.value;
-        if (m.mimeType.startsWith('image/')) {
-          final targetPath = '${dir.path}/share_${ts}_$index.jpg';
-          final result = await FlutterImageCompress.compressAndGetFile(
-            m.path,
-            targetPath,
-            quality: 85,
-            minHeight: 1920,
-          );
-          return (filePath: result?.path ?? m.path, mimeType: 'image/jpeg');
-        }
-        return (filePath: m.path, mimeType: m.mimeType);
-      }),
-    );
-  }
+  ) =>
+      ref.read(mediaPreparerProvider).prepareBatch(medias, filePrefix: 'share');
 }

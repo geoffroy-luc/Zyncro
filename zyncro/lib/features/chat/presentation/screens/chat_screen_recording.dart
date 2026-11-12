@@ -17,10 +17,9 @@ mixin _ChatRecording on _ChatScreenStateBase {
       }
       return;
     }
-    final dir = await getTemporaryDirectory();
-    final path =
-        '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-    await _recorder.start(const RecordConfig(), path: path);
+    final dir = await ref.read(temporaryDirectoryProvider)();
+    final path = '$dir/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    await _recorder.start(path);
     setState(() {
       _isRecording = true;
       _recordingDuration = Duration.zero;

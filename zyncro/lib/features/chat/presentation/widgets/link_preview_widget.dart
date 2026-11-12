@@ -1,24 +1,25 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
-import 'package:zyncro/features/chat/presentation/widgets/link_meta.dart';
+import 'package:zyncro/features/chat/domain/entities/link_meta.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 
 // ── Prévisualisation de lien ─────────────────────────────────────────────────
 
-class LinkPreviewWidget extends StatefulWidget {
+class LinkPreviewWidget extends ConsumerStatefulWidget {
   final String url;
   final bool isMe;
 
   const LinkPreviewWidget({super.key, required this.url, required this.isMe});
 
   @override
-  State<LinkPreviewWidget> createState() => _LinkPreviewWidgetState();
+  ConsumerState<LinkPreviewWidget> createState() => _LinkPreviewWidgetState();
 }
 
-class _LinkPreviewWidgetState extends State<LinkPreviewWidget> {
+class _LinkPreviewWidgetState extends ConsumerState<LinkPreviewWidget> {
   LinkMeta? _meta;
   bool _loading = true;
 
@@ -29,67 +30,14 @@ class _LinkPreviewWidgetState extends State<LinkPreviewWidget> {
   }
 
   Future<void> _fetchMeta() async {
-    try {
-      final response = await http
-          .get(
-            Uri.parse(widget.url),
-            headers: {'User-Agent': 'Mozilla/5.0 (compatible; Zyncro/1.0)'},
-          )
-          .timeout(const Duration(seconds: 6));
-
-      if (response.statusCode == 200) {
-        final body = response.body;
-        final meta = LinkMeta(
-          title: _ogTag(body, 'og:title') ?? _htmlTitle(body),
-          description:
-              _ogTag(body, 'og:description') ?? _metaTag(body, 'description'),
-          imageUrl: _ogTag(body, 'og:image'),
-          siteName:
-              _ogTag(body, 'og:site_name') ??
-              Uri.parse(widget.url).host.replaceFirst('www.', ''),
-        );
-        if (mounted) {
-          setState(() {
-            _meta = meta;
-            _loading = false;
-          });
-        }
-      } else {
-        if (mounted) setState(() => _loading = false);
-      }
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
+    final meta = await ref.read(linkPreviewServiceProvider).fetch(widget.url);
+    if (mounted) {
+      setState(() {
+        _meta = meta;
+        _loading = false;
+      });
     }
   }
-
-  String? _ogTag(String html, String property) {
-    final r1 = RegExp(
-      'property=["\']${RegExp.escape(property)}["\'][^>]*content=["\']([^"\']*)["\']',
-      caseSensitive: false,
-    );
-    final r2 = RegExp(
-      'content=["\']([^"\']*)["\'][^>]*property=["\']${RegExp.escape(property)}["\']',
-      caseSensitive: false,
-    );
-    return (r1.firstMatch(html) ?? r2.firstMatch(html))?.group(1)?.trim();
-  }
-
-  String? _metaTag(String html, String name) {
-    final r1 = RegExp(
-      'name=["\']${RegExp.escape(name)}["\'][^>]*content=["\']([^"\']*)["\']',
-      caseSensitive: false,
-    );
-    final r2 = RegExp(
-      'content=["\']([^"\']*)["\'][^>]*name=["\']${RegExp.escape(name)}["\']',
-      caseSensitive: false,
-    );
-    return (r1.firstMatch(html) ?? r2.firstMatch(html))?.group(1)?.trim();
-  }
-
-  String? _htmlTitle(String html) => RegExp(
-    r'<title[^>]*>([^<]+)</title>',
-    caseSensitive: false,
-  ).firstMatch(html)?.group(1)?.trim();
 
   @override
   Widget build(BuildContext context) {

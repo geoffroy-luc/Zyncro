@@ -26,4 +26,15 @@ class DeviceImagePickerService implements ImagePickerService {
     );
     return file?.path;
   }
+
+  @override
+  Future<String?> pickVideo({required MediaSource source}) async {
+    final file = await _picker.pickVideo(
+      source: switch (source) {
+        MediaSource.camera => ImageSource.camera,
+        MediaSource.gallery => ImageSource.gallery,
+      },
+    );
+    return file?.path;
+  }
 }

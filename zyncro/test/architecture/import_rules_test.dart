@@ -68,6 +68,24 @@ void main() {
     expect(violations, isEmpty);
   });
 
+  test('presentation/ et app/ passent par les services média / réseau', () {
+    const plugins = [
+      'package:http/',
+      'package:gal/',
+      'package:path_provider/',
+      'package:image_picker/',
+      'package:record/',
+      'package:flutter_image_compress/',
+    ];
+    final violations = <String>[
+      for (final f in [..._dartFiles('features'), ..._dartFiles('app')])
+        if (f.path.contains('/presentation/') || f.path.startsWith('lib/app/'))
+          for (final imp in _importsOf(f))
+            if (plugins.any(imp.contains)) '${f.path} → $imp',
+    ];
+    expect(violations, isEmpty);
+  });
+
   test('core/ ne dépend ni des features ni de app/', () {
     final violations = <String>[
       for (final f in _dartFiles('core'))

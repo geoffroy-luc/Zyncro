@@ -4,11 +4,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:record/record.dart';
+import 'package:zyncro/core/media/media_providers.dart';
+import 'package:zyncro/core/media/media_source.dart';
+import 'package:zyncro/core/media/voice_recorder.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
@@ -30,10 +29,10 @@ import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 
 part 'chat_screen_composer.dart';
-part 'chat_screen_message_actions.dart';
-part 'chat_screen_recording.dart';
 part 'chat_screen_media.dart';
 part 'chat_screen_menus.dart';
+part 'chat_screen_message_actions.dart';
+part 'chat_screen_recording.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -77,7 +76,7 @@ abstract class _ChatScreenStateBase extends ConsumerState<ChatScreen> {
   final Map<String, GlobalKey> _messageKeys = {};
   String? _highlightedMessageId;
 
-  final _recorder = AudioRecorder();
+  late final VoiceRecorder _recorder;
   bool _isRecording = false;
   bool _isUploading = false;
   bool _isUploadingMedia = false;
@@ -105,6 +104,7 @@ class _ChatScreenState extends _ChatScreenStateBase
   @override
   void initState() {
     super.initState();
+    _recorder = ref.read(voiceRecorderFactoryProvider)();
     _controller.addListener(_onTextChanged);
     _scrollController.addListener(_onScroll);
   }
