@@ -61,12 +61,18 @@ class LiveWindowPager<T> {
     _liveFull = full;
   }
 
+  /// Le curseur est **inclusif** côté requête (`<=`) : les éléments de même
+  /// horodatage que le dernier affiché ne sont plus sautés (BUG C4 corrigé),
+  /// les doublons sont écartés ici. Une page pleine sans aucun nouvel
+  /// élément (plus de [pageSize] éléments à la même milliseconde) arrête la
+  /// pagination plutôt que de redemander la même page en boucle.
   void addOlderPage(List<T> page) {
     final known = {
       for (final e in _live) idOf(e),
       for (final e in _older) idOf(e),
     };
-    _older = [..._older, ...page.where((e) => !known.contains(idOf(e)))];
-    if (page.length < pageSize) _olderExhausted = true;
+    final fresh = page.where((e) => !known.contains(idOf(e))).toList();
+    _older = [..._older, ...fresh];
+    if (page.length < pageSize || fresh.isEmpty) _olderExhausted = true;
   }
 }

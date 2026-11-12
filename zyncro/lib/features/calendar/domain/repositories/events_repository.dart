@@ -14,6 +14,7 @@ abstract interface class EventsRepository {
     String? color,
     RecurrenceRule? recurrence,
     List<String> participantIds = const [],
+    String? creatorName,
   });
   Future<void> updateEvent(String groupId, Event event);
   Future<void> deleteEvent(String groupId, String eventId);

@@ -79,4 +79,19 @@ void main() {
       ..addOlderPage(_desc(8, 3));
     expect(_ids(p), ['m11', 'm10', 'm9', 'm8', 'm7', 'm6']);
   });
+
+  test(
+    'BUG C4 corrigé : curseur inclusif, doublons écartés, pas de boucle',
+    () {
+      final p = _pager(3)
+        ..onLiveSnapshot(_desc(10, 3))
+        // La page « <= m8 » renvoie m8 (déjà affiché) et deux nouveaux.
+        ..addOlderPage(_desc(8, 3));
+      expect(_ids(p), ['m10', 'm9', 'm8', 'm7', 'm6']);
+      expect(p.hasMore, isTrue);
+      // Page pleine entièrement connue : arrêt.
+      p.addOlderPage(_desc(8, 3));
+      expect(p.hasMore, isFalse);
+    },
+  );
 }

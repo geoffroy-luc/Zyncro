@@ -136,7 +136,12 @@ mixin _CalendarScreenSections
                   CalendarToggleButton(
                     label: context.l10n.calendarAgenda,
                     active: _viewMode == ViewMode.agenda,
-                    onTap: () => setState(() => _viewMode = ViewMode.agenda),
+                    // BUG CA7 corrigé : l'agenda montre tout, pas le jour
+                    // sélectionné dans la grille.
+                    onTap: () => setState(() {
+                      _viewMode = ViewMode.agenda;
+                      _selectedDay = null;
+                    }),
                   ),
                 ],
               ),
@@ -219,19 +224,22 @@ mixin _CalendarScreenSections
                   _selectedDay = cellDate;
                 }),
                 child: Container(
-                  decoration: isSelected
-                      ? BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: primaryColor, width: 1.5),
-                        )
-                      : isToday
+                  // BUG CA8 corrigé : aujourd'hui garde son fond plein (texte
+                  // blanc lisible) même sélectionné ; la sélection ajoute un
+                  // contour.
+                  decoration: isToday
                       ? BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [primaryColor, darken(primaryColor)],
                           ),
+                          border: isSelected
+                              ? Border.all(
+                                  color: darken(primaryColor, 0.25),
+                                  width: 1.5,
+                                )
+                              : null,
                           borderRadius: BorderRadius.circular(8),
                           boxShadow: [
                             BoxShadow(
@@ -240,6 +248,12 @@ mixin _CalendarScreenSections
                               offset: const Offset(0, 2),
                             ),
                           ],
+                        )
+                      : isSelected
+                      ? BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: primaryColor, width: 1.5),
                         )
                       : null,
                   child: Column(

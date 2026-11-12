@@ -1,11 +1,17 @@
-# Bugs trouvés — non corrigés
+# Bugs trouvés
 
 > Règle : pendant le refactor, **aucun de ces bugs n'est corrigé en douce**. Ils sont figés par des tests de caractérisation, nommés `bug_<ID>_…` et marqués `// BUG <ID>`, qui seront inversés quand le correctif sera validé.
 > Les failles de sécurité (S-xx) sont dans [`AUDIT.md`](AUDIT.md) §10 et traitées à part (PLAN, étapes S1 à S3).
 >
 > Mêmes alias que l'AUDIT : chemins Dart relatifs à `zyncro/lib/`, FR = `firestore.rules`, FN = `functions/src/index.ts`.
 >
-> **Corrigés hors refactor** (branche `fix/client-hotfixes`, voie rapide validée) : G1, D1, D2.
+> **État au 2026-11-12** : 64 corrigés (✅ dans les tableaux), 35 restants. G1, D1, D2 sur `fix/client-hotfixes` ; les autres sur `fix/bugs`, chaque correctif inverse son test `BUG …` ou en ajoute un, avec le test bout en bout vert. Corrigés : C1, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C17, C18, CA1, CA2, CA3, CA4, CA6, CA7, CA8, CA9, CA10, D1, D2, E1, E2, E3, E5, E8, E9, E12, E14, E15, E16, E17, E21, E22, E23, E25, F1, F2, G1, G4, G5, G7, G8, G11, G12, G15, K1, K2, K3, M1, M2, M7, M8, M11, M12, M14, M15, M17.
+>
+> **Restants, et pourquoi** :
+> - **Changement de schéma ou mise à jour forcée** (à planifier avec S3) : K4 (horodatage serveur), G17 (un jeton FCM par appareil), E10 / E11 (`settled` et identifiants par occurrence), E20 (catégories par identifiant), G2 (couleurs masquées par palette), CA11 (filtres du calendrier personnels).
+> - **Fonctionnalité à part entière** : G3 (suppression de compte complète : purge serveur et transfert de propriété des groupes), CA5 (rappels partagés et replanifiés), G10 (bouton retour, feature prévue), C2 (anciens messages en temps réel), « uniquement cette occurrence » pour les séries (exceptions de série).
+> - **Décision produit** : E7 (abréviations k/M), E19 (devise), G18 (effacement des notifications), E4 / E6 (affichage et saisie des répartitions), E18 (membres partis), C16 (compter ses propres messages dans les non-lus).
+> - **Petits défauts restants** : E13, E24, F3, F4, G6, G9, G13, G14, G16, M3, M4, M5, M6, M9, M10, M13, M16.
 >
 > Gravité : 🔴 perte ou corruption de données / montant faux · 🟠 fonctionnalité cassée · 🟡 gêne ou incohérence.
 >
@@ -27,7 +33,7 @@
 | C1 🔴 ✅ | Messages qui disparaissent après « charger plus » | Après un `loadMore`, chaque nouveau message pousse le plus ancien hors de la fenêtre live de 50 messages. Ce message n'est alors ni dans `_live` ni dans `_older` (MPV:61-69, 86-96, 110-114) |
 | C2 🟠 | Anciens messages figés | `_older` est chargé par un `get()` unique : réactions, votes, éditions et suppressions au-delà des 50 derniers ne sont jamais reflétées (MPV:110-114) |
 | C3 🟠 ✅ | Pagination bloquée | `_hasMore = false` dès qu'il y a moins de 50 messages, et jamais remis à `true` (MPV:64) |
-| C4 🟡 | Messages sautés | Curseur `isLessThan` : les messages de la même milliseconde sont ignorés (MR:41) |
+| C4 🟡 ✅ | Messages sautés | Curseur `isLessThan` : les messages de la même milliseconde sont ignorés (MR:41) |
 | C5 🔴 ✅ | « Modifier » sur image, vidéo ou album casse le média | Le JSON est copié dans le champ texte puis écrasé par `editMessage` (CHAT:378-385) |
 | C6 🟠 ✅ | « Télécharger » sur un album ne fait rien | `data['url']` est absent et l'erreur est avalée (CHAT:466-467, 473) |
 | C7 🟡 ✅ | Mauvais libellé dans la citation de réponse | « Sondage » pour toute citation JSON, « Photo / Vidéo » pour un texte commençant par http (CHAT:3136-3140). Incohérent avec CHAT:1644-1652 |
@@ -40,15 +46,15 @@
 | C14 🔴 ✅ | État conservé au changement de groupe | Réponse, édition et recherche survivent au changement de groupe (`StatefulShellBranch`, RT:162). Conséquences : `replyToId` pointant vers un autre groupe, `editMessage` avec le mauvais `groupId` (CHAT:156) |
 | C15 🟡 ✅ | Double timer d'enregistrement | Second `Timer.periodic` si l'enregistrement est relancé (CHAT:655) |
 | C16 🟡 | Compteur de non-lus faux | Compte aussi ses propres messages et vaut 0 si `lastReadAt` est null (MPV:174-185) |
-| C17 🟡 | `watchUnreadCount` (mort) ne se mettrait jamais à jour | `asyncExpand` met en pause le flux externe (MR:407) |
+| C17 🟡 ✅ | `watchUnreadCount` (mort) ne se mettrait jamais à jour | `asyncExpand` met en pause le flux externe (MR:407) |
 | C18 🟡 ✅ | Aperçu de lien périmé après édition du message | Pas de `didUpdateWidget` (CHAT:2474+, 2697+, 3314+) |
 
 ## Médias et partage
 
 | ID | Bug | Cause probable / fichier |
 |---|---|---|
-| M1 🟠 | Upload refusé | Extension calculée par `split('.').last` : un chemin sans extension mais avec un dossier pointé produit un chemin invalide (MR:229, 275) |
-| M2 🟠 | MIME erroné | Une image non compressée part en `image/jpeg` (STG:238) ; les GIF sont convertis en JPEG ; `SharedMediaType.file` est traité comme un média (SP:116-121) |
+| M1 🟠 ✅ | Upload refusé | Extension calculée par `split('.').last` : un chemin sans extension mais avec un dossier pointé produit un chemin invalide (MR:229, 275) |
+| M2 🟠 ✅ | MIME erroné | Une image non compressée part en `image/jpeg` (STG:238) ; les GIF sont convertis en JPEG ; `SharedMediaType.file` est traité comme un média (SP:116-121) |
 | M3 🟡 | Présélection Direct Share perdue au démarrage à froid | `_initialised = true` alors que la liste des groupes est encore vide (STG:36-42) |
 | M4 🟡 | ID de raccourci appliqué au mauvais partage | Il n'est pas consommé quand le partage est un lien d'invitation (SP:103 vs 105) |
 | M5 🟡 | Deux partages successifs à chaud | Deux écrans `/share` s'empilent (SP:127-129) |
@@ -90,10 +96,10 @@
 | E19 🟡 | Devise cosmétique | « € » en dur (EXF:668-669, 685, 961, 989 ; RF:170 ; DB:55-57) ; yen affiché avec 2 décimales (EXS:48) |
 | E20 🟠 | Catégories référencées par leur nom | Renommer ou supprimer les fait passer en gris ; doublons acceptés (`expense.dart:20` ; `expenses_settings_screen.dart:50-64` ; `category_editor_sheet.dart:56-63`) |
 | E21 🟡 ✅ | Filtre de recherche fantôme après changement d'onglet | Le champ revient vide mais la liste reste filtrée (EXS:196, 214) |
-| E22 🟡 | « Aujourd'hui » calculé sur des tranches de 24 h | (EXS:53-57) |
+| E22 🟡 ✅ | « Aujourd'hui » calculé sur des tranches de 24 h | (EXS:53-57) |
 | E23 🟡 ✅ | Totaux incluant remboursements et dépenses réglées | Recevoir un remboursement augmente « Votre part » (EXS:143-149 ; DB:99-100) |
 | E24 🟡 | Messages et limites incohérents | Toute erreur de suppression affiche « Permission refusée » (EXF:556) ; le nom vient de `user.displayName` et non du pseudo de membre (EXF:542) ; RF n'a pas de limite (RF:157-181) |
-| E25 🟡 | Badge remboursement | Fond bleu, texte vert (EXS:833-841) |
+| E25 🟡 ✅ | Badge remboursement | Fond bleu, texte vert (EXS:833-841) |
 
 ## Calendrier
 
@@ -105,9 +111,9 @@
 | CA4 🟡 ✅ | Bornes des pickers | `lastDate: DateTime(2030)` (EVF:91-92) ; `initialDate < firstDate` (EVF:411-412) ; heure de fin = 24 si début à 23h (EVF:61, 69) |
 | CA5 🟠 | Rappels | Une seule notification sur la première occurrence (`reminder_service.dart:58-60`). Stockés par appareil, jamais replanifiés si un autre membre modifie l'événement. Préférences non nettoyées (93-95). ID dérivé de `hashCode` (21). Course de `_loadReminder` (EVF:63, 216). Doublon d'événement si `zonedSchedule` lève après `createEvent` (`reminder_service.dart:86` ; EVF:244-248). « 90 min » s'affiche « 1 heures » (EVF:529) |
 | CA6 🟡 ✅ | Suppression | Toujours la série entière ; toute erreur affiche « Permission refusée » (EVF:148, 160-165) |
-| CA7 🟡 | Mode agenda | L'agenda conserve le jour sélectionné (CAL:305-307, 449-456) |
-| CA8 🟡 | Aujourd'hui sélectionné illisible | Texte blanc sur fond clair (CAL:534-544 vs 571-575) |
-| CA9 🟡 | Créateur jamais affiché | `creatorName` n'est jamais écrit (`events_repository.dart:39-52`), les lignes correspondantes sont mortes (CAL:830, 926) |
+| CA7 🟡 ✅ | Mode agenda | L'agenda conserve le jour sélectionné (CAL:305-307, 449-456) |
+| CA8 🟡 ✅ | Aujourd'hui sélectionné illisible | Texte blanc sur fond clair (CAL:534-544 vs 571-575) |
+| CA9 🟡 ✅ | Créateur jamais affiché | `creatorName` n'est jamais écrit (`events_repository.dart:39-52`), les lignes correspondantes sont mortes (CAL:830, 926) |
 | CA10 🟡 ✅ | Tri de la liste du provider en place | `allEvents..sort` (DB:86-87) |
 | CA11 🟡 | `calendarFilters` partagés et inutilisés | Stockés dans le doc partagé du groupe (TS:63) mais jamais utilisés, les filtres restant locaux (CAL:48-49) |
 

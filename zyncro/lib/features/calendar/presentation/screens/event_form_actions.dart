@@ -231,6 +231,11 @@ mixin _EventFormActions on _EventFormScreenStateBase {
                   )
                 : _recurrence,
             participantIds: _selectedParticipantIds.toList(),
+            creatorName: ref
+                .read(currentMemberProvider)
+                .asData
+                ?.value
+                ?.displayName,
           );
           await ReminderService.scheduleReminder(created, _reminderMinutes);
         } else {
@@ -274,6 +279,11 @@ mixin _EventFormActions on _EventFormScreenStateBase {
           color: _selectedColor,
           recurrence: _recurrence,
           participantIds: _selectedParticipantIds.toList(),
+          creatorName: ref
+              .read(currentMemberProvider)
+              .asData
+              ?.value
+              ?.displayName,
         );
         await ReminderService.scheduleReminder(created, _reminderMinutes);
       }
