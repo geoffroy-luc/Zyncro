@@ -155,6 +155,7 @@
   "chatAucunResultat": "Aucun message ne correspond à la recherche.",
   "chatMediasEnregistres": "{count, plural, =0{Aucun média enregistré} =1{1 média enregistré dans la galerie} other{{count} médias enregistrés dans la galerie}}",
   "@chatMediasEnregistres": {"placeholders": {"count": {"type": "int"}}},
+  "expensesErreurChargement": "Impossible de charger les dépenses.",
   "chatEchecEnvoiMessage": "Échec de l'envoi du message.",
   "chatModifierLeMessage": "Modifier le message",
   "chatEnregistrement": "Enregistrement…",

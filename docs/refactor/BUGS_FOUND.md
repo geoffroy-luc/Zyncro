@@ -69,11 +69,11 @@
 
 | ID | Bug | Cause probable / fichier |
 |---|---|---|
-| E1 🔴 | Valeurs par défaut du mode « Par montant » refusées sans saisie | Arrondi : 100 €/3 → 33,33×3 = 99,99, écart > 0,01 (EXF:144-151, 182) |
-| E2 🔴 | Les soldes ne somment pas à zéro | Les % ne sont pas normalisés : 70 €/7 donne Σ = 70,021 (EXF:206, EXP:36-40) |
-| E3 🟠 | Réenregistrer sans rien toucher change les montants | Le % n'est pas stocké, il est recalculé et arrondi (EXF:607-608) |
+| E1 🔴 ✅ | Valeurs par défaut du mode « Par montant » refusées sans saisie | Arrondi : 100 €/3 → 33,33×3 = 99,99, écart > 0,01 (EXF:144-151, 182) |
+| E2 🔴 ✅ | Les soldes ne somment pas à zéro | Les % ne sont pas normalisés : 70 €/7 donne Σ = 70,021 (EXF:206, EXP:36-40) |
+| E3 🟠 ✅ | Réenregistrer sans rien toucher change les montants | Le % n'est pas stocké, il est recalculé et arrondi (EXF:607-608) |
 | E4 🟡 | Mode égal : écart stocké/affiché | Stocke 3,333…, affiche 3,33 (EXF:166, 961) |
-| E5 🟠 | Résidus d'arrondi visibles | Carte rouge « -0,00 € » alors que les comptes sont équilibrés (EXS:414, 443, 462, 634 ; RF:43-44) |
+| E5 🟠 ✅ | Résidus d'arrondi visibles | Carte rouge « -0,00 € » alors que les comptes sont équilibrés (EXS:414, 443, 462, 634 ; RF:43-44) |
 | E6 🟡 | La répartition personnalisée est réinitialisée | Au changement de montant ; chaque frappe écrase les autres membres (EXF:120-136, 673-679) |
 | E7 🟡 | Soldes et dettes abrégés en k/M | Imprécis pour de l'argent (EXS:41-44) |
 | E8 🔴 | Éditer une instance récurrente modifie toute la série | Elle est rétro-datée (`expense.dart:126`, ER:67, EXF:55, 466) |
@@ -84,14 +84,14 @@
 | E13 🟡 | Occurrences manquantes | `now` est figé au snapshot ; plafond silencieux de 500 (RU:89, 107) |
 | E14 🟡 | `until` exclut le jour même ; assertion du date picker | `initialDate < firstDate` (RU:111 ; EXF:329-330) |
 | E15 🟠 | Crash sur une règle incohérente | `count!`, `until!` (RU:110-111, `recurrence_rule.dart:50`) |
-| E16 🟠 | Pas d'état chargement ni erreur | Affiche 0,00 € ou « Aucune dépense » (EXS:128-139) |
+| E16 🟠 ✅ | Pas d'état chargement ni erreur | Affiche 0,00 € ou « Aucune dépense » (EXS:128-139) |
 | E17 🟡 | Impossible de retirer une catégorie | `copyWith` (`expense.dart:134, 140` ; EXF:1054) |
 | E18 🟠 | Membres partis | Nom affiché comme un uid tronqué ; « Rembourser » produit un message avec un nom vide ; leur part est retirée silencieusement à l'édition (EXS:393 ; RF:113 ; EXF:160) |
 | E19 🟡 | Devise cosmétique | « € » en dur (EXF:668-669, 685, 961, 989 ; RF:170 ; DB:55-57) ; yen affiché avec 2 décimales (EXS:48) |
 | E20 🟠 | Catégories référencées par leur nom | Renommer ou supprimer les fait passer en gris ; doublons acceptés (`expense.dart:20` ; `expenses_settings_screen.dart:50-64` ; `category_editor_sheet.dart:56-63`) |
 | E21 🟡 | Filtre de recherche fantôme après changement d'onglet | Le champ revient vide mais la liste reste filtrée (EXS:196, 214) |
 | E22 🟡 | « Aujourd'hui » calculé sur des tranches de 24 h | (EXS:53-57) |
-| E23 🟡 | Totaux incluant remboursements et dépenses réglées | Recevoir un remboursement augmente « Votre part » (EXS:143-149 ; DB:99-100) |
+| E23 🟡 ✅ | Totaux incluant remboursements et dépenses réglées | Recevoir un remboursement augmente « Votre part » (EXS:143-149 ; DB:99-100) |
 | E24 🟡 | Messages et limites incohérents | Toute erreur de suppression affiche « Permission refusée » (EXF:556) ; le nom vient de `user.displayName` et non du pseudo de membre (EXF:542) ; RF n'a pas de limite (RF:157-181) |
 | E25 🟡 | Badge remboursement | Fond bleu, texte vert (EXS:833-841) |
 

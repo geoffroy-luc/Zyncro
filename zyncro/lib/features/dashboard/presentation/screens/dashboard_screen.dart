@@ -18,6 +18,7 @@ import 'package:zyncro/features/dashboard/presentation/widgets/expense_row.dart'
 import 'package:zyncro/features/dashboard/presentation/widgets/message_row.dart';
 import 'package:zyncro/features/dashboard/presentation/widgets/pinned_note_card.dart';
 import 'package:zyncro/features/dashboard/presentation/widgets/quick_action_button.dart';
+import 'package:zyncro/features/expenses/domain/services/spending.dart';
 import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
 import 'package:zyncro/features/notes/presentation/providers/notes_provider.dart';
 import 'package:zyncro/features/notes/presentation/screens/note_editor_screen.dart';
@@ -58,7 +59,7 @@ class DashboardScreen extends ConsumerWidget {
         : null;
 
     // Résumé dépenses
-    final totalExpenses = allExpenses.fold(0.0, (s, e) => s + e.amount);
+    final totalExpenses = spendingOf(allExpenses, null).total;
     final myBalance = currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
     // Derniers messages (activité récente)
     final recentMessages = allMessages.take(3).toList();

@@ -766,6 +766,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{Aucun média enregistré} =1{1 média enregistré dans la galerie} other{{count} médias enregistrés dans la galerie}}'**
   String chatMediasEnregistres(int count);
 
+  /// No description provided for @expensesErreurChargement.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de charger les dépenses.'**
+  String get expensesErreurChargement;
+
   /// No description provided for @chatEchecEnvoiMessage.
   ///
   /// In fr, this message translates to:

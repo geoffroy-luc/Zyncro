@@ -372,6 +372,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get expensesErreurChargement => 'Impossible de charger les dépenses.';
+
+  @override
   String get chatEchecEnvoiMessage => 'Échec de l\'envoi du message.';
 
   @override

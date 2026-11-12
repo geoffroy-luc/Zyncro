@@ -10,6 +10,7 @@ import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/expenses/domain/entities/expense.dart';
+import 'package:zyncro/features/expenses/domain/services/money.dart';
 import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
 import 'package:zyncro/features/groups/domain/entities/group_member.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
