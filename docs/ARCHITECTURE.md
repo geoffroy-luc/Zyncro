@@ -45,6 +45,7 @@ Ces règles sont **vérifiées par des tests** (`zyncro/test/architecture/import
 | `domain/` et `shared/domain/` sont du Dart pur : ni `package:flutter`, ni Firebase, ni Riverpod | Logique testable sans framework, indépendante du backend |
 | Aucune instance `Firebase*.instance` en dehors de `core/firebase/` | Tout est injectable, donc testable (fakes, émulateurs) |
 | `presentation/` n'importe ni `cloud_firestore` ni `firebase_storage` | L'UI ne parle jamais directement au backend |
+| `presentation/` et `app/` n'importent aucun plugin média ou réseau (`http`, `gal`, `path_provider`, `image_picker`, `record`, `flutter_image_compress`) | Ils passent par les services de `core/media` (ou d'un `data/services/` de feature), remplaçables en test |
 | `core/` n'importe ni `features/` ni `app/` | Pas de cycles ; `core` est réutilisable |
 | `shared/models/` n'existe plus | Les entités vivent dans le domaine de leur feature |
 
@@ -61,13 +62,16 @@ zyncro/lib/
 │  │                          (collections, ids, chemins Storage), firebase_emulators (dev)
 │  ├─ error/                  Failure (sealed) + FailureMapper
 │  ├─ logging/                AppLogger
-│  ├─ media/                  ImagePickerService, FileStorage (+ implémentations, providers)
+│  ├─ media/                  ImagePickerService (photo / vidéo), MediaPreparer + ImageCompressor
+│  │                          (compression JPEG avant envoi), GallerySaver, VoiceRecorder,
+│  │                          NetworkBytesLoader, FileStorage (+ implémentations, providers)
 │  ├─ notifications/          PushNotificationService, PushTokenRepository, LocalNotifications,
 │  │                          NotificationPreferences, providers
 │  ├─ app_update/             AppUpdateService + AppUpdatePolicy (pure)
 │  ├─ constants/, theme/      palette historique, ThemeData
 │  └─ utils/                  color_hex, firestore_stream_extensions (mapDocsSafely)
-├─ design_system/             tokens (ZyncroColors en ThemeExtension, AppSpacing, AppRadii),
+├─ design_system/             tokens (ZyncroColors en ThemeExtension, AppSpacing, AppRadii ;
+│                             brand_palette : TabPalette, BalancePalette, couleurs fixes),
 │                             context_extensions (context.colors / context.textStyles)
 ├─ shared/
 │  ├─ domain/                 recurrence (RecurrenceRule, advanceOccurrence), categories
@@ -108,7 +112,9 @@ Firestore ──snapshots()──► FirestoreNotesRepository (FirebaseFirestore
 | Riverpod | Pas de codegen. `Provider` pour l'infrastructure, `StreamProvider` pour le temps réel, `Notifier`/`AsyncNotifier` pour les commandes et l'état. Pas d'effet de bord dans `build` ; `select` quand on ne lit qu'une partie d'un état |
 | Erreurs | Les exceptions techniques sont traduites par `FailureMapper.from(e)` en `Failure` (sealed : PermissionDenied, NotFound, Network, Cancelled, Validation, Unknown). L'UI teste le type, jamais un code Firebase |
 | Logs | `AppLogger.debug/info` (debug uniquement), `warning/error` (toujours). Jamais de token ni de donnée personnelle |
-| Couleurs | `context.colors.<rôle>` (`ZyncroColors`, ThemeExtension). Aucune nouvelle couleur en dur dans un widget. Les valeurs claires sont celles de la palette historique (test `test/design_system`) |
+| Couleurs | `context.colors.<rôle>` (`ZyncroColors`, ThemeExtension) pour tout ce qui dépend du thème ; `TabPalette` / `BalancePalette` (`design_system/tokens/brand_palette.dart`) pour les couleurs d'identité, fixes quel que soit le thème. Aucune nouvelle couleur en dur dans un widget. Valeurs historiques verrouillées par `test/design_system` |
+| Écrans longs | L'état d'un gros écran vit dans `_XStateBase` (champs + méthodes abstraites) et des mixins `on _XStateBase` répartis en `part` (`x_actions.dart`, `x_sections.dart`…). Les sections de `build` sont des méthodes `_buildY(...)` d'un mixin `_XSections`, ou mieux des widgets publics dans `widgets/` dès qu'elles sont réutilisables |
+| Pagination temps réel | `LiveWindowPager` (`features/chat/domain`) : fenêtre live des N plus récents + pages anciennes à la demande, sans trou quand de nouveaux éléments arrivent. Utilisé par la galerie ; c'est la base prévue pour corriger C1 dans le chat |
 | Imports | `package:zyncro/...` partout, triés (lint `always_use_package_imports`, `directives_ordering`) |
 | Futures | `await`, ou `unawaited(...)` explicite (lints `unawaited_futures`, `discarded_futures`) |
 | Analyse | `flutter analyze` à **0 issue**, infos comprises (`analysis_options.yaml` : strict-casts, strict-inference, strict-raw-types + règles) |
