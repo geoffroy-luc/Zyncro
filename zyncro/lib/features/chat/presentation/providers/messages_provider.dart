@@ -128,12 +128,6 @@ final chatMessagesProvider =
       ChatMessagesNotifier.new,
     );
 
-final mediaMessagesProvider = StreamProvider<List<Message>>((ref) {
-  final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
-  if (groupId == null) return Stream.value([]);
-  return ref.watch(messagesRepositoryProvider).watchMediaMessages(groupId);
-});
-
 /// Les 6 derniers médias du groupe (aperçu du tableau de bord) : requête
 /// bornée côté serveur au lieu de tout l'historique.
 final recentMediaMessagesProvider = StreamProvider<List<Message>>((ref) {

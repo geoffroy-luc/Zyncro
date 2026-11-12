@@ -9,10 +9,14 @@
 // Parcours couvert = checklist de non-régression (PLAN annexe A) : invité,
 // création d'espace, note, événement, dépense, message, navigation entre
 // onglets. Chaque écriture passe par les rules réelles.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:zyncro/core/firebase/firebase_emulators.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/main.dart' as app;
 
 Future<void> pumpUntil(
@@ -29,12 +33,18 @@ Future<void> pumpUntil(
   final visible = find
       .byType(Text)
       .evaluate()
-      .map((e) => (e.widget as Text).data ?? (e.widget as Text).textSpan?.toPlainText())
+      .map(
+        (e) =>
+            (e.widget as Text).data ??
+            (e.widget as Text).textSpan?.toPlainText(),
+      )
       .whereType<String>()
       .where((t) => t.trim().isNotEmpty)
       .toSet()
       .join(' | ');
-  throw TestFailure('Introuvable après $timeout : $finder\nTextes visibles : $visible');
+  throw TestFailure(
+    'Introuvable après $timeout : $finder\nTextes visibles : $visible',
+  );
 }
 
 Future<void> pumpUntilGone(
@@ -77,7 +87,8 @@ void main() {
     expect(
       useFirebaseEmulators,
       isTrue,
-      reason: 'Refus de tourner contre la production : '
+      reason:
+          'Refus de tourner contre la production : '
           'ajouter --dart-define=USE_FIREBASE_EMULATORS=true',
     );
     final suffix = DateTime.now().millisecondsSinceEpoch % 100000;
@@ -155,6 +166,14 @@ void main() {
 
     // Les messages système des autres onglets sont arrivés dans le chat.
     await pumpUntil(tester, find.textContaining('Note E2E'));
+
+    // ── Galerie paginée (requête média réelle, rules du dépôt) ────────────
+    unawaited(GoRouter.of(tester.element(input)).push(AppRoutes.mediaGallery));
+    await pumpUntil(tester, find.text('Aucun média partagé'));
+    GoRouter.of(tester.element(find.text('Aucun média partagé'))).pop();
+    // Le champ du chat reste dans l'arbre sous la galerie : attendre que
+    // celle-ci ait disparu, sinon le tap suivant tombe dans la transition.
+    await pumpUntilGone(tester, find.text('Aucun média partagé'));
 
     // ── Retour à l'accueil (dashboard) ────────────────────────────────────
     await tapAndPump(tester, navTab('Home'));

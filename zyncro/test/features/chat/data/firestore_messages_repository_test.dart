@@ -46,6 +46,19 @@ void main() {
     },
   );
 
+  test('galerie : page de médias strictement antérieurs au curseur', () async {
+    for (var i = 0; i < 8; i++) {
+      await add('img$i', i.isEven ? 'image' : 'file', i);
+    }
+    await add('txt', 'text', 1);
+    final page = await repo.fetchMediaMessagesBefore(
+      'g1',
+      t0.add(const Duration(minutes: 5)),
+      limit: 3,
+    );
+    expect(page.map((m) => m.id), ['img4', 'img3', 'img2']);
+  });
+
   test(
     'non-lus plafonnés à unreadCountCap (badge « 99+ » identique)',
     () async {

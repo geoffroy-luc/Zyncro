@@ -57,23 +57,6 @@ class FirestoreMessagesRepository implements MessagesRepository {
   }
 
   @override
-  Stream<List<Message>> watchMediaMessages(String groupId) {
-    return _col(groupId)
-        .where('type', whereIn: ['image', 'file'])
-        .snapshots()
-        .map((snap) {
-          final msgs = mapDocsSafely(
-            snap.docs,
-            MessageMapper.fromFirestore,
-            label: 'watchMediaMessages',
-          );
-          msgs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-          return msgs;
-        })
-        .surfacePermissionDenied('watchMediaMessages');
-  }
-
-  @override
   Stream<List<Message>> watchRecentMediaMessages(
     String groupId, {
     required int limit,
@@ -91,6 +74,25 @@ class FirestoreMessagesRepository implements MessagesRepository {
           ),
         )
         .surfacePermissionDenied('watchRecentMediaMessages');
+  }
+
+  @override
+  Future<List<Message>> fetchMediaMessagesBefore(
+    String groupId,
+    DateTime before, {
+    required int limit,
+  }) async {
+    final snap = await _col(groupId)
+        .where(MessageFields.type, whereIn: ['image', 'file'])
+        .orderBy(MessageFields.timestamp, descending: true)
+        .where(MessageFields.timestamp, isLessThan: Timestamp.fromDate(before))
+        .limit(limit)
+        .get();
+    return mapDocsSafely(
+      snap.docs,
+      MessageMapper.fromFirestore,
+      label: 'fetchMediaMessagesBefore',
+    );
   }
 
   @override
