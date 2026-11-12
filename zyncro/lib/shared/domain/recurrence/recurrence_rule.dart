@@ -14,6 +14,15 @@ class RecurrenceRule {
     this.count,
     this.until,
   });
+
+  /// Fin réellement applicable. BUG E15 corrigé : une règle incohérente
+  /// (`count` ou `until` absent pour sa fin) ne fait plus planter
+  /// (`count!` / `until!`) ; elle est lue comme sans fin.
+  RecurrenceEndType get effectiveEndType => switch (endType) {
+    RecurrenceEndType.count when count == null => RecurrenceEndType.forever,
+    RecurrenceEndType.until when until == null => RecurrenceEndType.forever,
+    _ => endType,
+  };
 }
 
 /// Date de l'occurrence suivante.

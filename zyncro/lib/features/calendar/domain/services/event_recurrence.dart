@@ -44,11 +44,11 @@ List<Event> _expandRecurring(
 
   while (occurrenceIndex < maxInstances) {
     // Check rule end conditions
-    if (rule.endType == RecurrenceEndType.count &&
+    if (rule.effectiveEndType == RecurrenceEndType.count &&
         occurrenceIndex >= rule.count!) {
       break;
     }
-    if (rule.endType == RecurrenceEndType.until &&
+    if (rule.effectiveEndType == RecurrenceEndType.until &&
         !withinUntil(current, rule.until!)) {
       break;
     }

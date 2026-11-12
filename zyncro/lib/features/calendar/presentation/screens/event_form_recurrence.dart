@@ -168,7 +168,11 @@ mixin _EventFormRecurrence on _EventFormScreenStateBase {
                                         onTap: () async {
                                           final picked = await showDatePicker(
                                             context: ctx,
-                                            initialDate: untilDate,
+                                            // BUG E14 corrigé : initialDate >= firstDate.
+                                            initialDate:
+                                                untilDate.isBefore(_startDate)
+                                                ? _startDate
+                                                : untilDate,
                                             firstDate: _startDate,
                                             lastDate: DateTime(2100),
                                           );

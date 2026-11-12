@@ -94,10 +94,7 @@ class _EventFormScreenState extends _EventFormScreenStateBase
         _endTime = TimeOfDay.fromDateTime(e.endDate!);
       } else {
         _endDate = _startDate;
-        _endTime = TimeOfDay(
-          hour: _startTime.hour + 1,
-          minute: _startTime.minute,
-        );
+        _endTime = _defaultEndTime(_startTime);
       }
       unawaited(_loadReminder(e.id));
       _recurrence = e.recurrence;
@@ -105,10 +102,7 @@ class _EventFormScreenState extends _EventFormScreenStateBase
     } else {
       _startDate = widget.initialDate ?? DateTime.now();
       _endDate = _startDate;
-      _endTime = TimeOfDay(
-        hour: _startTime.hour + 1,
-        minute: _startTime.minute,
-      );
+      _endTime = _defaultEndTime(_startTime);
     }
   }
 
@@ -364,3 +358,9 @@ class _EventFormScreenState extends _EventFormScreenStateBase
     );
   }
 }
+
+/// Fin par défaut : une heure après le début, sans dépasser 23 h 59 (BUG CA4
+/// corrigé : un début à 23 h donnait l'heure invalide 24).
+TimeOfDay _defaultEndTime(TimeOfDay start) => start.hour >= 23
+    ? const TimeOfDay(hour: 23, minute: 59)
+    : TimeOfDay(hour: start.hour + 1, minute: start.minute);

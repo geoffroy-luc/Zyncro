@@ -7,8 +7,12 @@ mixin _EventFormActions on _EventFormScreenStateBase {
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      // BUG CA4 corrigé : bornes qui contiennent toujours la date initiale
+      // (assertion de showDatePicker sinon) et plus de plafond à 2030.
+      firstDate: initial.isBefore(DateTime(2020)) ? initial : DateTime(2020),
+      lastDate: DateTime(DateTime.now().year + 20).isAfter(initial)
+          ? DateTime(DateTime.now().year + 20)
+          : initial,
     );
     if (picked != null) {
       setState(() {

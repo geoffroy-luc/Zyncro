@@ -28,8 +28,11 @@ List<Expense> _expandRecurringExpense(Expense base, DateTime now) {
   const maxInstances = 500;
 
   while (idx < maxInstances) {
-    if (rule.endType == RecurrenceEndType.count && idx >= rule.count!) break;
-    if (rule.endType == RecurrenceEndType.until &&
+    if (rule.effectiveEndType == RecurrenceEndType.count &&
+        idx >= rule.count!) {
+      break;
+    }
+    if (rule.effectiveEndType == RecurrenceEndType.until &&
         !withinUntil(current, rule.until!)) {
       break;
     }

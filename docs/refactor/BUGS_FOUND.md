@@ -83,7 +83,7 @@
 | E12 🟠 ✅ | Dérive des dates de récurrence | Mensuel (31/01 → 03/03) et heure d'été (`add(Duration)`) (RU:77-80) |
 | E13 🟡 | Occurrences manquantes | `now` est figé au snapshot ; plafond silencieux de 500 (RU:89, 107) |
 | E14 🟡 ✅ | `until` exclut le jour même ; assertion du date picker | `initialDate < firstDate` (RU:111 ; EXF:329-330) |
-| E15 🟠 | Crash sur une règle incohérente | `count!`, `until!` (RU:110-111, `recurrence_rule.dart:50`) |
+| E15 🟠 ✅ | Crash sur une règle incohérente | `count!`, `until!` (RU:110-111, `recurrence_rule.dart:50`) |
 | E16 🟠 ✅ | Pas d'état chargement ni erreur | Affiche 0,00 € ou « Aucune dépense » (EXS:128-139) |
 | E17 🟡 | Impossible de retirer une catégorie | `copyWith` (`expense.dart:134, 140` ; EXF:1054) |
 | E18 🟠 | Membres partis | Nom affiché comme un uid tronqué ; « Rembourser » produit un message avec un nom vide ; leur part est retirée silencieusement à l'édition (EXS:393 ; RF:113 ; EXF:160) |
@@ -102,7 +102,7 @@
 | CA1 🟠 ✅ | Impossible de vider description, lieu ou heure de fin en édition | (`event.dart:94-97` ; EVF:178-199) |
 | CA2 🟠 ✅ | Impossible de retirer une répétition en édition | `clearRecurrence` en mémoire, puis la clé est omise dans `toMap` (`event.dart:103, 73`) |
 | CA3 🟠 ✅ | Heure d'été | Une série hebdomadaire à 9h passe à 8h (RU:77-78). Pas de notion de journée entière |
-| CA4 🟡 | Bornes des pickers | `lastDate: DateTime(2030)` (EVF:91-92) ; `initialDate < firstDate` (EVF:411-412) ; heure de fin = 24 si début à 23h (EVF:61, 69) |
+| CA4 🟡 ✅ | Bornes des pickers | `lastDate: DateTime(2030)` (EVF:91-92) ; `initialDate < firstDate` (EVF:411-412) ; heure de fin = 24 si début à 23h (EVF:61, 69) |
 | CA5 🟠 | Rappels | Une seule notification sur la première occurrence (`reminder_service.dart:58-60`). Stockés par appareil, jamais replanifiés si un autre membre modifie l'événement. Préférences non nettoyées (93-95). ID dérivé de `hashCode` (21). Course de `_loadReminder` (EVF:63, 216). Doublon d'événement si `zonedSchedule` lève après `createEvent` (`reminder_service.dart:86` ; EVF:244-248). « 90 min » s'affiche « 1 heures » (EVF:529) |
 | CA6 🟡 ✅ | Suppression | Toujours la série entière ; toute erreur affiche « Permission refusée » (EVF:148, 160-165) |
 | CA7 🟡 | Mode agenda | L'agenda conserve le jour sélectionné (CAL:305-307, 449-456) |

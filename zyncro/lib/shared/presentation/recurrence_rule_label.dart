@@ -10,7 +10,7 @@ extension RecurrenceRuleLabel on RecurrenceRule {
       RecurrenceFrequency.monthly => 'Tous les mois',
       RecurrenceFrequency.yearly => 'Tous les ans',
     };
-    final endLabel = switch (endType) {
+    final endLabel = switch (effectiveEndType) {
       RecurrenceEndType.forever => '',
       RecurrenceEndType.count => ' · $count fois',
       RecurrenceEndType.until =>
