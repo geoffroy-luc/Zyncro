@@ -166,6 +166,7 @@
   "seriesCelleCiEtSuivantes": "Celle-ci et les suivantes",
   "seriesSuppressionSerieEntiere": "C'est la première occurrence : toute la série sera supprimée. Cette action est irréversible.",
   "chatMediaIndisponible": "Ce média n'est plus disponible.",
+  "authDeconnexionInvite": "Tu utilises un compte invité : en te déconnectant, il sera définitivement perdu, avec l'accès à tes espaces. Cette action est irréversible.",
   "chatEchecEnvoiMessage": "Échec de l'envoi du message.",
   "chatModifierLeMessage": "Modifier le message",
   "chatEnregistrement": "Enregistrement…",

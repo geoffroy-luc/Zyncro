@@ -47,6 +47,8 @@ mixin _HomeSettingsScreenSections
                             width: 56,
                             height: 56,
                             fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                const SizedBox.shrink(),
                           ),
                         )
                       : Center(

@@ -118,18 +118,18 @@
 | G1 🔴 ✅ | Perte de mises à jour des réglages d'onglet, réinitialisation possible de tous les onglets | `updateSettings` réécrit tout `TabSettings` (TSR:24-26) à partir d'un instantané. Avec le repli `?? TabSettings.defaults` (HS:521 ; `notes_settings_screen.dart:21` ; NE:244, 254 ; CSET:89), une écriture pendant le chargement remet catégories, fond, filtres et couleurs à leurs valeurs par défaut |
 | G2 🟠 | Masquer une couleur dans les notes la masque partout | `customColors` et `hiddenBaseColors` sont globaux à toutes les palettes (TS:46-47, 212-219 ; CPR:373). `hiddenBaseColors` n'est pas dédoublonné (TS:218) |
 | G3 🔴 | Suppression de compte | Ne supprime que l'utilisateur Auth (`auth_repository.dart:89-93`) : `memberIds`, docs membres, `users/{uid}` et photos restent. Les groupes possédés deviennent impossibles à administrer (FR:14-17, 73, 84). `requires-recent-login` est affiché brut (PR:270-279) |
-| G4 🟠 | Déconnexion d'un compte invité (anonyme) | Le compte est perdu définitivement, sans avertissement (PR:244-246) |
-| G5 🟠 | Rejoindre un groupe dont on est déjà membre | `set` sans merge : `role` repasse à member et le pseudo est réinitialisé (GR:86-95). Unicité du pseudo non contrôlée au join ; contrôle non transactionnel ailleurs (GR:279-288) |
+| G4 🟠 ✅ | Déconnexion d'un compte invité (anonyme) | Le compte est perdu définitivement, sans avertissement (PR:244-246) |
+| G5 🟠 ✅ | Rejoindre un groupe dont on est déjà membre | `set` sans merge : `role` repasse à member et le pseudo est réinitialisé (GR:86-95). Unicité du pseudo non contrôlée au join ; contrôle non transactionnel ailleurs (GR:279-288) |
 | G6 🟠 | Codes d'invitation | Régénération sans transaction (GR:218-239) ; aucun test de collision (`group.dart:28-32`) : en cas de collision, la création du groupe **échoue** (les rules n'autorisent pas l'`update` d'un code existant, vérifié sur émulateur) au lieu d'écraser l'autre code ; nom et emoji non répercutés dans `invite_codes` (GR:206-215 ; HS:139-142) |
 | G7 🟠 ✅ | Suppression de groupe | La purge de `members` déclenche `onMemberRemoved` : chaque membre reçoit en plus « Tu as été retiré du groupe » (FN:52-66, 71-104). `config` n'est pas purgé (FN:52), le Storage non plus |
 | G8 🟠 ✅ | Quitter un groupe | Celui qui part reçoit « Tu as été retiré du groupe » (FN:71-104 + GR:155-179) |
 | G9 🟡 | Spinner infini sur `/settings/*` après suppression du groupe ou retrait | La redirection ne couvre que le shell (GP:51-57 ; RT:72-79 ; HS:525-527) |
 | G10 🟠 | Bouton retour Android | Ferme l'app depuis un onglet : aucun `PopScope`, uniquement des `go` (RT ; GSEL:50 ; JL:46). Feature à venir, à ne pas corriger pendant le refactor |
-| G11 🟠 | Perte de mise à jour des notes | `copyWith` sur l'instantané d'ouverture puis `update(toMap())` complet (NE:153-164 ; `notes_repository.dart:62-64`). Épingler modifie `updatedAt` côté client (`note.dart:104`) |
+| G11 🟠 ✅ | Perte de mise à jour des notes | `copyWith` sur l'instantané d'ouverture puis `update(toMap())` complet (NE:153-164 ; `notes_repository.dart:62-64`). Épingler modifie `updatedAt` côté client (`note.dart:104`) |
 | G12 🟡 ✅ | Dashboard | Événements récurrents absents (DB:75) ; événements multi-jours en cours exclus (DB:88-89) ; total incluant les remboursements (DB:99-100) ; « € » en dur (DB:55-57) |
 | G13 🟡 | Interrupteur de notifications | Préférence locale non scopée par uid ; token réenregistré à chaque démarrage (PR:192 ; NOTIF:78-81) |
 | G14 🟡 | Divers | Pseudo de profil non validé ; emoji `maxLength: 2` alors que la création propose des emojis composés (HS:116 vs GSEL:433) ; couleur ajoutée non visible (`category_editor_sheet.dart:158`) |
-| G15 🟡 | `Image.network` sans `errorBuilder` | (HS:588, GSEL:253, RT:339) |
+| G15 🟡 ✅ | `Image.network` sans `errorBuilder` | (HS:588, GSEL:253, RT:339) |
 | G16 🟡 | Listener de tap sur notification en double | Si `initialize()` est rappelé sans logout (NOTIF:66-68, 102) |
 | G17 🟠 | Un seul token FCM par utilisateur | Se déconnecter sur un appareil coupe les notifications des autres (NOTIF:142-145, 175) |
 | G18 🟡 | Sélectionner un groupe efface les notifications de tous les groupes | (`app/app.dart:107-110`). À confirmer côté produit |

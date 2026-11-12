@@ -832,6 +832,12 @@ abstract class AppLocalizations {
   /// **'Ce média n\'est plus disponible.'**
   String get chatMediaIndisponible;
 
+  /// No description provided for @authDeconnexionInvite.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu utilises un compte invité : en te déconnectant, il sera définitivement perdu, avec l\'accès à tes espaces. Cette action est irréversible.'**
+  String get authDeconnexionInvite;
+
   /// No description provided for @chatEchecEnvoiMessage.
   ///
   /// In fr, this message translates to:

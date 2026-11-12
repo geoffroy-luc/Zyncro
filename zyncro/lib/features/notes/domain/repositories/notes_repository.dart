@@ -12,6 +12,10 @@ abstract interface class NotesRepository {
     List<ChecklistItem> checklist,
     required String userId,
   });
-  Future<void> updateNote(String groupId, Note note);
+
+  /// Avec [from] (état lu par l'appelant), seuls les champs modifiés sont
+  /// écrits : une modification concurrente d'un autre membre n'est plus
+  /// écrasée (BUG G11 corrigé).
+  Future<void> updateNote(String groupId, Note note, {Note? from});
   Future<void> deleteNote(String groupId, String noteId);
 }

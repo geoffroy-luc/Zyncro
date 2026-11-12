@@ -162,7 +162,11 @@ class _ChatScreenState extends _ChatScreenStateBase
         return Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(bgValue, fit: BoxFit.cover),
+            Image.network(
+              bgValue,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
             child,
           ],
         );

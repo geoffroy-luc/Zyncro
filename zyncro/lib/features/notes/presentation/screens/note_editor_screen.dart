@@ -177,6 +177,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             checklist: checklist,
             updatedBy: user.uid,
           ),
+          from: widget.note,
         );
       }
       final userName =

@@ -1,6 +1,7 @@
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/shared/data/mappers/expense_category_mapper.dart';
 import 'package:zyncro/shared/data/mappers/firestore_codec.dart';
+import 'package:zyncro/shared/data/mappers/map_diff.dart';
 import 'package:zyncro/shared/domain/categories/expense_category.dart';
 
 /// Champs Firestore des réglages d'onglet (`groups/{gid}/config/tabSettings`).
@@ -129,31 +130,6 @@ abstract final class TabSettingsMapper {
   /// l'appelant) et [to] (état voulu) : seuls ceux-là sont écrits
   /// (BUGS_FOUND G1 — écrire la carte complète écrasait les modifications
   /// concurrentes et, pendant un chargement, réinitialisait tous les onglets).
-  static Map<String, dynamic> changedFields(TabSettings from, TabSettings to) {
-    final before = toFirestore(from);
-    final after = toFirestore(to);
-    return {
-      for (final entry in after.entries)
-        if (!_jsonEquals(before[entry.key], entry.value))
-          entry.key: entry.value,
-    };
-  }
-
-  static bool _jsonEquals(Object? a, Object? b) {
-    if (a is List && b is List) {
-      if (a.length != b.length) return false;
-      for (var i = 0; i < a.length; i++) {
-        if (!_jsonEquals(a[i], b[i])) return false;
-      }
-      return true;
-    }
-    if (a is Map && b is Map) {
-      if (a.length != b.length) return false;
-      for (final key in a.keys) {
-        if (!b.containsKey(key) || !_jsonEquals(a[key], b[key])) return false;
-      }
-      return true;
-    }
-    return a == b;
-  }
+  static Map<String, dynamic> changedFields(TabSettings from, TabSettings to) =>
+      changedEntries(toFirestore(from), toFirestore(to));
 }

@@ -407,6 +407,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatMediaIndisponible => 'Ce média n\'est plus disponible.';
 
   @override
+  String get authDeconnexionInvite =>
+      'Tu utilises un compte invité : en te déconnectant, il sera définitivement perdu, avec l\'accès à tes espaces. Cette action est irréversible.';
+
+  @override
   String get chatEchecEnvoiMessage => 'Échec de l\'envoi du message.';
 
   @override

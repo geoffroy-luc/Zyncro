@@ -34,7 +34,11 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
     try {
       await ref
           .read(notesRepositoryProvider)
-          .updateNote(groupId, note.copyWith(isPinned: !note.isPinned));
+          .updateNote(
+            groupId,
+            note.copyWith(isPinned: !note.isPinned, touch: false),
+            from: note,
+          );
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

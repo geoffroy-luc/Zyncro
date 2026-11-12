@@ -245,6 +245,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                       height: 140,
                       width: double.infinity,
                       fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                     ),
                   ),
                 ),

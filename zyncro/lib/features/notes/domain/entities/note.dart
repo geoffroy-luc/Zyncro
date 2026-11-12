@@ -45,6 +45,9 @@ class Note {
     bool? isChecklist,
     List<ChecklistItem>? checklist,
     String? updatedBy,
+    // false : ne pas dater la modification (épingler n'est pas modifier,
+    // BUG G11 corrigé).
+    bool touch = true,
   }) {
     return Note(
       id: id,
@@ -57,7 +60,7 @@ class Note {
       checklist: checklist ?? this.checklist,
       createdBy: createdBy,
       createdAt: createdAt,
-      updatedAt: DateTime.now(),
+      updatedAt: touch ? DateTime.now() : updatedAt,
       updatedBy: updatedBy ?? this.updatedBy,
     );
   }

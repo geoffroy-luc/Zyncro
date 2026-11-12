@@ -83,6 +83,15 @@ class FirestoreGroupsRepository implements GroupsRepository {
     bool showProfilePhoto = true,
   }) async {
     final groupRef = _db.collection('groups').doc(groupId);
+    // BUG G5 corrigé : déjà membre → rien à écrire (le `set` sans merge
+    // remettait le rôle à « member » et réinitialisait le pseudo). Un
+    // non-membre n'a pas le droit de lire ce document : refus = pas membre.
+    try {
+      final existing = await groupRef.collection('members').doc(userId).get();
+      if (existing.exists) return;
+    } on FirebaseException catch (e) {
+      if (e.code != 'permission-denied') rethrow;
+    }
     final batch = _db.batch();
     batch.update(groupRef, {
       'memberIds': FieldValue.arrayUnion([userId]),

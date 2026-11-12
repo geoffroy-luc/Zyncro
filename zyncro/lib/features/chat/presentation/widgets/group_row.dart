@@ -36,7 +36,11 @@ class GroupRow extends StatelessWidget {
               ),
               clipBehavior: Clip.antiAlias,
               child: group.photoUrl != null
-                  ? Image.network(group.photoUrl!, fit: BoxFit.cover)
+                  ? Image.network(
+                      group.photoUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    )
                   : Center(
                       child: Text(
                         group.emoji?.isNotEmpty == true
