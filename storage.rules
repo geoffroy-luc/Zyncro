@@ -2,30 +2,58 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
+    // Couvert par firebase-tests/tests/storage.test.mjs (flux v1.1.3 + attaques).
+    // Les URLs de téléchargement déjà stockées (avec token) ne passent pas par
+    // ces règles : les clients existants continuent d'afficher les médias.
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Appartenance au groupe, vérifiée dans Firestore (règles cross-service).
+    function isMemberOf(groupId) {
+      return isSignedIn()
+        && firestore.exists(/databases/(default)/documents/groups/$(groupId)/members/$(request.auth.uid));
+    }
+
+    // 'g1.jpg' → 'g1' (photos et fonds de groupe nommés `<groupId>.jpg`).
+    function isJpgNamedByGroup(fileName) {
+      return fileName.matches('^[^.]+[.]jpg$');
+    }
+
+    function groupIdOf(fileName) {
+      return fileName.split('[.]')[0];
+    }
+
+    function isImageUnder(maxBytes) {
+      return request.resource.size < maxBytes
+        && request.resource.contentType.matches('image/.*');
+    }
+
     // ── Profile photos ─────────────────────────────────────────────────────
-    // Any authenticated user can read (needed to display avatars).
-    // Only the owner can write/delete their own photo.
-    match /profile_photos/{filename} {
-      allow read: if request.auth != null;
-      allow write, delete: if request.auth != null
-        && filename == request.auth.uid + '.jpg';
+    // Lecture unitaire par tout utilisateur connecté (avatars), pas de listage.
+    // Écriture : uniquement sa propre photo, image de moins de 5 Mo.
+    match /profile_photos/{fileName} {
+      allow get: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && fileName == request.auth.uid + '.jpg'
+        && isImageUnder(5 * 1024 * 1024);
+      allow delete: if isSignedIn() && fileName == request.auth.uid + '.jpg';
     }
 
     // ── Audio messages ─────────────────────────────────────────────────────
-    // L'accès Firestore est la vraie barrière (isGroupMember sur les messages).
-    // Ici on vérifie juste l'auth + le type + la taille.
-    match /audio/{groupId}/{filename} {
-      allow read:   if request.auth != null;
-      allow create: if request.auth != null
+    match /audio/{groupId}/{fileName} {
+      allow read:   if isMemberOf(groupId);
+      allow create: if isMemberOf(groupId)
         && request.resource.size < 50 * 1024 * 1024
         && request.resource.contentType.matches('audio/.*');
       allow update, delete: if false;
     }
 
     // ── Media messages (photos & vidéos) ───────────────────────────────────
-    match /media/{groupId}/{filename} {
-      allow read:   if request.auth != null;
-      allow create: if request.auth != null
+    match /media/{groupId}/{fileName} {
+      allow read:   if isMemberOf(groupId);
+      allow create: if isMemberOf(groupId)
         && request.resource.size < 100 * 1024 * 1024
         && (request.resource.contentType.matches('image/.*')
             || request.resource.contentType.matches('video/.*'));
@@ -33,22 +61,25 @@ service firebase.storage {
     }
 
     // ── Group photos (photo de profil du groupe) ────────────────────────────
-    match /group_photos/{filename} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-        && request.resource.size < 10 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
-      allow delete: if request.auth != null;
+    // Lecture unitaire par tout utilisateur connecté : l'aperçu d'un lien
+    // d'invitation l'affiche AVANT l'adhésion. Écriture réservée aux membres.
+    match /group_photos/{fileName} {
+      allow get: if isSignedIn();
+      allow create, update: if isJpgNamedByGroup(fileName)
+        && isMemberOf(groupIdOf(fileName))
+        && isImageUnder(10 * 1024 * 1024);
+      allow delete: if isJpgNamedByGroup(fileName)
+        && isMemberOf(groupIdOf(fileName));
     }
 
     // ── Chat backgrounds ───────────────────────────────────────────────────
-    match /chat_backgrounds/{filename} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
-        && request.resource.size < 20 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
-      allow delete: if request.auth != null;
+    match /chat_backgrounds/{fileName} {
+      allow get: if isSignedIn();
+      allow create, update: if isJpgNamedByGroup(fileName)
+        && isMemberOf(groupIdOf(fileName))
+        && isImageUnder(20 * 1024 * 1024);
+      allow delete: if isJpgNamedByGroup(fileName)
+        && isMemberOf(groupIdOf(fileName));
     }
-
   }
 }

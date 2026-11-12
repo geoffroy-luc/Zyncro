@@ -1,3 +1,5 @@
 .claude/
 .claude/settings.json
 .vscode/
+firebase-tests/node_modules/
+firebase-tests/*.log

@@ -1,0 +1,16 @@
+{
+  "name": "zyncro-firebase-tests",
+  "private": true,
+  "type": "module",
+  "description": "Tests des règles Firestore/Storage contre l'émulateur (flux légitimes v1.1.3 + attaques).",
+  "scripts": {
+    "test": "firebase emulators:exec --config ../firebase.json --only firestore,storage --project demo-zyncro \"vitest run\"",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.10.0",
+    "firebase-tools": "^15.10.1",
+    "vitest": "^3.2.4"
+  }
+}
