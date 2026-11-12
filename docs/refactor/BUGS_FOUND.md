@@ -24,24 +24,24 @@
 
 | ID | Bug | Cause probable / fichier |
 |---|---|---|
-| C1 🔴 | Messages qui disparaissent après « charger plus » | Après un `loadMore`, chaque nouveau message pousse le plus ancien hors de la fenêtre live de 50 messages. Ce message n'est alors ni dans `_live` ni dans `_older` (MPV:61-69, 86-96, 110-114) |
+| C1 🔴 ✅ | Messages qui disparaissent après « charger plus » | Après un `loadMore`, chaque nouveau message pousse le plus ancien hors de la fenêtre live de 50 messages. Ce message n'est alors ni dans `_live` ni dans `_older` (MPV:61-69, 86-96, 110-114) |
 | C2 🟠 | Anciens messages figés | `_older` est chargé par un `get()` unique : réactions, votes, éditions et suppressions au-delà des 50 derniers ne sont jamais reflétées (MPV:110-114) |
-| C3 🟠 | Pagination bloquée | `_hasMore = false` dès qu'il y a moins de 50 messages, et jamais remis à `true` (MPV:64) |
+| C3 🟠 ✅ | Pagination bloquée | `_hasMore = false` dès qu'il y a moins de 50 messages, et jamais remis à `true` (MPV:64) |
 | C4 🟡 | Messages sautés | Curseur `isLessThan` : les messages de la même milliseconde sont ignorés (MR:41) |
-| C5 🔴 | « Modifier » sur image, vidéo ou album casse le média | Le JSON est copié dans le champ texte puis écrasé par `editMessage` (CHAT:378-385) |
-| C6 🟠 | « Télécharger » sur un album ne fait rien | `data['url']` est absent et l'erreur est avalée (CHAT:466-467, 473) |
-| C7 🟡 | Mauvais libellé dans la citation de réponse | « Sondage » pour toute citation JSON, « Photo / Vidéo » pour un texte commençant par http (CHAT:3136-3140). Incohérent avec CHAT:1644-1652 |
-| C8 🟠 | Les réactions emoji sur un sondage comptent comme des votes | Elles sont comptées comme votes (CHAT:333-363, 3606-3608) et effacées par un vote exclusif (CHAT:590) |
+| C5 🔴 ✅ | « Modifier » sur image, vidéo ou album casse le média | Le JSON est copié dans le champ texte puis écrasé par `editMessage` (CHAT:378-385) |
+| C6 🟠 ✅ | « Télécharger » sur un album ne fait rien | `data['url']` est absent et l'erreur est avalée (CHAT:466-467, 473) |
+| C7 🟡 ✅ | Mauvais libellé dans la citation de réponse | « Sondage » pour toute citation JSON, « Photo / Vidéo » pour un texte commençant par http (CHAT:3136-3140). Incohérent avec CHAT:1644-1652 |
+| C8 🟠 ✅ | Les réactions emoji sur un sondage comptent comme des votes | Elles sont comptées comme votes (CHAT:333-363, 3606-3608) et effacées par un vote exclusif (CHAT:590) |
 | C9 🟡 | « Répondre » proposé sur un sondage mais sans effet visible | `_PollCard` n'affiche pas de citation, et le swipe est désactivé (CHAT:367, 1476) |
-| C10 🟠 | Réponse perdue | `sendAudio` et `sendPoll` ne transmettent pas la réponse, et la barre de réponse reste affichée (CHAT:605-618, 694-706) |
-| C11 🟠 | Texte perdu si l'envoi échoue | Le champ est vidé avant l'`await`, sans `catch` ni retour à l'utilisateur (CHAT:252, 256-281) |
-| C12 🟡 | Recherche sans résultat | Affiche « Aucun message. Soyez le premier ! » (CHAT:1392-1398) |
-| C13 🟠 | Crash du build | Couleur hex invalide dans le fond du chat : `int.parse` sans garde (CHAT:1295) |
-| C14 🔴 | État conservé au changement de groupe | Réponse, édition et recherche survivent au changement de groupe (`StatefulShellBranch`, RT:162). Conséquences : `replyToId` pointant vers un autre groupe, `editMessage` avec le mauvais `groupId` (CHAT:156) |
-| C15 🟡 | Double timer d'enregistrement | Second `Timer.periodic` si l'enregistrement est relancé (CHAT:655) |
+| C10 🟠 ✅ | Réponse perdue | `sendAudio` et `sendPoll` ne transmettent pas la réponse, et la barre de réponse reste affichée (CHAT:605-618, 694-706) |
+| C11 🟠 ✅ | Texte perdu si l'envoi échoue | Le champ est vidé avant l'`await`, sans `catch` ni retour à l'utilisateur (CHAT:252, 256-281) |
+| C12 🟡 ✅ | Recherche sans résultat | Affiche « Aucun message. Soyez le premier ! » (CHAT:1392-1398) |
+| C13 🟠 ✅ | Crash du build | Couleur hex invalide dans le fond du chat : `int.parse` sans garde (CHAT:1295) |
+| C14 🔴 ✅ | État conservé au changement de groupe | Réponse, édition et recherche survivent au changement de groupe (`StatefulShellBranch`, RT:162). Conséquences : `replyToId` pointant vers un autre groupe, `editMessage` avec le mauvais `groupId` (CHAT:156) |
+| C15 🟡 ✅ | Double timer d'enregistrement | Second `Timer.periodic` si l'enregistrement est relancé (CHAT:655) |
 | C16 🟡 | Compteur de non-lus faux | Compte aussi ses propres messages et vaut 0 si `lastReadAt` est null (MPV:174-185) |
 | C17 🟡 | `watchUnreadCount` (mort) ne se mettrait jamais à jour | `asyncExpand` met en pause le flux externe (MR:407) |
-| C18 🟡 | Aperçu de lien périmé après édition du message | Pas de `didUpdateWidget` (CHAT:2474+, 2697+, 3314+) |
+| C18 🟡 ✅ | Aperçu de lien périmé après édition du message | Pas de `didUpdateWidget` (CHAT:2474+, 2697+, 3314+) |
 
 ## Médias et partage
 
@@ -115,7 +115,7 @@
 
 | ID | Bug | Cause probable / fichier |
 |---|---|---|
-| G1 🔴 | Perte de mises à jour des réglages d'onglet, réinitialisation possible de tous les onglets | `updateSettings` réécrit tout `TabSettings` (TSR:24-26) à partir d'un instantané. Avec le repli `?? TabSettings.defaults` (HS:521 ; `notes_settings_screen.dart:21` ; NE:244, 254 ; CSET:89), une écriture pendant le chargement remet catégories, fond, filtres et couleurs à leurs valeurs par défaut |
+| G1 🔴 ✅ | Perte de mises à jour des réglages d'onglet, réinitialisation possible de tous les onglets | `updateSettings` réécrit tout `TabSettings` (TSR:24-26) à partir d'un instantané. Avec le repli `?? TabSettings.defaults` (HS:521 ; `notes_settings_screen.dart:21` ; NE:244, 254 ; CSET:89), une écriture pendant le chargement remet catégories, fond, filtres et couleurs à leurs valeurs par défaut |
 | G2 🟠 | Masquer une couleur dans les notes la masque partout | `customColors` et `hiddenBaseColors` sont globaux à toutes les palettes (TS:46-47, 212-219 ; CPR:373). `hiddenBaseColors` n'est pas dédoublonné (TS:218) |
 | G3 🔴 | Suppression de compte | Ne supprime que l'utilisateur Auth (`auth_repository.dart:89-93`) : `memberIds`, docs membres, `users/{uid}` et photos restent. Les groupes possédés deviennent impossibles à administrer (FR:14-17, 73, 84). `requires-recent-login` est affiché brut (PR:270-279) |
 | G4 🟠 | Déconnexion d'un compte invité (anonyme) | Le compte est perdu définitivement, sans avertissement (PR:244-246) |
@@ -147,5 +147,5 @@
 
 | ID | Bug | Cause probable / fichier |
 |---|---|---|
-| D1 🔴 | Un document malformé casse tout le stream pour tous les membres | Casts stricts et `values.byName` dans tous les `fromMap` (`shared/models/*.dart`). Une nouvelle valeur d'enum casserait les anciennes versions |
-| D2 🟠 | Crash latent sur timestamp en attente | `Message.fromMap` plante sur un `timestamp` null (`message.dart:42`). C'est déjà possible pour le message système de `leaveGroup` (`serverTimestamp`, GR:174) dans le cache local de l'émetteur |
+| D1 🔴 ✅ | Un document malformé casse tout le stream pour tous les membres | Casts stricts et `values.byName` dans tous les `fromMap` (`shared/models/*.dart`). Une nouvelle valeur d'enum casserait les anciennes versions |
+| D2 🟠 ✅ | Crash latent sur timestamp en attente | `Message.fromMap` plante sur un `timestamp` null (`message.dart:42`). C'est déjà possible pour le message système de `leaveGroup` (`serverTimestamp`, GR:174) dans le cache local de l'émetteur |

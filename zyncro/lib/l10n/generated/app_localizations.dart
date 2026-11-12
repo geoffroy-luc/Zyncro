@@ -724,6 +724,54 @@ abstract class AppLocalizations {
   /// **'Aucun message. Soyez le premier !'**
   String get chatAucunMessageSoyezLePremier;
 
+  /// No description provided for @chatReplyPhoto.
+  ///
+  /// In fr, this message translates to:
+  /// **'Photo'**
+  String get chatReplyPhoto;
+
+  /// No description provided for @chatReplyVideo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vidéo'**
+  String get chatReplyVideo;
+
+  /// No description provided for @chatReplyAlbum.
+  ///
+  /// In fr, this message translates to:
+  /// **'Album'**
+  String get chatReplyAlbum;
+
+  /// No description provided for @chatReplyAudio.
+  ///
+  /// In fr, this message translates to:
+  /// **'Audio'**
+  String get chatReplyAudio;
+
+  /// No description provided for @chatReplyPoll.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sondage'**
+  String get chatReplyPoll;
+
+  /// No description provided for @chatAucunResultat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun message ne correspond à la recherche.'**
+  String get chatAucunResultat;
+
+  /// No description provided for @chatMediasEnregistres.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucun média enregistré} =1{1 média enregistré dans la galerie} other{{count} médias enregistrés dans la galerie}}'**
+  String chatMediasEnregistres(int count);
+
+  /// No description provided for @chatEchecEnvoiMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échec de l\'envoi du message.'**
+  String get chatEchecEnvoiMessage;
+
   /// No description provided for @chatModifierLeMessage.
   ///
   /// In fr, this message translates to:

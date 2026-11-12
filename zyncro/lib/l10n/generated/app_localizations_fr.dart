@@ -342,6 +342,39 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun message. Soyez le premier !';
 
   @override
+  String get chatReplyPhoto => 'Photo';
+
+  @override
+  String get chatReplyVideo => 'Vidéo';
+
+  @override
+  String get chatReplyAlbum => 'Album';
+
+  @override
+  String get chatReplyAudio => 'Audio';
+
+  @override
+  String get chatReplyPoll => 'Sondage';
+
+  @override
+  String get chatAucunResultat => 'Aucun message ne correspond à la recherche.';
+
+  @override
+  String chatMediasEnregistres(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count médias enregistrés dans la galerie',
+      one: '1 média enregistré dans la galerie',
+      zero: 'Aucun média enregistré',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatEchecEnvoiMessage => 'Échec de l\'envoi du message.';
+
+  @override
   String get chatModifierLeMessage => 'Modifier le message';
 
   @override

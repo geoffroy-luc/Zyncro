@@ -24,6 +24,7 @@ import 'package:zyncro/features/chat/presentation/widgets/gradient_circle_button
 import 'package:zyncro/features/chat/presentation/widgets/media_downloader.dart';
 import 'package:zyncro/features/chat/presentation/widgets/message_bubble.dart';
 import 'package:zyncro/features/chat/presentation/widgets/recording_bar.dart';
+import 'package:zyncro/features/chat/presentation/widgets/reply_kind_label.dart';
 import 'package:zyncro/features/chat/presentation/widgets/seen_by_row.dart';
 import 'package:zyncro/features/chat/presentation/widgets/swipe_to_reply.dart';
 import 'package:zyncro/features/chat/presentation/widgets/typing_indicator.dart';
@@ -144,6 +145,7 @@ class _ChatScreenState extends _ChatScreenStateBase
         ref.watch(expenseMembersProvider).asData?.value ?? <GroupMember>[];
 
     _listenReadReceipts();
+    _listenGroupChange();
 
     if (currentUid == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -168,7 +170,7 @@ class _ChatScreenState extends _ChatScreenStateBase
     }
 
     final bgColor = bgType == 'color' && bgValue != null
-        ? hexToColor(bgValue)
+        ? (tryHexToColor(bgValue) ?? context.colors.background)
         : context.colors.background;
 
     return Scaffold(

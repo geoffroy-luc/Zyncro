@@ -36,16 +36,23 @@ class PollCard extends StatelessWidget {
     final options = List<String>.from(data['options'] as List? ?? []);
     final multipleChoice = data['multipleChoice'] as bool? ?? false;
 
+    // BUG C8 corrigé : seules les clés d'option ("0", "1"…) sont des votes ;
+    // une réaction emoji (possible depuis d'anciennes versions) n'en est pas.
+    bool isVoteKey(String key) {
+      final i = int.tryParse(key);
+      return i != null && i >= 0 && i < options.length;
+    }
+
     final userVoteKeys = <String>{};
-    for (final key in message.reactions.keys) {
+    for (final key in message.reactions.keys.where(isVoteKey)) {
       if (message.reactions[key]?.contains(currentUserId) == true) {
         userVoteKeys.add(key);
       }
     }
 
     int totalVotes = 0;
-    for (final voters in message.reactions.values) {
-      totalVotes += voters.length;
+    for (final entry in message.reactions.entries) {
+      if (isVoteKey(entry.key)) totalVotes += entry.value.length;
     }
 
     return GestureDetector(

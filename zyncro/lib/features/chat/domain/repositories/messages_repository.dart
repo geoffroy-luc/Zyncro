@@ -76,6 +76,9 @@ abstract interface class MessagesRepository {
     required String senderName,
     required String filePath,
     required int durationSeconds,
+    String? replyToId,
+    String? replyToSenderName,
+    String? replyToContent,
   });
 
   /// Envoie une photo ou une vidéo dans le groupe.
@@ -109,6 +112,9 @@ abstract interface class MessagesRepository {
     required String question,
     required List<String> options,
     bool multipleChoice = false,
+    String? replyToId,
+    String? replyToSenderName,
+    String? replyToContent,
   });
 
   /// Modifie un sondage existant (réinitialise les votes).

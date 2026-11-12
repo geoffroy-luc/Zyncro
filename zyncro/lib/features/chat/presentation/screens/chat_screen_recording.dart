@@ -24,6 +24,7 @@ mixin _ChatRecording on _ChatScreenStateBase {
       _isRecording = true;
       _recordingDuration = Duration.zero;
     });
+    _recordingTimer?.cancel(); // BUG C15 corrigé : jamais deux timers.
     _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
         setState(() => _recordingDuration += const Duration(seconds: 1));
@@ -62,6 +63,9 @@ mixin _ChatRecording on _ChatScreenStateBase {
       return;
     }
 
+    // BUG C10 corrigé : la réponse en cours accompagne le vocal.
+    final reply = _replyingTo;
+    setState(() => _replyingTo = null);
     try {
       await ref
           .read(messagesRepositoryProvider)
@@ -75,6 +79,9 @@ mixin _ChatRecording on _ChatScreenStateBase {
                 'Anonyme',
             filePath: path,
             durationSeconds: duration.inSeconds,
+            replyToId: reply?.id,
+            replyToSenderName: reply?.senderName,
+            replyToContent: reply?.content,
           );
       if (_scrollController.hasClients) {
         unawaited(
