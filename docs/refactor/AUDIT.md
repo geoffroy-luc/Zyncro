@@ -64,7 +64,7 @@ Chemins Dart relatifs à `zyncro/lib/`. Alias utilisés pour les fichiers les pl
 6. **Dépôt et outillage** :
    - `functions/node_modules` (5 776 fichiers) et `functions/lib` sont versionnés.
    - La CI ne fait que déployer : ni analyze ni tests, et la version de Flutter flotte (`3.x`).
-   - Les Cloud Functions tiennent en un seul fichier, sans lint ni nettoyage des tokens FCM invalides.
+   - Les Cloud Functions tiennent en un seul fichier (12 triggers), sans lint ni nettoyage des tokens FCM invalides.
 
 ---
 
@@ -207,7 +207,7 @@ Le détail des failles est en §10, celui des bugs dans `BUGS_FOUND.md`.
 | A-12 | Le `TabSettings` monolithique mélange 5 onglets (TS:45-220) ; filtres et palettes sont partagés à tort entre membres ou entre modules (G2, CA10). Il n'y a pas de système générique pour les réglages d'onglet | TS |
 | A-13 | Duplication massive : §6 | |
 | A-14 | Couverture de tests nulle, aucun test des rules ni des functions | |
-| A-15 | Cloud Functions monolithiques (462 lignes, 14 triggers), aucun lint, réponses FCM ignorées, aucune idempotence | §11 |
+| A-15 | Cloud Functions monolithiques (462 lignes, 12 triggers), aucun lint, réponses FCM ignorées, aucune idempotence | §11 |
 | A-16 | Code mort : `GroupSettingsScreen` + route `/group-settings` (aucune navigation), `MediaSwipeViewer` (MV:472-655), `AppUser`, `settleExpense` (ER:76-78), `watchUnreadCount` (MR:397-416, remplacé par MPV:174), `Expense.sharePerPerson`, `CalendarFilters` (lu et écrit, jamais utilisé), `untilController` (EVF:262) | |
 | A-17 | Hygiène du dépôt : `functions/node_modules` (5 776 fichiers) et `functions/lib` versionnés ; CI sans analyze ni test ; Flutter `3.x` flottant dans les workflows de déploiement ; aucun `predeploy` de build des functions dans `firebase.json` (un déploiement sans build envoie le `lib/` versionné, potentiellement périmé) | `.github/workflows/*.yml`, `firebase.json` |
 | A-18 | Le partage vers Zyncro n'existe pas sur iOS : aucune Share Extension, aucun App Group, aucun schéma `ShareMedia-*` | `zyncro/ios/Runner/Info.plist:58-78`, `Runner.entitlements` |
@@ -386,7 +386,7 @@ Les URLs `getDownloadURL` portent un token permanent : toute personne qui détie
 
 | Point | Constat |
 |---|---|
-| Surface | Uniquement des triggers Firestore (14). Aucun callable ni endpoint HTTP, donc pas de surface d'entrée directe ✅ |
+| Surface | Uniquement des triggers Firestore (12). Aucun callable ni endpoint HTTP, donc pas de surface d'entrée directe ✅ |
 | Authentification et validation | Les triggers font confiance au contenu des documents : `senderName`, `paidByName` et `creatorName` sont fournis par le client et repris tels quels dans les notifications (FN:141, 282, 458). Notifications usurpables (S-11) |
 | Idempotence | Aucune. Les triggers sont *at-least-once*, des notifications en double sont possibles. `onGroupDeleted` est idempotent de fait |
 | Effets de bord en cascade | La purge de `members` dans `onGroupDeleted` (FN:52-66) déclenche `onMemberRemoved` pour chaque membre : chacun reçoit en plus « Tu as été retiré du groupe » (G7). Quitter volontairement envoie aussi ce message à celui qui part (G8) |

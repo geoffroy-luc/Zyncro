@@ -1,7 +1,30 @@
 # Plan de refactoring architectural — Zyncro
 
 > Pré-requis de lecture : [`AUDIT.md`](AUDIT.md) (constats S-, A-, Y-, D-) et [`BUGS_FOUND.md`](BUGS_FOUND.md) (bugs K, C, M, E, CA, G, F, D).
-> Statut : **en attente de validation** (voir la section 7, décisions à valider). Aucune ligne de code n'a été modifiée.
+> Statut : **validé** (D1–D10 acceptés) puis exécuté — avancement ci-dessous, détail dans [`RECAP.md`](RECAP.md).
+
+## Avancement (2026-11-12)
+
+| Étape | État |
+|---|---|
+| S1 rules | ✅ Firestore déployé · ⏸️ Storage prêt, en attente du rôle IAM cross-service |
+| S2 App Check client, logs, page d'invitation | ✅ code (branche `fix/client-hotfixes`), à publier |
+| S3 fermeture complète (mise à jour forcée) | ⏳ non démarré |
+| Voie rapide G1, D1, D2 | ✅ |
+| 0 Hygiène, CI | ✅ |
+| 1 Lints stricts | ✅ 0 issue |
+| 2 Filets (injection, caractérisation, bout en bout) | ✅ |
+| 3 Fondations core | ✅ |
+| 4 Domaine / data | ✅ |
+| 5 Services transverses | ✅ (compression média du chat encore dans l'écran) |
+| 6 Design system | 🟡 tokens + 454 usages migrés ; littéraux restants (`Colors.white`…) |
+| 7 l10n | 🟡 infrastructure + shell ; reste des chaînes à migrer |
+| 8 Découpage des écrans | 🟡 widgets et mixins extraits (max 882 lignes) ; `build` encore longs, pas encore de controllers Notifier |
+| 9 Navigation | ✅ (bouton retour : politique prête, non branchée) |
+| 10 Performance | 🟡 non-lus et aperçu médias bornés + index ; galerie paginée à faire |
+| 11 Cloud Functions | ✅ découpées, Node 22, déployées |
+| 12 Documentation | ✅ |
+| 13 Corrections de bugs | ⏳ (hors G1/D1/D2) |
 
 ## 1. Principes et garde-fous
 
