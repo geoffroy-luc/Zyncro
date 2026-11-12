@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zyncro/core/error/failure.dart';
 import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
-import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 
 // ── Join group sheet ──────────────────────────────────────────────────────────
@@ -69,17 +69,7 @@ class _JoinGroupSheetState extends ConsumerState<JoinGroupSheet> {
         return;
       }
 
-      final userName = freshUser.displayName ?? user.email ?? 'Quelqu\'un';
-      unawaited(
-        ref
-            .read(messagesRepositoryProvider)
-            .sendSystemMessage(
-              groupId: group.id,
-              userId: user.uid,
-              content: '👋 $userName a rejoint le groupe',
-              notifScreen: 'chat',
-            ),
-      );
+      // Le message « a rejoint le groupe » est écrit par le serveur (S3).
 
       await ref.read(selectedGroupIdProvider.notifier).select(group.id);
       if (mounted) {
@@ -87,7 +77,11 @@ class _JoinGroupSheetState extends ConsumerState<JoinGroupSheet> {
         context.go(AppRoutes.home);
       }
     } catch (e) {
-      if (mounted) setState(() => _error = 'Erreur : $e');
+      if (mounted) {
+        setState(
+          () => _error = e is ValidationFailure ? e.code : 'Erreur : $e',
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

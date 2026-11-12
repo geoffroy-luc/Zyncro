@@ -9,7 +9,7 @@
 |---|---|
 | S1 rules | ✅ Firestore et Storage déployés, vérifiés (= dépôt) |
 | S2 App Check client, logs, page d'invitation | ✅ fusionné dans `main` (local), à publier |
-| S3 fermeture complète (mise à jour forcée) | ⏳ non démarré |
+| S3 fermeture complète (mise à jour forcée) | 🟡 phase 1 faite (callable `joinGroupByCode` déployé, client release N, horodatage serveur K4) ; phases 2 et 3 : voir `S3.md` |
 | Voie rapide G1, D1, D2 | ✅ |
 | 0 Hygiène, CI | ✅ |
 | 1 Lints stricts | ✅ 0 issue |

@@ -147,6 +147,7 @@ class _ChatScreenState extends _ChatScreenStateBase
 
     _listenReadReceipts();
     _listenGroupChange();
+    _listenAccountChange();
 
     if (currentUid == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));

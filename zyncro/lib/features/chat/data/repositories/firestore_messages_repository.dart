@@ -21,6 +21,16 @@ class FirestoreMessagesRepository implements MessagesRepository {
   CollectionReference<Map<String, dynamic>> _col(String groupId) =>
       _db.collection('groups').doc(groupId).collection('messages');
 
+  /// Document d'un nouveau message. BUG K4 corrigé : l'horodatage est
+  /// celui du **serveur** (l'horloge du téléphone plaçait les messages d'un
+  /// appareil déréglé en bas ou dans l'historique). En attente d'accusé, il
+  /// se lit `null` et `MessageMapper` retombe sur l'heure locale (D2) : le
+  /// message apparaît aussitôt en dernier.
+  Map<String, dynamic> _newMessage(Message message) => {
+    ...MessageMapper.toFirestore(message),
+    MessageFields.timestamp: FieldValue.serverTimestamp(),
+  };
+
   CollectionReference<Map<String, dynamic>> _typingCol(String groupId) =>
       _db.collection('groups').doc(groupId).collection('typing');
 
@@ -175,7 +185,7 @@ class FirestoreMessagesRepository implements MessagesRepository {
       replyToSenderName: replyToSenderName,
       replyToContent: replyToContent,
     );
-    await ref.set(MessageMapper.toFirestore(message));
+    await ref.set(_newMessage(message));
   }
 
   @override
@@ -214,10 +224,7 @@ class FirestoreMessagesRepository implements MessagesRepository {
       type: MessageType.system,
       timestamp: DateTime.now(),
     );
-    await ref.set({
-      ...MessageMapper.toFirestore(message),
-      'notifScreen': notifScreen,
-    });
+    await ref.set({..._newMessage(message), 'notifScreen': notifScreen});
   }
 
   @override
@@ -258,7 +265,7 @@ class FirestoreMessagesRepository implements MessagesRepository {
       replyToSenderName: replyToSenderName,
       replyToContent: replyToContent,
     );
-    await ref.set(MessageMapper.toFirestore(message));
+    await ref.set(_newMessage(message));
   }
 
   @override
@@ -300,7 +307,7 @@ class FirestoreMessagesRepository implements MessagesRepository {
       replyToSenderName: replyToSenderName,
       replyToContent: replyToContent,
     );
-    await ref.set(MessageMapper.toFirestore(message));
+    await ref.set(_newMessage(message));
   }
 
   @override
@@ -349,7 +356,7 @@ class FirestoreMessagesRepository implements MessagesRepository {
       replyToSenderName: replyToSenderName,
       replyToContent: replyToContent,
     );
-    await ref.set(MessageMapper.toFirestore(message));
+    await ref.set(_newMessage(message));
   }
 
   @override
@@ -382,7 +389,7 @@ class FirestoreMessagesRepository implements MessagesRepository {
       replyToSenderName: replyToSenderName,
       replyToContent: replyToContent,
     );
-    await ref.set(MessageMapper.toFirestore(message));
+    await ref.set(_newMessage(message));
   }
 
   @override

@@ -16,3 +16,4 @@ export { onEventDeleted } from "./events/onEventDeleted";
 export { onNoteCreated } from "./notes/onNoteCreated";
 export { onNoteUpdated } from "./notes/onNoteUpdated";
 export { onNoteDeleted } from "./notes/onNoteDeleted";
+export { joinGroupByCode } from "./invites/joinGroupByCode";

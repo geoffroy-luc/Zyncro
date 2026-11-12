@@ -21,6 +21,7 @@ main
 | Rules **Firestore** durcies (S1) | ✅ Déployées et vérifiées : version déployée = dépôt. Validées par 98 tests émulateur et par le test bout en bout de l'app réelle (0 refus de permission) |
 | Rules **Storage** durcies (S1) | ✅ Déployées et vérifiées (= dépôt). Le rôle IAM `roles/firebaserules.firestoreServiceAgent` a été accordé par la CLI Firebase lors du déploiement |
 | Cloud Functions | ✅ Redéployées en **Node 22** (le runtime Node 20 est décommissionné depuis le 2026-10-30). Code découpé par domaine, notifications strictement identiques (tests snapshot) |
+| Callable `joinGroupByCode` (S3, phase 1) | ✅ Déployé le 2026-11-12, et appelé par le client de la release N. Déroulé des phases suivantes : `S3.md` |
 | Cloud Functions (corrections G7, G8, F1, F2) | ✅ `onMemberRemoved`, `onEventDeleted`, `onNoteDeleted` passés aux triggers « WithAuthContext » (migration en place, exports inchangés) et `onEventUpdated` : déployées le 2026-11-12 |
 | Index Firestore | ✅ Index composite `messages (type ASC, timestamp DESC)` déployé : aperçu médias du dashboard et galerie paginée |
 | Sauvegarde des rules d'avant S1 | `/home/zoff/Dev/zyncro-tools/deployed-rules-backup/` (rollback possible) |
@@ -44,7 +45,7 @@ Le code client (App Check, G1, D1, refactor) doit encore être publié via une r
 
 **Qualité** :
 - `flutter analyze` à **0 issue** avec `strict-casts`, `strict-inference`, `strict-raw-types` et environ 40 règles (point de départ : 24 infos, ou 726 avec ce jeu).
-- Tests : 0 au départ, maintenant **163** côté Flutter (unitaires, caractérisation, architecture, l10n, repositories sur Firestore simulé), **37** côté functions et **98** côté rules, plus **1 test bout en bout** (app réelle sur émulateur Android, contre les émulateurs Firebase : invité, espace, note, événement, dépense, message, galerie, réglages de l'accueil).
+- Tests : 0 au départ, maintenant **163** côté Flutter (unitaires, caractérisation, architecture, l10n, repositories sur Firestore simulé), **43** côté functions et **98** côté rules, plus **1 test bout en bout** (app réelle sur émulateur Android, contre les émulateurs Firebase : invité, espace, note, événement, dépense, message, galerie, réglages de l'accueil).
 - CI de PR ajoutée, Flutter épinglé, `node_modules` et `lib/` des functions retirés du dépôt.
 
 **Performance** :
@@ -74,19 +75,15 @@ Aucun nouveau champ en base : les correctifs n'utilisent que des champs existant
 | Performance | Pas encore faits : `cacheWidth` des miniatures, cache disque des images (D4), `autoDispose` des controllers, `jsonDecode` encore dans les `build` des bulles | Mesurer avec DevTools avant / après |
 | Système générique de réglages d'onglet, catégories partagées, rôles | **Points d'extension conçus** (PLAN §3), non implémentés : ce sont des features à venir | — |
 | Goldens visuels | Remplacés par la caractérisation, l'égalité des tokens et le test bout en bout | Ajouter des goldens avant de toucher au rendu |
-| Rules : un non-membre qui connaît un `groupId` peut encore s'ajouter comme simple membre | Résiduel documenté (S3) | Callable `joinGroupByCode` + mise à jour forcée |
+| Rules : un non-membre qui connaît un `groupId` peut encore s'ajouter comme simple membre | Callable en place (S3 phase 1) ; le chemin client reste ouvert pour les versions ≤ 1.1.3 | Phase 3 de `S3.md` après la hausse de `minimum_version` |
 | Partage vers Zyncro sur iOS | Inexistant (pas de Share Extension) | Feature iOS dédiée |
 
 ## 5. Recommandations, par priorité
 
 1. **Pousser `main`** et **publier une release** : elle apporte App Check en production, G1 et D1, et tout le refactor.
 2. Configurer **App Check** dans la console : Play Integrity lié au Play Console, DeviceCheck. Surveiller les métriques avant tout enforcement.
-3. Planifier **S3** :
-   - adhésion via callable ;
-   - timestamps serveur pour les messages (corrige K4, l'ordre des messages) ;
-   - enforcement App Check ;
-   - hausse de `minimum_version`.
-4. **Bugs restants** (`BUGS_FOUND.md`, en-tête) : ceux qui demandent un changement de schéma sont à planifier avec S3 (K4, G17, E10, E11, E20, G2, CA11). G3 (suppression de compte complète) est le plus important des restants.
+3. **S3** : la phase 1 est prête (release N). Ensuite, hausse de `minimum_version` 2 à 4 semaines après la release, puis règles strictes et enforcement App Check (`S3.md`).
+4. **Bugs restants** (`BUGS_FOUND.md`, en-tête) : ceux qui demandent un changement de schéma sont à planifier avec S3 (G17, E10, E11, E20, G2, CA11). G3 (suppression de compte complète) est le plus important des restants.
 5. Poursuivre le refactor de présentation (dette §4) en même temps que les nouvelles features : chaque nouvel écran suit `ARCHITECTURE.md` §9.
 6. Compléter `invite.html` avec l'id App Store, et `assetlinks.json` avec l'empreinte Play App Signing.
 

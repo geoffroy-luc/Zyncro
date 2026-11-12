@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -24,4 +25,5 @@ Future<void> connectFirebaseEmulatorsIfRequested() async {
   FirebaseFirestore.instance.useFirestoreEmulator(_emulatorHost, 8080);
   await FirebaseAuth.instance.useAuthEmulator(_emulatorHost, 9099);
   await FirebaseStorage.instance.useStorageEmulator(_emulatorHost, 9199);
+  FirebaseFunctions.instance.useFunctionsEmulator(_emulatorHost, 5001);
 }

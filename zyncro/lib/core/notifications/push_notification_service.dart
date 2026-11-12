@@ -38,15 +38,25 @@ class PushNotificationService {
   StreamSubscription<RemoteMessage>? _foregroundSub;
   StreamSubscription<RemoteMessage>? _openedAppSub;
 
+  /// Demande de permission en cours : une seule à la fois. Se déconnecter
+  /// puis se reconnecter sans avoir répondu au dialogue relançait une
+  /// demande, et firebase_messaging levait « A request for permissions is
+  /// already running » (exception non gérée).
+  Future<NotificationSettings>? _pendingPermission;
+
   /// À appeler quand un utilisateur est authentifié.
   Future<void> initialize(String userId) async {
     // Annuler les anciens listeners avant d'en créer de nouveaux.
-    // ⚠️ _openedAppSub n'est pas annulé ici (BUGS_FOUND G16, conservé).
+    // BUG G16 corrigé : _openedAppSub aussi (sinon un tap sur notification
+    // était traité deux fois après un second initialize).
     await _tokenRefreshSub?.cancel();
     await _foregroundSub?.cancel();
+    await _openedAppSub?.cancel();
 
-    // Permission (iOS & Android 13+)
-    final settings = await _messaging.requestPermission();
+    // Permission (iOS & Android 13+), partagée si une demande est en cours.
+    final settings = await (_pendingPermission ??= _messaging
+        .requestPermission()
+        .whenComplete(() => _pendingPermission = null));
     if (settings.authorizationStatus == AuthorizationStatus.denied) return;
 
     final token = await _messaging.getToken();

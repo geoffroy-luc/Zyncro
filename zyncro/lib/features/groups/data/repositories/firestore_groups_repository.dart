@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:zyncro/core/error/failure.dart';
 import 'package:zyncro/core/firebase/firestore_paths.dart';
 import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
 import 'package:zyncro/features/groups/data/mappers/group_mapper.dart';
@@ -10,10 +12,15 @@ import 'package:zyncro/features/groups/domain/repositories/groups_repository.dar
 import 'package:zyncro/features/groups/domain/services/invite_code_generator.dart';
 
 class FirestoreGroupsRepository implements GroupsRepository {
-  FirestoreGroupsRepository(this._db, this._storage);
+  FirestoreGroupsRepository(
+    this._db,
+    this._storage, {
+    FirebaseFunctions? functions,
+  }) : _functions = functions;
 
   final FirebaseFirestore _db;
   final FirebaseStorage _storage;
+  final FirebaseFunctions? _functions;
 
   @override
   Stream<List<Group>> watchUserGroups(String userId) {
@@ -75,39 +82,6 @@ class FirestoreGroupsRepository implements GroupsRepository {
   }
 
   @override
-  Future<void> joinGroup(
-    String groupId,
-    String userId,
-    String displayName, {
-    String? photoUrl,
-    bool showProfilePhoto = true,
-  }) async {
-    final groupRef = _db.collection('groups').doc(groupId);
-    // BUG G5 corrigé : déjà membre → rien à écrire (le `set` sans merge
-    // remettait le rôle à « member » et réinitialisait le pseudo). Un
-    // non-membre n'a pas le droit de lire ce document : refus = pas membre.
-    try {
-      final existing = await groupRef.collection('members').doc(userId).get();
-      if (existing.exists) return;
-    } on FirebaseException catch (e) {
-      if (e.code != 'permission-denied') rethrow;
-    }
-    final batch = _db.batch();
-    batch.update(groupRef, {
-      'memberIds': FieldValue.arrayUnion([userId]),
-    });
-    batch.set(groupRef.collection('members').doc(userId), {
-      'uid': userId,
-      'displayName': displayName,
-      'role': 'member',
-      'joinedAt': FieldValue.serverTimestamp(),
-      'photoUrl': photoUrl,
-      'showProfilePhoto': showProfilePhoto,
-    });
-    await batch.commit();
-  }
-
-  @override
   Future<Group?> joinGroupByCode(
     String code,
     String userId,
@@ -115,21 +89,28 @@ class FirestoreGroupsRepository implements GroupsRepository {
     String? photoUrl,
     bool showProfilePhoto = true,
   }) async {
-    final codeDoc = await _db
-        .collection('invite_codes')
-        .doc(code.toUpperCase().trim())
-        .get();
-    if (!codeDoc.exists) return null;
-
-    final groupId = codeDoc.data()!['groupId'] as String;
-
-    await joinGroup(
-      groupId,
-      userId,
-      displayName,
-      photoUrl: photoUrl,
-      showProfilePhoto: showProfilePhoto,
-    );
+    final functions = _functions;
+    if (functions == null) {
+      throw StateError('FirebaseFunctions non injecté');
+    }
+    final String? groupId;
+    try {
+      final result = await functions
+          .httpsCallable('joinGroupByCode')
+          .call<Map<String, dynamic>>({
+            'code': code.toUpperCase().trim(),
+            'displayName': displayName,
+            'photoUrl': photoUrl,
+            'showProfilePhoto': showProfilePhoto,
+          });
+      groupId = result.data['groupId'] as String?;
+    } on FirebaseFunctionsException catch (e) {
+      if (e.code == 'resource-exhausted' || e.code == 'invalid-argument') {
+        throw ValidationFailure(e.message ?? e.code, e);
+      }
+      rethrow;
+    }
+    if (groupId == null) return null;
 
     final updated = await _db.collection('groups').doc(groupId).get();
     if (!updated.exists) return null;
