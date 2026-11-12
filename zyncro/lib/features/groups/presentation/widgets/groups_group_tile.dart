@@ -46,6 +46,8 @@ class GroupsGroupTile extends ConsumerWidget {
                               width: 48,
                               height: 48,
                               fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  const SizedBox.shrink(),
                             ),
                           )
                         : Center(

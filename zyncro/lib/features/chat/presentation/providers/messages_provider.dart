@@ -6,6 +6,7 @@ import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/data/repositories/firestore_messages_repository.dart';
 import 'package:zyncro/features/chat/data/services/link_preview_service.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';
+import 'package:zyncro/features/chat/domain/live_window_pager.dart';
 import 'package:zyncro/features/chat/domain/repositories/messages_repository.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 
@@ -40,19 +41,27 @@ class ChatMessagesState {
   );
 }
 
+/// Fenêtre live des 50 derniers messages + pages plus anciennes.
+///
+/// BUG C1 corrigé : un message poussé hors de la fenêtre live par un nouvel
+/// arrivant reste affiché (LiveWindowPager). BUG C3 corrigé : « plus
+/// d'historique » est recalculé à chaque instantané au lieu d'être figé à
+/// false dès qu'une fenêtre incomplète a été vue.
 class ChatMessagesNotifier extends AsyncNotifier<ChatMessagesState> {
-  List<Message> _live = [];
-  List<Message> _older = [];
-  bool _hasMore = true;
+  static const pageSize = 50;
+
+  late LiveWindowPager<Message> _pager;
   bool _loadingMore = false;
 
   @override
   Future<ChatMessagesState> build() async {
     final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
 
-    _live = [];
-    _older = [];
-    _hasMore = true;
+    _pager = LiveWindowPager(
+      pageSize: pageSize,
+      idOf: (m) => m.id,
+      timeOf: (m) => m.timestamp,
+    );
     _loadingMore = false;
 
     if (groupId == null) {
@@ -60,16 +69,15 @@ class ChatMessagesNotifier extends AsyncNotifier<ChatMessagesState> {
     }
 
     final repo = ref.read(messagesRepositoryProvider);
-    final completer = Completer<List<Message>>();
+    final completer = Completer<void>();
 
     final sub = repo
         .watchMessages(groupId)
         .listen(
           (msgs) {
-            _live = msgs;
-            if (msgs.length < 50) _hasMore = false;
+            _pager.onLiveSnapshot(msgs);
             if (!completer.isCompleted) {
-              completer.complete(msgs);
+              completer.complete();
             } else {
               state = AsyncData(_buildState());
             }
@@ -89,36 +97,32 @@ class ChatMessagesNotifier extends AsyncNotifier<ChatMessagesState> {
     return _buildState();
   }
 
-  ChatMessagesState _buildState() {
-    final liveIds = _live.map((m) => m.id).toSet();
-    return ChatMessagesState(
-      messages: [..._live, ..._older.where((m) => !liveIds.contains(m.id))],
-      hasMore: _hasMore,
-      loadingMore: _loadingMore,
-    );
-  }
+  ChatMessagesState _buildState() => ChatMessagesState(
+    messages: _pager.items,
+    hasMore: _pager.hasMore,
+    loadingMore: _loadingMore,
+  );
 
   Future<void> loadMore() async {
-    if (_loadingMore || !_hasMore) return;
-    final current = state.value;
-    if (current == null || current.messages.isEmpty) return;
-
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
-    if (groupId == null) return;
-
+    final cursor = _pager.cursor;
+    if (_loadingMore || !_pager.hasMore || groupId == null || cursor == null) {
+      return;
+    }
+    final pager = _pager;
     _loadingMore = true;
-    state = AsyncData(current.copyWith(loadingMore: true));
-
+    state = AsyncData(_buildState());
     try {
-      final oldest = current.messages.last.timestamp;
       final batch = await ref
           .read(messagesRepositoryProvider)
-          .fetchMessagesBefore(groupId, oldest);
-      _older = [..._older, ...batch];
-      if (batch.length < 50) _hasMore = false;
+          .fetchMessagesBefore(groupId, cursor);
+      // Le groupe a pu changer pendant la requête : page jetée.
+      if (identical(pager, _pager)) pager.addOlderPage(batch);
     } finally {
-      _loadingMore = false;
-      state = AsyncData(_buildState());
+      if (identical(pager, _pager)) {
+        _loadingMore = false;
+        state = AsyncData(_buildState());
+      }
     }
   }
 }

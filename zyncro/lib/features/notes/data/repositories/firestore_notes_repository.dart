@@ -3,6 +3,7 @@ import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
 import 'package:zyncro/features/notes/data/mappers/note_mapper.dart';
 import 'package:zyncro/features/notes/domain/entities/note.dart';
 import 'package:zyncro/features/notes/domain/repositories/notes_repository.dart';
+import 'package:zyncro/shared/data/mappers/map_diff.dart';
 
 class FirestoreNotesRepository implements NotesRepository {
   FirestoreNotesRepository(this._db);
@@ -64,8 +65,13 @@ class FirestoreNotesRepository implements NotesRepository {
   }
 
   @override
-  Future<void> updateNote(String groupId, Note note) async {
-    await _col(groupId).doc(note.id).update(NoteMapper.toFirestore(note));
+  Future<void> updateNote(String groupId, Note note, {Note? from}) async {
+    final after = NoteMapper.toFirestore(note);
+    final changes = from == null
+        ? after
+        : changedEntries(NoteMapper.toFirestore(from), after);
+    if (changes.isEmpty) return;
+    await _col(groupId).doc(note.id).update(changes);
   }
 
   @override

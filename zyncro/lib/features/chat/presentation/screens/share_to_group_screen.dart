@@ -42,8 +42,18 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
 
     // Plus rien à partager (déjà envoyé / annulé) → on ferme proprement.
     if (share == null) {
+      // BUG M8 corrigé : une barre avec fermeture plutôt qu'un écran vide.
       return Scaffold(
         backgroundColor: context.colors.background,
+        appBar: AppBar(
+          backgroundColor: context.colors.surface,
+          surfaceTintColor: context.colors.surface,
+          elevation: 0.5,
+          leading: IconButton(
+            icon: Icon(Icons.close, color: context.colors.textPrimary),
+            onPressed: _cancel,
+          ),
+        ),
         body: const SizedBox.shrink(),
       );
     }
@@ -197,10 +207,14 @@ class _ShareToGroupScreenState extends ConsumerState<ShareToGroupScreen> {
         }
       }
 
-      // Monte le score d'activité + met à jour les raccourcis de partage direct.
-      await ref
-          .read(shareShortcutsControllerProvider.notifier)
-          .recordInteraction(groupId, weight: 2.0);
+      // Monte le score d'activité + met à jour les raccourcis de partage
+      // direct. BUG M7 corrigé : un échec ici n'affiche plus « Échec du
+      // partage » alors que le contenu est envoyé (risque de double envoi).
+      try {
+        await ref
+            .read(shareShortcutsControllerProvider.notifier)
+            .recordInteraction(groupId, weight: 2.0);
+      } catch (_) {}
 
       ref.read(incomingShareProvider.notifier).clear();
       await ref.read(selectedGroupIdProvider.notifier).select(groupId);

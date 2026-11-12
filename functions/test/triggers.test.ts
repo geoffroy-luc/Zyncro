@@ -125,13 +125,29 @@ describe("événements", () => {
     expect(sent).toMatchSnapshot();
   });
   it("onEventUpdated", async () => {
-    const d = { createdBy: "alice", updatedBy: "bob" };
-    await run(fns.onEventUpdated, updated(p, d, d));
+    const d = { createdBy: "alice", updatedBy: "bob", title: "A" };
+    await run(fns.onEventUpdated, updated(p, d, { ...d, title: "B" }));
     expect(sent).toMatchSnapshot();
   });
-  it("onEventDeleted (attribué au créateur, BUG F1)", async () => {
+  it("BUG F2 corrigé : onEventUpdated sans changement réel → rien", async () => {
+    const d = { createdBy: "alice", updatedBy: "bob", title: "A" };
+    await run(fns.onEventUpdated, updated(p, d, { ...d, updatedBy: "alice" }));
+    expect(sent).toEqual([]);
+  });
+  it("onEventDeleted sans auteur connu (attribué au créateur)", async () => {
     await run(fns.onEventDeleted, created(p, { createdBy: "alice" }));
     expect(sent).toMatchSnapshot();
+  });
+  it("BUG F1 corrigé : onEventDeleted attribué à l'auteur, non notifié", async () => {
+    await run(fns.onEventDeleted, {
+      ...created(p, { createdBy: "alice" }),
+      authType: "unknown",
+      authId: "bob",
+    });
+    expect(sent).toHaveLength(1);
+    expect(JSON.stringify(sent)).toContain("Bob a supprimé un événement");
+    expect(JSON.stringify(sent)).not.toContain("tok-bob");
+    expect(JSON.stringify(sent)).toContain("tok-alice");
   });
 });
 
@@ -178,6 +194,30 @@ describe("groupes", () => {
   it("onMemberRemoved", async () => {
     await run(fns.onMemberRemoved, created({ groupId: "g1", userId: "bob" }, {}));
     expect(sent).toMatchSnapshot();
+  });
+  it("BUG G8 corrigé : quitter soi-même le groupe → rien", async () => {
+    await run(fns.onMemberRemoved, {
+      ...created({ groupId: "g1", userId: "bob" }, {}),
+      authType: "unknown",
+      authId: "bob",
+    });
+    expect(sent).toEqual([]);
+  });
+  it("retiré par un autre membre → notifié", async () => {
+    await run(fns.onMemberRemoved, {
+      ...created({ groupId: "g1", userId: "bob" }, {}),
+      authType: "unknown",
+      authId: "alice",
+    });
+    expect(sent).toHaveLength(1);
+  });
+  it("BUG G7 corrigé : purge après suppression du groupe → rien", async () => {
+    store.delete("groups/g1");
+    await run(fns.onMemberRemoved, {
+      ...created({ groupId: "g1", userId: "bob" }, {}),
+      authType: "service_account",
+    });
+    expect(sent).toEqual([]);
   });
   it("onMemberRemoved : membre sans token → rien", async () => {
     await run(fns.onMemberRemoved, created({ groupId: "g1", userId: "carol" }, {}));

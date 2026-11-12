@@ -342,6 +342,78 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun message. Soyez le premier !';
 
   @override
+  String get chatReplyPhoto => 'Photo';
+
+  @override
+  String get chatReplyVideo => 'Vidéo';
+
+  @override
+  String get chatReplyAlbum => 'Album';
+
+  @override
+  String get chatReplyAudio => 'Audio';
+
+  @override
+  String get chatReplyPoll => 'Sondage';
+
+  @override
+  String get chatAucunResultat => 'Aucun message ne correspond à la recherche.';
+
+  @override
+  String chatMediasEnregistres(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count médias enregistrés dans la galerie',
+      one: '1 média enregistré dans la galerie',
+      zero: 'Aucun média enregistré',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get expensesErreurChargement => 'Impossible de charger les dépenses.';
+
+  @override
+  String get expensesModifierRecurrente => 'Modifier une dépense récurrente';
+
+  @override
+  String get expensesSupprimerRecurrente => 'Supprimer une dépense récurrente';
+
+  @override
+  String get calendarModifierRecurrent => 'Modifier un événement récurrent';
+
+  @override
+  String get calendarSupprimerRecurrent => 'Supprimer un événement récurrent';
+
+  @override
+  String get seriesPorteeExplication =>
+      'Appliquer à cette occurrence et aux suivantes, ou à toute la série (occurrences passées comprises) ?';
+
+  @override
+  String get seriesAnnuler => 'Annuler';
+
+  @override
+  String get seriesToute => 'Toute la série';
+
+  @override
+  String get seriesCelleCiEtSuivantes => 'Celle-ci et les suivantes';
+
+  @override
+  String get seriesSuppressionSerieEntiere =>
+      'C\'est la première occurrence : toute la série sera supprimée. Cette action est irréversible.';
+
+  @override
+  String get chatMediaIndisponible => 'Ce média n\'est plus disponible.';
+
+  @override
+  String get authDeconnexionInvite =>
+      'Tu utilises un compte invité : en te déconnectant, il sera définitivement perdu, avec l\'accès à tes espaces. Cette action est irréversible.';
+
+  @override
+  String get chatEchecEnvoiMessage => 'Échec de l\'envoi du message.';
+
+  @override
   String get chatModifierLeMessage => 'Modifier le message';
 
   @override

@@ -64,7 +64,7 @@ class _CalendarScreenState extends _CalendarScreenStateBase
     final eventsAsync = ref.watch(expandedEventsProvider);
     final rawEvents = eventsAsync.asData?.value ?? [];
     final allEvents = _applyFilters(rawEvents, _search);
-    final monthEvents = eventsStartingInMonth(allEvents, _displayedMonth);
+    final monthEvents = eventsInMonth(allEvents, _displayedMonth);
     final today = DateTime.now();
 
     final visibleEvents = _selectedDay != null

@@ -39,11 +39,18 @@ void main() {
     });
   });
 
-  test('BUG K1 : un événement à cheval sur deux mois est absent du second', () {
-    final e = ev(DateTime(2026, 10, 28), end: DateTime(2026, 11, 3));
-    expect(eventsStartingInMonth([e], DateTime(2026, 10)), [e]);
-    expect(eventsStartingInMonth([e], DateTime(2026, 11)), isEmpty);
-  });
+  test(
+    'BUG K1 corrigé : un événement à cheval sur deux mois est dans les deux',
+    () {
+      final e = ev(DateTime(2026, 10, 28), end: DateTime(2026, 11, 3));
+      expect(eventsInMonth([e], DateTime(2026, 10)), [e]);
+      expect(eventsInMonth([e], DateTime(2026, 11)), [e]);
+      expect(eventsInMonth([e], DateTime(2026, 12)), isEmpty);
+      final single = ev(DateTime(2026, 11, 30, 23));
+      expect(eventsInMonth([single], DateTime(2026, 11)), [single]);
+      expect(eventsInMonth([single], DateTime(2026, 12)), isEmpty);
+    },
+  );
 
   group('EventFilter', () {
     final a = ev(

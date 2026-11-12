@@ -6,10 +6,9 @@ typedef PreparedMedia = ({String filePath, String mimeType});
 /// Préparation des photos / vidéos avant envoi : compression JPEG des images
 /// (qualité 85, hauteur min 1920), vidéos inchangées.
 ///
-/// Deux comportements historiques conservés à l'identique :
-/// - [prepareBatch] (galerie, partage) : le type devient `image/jpeg` même si
-///   la compression échoue (le fichier d'origine est alors envoyé) ;
-/// - [prepareSingle] (caméra) : le type ne change que si la compression réussit.
+/// Le type ne devient `image/jpeg` que si la compression réussit (sinon le
+/// fichier d'origine part avec son type) ; les GIF ne sont pas compressés
+/// (BUG M2 corrigé).
 class MediaPreparer {
   const MediaPreparer(this._compressor, {DateTime Function()? clock})
     : _clock = clock ?? DateTime.now;
@@ -30,14 +29,16 @@ class MediaPreparer {
       medias.asMap().entries.map((e) async {
         final index = e.key;
         final media = e.value;
-        if (media.mimeType.startsWith('image/')) {
+        if (_compressible(media.mimeType)) {
           final result = await _compressor.compressJpeg(
             media.path,
             '$dir/${filePrefix}_${ts}_$index.jpg',
             quality: quality,
             minHeight: minHeight,
           );
-          return (filePath: result ?? media.path, mimeType: 'image/jpeg');
+          // BUG M2 corrigé : sans compression, le type d'origine est gardé
+          // (une image PNG / HEIC non compressée partait en image/jpeg).
+          if (result != null) return (filePath: result, mimeType: 'image/jpeg');
         }
         return (filePath: media.path, mimeType: media.mimeType);
       }),
@@ -45,7 +46,7 @@ class MediaPreparer {
   }
 
   Future<PreparedMedia> prepareSingle(String path, String mimeType) async {
-    if (!mimeType.startsWith('image/')) {
+    if (!_compressible(mimeType)) {
       return (filePath: path, mimeType: mimeType);
     }
     final dir = await _compressor.temporaryDirectory();
@@ -58,4 +59,9 @@ class MediaPreparer {
     if (result != null) return (filePath: result, mimeType: 'image/jpeg');
     return (filePath: path, mimeType: mimeType);
   }
+
+  /// Images compressées en JPEG ; BUG M2 corrigé : les GIF restent tels
+  /// quels (la conversion perdait l'animation).
+  static bool _compressible(String mimeType) =>
+      mimeType.startsWith('image/') && mimeType != 'image/gif';
 }

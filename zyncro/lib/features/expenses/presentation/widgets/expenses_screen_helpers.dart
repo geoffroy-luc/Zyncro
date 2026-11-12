@@ -39,10 +39,16 @@ String expensesFormatAmount(double v, {String currency = 'EUR'}) {
 }
 
 String expensesFormatDate(DateTime dt) {
+  // BUG E22 corrigé : jours de calendrier (une dépense d'hier à 23 h n'est
+  // plus « Aujourd'hui » à 8 h). UTC : pas de journée de 23 h à l'heure d'été.
   final now = DateTime.now();
-  final diff = now.difference(dt);
-  if (diff.inDays == 0) return "Aujourd'hui";
-  if (diff.inDays == 1) return 'Hier';
-  if (diff.inDays < 7) return 'Il y a ${diff.inDays} j';
+  final days = DateTime.utc(
+    now.year,
+    now.month,
+    now.day,
+  ).difference(DateTime.utc(dt.year, dt.month, dt.day)).inDays;
+  if (days == 0) return "Aujourd'hui";
+  if (days == 1) return 'Hier';
+  if (days > 1 && days < 7) return 'Il y a $days j';
   return DateFormat('d MMM', 'fr_FR').format(dt);
 }

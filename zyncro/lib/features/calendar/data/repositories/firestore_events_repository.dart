@@ -40,6 +40,7 @@ class FirestoreEventsRepository implements EventsRepository {
     String? color,
     RecurrenceRule? recurrence,
     List<String> participantIds = const [],
+    String? creatorName,
   }) async {
     final ref = _col(groupId).doc();
     final event = Event(
@@ -51,6 +52,9 @@ class FirestoreEventsRepository implements EventsRepository {
       endDate: endDate,
       location: location,
       createdBy: userId,
+      // BUG CA9 corrigé : le pseudo du créateur est enregistré (champ déjà lu
+      // et affiché, mais jamais écrit).
+      creatorName: creatorName,
       createdAt: DateTime.now(),
       color: color,
       recurrence: recurrence,
@@ -62,7 +66,9 @@ class FirestoreEventsRepository implements EventsRepository {
 
   @override
   Future<void> updateEvent(String groupId, Event event) async {
-    await _col(groupId).doc(event.id).update(EventMapper.toFirestore(event));
+    await _col(
+      groupId,
+    ).doc(event.id).update(EventMapper.toFirestoreUpdate(event));
   }
 
   @override

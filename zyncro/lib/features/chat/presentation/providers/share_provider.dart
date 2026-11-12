@@ -121,6 +121,9 @@ class IncomingShareNotifier extends Notifier<PendingShare?> {
       final mime =
           f.mimeType ??
           (f.type == SharedMediaType.video ? 'video/mp4' : 'image/jpeg');
+      // BUG M2 corrigé : un fichier quelconque (PDF…) n'est pas un média ;
+      // il était envoyé comme tel puis refusé par Storage.
+      if (!mime.startsWith('image/') && !mime.startsWith('video/')) continue;
       medias.add((path: f.path, mimeType: mime));
     }
     if (medias.isEmpty) return null;

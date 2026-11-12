@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/features/chat/presentation/widgets/reply_kind_label.dart';
 
 // ── Reply preview (dans la bulle) ────────────────────────────────────────────
 
@@ -16,12 +17,6 @@ class ReplyPreview extends StatelessWidget {
     this.senderName,
     this.onTap,
   });
-
-  String _formatReplyContent(String c) {
-    if (c.startsWith('http')) return 'Photo / Vidéo';
-    if (c.startsWith('{')) return 'Sondage';
-    return c;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +54,7 @@ class ReplyPreview extends StatelessWidget {
                 ),
               ),
             Text(
-              _formatReplyContent(content),
+              replyLabel(context, content),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

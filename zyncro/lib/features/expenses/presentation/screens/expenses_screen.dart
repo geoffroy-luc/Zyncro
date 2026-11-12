@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/expenses/domain/services/spending.dart';
 import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
 import 'package:zyncro/features/expenses/presentation/screens/expense_form_screen.dart';
 import 'package:zyncro/features/expenses/presentation/widgets/depenses_tab.dart';
@@ -19,6 +20,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   late final TabController _tabController;
   int _currentTab = 0;
   String _search = '';
+  // BUG E21 corrigé : le champ affiche toujours le filtre actif (il
+  // revenait vide après un changement d'onglet alors que la liste restait
+  // filtrée).
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -33,13 +38,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   @override
   void dispose() {
+    _searchController.dispose();
     _tabController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final allExpenses = ref.watch(expensesProvider).asData?.value ?? [];
+    final expensesAsync = ref.watch(expensesProvider);
+    final allExpenses = expensesAsync.asData?.value ?? [];
     final expenses = _search.isEmpty
         ? allExpenses
         : allExpenses.where((e) {
@@ -54,13 +61,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final nameByUid = {for (final m in members) m.uid: m.displayName};
 
     final myBalance = currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
-    final total = expenses.fold(0.0, (sum, e) => sum + e.amount);
-    final myShare = currentUid == null
-        ? 0.0
-        : expenses.fold(
-            0.0,
-            (sum, e) => sum + (e.effectiveSplitAmounts[currentUid] ?? 0.0),
-          );
+    final (:total, :myShare) = spendingOf(expenses, currentUid);
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -132,6 +133,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       ),
                       Expanded(
                         child: TextField(
+                          controller: _searchController,
                           onChanged: (v) => setState(() => _search = v),
                           decoration: InputDecoration(
                             hintText: context.l10n.expensesRechercherUneDepense,
@@ -156,26 +158,41 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
             // ── Tabs ─────────────────────────────────────────────────
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // ── Tab 0 : Dépenses ─────────────────────────────
-                  DepensesTab(
-                    expenses: expenses,
-                    total: total,
-                    myShare: myShare,
-                    currentUid: currentUid,
-                  ),
-                  // ── Tab 1 : Équilibre ────────────────────────────
-                  EquilibreTab(
-                    myBalance: myBalance,
-                    balances: balances,
-                    nameByUid: nameByUid,
-                    currentUid: currentUid,
-                    members: members,
-                  ),
-                ],
-              ),
+              // BUG E16 corrigé : chargement et erreur visibles (au lieu de
+              // « 0,00 € » / « Aucune dépense »).
+              child: !expensesAsync.hasValue && expensesAsync.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : !expensesAsync.hasValue && expensesAsync.hasError
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          context.l10n.expensesErreurChargement,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: context.colors.textSecondary),
+                        ),
+                      ),
+                    )
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        // ── Tab 0 : Dépenses ─────────────────────────────
+                        DepensesTab(
+                          expenses: expenses,
+                          total: total,
+                          myShare: myShare,
+                          currentUid: currentUid,
+                        ),
+                        // ── Tab 1 : Équilibre ────────────────────────────
+                        EquilibreTab(
+                          myBalance: myBalance,
+                          balances: balances,
+                          nameByUid: nameByUid,
+                          currentUid: currentUid,
+                          members: members,
+                        ),
+                      ],
+                    ),
             ),
           ],
         ),

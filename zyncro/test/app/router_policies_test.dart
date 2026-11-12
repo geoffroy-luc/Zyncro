@@ -58,11 +58,20 @@ void main() {
         isNull,
       );
     });
-    test('hors shell : pas de redirection même sans espace', () {
+    test('hors espace : pas de redirection même sans espace', () {
       expect(redirect(path: '/groups', groupId: null), isNull);
       expect(redirect(path: '/profile', groupId: null), isNull);
-      expect(redirect(path: '/settings/chat', groupId: null), isNull);
     });
+
+    test(
+      'BUG G9 corrigé : réglages d’onglet et galerie sans espace → /groups',
+      () {
+        expect(redirect(path: '/settings/chat', groupId: null), '/groups');
+        expect(redirect(path: '/settings/home', groupId: null), '/groups');
+        expect(redirect(path: '/media-gallery', groupId: null), '/groups');
+        expect(redirect(path: '/settings/chat'), isNull);
+      },
+    );
   });
 
   group('decideBackNavigation (non branché)', () {

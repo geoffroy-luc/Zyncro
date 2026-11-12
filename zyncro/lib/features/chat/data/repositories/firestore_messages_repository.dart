@@ -4,9 +4,11 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:zyncro/core/firebase/firestore_paths.dart';
+import 'package:zyncro/core/media/file_extension.dart';
 import 'package:zyncro/core/utils/firestore_stream_extensions.dart';
 import 'package:zyncro/features/chat/data/mappers/message_mapper.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';
+import 'package:zyncro/features/chat/domain/reactions.dart';
 import 'package:zyncro/features/chat/domain/repositories/messages_repository.dart';
 import 'package:zyncro/features/groups/data/mappers/group_member_mapper.dart';
 
@@ -46,7 +48,7 @@ class FirestoreMessagesRepository implements MessagesRepository {
   }) async {
     final snap = await _col(groupId)
         .orderBy('timestamp', descending: true)
-        .where('timestamp', isLessThan: Timestamp.fromDate(before))
+        .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(before))
         .limit(limit)
         .get();
     return mapDocsSafely(
@@ -85,7 +87,10 @@ class FirestoreMessagesRepository implements MessagesRepository {
     final snap = await _col(groupId)
         .where(MessageFields.type, whereIn: ['image', 'file'])
         .orderBy(MessageFields.timestamp, descending: true)
-        .where(MessageFields.timestamp, isLessThan: Timestamp.fromDate(before))
+        .where(
+          MessageFields.timestamp,
+          isLessThanOrEqualTo: Timestamp.fromDate(before),
+        )
         .limit(limit)
         .get();
     return mapDocsSafely(
@@ -222,6 +227,9 @@ class FirestoreMessagesRepository implements MessagesRepository {
     required String senderName,
     required String filePath,
     required int durationSeconds,
+    String? replyToId,
+    String? replyToSenderName,
+    String? replyToContent,
   }) async {
     final ref = _col(groupId).doc();
     final storageRef = _storage.ref('audio/$groupId/${ref.id}.m4a');
@@ -246,6 +254,9 @@ class FirestoreMessagesRepository implements MessagesRepository {
       content: content,
       type: MessageType.audio,
       timestamp: DateTime.now(),
+      replyToId: replyToId,
+      replyToSenderName: replyToSenderName,
+      replyToContent: replyToContent,
     );
     await ref.set(MessageMapper.toFirestore(message));
   }
@@ -262,7 +273,7 @@ class FirestoreMessagesRepository implements MessagesRepository {
     String? replyToContent,
   }) async {
     final isVideo = mimeType.startsWith('video/');
-    final ext = filePath.split('.').last;
+    final ext = uploadExtension(filePath, mimeType);
     final ref = _col(groupId).doc();
     final storageRef = _storage.ref('media/$groupId/${ref.id}.$ext');
     final snapshot = await storageRef.putFile(
@@ -307,7 +318,7 @@ class FirestoreMessagesRepository implements MessagesRepository {
       medias.asMap().entries.map((entry) async {
         final index = entry.key;
         final media = entry.value;
-        final ext = media.filePath.split('.').last;
+        final ext = uploadExtension(media.filePath, media.mimeType);
         final storageRef = _storage.ref('media/$groupId/${ref.id}_$index.$ext');
         final snapshot = await storageRef.putFile(
           File(media.filePath),
@@ -349,6 +360,9 @@ class FirestoreMessagesRepository implements MessagesRepository {
     required String question,
     required List<String> options,
     bool multipleChoice = false,
+    String? replyToId,
+    String? replyToSenderName,
+    String? replyToContent,
   }) async {
     final ref = _col(groupId).doc();
     final content = jsonEncode({
@@ -364,6 +378,9 @@ class FirestoreMessagesRepository implements MessagesRepository {
       content: content,
       type: MessageType.poll,
       timestamp: DateTime.now(),
+      replyToId: replyToId,
+      replyToSenderName: replyToSenderName,
+      replyToContent: replyToContent,
     );
     await ref.set(MessageMapper.toFirestore(message));
   }
@@ -476,22 +493,14 @@ class FirestoreMessagesRepository implements MessagesRepository {
         (k, v) => MapEntry(k, List<String>.from(v as List)),
       );
 
-      // En mode exclusif (choix unique), retire l'utilisateur de toutes les autres réactions
-      if (exclusive) {
-        for (final key in reactions.keys) {
-          reactions[key]?.remove(userId);
-        }
-      }
-
-      // Ajoute la nouvelle réaction sauf si l'utilisateur la retirait
-      if (!hasReacted) {
-        reactions[emoji] = [...(reactions[emoji] ?? []), userId];
-      }
-
-      // Supprime les listes vides
-      reactions.removeWhere((_, v) => v.isEmpty);
-
-      tx.update(ref, {'reactions': reactions});
+      final next = applyReaction(
+        reactions,
+        key: emoji,
+        userId: userId,
+        hasReacted: hasReacted,
+        exclusive: exclusive,
+      );
+      tx.update(ref, {'reactions': next});
     });
   }
 }

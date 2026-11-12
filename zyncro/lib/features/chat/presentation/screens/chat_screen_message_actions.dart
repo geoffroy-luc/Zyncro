@@ -33,58 +33,67 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: _quickEmojis.map((emoji) {
-                  final hasReacted =
-                      message.reactions[emoji]?.contains(currentUser.uid) ==
-                      true;
-                  return GestureDetector(
-                    onTap: () => Navigator.of(ctx).pop('react:$emoji'),
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: hasReacted
-                            ? Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.15)
-                            : context.colors.background,
-                        shape: BoxShape.circle,
-                        border: Border.all(
+            // BUG C8 corrigé : pas de réaction emoji sur un sondage (comptée
+            // comme un vote, invisible sur la carte).
+            if (message.type != MessageType.poll)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: _quickEmojis.map((emoji) {
+                    final hasReacted =
+                        message.reactions[emoji]?.contains(currentUser.uid) ==
+                        true;
+                    return GestureDetector(
+                      onTap: () => Navigator.of(ctx).pop('react:$emoji'),
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
                           color: hasReacted
-                              ? Theme.of(context).colorScheme.primary
-                              : context.colors.border,
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.15)
+                              : context.colors.background,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: hasReacted
+                                ? Theme.of(context).colorScheme.primary
+                                : context.colors.border,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 22),
+                          ),
                         ),
                       ),
-                      child: Center(
-                        child: Text(
-                          emoji,
-                          style: const TextStyle(fontSize: 22),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
             const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.reply_outlined),
-              title: Text(context.l10n.chatRepondre),
-              onTap: () => Navigator.of(ctx).pop('reply'),
-            ),
+            // BUG C9 corrigé : pas de « Répondre » sur un sondage (la carte
+            // n'affiche pas de citation, le balayage est déjà désactivé).
+            if (message.type != MessageType.poll)
+              ListTile(
+                leading: const Icon(Icons.reply_outlined),
+                title: Text(context.l10n.chatRepondre),
+                onTap: () => Navigator.of(ctx).pop('reply'),
+              ),
             if (message.type == MessageType.text)
               ListTile(
                 leading: const Icon(Icons.content_copy_outlined),
                 title: Text(context.l10n.chatCopier),
                 onTap: () => Navigator.of(ctx).pop('copy'),
               ),
-            if (isMe &&
-                message.type != MessageType.poll &&
-                message.type != MessageType.audio)
+            // BUG C5 corrigé : seul un texte se modifie (le contenu d'un
+            // média / album est du JSON, l'éditer cassait le média).
+            if (isMe && message.type == MessageType.text)
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
                 title: Text(context.l10n.chatModifier),
@@ -170,6 +179,13 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
   Future<void> _downloadMedia(Message message) async {
     try {
       final data = jsonDecode(message.content) as Map<String, dynamic>;
+      // BUG C6 corrigé : un album enregistre tous ses médias.
+      if (data['medias'] is List) {
+        await _downloadAlbum(
+          (data['medias'] as List).cast<Map<String, dynamic>>(),
+        );
+        return;
+      }
       final url = data['url'] as String? ?? '';
       if (url.isEmpty) return;
       if (message.type == MessageType.image) {
@@ -178,6 +194,32 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
         await MediaDownloader.downloadVideo(context, url);
       }
     } catch (_) {}
+  }
+
+  Future<void> _downloadAlbum(List<Map<String, dynamic>> medias) async {
+    final saver = ref.read(gallerySaverProvider);
+    try {
+      var saved = 0;
+      for (final m in medias) {
+        final url = m['url'] as String? ?? '';
+        if (url.isEmpty) continue;
+        if ((m['mimeType'] as String? ?? '').startsWith('video/')) {
+          await saver.saveVideoFromUrl(url);
+        } else {
+          await saver.saveImageFromUrl(url);
+        }
+        saved++;
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.chatMediasEnregistres(saved))),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.chatErreurTelechargement(e))),
+      );
+    }
   }
 
   void _editMessage(Message message) {
@@ -312,6 +354,9 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
     );
     if (result == null || !mounted) return;
 
+    // BUG C10 corrigé : la réponse en cours accompagne le sondage.
+    final reply = _replyingTo;
+    setState(() => _replyingTo = null);
     await ref
         .read(messagesRepositoryProvider)
         .sendPoll(
@@ -325,6 +370,9 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
           question: result['question'] as String,
           options: List<String>.from(result['options'] as List),
           multipleChoice: result['multipleChoice'] as bool? ?? false,
+          replyToId: reply?.id,
+          replyToSenderName: reply?.senderName,
+          replyToContent: reply?.content,
         );
 
     if (_scrollController.hasClients) {

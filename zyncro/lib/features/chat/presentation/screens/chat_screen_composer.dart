@@ -151,6 +151,11 @@ mixin _ChatComposer on _ChatScreenStateBase {
         }
       } catch (_) {
         if (!mounted) return;
+        // BUG C11 corrigé : retour en mode édition avec le texte saisi.
+        if (_controller.text.isEmpty && _editingMessage == null) {
+          _controller.text = text;
+          setState(() => _editingMessage = message);
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.l10n.chatImpossibleDeModifierLeMessage),
@@ -200,6 +205,17 @@ mixin _ChatComposer on _ChatScreenStateBase {
           ),
         );
       }
+    } catch (_) {
+      // BUG C11 corrigé : le texte (et la réponse) reviennent dans le champ
+      // si l'utilisateur n'a rien retapé entre-temps.
+      if (!mounted) return;
+      if (_controller.text.isEmpty) {
+        _controller.text = text;
+        setState(() => _replyingTo ??= reply);
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.chatEchecEnvoiMessage)),
+      );
     } finally {
       if (mounted) setState(() => _sending = false);
     }

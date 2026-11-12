@@ -46,7 +46,7 @@ void main() {
     },
   );
 
-  test('galerie : page de médias strictement antérieurs au curseur', () async {
+  test('BUG C4 corrigé : page de médias au curseur inclus (<=)', () async {
     for (var i = 0; i < 8; i++) {
       await add('img$i', i.isEven ? 'image' : 'file', i);
     }
@@ -56,7 +56,7 @@ void main() {
       t0.add(const Duration(minutes: 5)),
       limit: 3,
     );
-    expect(page.map((m) => m.id), ['img4', 'img3', 'img2']);
+    expect(page.map((m) => m.id), ['img5', 'img4', 'img3']);
   });
 
   test(

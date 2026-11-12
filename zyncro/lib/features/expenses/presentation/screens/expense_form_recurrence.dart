@@ -153,7 +153,11 @@ mixin _ExpenseFormRecurrence on _ExpenseFormScreenStateBase {
                                         onTap: () async {
                                           final picked = await showDatePicker(
                                             context: ctx,
-                                            initialDate: untilDate,
+                                            // BUG E14 corrigé : initialDate >= firstDate.
+                                            initialDate:
+                                                untilDate.isBefore(_date)
+                                                ? _date
+                                                : untilDate,
                                             firstDate: _date,
                                             lastDate: DateTime(2100),
                                           );

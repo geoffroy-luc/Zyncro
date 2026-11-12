@@ -48,9 +48,13 @@ mixin _ExpenseFormSplit on _ExpenseFormScreenStateBase {
         return;
       }
       final remaining = (total - entered).clamp(0.0, total);
-      final perOther = remaining / others.length;
+      final shares = allocateCents(toCents(remaining), {
+        for (final uid in others) uid: 1.0,
+      });
       for (final uid in others) {
-        _amountSplitControllers[uid]?.text = perOther.toStringAsFixed(2);
+        _amountSplitControllers[uid]?.text = fromCents(
+          shares[uid]!,
+        ).toStringAsFixed(2);
       }
     }
     _recalculating = false;
@@ -61,15 +65,17 @@ mixin _ExpenseFormSplit on _ExpenseFormScreenStateBase {
         .where((m) => _selectedMemberUids.contains(m.uid))
         .toList();
     if (selected.isEmpty) return;
-    final perAmount = total / selected.length;
+    // BUG E1 corrigé : parts par défaut au centime près (33,34 / 33,33 /
+    // 33,33 pour 100 €), dont la somme égale le total.
+    final shares = allocateCents(toCents(total), {
+      for (final m in selected) m.uid: 1.0,
+    });
     final perPct = 100 / selected.length;
-    for (var i = 0; i < selected.length; i++) {
-      final uid = selected[i].uid;
-      final amount = i == selected.length - 1
-          ? total - perAmount * (selected.length - 1)
-          : perAmount;
-      _amountSplitControllers[uid]?.text = amount.toStringAsFixed(2);
-      _percentageSplitControllers[uid]?.text = perPct.toStringAsFixed(2);
+    for (final m in selected) {
+      _amountSplitControllers[m.uid]?.text = fromCents(
+        shares[m.uid]!,
+      ).toStringAsFixed(2);
+      _percentageSplitControllers[m.uid]?.text = perPct.toStringAsFixed(2);
     }
   }
 
@@ -102,11 +108,16 @@ mixin _ExpenseFormSplit on _ExpenseFormScreenStateBase {
         _splitError = 'Au moins une part doit être > 0.';
         return null;
       }
-      if ((values.values.fold(0.0, (a, b) => a + b) - total).abs() > 0.01) {
+      // Tolérance historique d'un centime, puis ajustement exact au total.
+      final sumCents = values.values.fold(0, (a, b) => a + toCents(b));
+      if ((sumCents - toCents(total)).abs() > 1) {
         _splitError = 'La somme des montants doit égaler le total.';
         return null;
       }
-      return values;
+      return allocateCents(
+        toCents(total),
+        values,
+      ).map((uid, c) => MapEntry(uid, fromCents(c)));
     }
     // percentage
     final pcts = <String, double>{};
@@ -126,6 +137,10 @@ mixin _ExpenseFormSplit on _ExpenseFormScreenStateBase {
       _splitError = 'La somme des pourcentages doit être 100%.';
       return null;
     }
-    return {for (final e in pcts.entries) e.key: total * e.value / 100};
+    // BUG E2 corrigé : % normalisés et répartis au centime (Σ = total).
+    return allocateCents(
+      toCents(total),
+      pcts,
+    ).map((uid, c) => MapEntry(uid, fromCents(c)));
   }
 }

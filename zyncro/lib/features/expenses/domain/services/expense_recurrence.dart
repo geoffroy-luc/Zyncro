@@ -28,9 +28,12 @@ List<Expense> _expandRecurringExpense(Expense base, DateTime now) {
   const maxInstances = 500;
 
   while (idx < maxInstances) {
-    if (rule.endType == RecurrenceEndType.count && idx >= rule.count!) break;
-    if (rule.endType == RecurrenceEndType.until &&
-        current.isAfter(rule.until!)) {
+    if (rule.effectiveEndType == RecurrenceEndType.count &&
+        idx >= rule.count!) {
+      break;
+    }
+    if (rule.effectiveEndType == RecurrenceEndType.until &&
+        !withinUntil(current, rule.until!)) {
       break;
     }
     if (current.isAfter(now)) break;
@@ -55,11 +58,13 @@ List<Expense> _expandRecurringExpense(Expense base, DateTime now) {
         splitAmounts: base.splitAmounts,
         updatedBy: base.updatedBy,
         recurrence: base.recurrence,
+        seriesStart: base.date,
+        occurrenceIndex: idx,
       ),
     );
 
     idx++;
-    current = advanceOccurrence(current, rule.frequency);
+    current = nthOccurrence(base.date, rule.frequency, idx);
   }
 
   return instances;

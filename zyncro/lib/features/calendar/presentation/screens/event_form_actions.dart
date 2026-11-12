@@ -7,8 +7,12 @@ mixin _EventFormActions on _EventFormScreenStateBase {
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      // BUG CA4 corrigé : bornes qui contiennent toujours la date initiale
+      // (assertion de showDatePicker sinon) et plus de plafond à 2030.
+      firstDate: initial.isBefore(DateTime(2020)) ? initial : DateTime(2020),
+      lastDate: DateTime(DateTime.now().year + 20).isAfter(initial)
+          ? DateTime(DateTime.now().year + 20)
+          : initial,
     );
     if (picked != null) {
       setState(() {
@@ -37,11 +41,38 @@ mixin _EventFormActions on _EventFormScreenStateBase {
   }
 
   Future<void> _delete() async {
+    final original = widget.event!;
+    // BUG CA6 corrigé : sur une occurrence (hors première), choix entre
+    // « celle-ci et les suivantes » et toute la série ; sur la première,
+    // l'avertissement dit que la série entière part.
+    if (original.isSeriesOccurrence && original.occurrenceIndex! > 0) {
+      final scope = await showSeriesScopeDialog(
+        context,
+        title: context.l10n.calendarSupprimerRecurrent,
+        deleting: true,
+      );
+      if (scope == null || !mounted) return;
+      if (scope == SeriesScope.thisAndFollowing) {
+        await _guarded(() async {
+          await ref
+              .read(eventsRepositoryProvider)
+              .updateEvent(_groupIdOrThrow(), _truncatedBase(original));
+          if (mounted) Navigator.of(context).pop();
+        });
+        return;
+      }
+      await _deleteConfirmed(original);
+      return;
+    }
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(context.l10n.calendarSupprimerLEvenement),
-        content: Text(context.l10n.calendarCetteActionEstIrreversible),
+        content: Text(
+          original.recurrence != null
+              ? context.l10n.seriesSuppressionSerieEntiere
+              : context.l10n.calendarCetteActionEstIrreversible,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -58,36 +89,79 @@ mixin _EventFormActions on _EventFormScreenStateBase {
       ),
     );
 
-    if (confirm == true && mounted) {
-      final user = ref.read(authStateProvider).asData?.value;
-      final groupId = ref.read(selectedGroupIdProvider).asData?.value;
-      if (groupId == null) return;
-      try {
-        await ref
-            .read(eventsRepositoryProvider)
-            .deleteEvent(groupId, widget.event!.id);
-        await ReminderService.cancelReminder(widget.event!.id);
-        final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
-        if (user != null) {
-          unawaited(
-            ref
-                .read(messagesRepositoryProvider)
-                .sendSystemMessage(
-                  groupId: groupId,
-                  userId: user.uid,
-                  content:
-                      '📅 $userName a supprimé un événement « ${widget.event!.title} »',
-                  notifScreen: 'calendar',
-                ),
-          );
-        }
-        if (mounted) Navigator.of(context).pop();
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.calendarPermissionRefusee)),
-          );
-        }
+    if (confirm == true && mounted) await _deleteConfirmed(original);
+  }
+
+  String _groupIdOrThrow() {
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) throw StateError('Aucun groupe sélectionné');
+    return groupId;
+  }
+
+  /// La série d'origine (document de base), arrêtée juste avant [occurrence].
+  Event _truncatedBase(Event occurrence) {
+    final start = occurrence.seriesStart!;
+    final duration = occurrence.endDate?.difference(occurrence.startDate);
+    return occurrence.copyWith(
+      startDate: start,
+      endDate: duration == null ? null : start.add(duration),
+      recurrence: truncateBefore(
+        occurrence.recurrence!,
+        index: occurrence.occurrenceIndex!,
+        occurrence: occurrence.startDate,
+      ),
+    );
+  }
+
+  Future<void> _guarded(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.calendarErreur(e))));
+      }
+    }
+  }
+
+  Future<void> _deleteConfirmed(Event original) async {
+    final user = ref.read(authStateProvider).asData?.value;
+    final groupId = ref.read(selectedGroupIdProvider).asData?.value;
+    if (groupId == null) return;
+    try {
+      await ref
+          .read(eventsRepositoryProvider)
+          .deleteEvent(groupId, original.id);
+      await ReminderService.cancelReminder(original.id);
+      final userName = user?.displayName ?? user?.email ?? 'Quelqu\'un';
+      if (user != null) {
+        unawaited(
+          ref
+              .read(messagesRepositoryProvider)
+              .sendSystemMessage(
+                groupId: groupId,
+                userId: user.uid,
+                content:
+                    '📅 $userName a supprimé un événement « ${widget.event!.title} »',
+                notifScreen: 'calendar',
+              ),
+        );
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        // BUG CA6 (message) corrigé : « Permission refusée » seulement si
+        // c'en est une.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              FailureMapper.from(e) is PermissionDeniedFailure
+                  ? context.l10n.calendarPermissionRefusee
+                  : context.l10n.calendarErreur(e),
+            ),
+          ),
+        );
       }
     }
   }
@@ -123,20 +197,76 @@ mixin _EventFormActions on _EventFormScreenStateBase {
     try {
       final isCreating = widget.event == null;
       if (!isCreating) {
-        final updated = widget.event!.copyWith(
-          title: title,
-          description: description,
-          startDate: startDt,
-          endDate: endDt,
-          location: location,
-          color: _selectedColor,
-          updatedBy: user.uid,
-          recurrence: _recurrence,
-          clearRecurrence: _recurrence == null,
-          participantIds: _selectedParticipantIds.toList(),
-        );
-        await repo.updateEvent(groupId, updated);
-        await ReminderService.scheduleReminder(updated, _reminderMinutes);
+        final original = widget.event!;
+        // BUG K2 (1) corrigé : sur une occurrence (hors première), choix de
+        // la portée ; l'ancre de la série n'est plus réécrite à sa date.
+        var scope = SeriesScope.wholeSeries;
+        if (original.isSeriesOccurrence && original.occurrenceIndex! > 0) {
+          final chosen = await showSeriesScopeDialog(
+            context,
+            title: context.l10n.calendarModifierRecurrent,
+            deleting: false,
+          );
+          if (chosen == null) {
+            if (mounted) setState(() => _saving = false);
+            return;
+          }
+          scope = chosen;
+        }
+        if (scope == SeriesScope.thisAndFollowing) {
+          await repo.updateEvent(groupId, _truncatedBase(original));
+          final created = await repo.createEvent(
+            groupId: groupId,
+            title: title,
+            description: description,
+            startDate: startDt,
+            endDate: endDt,
+            location: location,
+            userId: user.uid,
+            color: _selectedColor,
+            recurrence: sameRule(_recurrence, original.recurrence)
+                ? continueFrom(
+                    original.recurrence!,
+                    index: original.occurrenceIndex!,
+                  )
+                : _recurrence,
+            participantIds: _selectedParticipantIds.toList(),
+            creatorName: ref
+                .read(currentMemberProvider)
+                .asData
+                ?.value
+                ?.displayName,
+          );
+          await ReminderService.scheduleReminder(created, _reminderMinutes);
+        } else {
+          final anchorStart = original.isSeriesOccurrence
+              ? shiftAnchor(
+                  original.seriesStart!,
+                  occurrence: original.startDate,
+                  edited: startDt,
+                )
+              : startDt;
+          final updated = original.copyWith(
+            title: title,
+            description: description,
+            clearDescription: description == null,
+            startDate: anchorStart,
+            endDate: endDt == null
+                ? null
+                : anchorStart.add(endDt.difference(startDt)),
+            clearEndDate: endDt == null,
+            location: location,
+            clearLocation: location == null,
+            color: _selectedColor,
+            clearColor: _selectedColor == null,
+            updatedBy: user.uid,
+            recurrence: _recurrence,
+            clearRecurrence: _recurrence == null,
+            participantIds: _selectedParticipantIds.toList(),
+          );
+          await repo.updateEvent(groupId, updated);
+          await ReminderService.scheduleReminder(updated, _reminderMinutes);
+        }
       } else {
         final created = await repo.createEvent(
           groupId: groupId,
@@ -149,6 +279,11 @@ mixin _EventFormActions on _EventFormScreenStateBase {
           color: _selectedColor,
           recurrence: _recurrence,
           participantIds: _selectedParticipantIds.toList(),
+          creatorName: ref
+              .read(currentMemberProvider)
+              .asData
+              ?.value
+              ?.displayName,
         );
         await ReminderService.scheduleReminder(created, _reminderMinutes);
       }

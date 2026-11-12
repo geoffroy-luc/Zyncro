@@ -27,6 +27,27 @@ mixin _ChatScreenSections
     );
   }
 
+  /// BUG C14 corrigé : réponse, édition et recherche appartiennent au groupe
+  /// affiché ; elles sont abandonnées quand on change de groupe (sinon
+  /// `replyToId` d'un autre groupe, `editMessage` sur le mauvais `groupId`).
+  void _listenGroupChange() {
+    ref.listen(selectedGroupIdProvider.select((g) => g.asData?.value), (
+      previous,
+      next,
+    ) {
+      if (previous == next) return;
+      setState(() {
+        if (_editingMessage != null) _controller.clear();
+        _editingMessage = null;
+        _replyingTo = null;
+        _search = '';
+        _showSearch = false;
+        _highlightedMessageId = null;
+        _visibleTimestamps.clear();
+      });
+    });
+  }
+
   /// À appeler depuis `build` (ref.listen).
   void _listenReadReceipts() {
     // Marque le dernier message comme lu quand un nouveau message arrive
@@ -76,7 +97,11 @@ mixin _ChatScreenSections
     if (messages.isEmpty) {
       return Center(
         child: Text(
-          context.l10n.chatAucunMessageSoyezLePremier,
+          // BUG C12 corrigé : message dédié quand c'est la recherche qui
+          // ne trouve rien.
+          _search.isEmpty
+              ? context.l10n.chatAucunMessageSoyezLePremier
+              : context.l10n.chatAucunResultat,
           style: TextStyle(color: context.colors.textSecondary),
         ),
       );
@@ -208,15 +233,7 @@ mixin _ChatScreenSections
           ),
         ),
         Text(
-          replyingTo.type == MessageType.image
-              ? 'Photo'
-              : replyingTo.type == MessageType.file
-              ? 'Fichier'
-              : replyingTo.type == MessageType.audio
-              ? 'Audio'
-              : replyingTo.type == MessageType.poll
-              ? 'Sondage'
-              : replyingTo.content,
+          replyLabel(context, replyingTo.content),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(color: context.colors.textSecondary, fontSize: 12),

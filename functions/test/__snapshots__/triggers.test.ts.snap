@@ -715,7 +715,7 @@ exports[`événements > onEventCreated sans creatorName (pseudo, repli Auth) 1`]
 ]
 `;
 
-exports[`événements > onEventDeleted (attribué au créateur, BUG F1) 1`] = `
+exports[`événements > onEventDeleted sans auteur connu (attribué au créateur) 1`] = `
 [
   {
     "kind": "multicast",

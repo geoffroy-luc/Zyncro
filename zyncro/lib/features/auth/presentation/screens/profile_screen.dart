@@ -209,11 +209,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // ── Sign out / delete ─────────────────────────────────────────────────────
 
   Future<void> _signOut() async {
+    // BUG G4 corrigé : un compte invité est perdu à la déconnexion ; on le
+    // dit clairement.
+    final isGuest =
+        ref.read(authStateProvider).asData?.value?.isAnonymous ?? false;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(context.l10n.authSeDeconnecter),
-        content: Text(context.l10n.authConfirmesTuLaDeconnexion),
+        content: Text(
+          isGuest
+              ? context.l10n.authDeconnexionInvite
+              : context.l10n.authConfirmesTuLaDeconnexion,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),

@@ -29,9 +29,21 @@ class _LinkPreviewWidgetState extends ConsumerState<LinkPreviewWidget> {
     unawaited(_fetchMeta());
   }
 
+  /// BUG C18 corrigé : un message édité avec un autre lien recharge l'aperçu.
+  @override
+  void didUpdateWidget(LinkPreviewWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) {
+      _meta = null;
+      _loading = true;
+      unawaited(_fetchMeta());
+    }
+  }
+
   Future<void> _fetchMeta() async {
-    final meta = await ref.read(linkPreviewServiceProvider).fetch(widget.url);
-    if (mounted) {
+    final url = widget.url;
+    final meta = await ref.read(linkPreviewServiceProvider).fetch(url);
+    if (mounted && url == widget.url) {
       setState(() {
         _meta = meta;
         _loading = false;

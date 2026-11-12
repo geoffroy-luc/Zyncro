@@ -90,23 +90,29 @@ void main() {
       expect(b, {'a': 0.0, 'b': 0.0});
     });
 
-    test('BUG E2 : répartition en % non normalisée → soldes ≠ 0', () async {
-      // 70 € / 7 en % saisis à 14,29 % (EXF stocke total * pct / 100)
-      final pctAmounts = {
-        for (final u in ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
-          u: 70 * 14.29 / 100,
-      };
-      final b = await balancesOf([
-        exp(
-          paidBy: 'a',
-          amount: 70,
-          splitWith: pctAmounts.keys.toList(),
-          splitAmounts: pctAmounts,
-        ),
-      ]);
-      final sum = b.values.fold<double>(0, (s, v) => s + v);
-      expect(sum, isNot(closeTo(0, 0.001)));
-    });
+    test(
+      'BUG E2 corrigé : % non normalisés déjà stockés → Σ soldes = 0',
+      () async {
+        // 70 € / 7 en % saisis à 14,29 % (EXF stocke total * pct / 100)
+        final pctAmounts = {
+          for (final u in ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
+            u: 70 * 14.29 / 100,
+        };
+        final b = await balancesOf([
+          exp(
+            paidBy: 'a',
+            amount: 70,
+            splitWith: pctAmounts.keys.toList(),
+            splitAmounts: pctAmounts,
+          ),
+        ]);
+        final sum = b.values.fold<double>(0, (s, v) => s + v);
+        expect(sum, 0);
+        // 70 € répartis au centime : 10 € chacun, le payeur récupère 60 €.
+        expect(b['a'], 60);
+        expect(b['g'], -10);
+      },
+    );
   });
 
   group('orderedGroupsProvider', () {

@@ -9,6 +9,7 @@ import 'package:zyncro/core/media/media_providers.dart';
 import 'package:zyncro/core/media/media_source.dart';
 import 'package:zyncro/core/media/voice_recorder.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/core/utils/duration_format.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';
@@ -24,6 +25,7 @@ import 'package:zyncro/features/chat/presentation/widgets/gradient_circle_button
 import 'package:zyncro/features/chat/presentation/widgets/media_downloader.dart';
 import 'package:zyncro/features/chat/presentation/widgets/message_bubble.dart';
 import 'package:zyncro/features/chat/presentation/widgets/recording_bar.dart';
+import 'package:zyncro/features/chat/presentation/widgets/reply_kind_label.dart';
 import 'package:zyncro/features/chat/presentation/widgets/seen_by_row.dart';
 import 'package:zyncro/features/chat/presentation/widgets/swipe_to_reply.dart';
 import 'package:zyncro/features/chat/presentation/widgets/typing_indicator.dart';
@@ -144,6 +146,7 @@ class _ChatScreenState extends _ChatScreenStateBase
         ref.watch(expenseMembersProvider).asData?.value ?? <GroupMember>[];
 
     _listenReadReceipts();
+    _listenGroupChange();
 
     if (currentUid == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -159,7 +162,11 @@ class _ChatScreenState extends _ChatScreenStateBase
         return Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(bgValue, fit: BoxFit.cover),
+            Image.network(
+              bgValue,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
             child,
           ],
         );
@@ -168,7 +175,7 @@ class _ChatScreenState extends _ChatScreenStateBase
     }
 
     final bgColor = bgType == 'color' && bgValue != null
-        ? hexToColor(bgValue)
+        ? (tryHexToColor(bgValue) ?? context.colors.background)
         : context.colors.background;
 
     return Scaffold(

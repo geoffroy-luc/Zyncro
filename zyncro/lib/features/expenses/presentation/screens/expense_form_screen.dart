@@ -5,11 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:zyncro/core/constants/expense_categories.dart';
+import 'package:zyncro/core/error/failure.dart';
+import 'package:zyncro/core/error/failure_mapper.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/expenses/domain/entities/expense.dart';
+import 'package:zyncro/features/expenses/domain/services/money.dart';
 import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
 import 'package:zyncro/features/groups/domain/entities/group_member.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
@@ -17,14 +20,16 @@ import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 import 'package:zyncro/shared/domain/categories/expense_category.dart';
 import 'package:zyncro/shared/domain/recurrence/recurrence_rule.dart';
+import 'package:zyncro/shared/domain/recurrence/series_split.dart';
 import 'package:zyncro/shared/presentation/recurrence_rule_label.dart';
 import 'package:zyncro/shared/widgets/category_editor_sheet.dart';
+import 'package:zyncro/shared/widgets/series_scope_dialog.dart';
 import 'package:zyncro/shared/widgets/user_avatar.dart';
 
-part 'expense_form_split.dart';
-part 'expense_form_recurrence.dart';
 part 'expense_form_actions.dart';
+part 'expense_form_recurrence.dart';
 part 'expense_form_screen_sections.dart';
+part 'expense_form_split.dart';
 
 class ExpenseFormScreen extends ConsumerStatefulWidget {
   final Expense? expense;

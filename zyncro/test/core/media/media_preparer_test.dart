@@ -46,7 +46,7 @@ void main() {
       ));
     });
 
-    test('échec de compression : fichier d’origine, mime forcé JPEG', () async {
+    test('BUG M2 corrigé : échec de compression → type d’origine', () async {
       final out =
           await MediaPreparer(
             _FakeCompressor(fails: true),
@@ -55,8 +55,17 @@ void main() {
             (path: '/a.png', mimeType: 'image/png'),
           ], filePrefix: 'compressed');
 
-      expect(out.single, (filePath: '/a.png', mimeType: 'image/jpeg'));
+      expect(out.single, (filePath: '/a.png', mimeType: 'image/png'));
     });
+  });
+
+  test('BUG M2 corrigé : un GIF n’est pas converti en JPEG', () async {
+    final fake = _FakeCompressor();
+    final out = await MediaPreparer(fake, clock: () => clock).prepareBatch([
+      (path: '/a.gif', mimeType: 'image/gif'),
+    ], filePrefix: 'share');
+    expect(out.single, (filePath: '/a.gif', mimeType: 'image/gif'));
+    expect(fake.calls, isEmpty);
   });
 
   group('MediaPreparer.prepareSingle', () {

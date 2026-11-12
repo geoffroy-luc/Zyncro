@@ -12,16 +12,18 @@ bool eventOccursOnDay(Event e, DateTime day) =>
         !e.startDate.isAfter(day) &&
         !e.endDate!.isBefore(day));
 
-/// Événements du mois affiché.
+/// Événements du mois affiché : tous ceux qui **chevauchent** le mois.
 ///
-/// ⚠️ Ne retient que les événements qui COMMENCENT dans le mois : un événement
-/// à cheval sur deux mois est absent du second (BUGS_FOUND K1) — comportement
-/// historique conservé.
-List<Event> eventsStartingInMonth(Iterable<Event> events, DateTime month) =>
-    events
-        .where(
-          (e) =>
-              e.startDate.year == month.year &&
-              e.startDate.month == month.month,
-        )
-        .toList();
+/// BUG K1 corrigé : auparavant seul le mois de début comptait (un événement
+/// du 28/10 au 03/11 était absent de novembre).
+List<Event> eventsInMonth(Iterable<Event> events, DateTime month) {
+  final first = DateTime(month.year, month.month);
+  final next = DateTime(month.year, month.month + 1);
+  return events
+      .where(
+        (e) =>
+            e.startDate.isBefore(next) &&
+            !(e.endDate ?? e.startDate).isBefore(first),
+      )
+      .toList();
+}

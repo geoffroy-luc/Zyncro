@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/design_system/tokens/brand_palette.dart';
 import 'package:zyncro/features/expenses/domain/entities/expense.dart';
 import 'package:zyncro/features/expenses/presentation/screens/expense_form_screen.dart';
 import 'package:zyncro/features/expenses/presentation/widgets/expenses_screen_helpers.dart';
@@ -79,15 +80,17 @@ class ExpenseCard extends ConsumerWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFF4F7CFF,
-                                  ).withValues(alpha: 0.1),
+                                  // BUG E25 corrigé : fond et texte de la même
+                                  // couleur (fond bleu, texte vert avant).
+                                  color: BalancePalette.settleAction.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(100),
                                 ),
                                 child: Text(
                                   context.l10n.expensesRemboursement,
-                                  style: TextStyle(
-                                    color: context.colors.success,
+                                  style: const TextStyle(
+                                    color: BalancePalette.settleAction,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                   ),

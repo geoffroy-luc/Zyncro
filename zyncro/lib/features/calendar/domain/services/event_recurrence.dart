@@ -44,12 +44,12 @@ List<Event> _expandRecurring(
 
   while (occurrenceIndex < maxInstances) {
     // Check rule end conditions
-    if (rule.endType == RecurrenceEndType.count &&
+    if (rule.effectiveEndType == RecurrenceEndType.count &&
         occurrenceIndex >= rule.count!) {
       break;
     }
-    if (rule.endType == RecurrenceEndType.until &&
-        current.isAfter(rule.until!)) {
+    if (rule.effectiveEndType == RecurrenceEndType.until &&
+        !withinUntil(current, rule.until!)) {
       break;
     }
     // Stop generating beyond the display range
@@ -74,12 +74,17 @@ List<Event> _expandRecurring(
           color: base.color,
           updatedBy: base.updatedBy,
           recurrence: base.recurrence,
+          // BUG K2 (2) corrigé : les occurrences gardent leurs participants
+          // (le filtre par participant masquait toute la série).
+          participantIds: base.participantIds,
+          seriesStart: base.startDate,
+          occurrenceIndex: occurrenceIndex,
         ),
       );
     }
 
     occurrenceIndex++;
-    current = advanceOccurrence(current, rule.frequency);
+    current = nthOccurrence(base.startDate, rule.frequency, occurrenceIndex);
   }
 
   return instances;
