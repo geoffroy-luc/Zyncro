@@ -5,14 +5,14 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
-
-import '../../../../app/router.dart';
-import '../../../../core/constants/invite.dart';
-import '../../../../core/services/group_activity_service.dart';
-import '../../../../core/services/share_shortcuts_service.dart';
-import '../../../../shared/models/group.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/app/router.dart';
+import 'package:zyncro/core/constants/invite.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
+import 'package:zyncro/core/services/share_shortcuts_service.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/groups/data/services/group_activity_service.dart';
+import 'package:zyncro/features/groups/domain/entities/group.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 
 // ── Contenu partagé en attente d'être envoyé ─────────────────────────────────
 
@@ -106,7 +106,10 @@ class IncomingShareNotifier extends Notifier<PendingShare?> {
 
     // Partage 100 % texte / lien.
     if (files.every(isText)) {
-      final text = files.map((f) => f.path).where((s) => s.isNotEmpty).join('\n');
+      final text = files
+          .map((f) => f.path)
+          .where((s) => s.isNotEmpty)
+          .join('\n');
       if (text.isEmpty) return null;
       return PendingShare.text(text: text, preselectedGroupId: groupId);
     }
@@ -125,7 +128,7 @@ class IncomingShareNotifier extends Notifier<PendingShare?> {
   }
 
   void _navigate() {
-    ref.read(routerProvider).push('/share');
+    unawaited(ref.read(routerProvider).push(AppRoutes.share));
   }
 
   /// Efface le partage en attente (après envoi ou annulation).
@@ -149,7 +152,7 @@ class ShareShortcutsController extends Notifier<void> {
     // Re-publie dès que la liste des groupes change (ajout, suppression, photo).
     ref.listen(userGroupsProvider, (_, next) {
       final groups = next.asData?.value;
-      if (groups != null) _resync(groups);
+      if (groups != null) unawaited(_resync(groups));
     }, fireImmediately: true);
   }
 
@@ -159,7 +162,7 @@ class ShareShortcutsController extends Notifier<void> {
     if (uid == null) return;
     await GroupActivityService.recordInteraction(uid, groupId, weight: weight);
     final groups = ref.read(userGroupsProvider).asData?.value;
-    if (groups != null) _resync(groups);
+    if (groups != null) unawaited(_resync(groups));
   }
 
   Future<void> _resync(List<Group> groups) async {
@@ -182,7 +185,9 @@ class ShareShortcutsController extends Notifier<void> {
 
   Future<Uint8List?> _iconFor(Group g) async {
     final url = g.photoUrl;
-    if (url == null || url.isEmpty) return null; // le natif dessinera l'initiale
+    if (url == null || url.isEmpty) {
+      return null; // le natif dessinera l'initiale
+    }
     if (_iconCache.containsKey(url)) return _iconCache[url];
     try {
       final resp = await http

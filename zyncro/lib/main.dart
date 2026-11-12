@@ -7,17 +7,19 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz_lib;
-import 'app/app.dart';
-import 'core/services/notification_service.dart';
-import 'core/services/reminder_service.dart';
-import 'firebase_options.dart';
+import 'package:zyncro/app/app.dart';
+import 'package:zyncro/core/firebase/firebase_emulators.dart';
+import 'package:zyncro/core/notifications/local_notifications.dart';
+import 'package:zyncro/features/calendar/data/services/reminder_service.dart';
+import 'package:zyncro/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Future.wait([
     Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
-    initializeDateFormatting('fr_FR', null),
+    initializeDateFormatting('fr_FR'),
   ]);
+  await connectFirebaseEmulatorsIfRequested();
   // App Check : providers de production en release (Play Integrity /
   // DeviceCheck), providers debug en développement. L'enforcement côté
   // console ne doit être activé qu'une fois les anciennes versions (qui
@@ -34,7 +36,7 @@ void main() async {
   final tzInfo = await FlutterTimezone.getLocalTimezone();
   tz_lib.setLocalLocation(tz_lib.getLocation(tzInfo.identifier));
   await ReminderService.initialize();
-  await NotificationService.createNotificationChannel();
-  NotificationService.registerBackgroundHandler();
+  await LocalNotifications.createNotificationChannel();
+  LocalNotifications.registerBackgroundHandler();
   runApp(const ProviderScope(child: ZyncroApp()));
 }

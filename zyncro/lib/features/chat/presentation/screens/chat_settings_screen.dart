@@ -1,15 +1,16 @@
-import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/models/tab_settings.dart';
-import '../../../../shared/widgets/color_picker_row.dart';
-import '../../../../shared/widgets/settings_widgets.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
-import '../../../groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/core/firebase/firestore_paths.dart';
+import 'package:zyncro/core/media/media_providers.dart';
+import 'package:zyncro/core/media/media_source.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
+import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/shared/widgets/color_picker_row.dart';
+import 'package:zyncro/shared/widgets/settings_widgets.dart';
 
 class ChatSettingsScreen extends ConsumerStatefulWidget {
   const ChatSettingsScreen({super.key});
@@ -33,7 +34,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
 
-    final source = await showModalBottomSheet<ImageSource>(
+    final source = await showModalBottomSheet<MediaSource>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -47,7 +48,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.border,
+                color: context.colors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -55,12 +56,12 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
               title: const Text('Prendre une photo'),
-              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              onTap: () => Navigator.pop(ctx, MediaSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
               title: const Text('Choisir depuis la galerie'),
-              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              onTap: () => Navigator.pop(ctx, MediaSource.gallery),
             ),
             const SizedBox(height: 8),
           ],
@@ -71,34 +72,34 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
 
     setState(() => _loadingBg = true);
     try {
-      final picker = ImagePicker();
-      final file = await picker.pickImage(
-        source: source,
-        imageQuality: 80,
-        maxWidth: 1080,
-      );
-      if (file == null) return;
+      final path = await ref
+          .read(imagePickerServiceProvider)
+          .pickImage(source: source, imageQuality: 80, maxWidth: 1080);
+      if (path == null) return;
 
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('chat_backgrounds/$groupId.jpg');
-      await ref.putFile(
-        File(file.path),
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-      final url = await ref.getDownloadURL();
+      final url = await ref
+          .read(fileStorageProvider)
+          .upload(
+            path,
+            StoragePaths.chatBackground(groupId),
+            contentType: 'image/jpeg',
+          );
 
       final settings =
-          this.ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+          ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
       await _update(
-        settings, settings.copyWith(chatBackgroundType: 'image', chatBackgroundValue: url),
+        settings,
+        settings.copyWith(
+          chatBackgroundType: 'image',
+          chatBackgroundValue: url,
+        ),
       );
     } on Exception catch (e) {
       if (e.toString().contains('cancelled')) return;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     } finally {
       if (mounted) setState(() => _loadingBg = false);
@@ -112,7 +113,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
     final bgType = settings.chatBackgroundType;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -121,17 +122,17 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
+        title: Text(
           'Paramètres Chat',
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.colors.textPrimary,
           ),
         ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.border),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(height: 1, color: context.colors.border),
         ),
       ),
       body: ListView(
@@ -149,9 +150,13 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                   onSelect: (hex) =>
                       _update(settings, settings.copyWith(chatThemeColor: hex)),
                   onAddColor: (hex) => _update(
-                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
+                    settings,
+                    settings.copyWith(
+                      customColors: [...settings.customColors, hex],
+                    ),
                   ),
-                  onDeleteColor: (hex) => _update(settings, settings.withColorRemoved(hex)),
+                  onDeleteColor: (hex) =>
+                      _update(settings, settings.withColorRemoved(hex)),
                 ),
               ),
             ],
@@ -183,10 +188,14 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                   onSelectionChanged: (Set<String> sel) async {
                     final type = sel.first;
                     if (type == 'none') {
-                      await _update(settings, settings.copyWith(clearChatBackground: true));
+                      await _update(
+                        settings,
+                        settings.copyWith(clearChatBackground: true),
+                      );
                     } else if (type == 'color') {
                       await _update(
-                        settings, settings.copyWith(
+                        settings,
+                        settings.copyWith(
                           chatBackgroundType: 'color',
                           chatBackgroundValue:
                               settings.chatBackgroundValue ?? '#F7F9FC',
@@ -207,20 +216,25 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                     extraColors: settings.customColors,
                     hiddenBaseColors: settings.hiddenBaseColors,
                     onSelect: (hex) => _update(
-                      settings, settings.copyWith(
+                      settings,
+                      settings.copyWith(
                         chatBackgroundType: 'color',
                         chatBackgroundValue: hex,
                       ),
                     ),
                     onAddColor: (hex) => _update(
-                      settings, settings.copyWith(customColors: [...settings.customColors, hex]),
+                      settings,
+                      settings.copyWith(
+                        customColors: [...settings.customColors, hex],
+                      ),
                     ),
                     onDeleteColor: (hex) =>
                         _update(settings, settings.withColorRemoved(hex)),
                   ),
                 ),
               ],
-              if (bgType == 'image' && settings.chatBackgroundValue != null) ...[
+              if (bgType == 'image' &&
+                  settings.chatBackgroundValue != null) ...[
                 const SettingsDivider(),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
@@ -254,7 +268,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
               SettingsTile(
                 title: 'Photos & vidéos partagées',
                 subtitle: 'Voir tous les médias du groupe',
-                onTap: () => context.push('/media-gallery'),
+                onTap: () => context.push(AppRoutes.mediaGallery),
               ),
             ],
           ),

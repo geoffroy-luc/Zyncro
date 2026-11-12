@@ -1,14 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/models/note.dart';
-import '../../../../shared/models/tab_settings.dart';
-import '../../../../shared/widgets/color_picker_row.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../chat/presentation/providers/messages_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
-import '../../../groups/presentation/providers/tab_settings_provider.dart';
-import '../providers/notes_provider.dart';
+import 'package:zyncro/core/constants/app_colors.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/notes/domain/entities/note.dart';
+import 'package:zyncro/features/notes/presentation/providers/notes_provider.dart';
+import 'package:zyncro/features/notes/presentation/widgets/option_chip.dart';
+import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
+import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/shared/widgets/color_picker_row.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   final Note? note; // null = création
@@ -36,9 +41,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.note?.title ?? '');
-    _contentController = TextEditingController(text: widget.note?.content ?? '');
+    _contentController = TextEditingController(
+      text: widget.note?.content ?? '',
+    );
     _isPinned = widget.note?.isPinned ?? false;
-    _selectedColor = widget.note?.color ??
+    _selectedColor =
+        widget.note?.color ??
         ref.read(tabSettingsProvider).asData?.value.notesThemeColor ??
         AppColors.itemPalette.first;
     _isChecklist = widget.note?.isChecklist ?? false;
@@ -47,8 +55,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   void _syncChecklistControllers() {
-    for (final c in _itemControllers) { c.dispose(); }
-    for (final f in _itemFocusNodes) { f.dispose(); }
+    for (final c in _itemControllers) {
+      c.dispose();
+    }
+    for (final f in _itemFocusNodes) {
+      f.dispose();
+    }
     _itemControllers.clear();
     _itemFocusNodes.clear();
     for (final item in _checklist) {
@@ -118,8 +130,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
-    for (final c in _itemControllers) { c.dispose(); }
-    for (final f in _itemFocusNodes) { f.dispose(); }
+    for (final c in _itemControllers) {
+      c.dispose();
+    }
+    for (final f in _itemFocusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -163,22 +179,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ),
         );
       }
-      final userName = ref.read(currentMemberProvider).asData?.value?.displayName ??
+      final userName =
+          ref.read(currentMemberProvider).asData?.value?.displayName ??
           user.displayName ??
           user.email ??
           'Quelqu\'un';
       final action = isCreating ? 'a créé une note' : 'a modifié la note';
-      ref.read(messagesRepositoryProvider).sendSystemMessage(
-        groupId: groupId,
-        userId: user.uid,
-        content: '📝 $userName $action « $title »',
-        notifScreen: 'notes',
+      unawaited(
+        ref
+            .read(messagesRepositoryProvider)
+            .sendSystemMessage(
+              groupId: groupId,
+              userId: user.uid,
+              content: '📝 $userName $action « $title »',
+              notifScreen: 'notes',
+            ),
       );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -201,8 +223,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Supprimer',
-                style: TextStyle(color: AppColors.error)),
+            child: Text(
+              'Supprimer',
+              style: TextStyle(color: context.colors.error),
+            ),
           ),
         ],
       ),
@@ -215,24 +239,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             .deleteNote(groupId, widget.note!.id);
         final user = ref.read(authStateProvider).asData?.value;
         if (user != null) {
-          final userName = ref.read(currentMemberProvider).asData?.value?.displayName ??
-          user.displayName ??
-          user.email ??
-          'Quelqu\'un';
-          ref.read(messagesRepositoryProvider).sendSystemMessage(
-            groupId: groupId,
-            userId: user.uid,
-            content:
-                '📝 $userName a supprimé la note « ${widget.note!.title} »',
-            notifScreen: 'notes',
+          final userName =
+              ref.read(currentMemberProvider).asData?.value?.displayName ??
+              user.displayName ??
+              user.email ??
+              'Quelqu\'un';
+          unawaited(
+            ref
+                .read(messagesRepositoryProvider)
+                .sendSystemMessage(
+                  groupId: groupId,
+                  userId: user.uid,
+                  content:
+                      '📝 $userName a supprimé la note « ${widget.note!.title} »',
+                  notifScreen: 'notes',
+                ),
           );
         }
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Permission refusée')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Permission refusée')));
         }
       }
     }
@@ -241,40 +270,49 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Future<void> _addCustomColor(String hex) async {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    final settings = ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
-    await ref.read(tabSettingsRepositoryProvider).updateSettings(
-      groupId,
-      from: settings,
-      to: settings.copyWith(customColors: [...settings.customColors, hex]),
-    );
+    final settings =
+        ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    await ref
+        .read(tabSettingsRepositoryProvider)
+        .updateSettings(
+          groupId,
+          from: settings,
+          to: settings.copyWith(customColors: [...settings.customColors, hex]),
+        );
   }
 
   Future<void> _deleteCustomColor(String hex) async {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    final settings = ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
-    await ref.read(tabSettingsRepositoryProvider).updateSettings(
-      groupId,
-      from: settings,
-      to: settings.withColorRemoved(hex),
-    );
+    final settings =
+        ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    await ref
+        .read(tabSettingsRepositoryProvider)
+        .updateSettings(
+          groupId,
+          from: settings,
+          to: settings.withColorRemoved(hex),
+        );
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(currentMemberProvider); // garde le provider actif pour ref.read() dans les méthodes async
+    ref.watch(
+      currentMemberProvider,
+    ); // garde le provider actif pour ref.read() dans les méthodes async
     final isEditing = widget.note != null;
-    final tabSettings = ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final tabSettings =
+        ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
     final accentColor = hexToColor(_selectedColor);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: Text(isEditing ? 'Modifier la note' : 'Nouvelle note'),
         actions: [
           if (isEditing)
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+              icon: Icon(Icons.delete_outline, color: context.colors.error),
               onPressed: _delete,
             ),
           IconButton(
@@ -316,8 +354,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               // Couleur
               Text(
                 'Couleur',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -337,17 +375,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               // Options : épingler + checklist
               Row(
                 children: [
-                  _OptionChip(
-                    icon: _isPinned
-                        ? Icons.push_pin
-                        : Icons.push_pin_outlined,
+                  OptionChip(
+                    icon: _isPinned ? Icons.push_pin : Icons.push_pin_outlined,
                     label: 'Épingler',
                     selected: _isPinned,
                     accentColor: accentColor,
                     onTap: () => setState(() => _isPinned = !_isPinned),
                   ),
                   const SizedBox(width: 8),
-                  _OptionChip(
+                  OptionChip(
                     icon: _isChecklist
                         ? Icons.checklist_rounded
                         : Icons.checklist_outlined,
@@ -400,10 +436,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                         children: [
                           ReorderableDragStartListener(
                             index: i,
-                            child: const Icon(
+                            child: Icon(
                               Icons.drag_handle,
                               size: 20,
-                              color: AppColors.textSecondary,
+                              color: context.colors.textSecondary,
                             ),
                           ),
                           Checkbox(
@@ -421,8 +457,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                               focusNode: _itemFocusNodes[i],
                               decoration: InputDecoration(
                                 hintText: 'Élément ${i + 1}…',
-                                hintStyle: const TextStyle(
-                                    color: AppColors.textSecondary),
+                                hintStyle: TextStyle(
+                                  color: context.colors.textSecondary,
+                                ),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
@@ -431,8 +468,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                               style: TextStyle(
                                 fontSize: 15,
                                 color: item.done
-                                    ? AppColors.textSecondary
-                                    : AppColors.textPrimary,
+                                    ? context.colors.textSecondary
+                                    : context.colors.textPrimary,
                                 decoration: item.done
                                     ? TextDecoration.lineThrough
                                     : TextDecoration.none,
@@ -444,8 +481,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close,
-                                size: 18, color: AppColors.textSecondary),
+                            icon: Icon(
+                              Icons.close,
+                              size: 18,
+                              color: context.colors.textSecondary,
+                            ),
                             onPressed: () => _removeChecklistItem(i),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
@@ -467,59 +507,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               ],
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _OptionChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final Color accentColor;
-  final VoidCallback onTap;
-
-  const _OptionChip({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.accentColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected
-              ? accentColor.withValues(alpha: 0.1)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected ? accentColor : AppColors.border,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon,
-                size: 16,
-                color: selected ? accentColor : AppColors.textSecondary),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                color: selected ? accentColor : AppColors.textSecondary,
-                fontWeight:
-                    selected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
         ),
       ),
     );

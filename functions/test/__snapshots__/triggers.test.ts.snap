@@ -1,0 +1,795 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`dépenses > onExpenseUpdated avec updatedBy (pseudo du membre) 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "expenses",
+      },
+      "notification": {
+        "body": "Bob a modifié une dépense",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-alice",
+      ],
+    },
+  },
+]
+`;
+
+exports[`dépenses > onExpenseUpdated sans updatedBy (paidByName) 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "expenses",
+      },
+      "notification": {
+        "body": "Alice a modifié une dépense",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`dépenses > onNewExpense : participants sauf payeur 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "expenses",
+      },
+      "notification": {
+        "body": "Alice a ajouté une dépense",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`groupes > onGroupDeleted : notifie tous les membres puis purge les sous-collections 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+      },
+      "notification": {
+        "body": "Le groupe a été supprimé.",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-alice",
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`groupes > onGroupDeleted : notifie tous les membres puis purge les sous-collections 2`] = `
+[
+  "groups/g1/events/e1",
+  "groups/g1/expenses/x1",
+  "groups/g1/members/alice",
+  "groups/g1/members/bob",
+  "groups/g1/members/x",
+  "groups/g1/messages/m1",
+  "groups/g1/messages/m2",
+  "groups/g1/notes/n1",
+  "groups/g1/typing/t1",
+]
+`;
+
+exports[`groupes > onMemberRemoved 1`] = `
+[
+  {
+    "kind": "send",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "tag": "g1",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+      },
+      "notification": {
+        "body": "Tu as été retiré du groupe.",
+        "title": "Famille",
+      },
+      "token": "tok-bob",
+    },
+  },
+]
+`;
+
+exports[`notes > onNoteCreated 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "notes",
+      },
+      "notification": {
+        "body": "Bob a créé une note",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-alice",
+      ],
+    },
+  },
+]
+`;
+
+exports[`notes > onNoteDeleted 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "notes",
+      },
+      "notification": {
+        "body": "Bob a supprimé une note",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-alice",
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`notes > onNoteUpdated : contenu modifié 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "notes",
+      },
+      "notification": {
+        "body": "Alice a modifié une note",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`onMessageReaction > nouvelle réaction d'un autre membre → notifie l'auteur 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "chat",
+      },
+      "notification": {
+        "body": "Bob a réagi à ton message avec ❤️",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-alice",
+      ],
+    },
+  },
+]
+`;
+
+exports[`onNewMessage > audio 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "chat",
+      },
+      "notification": {
+        "body": "Alice a envoyé un message vocal 🎤",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`onNewMessage > image 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "chat",
+      },
+      "notification": {
+        "body": "Alice a envoyé une photo 📷",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`onNewMessage > sans senderName 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "chat",
+      },
+      "notification": {
+        "body": "Quelqu'un: hey",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`onNewMessage > sondage 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "chat",
+      },
+      "notification": {
+        "body": "Alice a créé un sondage 📊",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`onNewMessage > texte court 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "chat",
+      },
+      "notification": {
+        "body": "Alice: Salut !",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`onNewMessage > texte long tronqué à 80 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "chat",
+      },
+      "notification": {
+        "body": "Alice: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`onNewMessage > vidéo (file) 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "chat",
+      },
+      "notification": {
+        "body": "Alice a envoyé une vidéo 🎥",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`événements > onEventCreated avec creatorName 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "calendar",
+      },
+      "notification": {
+        "body": "Ali a créé un événement",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`événements > onEventCreated sans creatorName (pseudo, repli Auth) 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "calendar",
+      },
+      "notification": {
+        "body": "Carol (Auth) a créé un événement",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-alice",
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`événements > onEventDeleted (attribué au créateur, BUG F1) 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "calendar",
+      },
+      "notification": {
+        "body": "Alice a supprimé un événement",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-alice",
+        "tok-bob",
+      ],
+    },
+  },
+]
+`;
+
+exports[`événements > onEventUpdated 1`] = `
+[
+  {
+    "kind": "multicast",
+    "message": {
+      "android": {
+        "collapseKey": "g1",
+        "notification": {
+          "channelId": "zyncro_high_importance",
+        },
+        "priority": "high",
+      },
+      "apns": {
+        "headers": {
+          "apns-collapse-id": "g1",
+        },
+        "payload": {
+          "aps": {
+            "sound": "default",
+            "threadId": "g1",
+          },
+        },
+      },
+      "data": {
+        "groupId": "g1",
+        "screen": "calendar",
+      },
+      "notification": {
+        "body": "Bob a modifié un événement",
+        "title": "Famille",
+      },
+      "tokens": [
+        "tok-alice",
+      ],
+    },
+  },
+]
+`;

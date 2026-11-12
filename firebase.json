@@ -5,18 +5,34 @@
     "ignore": [
       "node_modules",
       ".git"
+    ],
+    "predeploy": [
+      "\"$RESOURCE_DIR/node_modules/.bin/tsc\" -p \"$RESOURCE_DIR\""
     ]
   },
   "firestore": {
-    "rules": "firestore.rules"
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   },
   "storage": {
     "rules": "storage.rules"
   },
   "emulators": {
-    "firestore": { "port": 8080 },
-    "storage": { "port": 9199 },
-    "ui": { "enabled": false },
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": false
+    },
     "singleProjectMode": true
   },
   "hosting": {
@@ -36,13 +52,19 @@
       {
         "source": "/.well-known/apple-app-site-association",
         "headers": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ]
       },
       {
         "source": "/.well-known/assetlinks.json",
         "headers": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ]
       }
     ]

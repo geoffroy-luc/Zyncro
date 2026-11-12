@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../data/repositories/groups_repository.dart';
-import '../../domain/repositories/i_groups_repository.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../../shared/models/group.dart';
-import '../../../../shared/models/group_member.dart';
+import 'package:zyncro/core/firebase/firebase_providers.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/groups/data/repositories/firestore_groups_repository.dart';
+import 'package:zyncro/features/groups/domain/entities/group.dart';
+import 'package:zyncro/features/groups/domain/entities/group_member.dart';
+import 'package:zyncro/features/groups/domain/repositories/groups_repository.dart';
 
-final groupsRepositoryProvider = Provider<IGroupsRepository>(
-  (_) => GroupsRepository(),
+final groupsRepositoryProvider = Provider<GroupsRepository>(
+  (ref) => FirestoreGroupsRepository(
+    ref.watch(firestoreProvider),
+    ref.watch(firebaseStorageProvider),
+  ),
 );
 
 final userGroupsProvider = StreamProvider<List<Group>>((ref) {
@@ -40,7 +46,9 @@ class SelectedGroupIdNotifier extends AsyncNotifier<String?> {
 
     // Vérifie une fois si le groupe stocké existe toujours
     final initialGroups = ref.read(userGroupsProvider).asData?.value;
-    if (storedId != null && initialGroups != null && !initialGroups.any((g) => g.id == storedId)) {
+    if (storedId != null &&
+        initialGroups != null &&
+        !initialGroups.any((g) => g.id == storedId)) {
       await prefs.remove(_kGroupIdKey);
       await prefs.remove(_kGroupUserKey);
       return null;
@@ -51,8 +59,10 @@ class SelectedGroupIdNotifier extends AsyncNotifier<String?> {
     ref.listen(userGroupsProvider, (_, next) {
       final groups = next.asData?.value;
       final currentId = state.asData?.value;
-      if (currentId != null && groups != null && !groups.any((g) => g.id == currentId)) {
-        select(null);
+      if (currentId != null &&
+          groups != null &&
+          !groups.any((g) => g.id == currentId)) {
+        unawaited(select(null));
       }
     });
 
@@ -141,14 +151,13 @@ final currentMemberProvider = StreamProvider<GroupMember?>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
   final userId = ref.watch(authStateProvider).asData?.value?.uid;
   if (groupId == null || userId == null) return Stream.value(null);
-  return ref
-      .watch(groupsRepositoryProvider)
-      .watchMembers(groupId)
-      .map((members) {
-        try {
-          return members.firstWhere((m) => m.uid == userId);
-        } catch (_) {
-          return null;
-        }
-      });
+  return ref.watch(groupsRepositoryProvider).watchMembers(groupId).map((
+    members,
+  ) {
+    try {
+      return members.firstWhere((m) => m.uid == userId);
+    } catch (_) {
+      return null;
+    }
+  });
 });

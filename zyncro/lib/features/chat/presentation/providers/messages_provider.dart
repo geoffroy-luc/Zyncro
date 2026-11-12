@@ -1,15 +1,18 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/messages_repository.dart';
-import '../../domain/repositories/i_messages_repository.dart';
-import '../../../../shared/models/message.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/core/firebase/firebase_providers.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/data/repositories/firestore_messages_repository.dart';
+import 'package:zyncro/features/chat/domain/entities/message.dart';
+import 'package:zyncro/features/chat/domain/repositories/messages_repository.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 
-final messagesRepositoryProvider = Provider<IMessagesRepository>(
-  (_) => MessagesRepository(),
+final messagesRepositoryProvider = Provider<MessagesRepository>(
+  (ref) => FirestoreMessagesRepository(
+    ref.watch(firestoreProvider),
+    ref.watch(firebaseStorageProvider),
+  ),
 );
 
 // ── Pagination state ─────────────────────────────────────────────────────────
@@ -58,24 +61,26 @@ class ChatMessagesNotifier extends AsyncNotifier<ChatMessagesState> {
     final repo = ref.read(messagesRepositoryProvider);
     final completer = Completer<List<Message>>();
 
-    final sub = repo.watchMessages(groupId).listen(
-      (msgs) {
-        _live = msgs;
-        if (msgs.length < 50) _hasMore = false;
-        if (!completer.isCompleted) {
-          completer.complete(msgs);
-        } else {
-          state = AsyncData(_buildState());
-        }
-      },
-      onError: (Object e, StackTrace st) {
-        if (!completer.isCompleted) {
-          completer.completeError(e, st);
-        } else {
-          state = AsyncError(e, st);
-        }
-      },
-    );
+    final sub = repo
+        .watchMessages(groupId)
+        .listen(
+          (msgs) {
+            _live = msgs;
+            if (msgs.length < 50) _hasMore = false;
+            if (!completer.isCompleted) {
+              completer.complete(msgs);
+            } else {
+              state = AsyncData(_buildState());
+            }
+          },
+          onError: (Object e, StackTrace st) {
+            if (!completer.isCompleted) {
+              completer.completeError(e, st);
+            } else {
+              state = AsyncError(e, st);
+            }
+          },
+        );
 
     ref.onDispose(sub.cancel);
 
@@ -86,10 +91,7 @@ class ChatMessagesNotifier extends AsyncNotifier<ChatMessagesState> {
   ChatMessagesState _buildState() {
     final liveIds = _live.map((m) => m.id).toSet();
     return ChatMessagesState(
-      messages: [
-        ..._live,
-        ..._older.where((m) => !liveIds.contains(m.id)),
-      ],
+      messages: [..._live, ..._older.where((m) => !liveIds.contains(m.id))],
       hasMore: _hasMore,
       loadingMore: _loadingMore,
     );
@@ -122,13 +124,23 @@ class ChatMessagesNotifier extends AsyncNotifier<ChatMessagesState> {
 
 final chatMessagesProvider =
     AsyncNotifierProvider<ChatMessagesNotifier, ChatMessagesState>(
-  ChatMessagesNotifier.new,
-);
+      ChatMessagesNotifier.new,
+    );
 
 final mediaMessagesProvider = StreamProvider<List<Message>>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
   if (groupId == null) return Stream.value([]);
   return ref.watch(messagesRepositoryProvider).watchMediaMessages(groupId);
+});
+
+/// Les 6 derniers médias du groupe (aperçu du tableau de bord) : requête
+/// bornée côté serveur au lieu de tout l'historique.
+final recentMediaMessagesProvider = StreamProvider<List<Message>>((ref) {
+  final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
+  if (groupId == null) return Stream.value([]);
+  return ref
+      .watch(messagesRepositoryProvider)
+      .watchRecentMediaMessages(groupId, limit: 6);
 });
 
 /// True uniquement quand l'utilisateur est sur l'onglet Chat.
@@ -139,8 +151,9 @@ class ChatTabActiveNotifier extends Notifier<bool> {
   void setActive(bool value) => state = value;
 }
 
-final isChatTabActiveProvider =
-    NotifierProvider<ChatTabActiveNotifier, bool>(ChatTabActiveNotifier.new);
+final isChatTabActiveProvider = NotifierProvider<ChatTabActiveNotifier, bool>(
+  ChatTabActiveNotifier.new,
+);
 
 /// True quand l'app est au premier plan (foreground).
 class AppInForegroundNotifier extends Notifier<bool> {
@@ -150,46 +163,39 @@ class AppInForegroundNotifier extends Notifier<bool> {
   void setForeground(bool value) => state = value;
 }
 
-final appInForegroundProvider =
-    NotifierProvider<AppInForegroundNotifier, bool>(AppInForegroundNotifier.new);
+final appInForegroundProvider = NotifierProvider<AppInForegroundNotifier, bool>(
+  AppInForegroundNotifier.new,
+);
 
 /// Stream du lastReadAt de l'utilisateur courant pour un groupe donné.
-final _memberLastReadAtProvider =
-    StreamProvider.family<DateTime?, String>((ref, groupId) {
+final _memberLastReadAtProvider = StreamProvider.family<DateTime?, String>((
+  ref,
+  groupId,
+) {
   final userId = ref.watch(authStateProvider).asData?.value?.uid;
   if (userId == null) return Stream.value(null);
-  return FirebaseFirestore.instance
-      .collection('groups')
-      .doc(groupId)
-      .collection('members')
-      .doc(userId)
-      .snapshots()
-      .map((snap) {
-    final ts = snap.data()?['lastReadAt'] as Timestamp?;
-    return ts?.toDate();
-  });
+  return ref
+      .watch(messagesRepositoryProvider)
+      .watchLastReadAt(groupId: groupId, userId: userId);
 });
 
 /// Nombre de messages non lus pour l'utilisateur courant dans un groupe donné.
 final unreadCountProvider = StreamProvider.family<int, String>((ref, groupId) {
-  final lastReadAt =
-      ref.watch(_memberLastReadAtProvider(groupId)).asData?.value;
+  final lastReadAt = ref
+      .watch(_memberLastReadAtProvider(groupId))
+      .asData
+      ?.value;
   if (lastReadAt == null) return Stream.value(0);
-  return FirebaseFirestore.instance
-      .collection('groups')
-      .doc(groupId)
-      .collection('messages')
-      .where('timestamp', isGreaterThan: Timestamp.fromDate(lastReadAt))
-      .snapshots()
-      .map((snap) => snap.docs.length);
+  return ref
+      .watch(messagesRepositoryProvider)
+      .watchCountSince(groupId: groupId, since: lastReadAt);
 });
 
 final typingProvider = StreamProvider<List<String>>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider).asData?.value;
   final currentUserId = ref.watch(authStateProvider).asData?.value?.uid;
   if (groupId == null || currentUserId == null) return Stream.value([]);
-  return ref.watch(messagesRepositoryProvider).watchTyping(
-        groupId: groupId,
-        currentUserId: currentUserId,
-      );
+  return ref
+      .watch(messagesRepositoryProvider)
+      .watchTyping(groupId: groupId, currentUserId: currentUserId);
 });

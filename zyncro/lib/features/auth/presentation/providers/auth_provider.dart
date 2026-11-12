@@ -1,19 +1,28 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/auth_repository.dart';
-import '../../data/services/user_profile_service.dart';
-import '../../domain/repositories/i_auth_repository.dart';
+import 'package:zyncro/core/firebase/firebase_providers.dart';
+import 'package:zyncro/core/notifications/notification_providers.dart';
+import 'package:zyncro/features/auth/data/repositories/firebase_auth_repository.dart';
+import 'package:zyncro/features/auth/data/services/user_profile_service.dart';
+import 'package:zyncro/features/auth/domain/entities/app_user.dart';
+import 'package:zyncro/features/auth/domain/repositories/auth_repository.dart';
 
-final authRepositoryProvider = Provider<IAuthRepository>(
-  (_) => AuthRepository(),
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => FirebaseAuthRepository(
+    ref.watch(firebaseAuthProvider),
+    ref.watch(pushNotificationServiceProvider),
+  ),
 );
 
-final authStateProvider = StreamProvider<User?>(
+final authStateProvider = StreamProvider<AppUser?>(
   (ref) => ref.read(authRepositoryProvider).authStateChanges,
 );
 
 final userProfileServiceProvider = Provider<UserProfileService>(
-  (_) => UserProfileService(),
+  (ref) => UserProfileService(
+    ref.watch(firebaseAuthProvider),
+    ref.watch(firestoreProvider),
+    ref.watch(firebaseStorageProvider),
+  ),
 );
 
 /// Streams the current user's Firestore doc (photoUrl, showProfilePhoto, etc.)

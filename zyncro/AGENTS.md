@@ -26,36 +26,38 @@ All business data is scoped by `groupId`.
 
 ## Architecture rules
 
-Use a feature-first modular architecture.
+Full reference: `../docs/ARCHITECTURE.md`. Rules below are enforced by
+`test/architecture/import_rules_test.dart`.
 
-Preferred structure:
+Structure:
 
-- `lib/core/` for app-wide infrastructure, theme, utilities, shared services
-- `lib/shared/` for cross-feature reusable widgets/models/enums
-- `lib/features/<feature_name>/` for business modules
-
-Inside each feature, use:
-
-- `data/`
-- `domain/`
-- `presentation/`
-
-Inside `presentation/`, prefer:
-
-- `screens/`
-- `widgets/`
-- `providers/`
+- `lib/app/` — composition root: router, app shell, global listeners. Only place that knows every feature.
+- `lib/core/` — cross-cutting infrastructure, never imports `features/` or `app/`:
+  `firebase/` (the ONLY place that touches `Firebase*.instance`, Firestore paths), `error/` (`Failure`, `FailureMapper`),
+  `logging/` (`AppLogger`), `media/`, `notifications/`, `app_update/`, `utils/`.
+- `lib/design_system/` — tokens (`ZyncroColors` theme extension, `AppSpacing`, `AppRadii`) and `context.colors`.
+- `lib/shared/` — `domain/` (pure cross-feature domain: recurrence, categories), `data/mappers/`, `presentation/`, `widgets/`.
+- `lib/features/<feature>/` — `domain/` (entities, repository interfaces, pure services), `data/` (mappers, repositories, technical services), `presentation/` (`screens/`, `widgets/`, `providers/`).
 
 Rules:
 
-- Do not put business logic inside widgets.
-- Do not access Firebase directly from UI widgets.
-- Keep domain entities framework-agnostic.
-- Repository contracts belong in `domain/repositories/`.
-- Implementations belong in `data/repositories/`.
-- Firebase models belong in `data/models/`.
-- Mapping logic belongs in `mappers/` when needed.
-- Avoid large monolithic files.
+- `domain/` is pure Dart: no Flutter, Firebase or Riverpod imports.
+- Entities live in `features/<f>/domain/entities/`. Never add `fromMap`/`toMap` to an entity.
+- Serialization lives in `data/mappers/<x>_mapper.dart` (`XMapper.fromFirestore/toFirestore`) with field names in `XFields`. No raw field strings elsewhere.
+- Repository interface `XRepository` in `domain/repositories/`; implementation `FirestoreXRepository` in `data/repositories/`, receiving Firebase instances by constructor (from `core/firebase/firebase_providers.dart`).
+- Read lists with `mapDocsSafely` (an unreadable document is skipped and logged, never breaks the stream).
+- `presentation/` never imports `cloud_firestore` / `firebase_storage`; widgets never call Firebase or plugins directly (use services in `core/`).
+- Features don't import each other, except the session context (`auth`, `groups`). Compose in `app/` or use ports in `shared/domain`.
+- Map technical errors with `FailureMapper.from(e)`; check `Failure` subtypes in UI, never Firebase error codes.
+- Avoid large monolithic files (target ≤ 300 lines; screens compose, widgets render).
+
+## Data contract (production app — backward compatibility)
+
+- Never rename a collection, field or stored enum value (message `type`, `expenseType`, `splitType`, member `role`…).
+- New fields are optional with a read default. Update existing documents with `update()` or `set(merge: true)`, never a bare `set()`.
+- Tab settings are written field by field (`TabSettingsMapper.changedFields`).
+- Wire format is pinned by `test/characterization/models_wire_format_test.dart` — it must stay green.
+- Any `firestore.rules` / `storage.rules` change starts with tests in `../firebase-tests/` (legit v1.x flows + attacks); deploy from the repository root.
 
 ## UI and component rules
 
@@ -68,6 +70,7 @@ Rules:
 - Prefer small reusable widgets over duplicated UI blocks.
 - Keep screens focused on composition, not implementation details.
 - Use consistent spacing, rounded cards, and strong readability.
+- Colors come from the theme: `context.colors.<role>` (`design_system/`). Never add a hard-coded color in a widget.
 - Keep the UI modern, clean, warm, and product-oriented.
 
 ## Product rules
@@ -89,10 +92,10 @@ Notes, events, expenses, and messages must all belong to a group.
 
 ## State management rules
 
-- Use Riverpod providers consistently.
-- Prefer one responsibility per provider.
-- Streams should be used for real-time Firebase features where appropriate.
-- Derived state should stay outside widgets when possible.
+- Riverpod 3, no code generation.
+- `Provider` for infrastructure (repositories, services), `StreamProvider` for real-time data, `Notifier`/`AsyncNotifier` for commands and screen state.
+- One responsibility per provider; derived state computed in providers/domain services, not in widgets.
+- No side effects in `build` (use `ref.listen`, `initState`); use `select` when reading part of a state.
 
 ## Navigation rules
 
@@ -120,11 +123,17 @@ Notes, events, expenses, and messages must all belong to a group.
 
 ## Testing and validation
 
-After code changes:
+Quality gate (also run by CI):
 
-- run `flutter analyze`
-- run `flutter test` when business logic changes
-- do not leave analyzer errors unresolved
+- `dart format --set-exit-if-changed lib test`
+- `flutter analyze` → **0 issues**, infos included (strict analysis options)
+- `flutter test` (unit, characterization, architecture tests)
+- `flutter build apk --debug`
+- functions: `cd ../functions && npm run build && npm run lint && npm test`
+- rules: `cd ../firebase-tests && npm test`
+- critical flows: `integration_test/app_smoke_test.dart` against Firebase emulators (`--dart-define=USE_FIREBASE_EMULATORS=true`)
+
+Known bugs are listed in `../docs/refactor/BUGS_FOUND.md` and pinned by `BUG …` tests: fixing one means flipping its test.
 
 ## Output expectations
 

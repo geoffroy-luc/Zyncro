@@ -1,14 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/expense_categories.dart';
-import '../../../../shared/models/expense_category.dart';
-import '../../../../shared/models/tab_settings.dart';
-import '../../../../shared/widgets/category_editor_sheet.dart';
-import '../../../../shared/widgets/color_picker_row.dart';
-import '../../../../shared/widgets/settings_widgets.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
-import '../../../groups/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/core/constants/expense_categories.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
+import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
+import 'package:zyncro/shared/domain/categories/expense_category.dart';
+import 'package:zyncro/shared/widgets/category_editor_sheet.dart';
+import 'package:zyncro/shared/widgets/color_picker_row.dart';
+import 'package:zyncro/shared/widgets/settings_widgets.dart';
 
 const _currencies = ['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'CAD', 'AUD'];
 const _currencySymbols = {
@@ -59,10 +62,11 @@ class _ExpensesSettingsScreenState
     await _update(settings, settings.copyWith(expensesCategories: categories));
   }
 
-  Future<void> _deleteCategory(TabSettings settings, ExpenseCategory cat) async {
-    final updated = settings.expensesCategories
-        .where((c) => c != cat)
-        .toList();
+  Future<void> _deleteCategory(
+    TabSettings settings,
+    ExpenseCategory cat,
+  ) async {
+    final updated = settings.expensesCategories.where((c) => c != cat).toList();
     await _update(settings, settings.copyWith(expensesCategories: updated));
   }
 
@@ -72,7 +76,7 @@ class _ExpensesSettingsScreenState
         ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -81,17 +85,17 @@ class _ExpensesSettingsScreenState
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
+        title: Text(
           'Paramètres Dépenses',
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: context.colors.textPrimary,
           ),
         ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.border),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(height: 1, color: context.colors.border),
         ),
       ),
       body: ListView(
@@ -106,12 +110,18 @@ class _ExpensesSettingsScreenState
                   selected: settings.expensesThemeColor,
                   extraColors: settings.customColors,
                   hiddenBaseColors: settings.hiddenBaseColors,
-                  onSelect: (hex) =>
-                      _update(settings, settings.copyWith(expensesThemeColor: hex)),
-                  onAddColor: (hex) => _update(
-                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
+                  onSelect: (hex) => _update(
+                    settings,
+                    settings.copyWith(expensesThemeColor: hex),
                   ),
-                  onDeleteColor: (hex) => _update(settings, settings.withColorRemoved(hex)),
+                  onAddColor: (hex) => _update(
+                    settings,
+                    settings.copyWith(
+                      customColors: [...settings.customColors, hex],
+                    ),
+                  ),
+                  onDeleteColor: (hex) =>
+                      _update(settings, settings.withColorRemoved(hex)),
                 ),
               ),
             ],
@@ -120,21 +130,24 @@ class _ExpensesSettingsScreenState
             title: 'Devise',
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: DropdownButton<String>(
                     value: settings.expensesCurrency,
                     isExpanded: true,
                     underline: const SizedBox.shrink(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                     items: _currencies
                         .map(
@@ -146,7 +159,12 @@ class _ExpensesSettingsScreenState
                         .toList(),
                     onChanged: (val) {
                       if (val != null) {
-                        _update(settings, settings.copyWith(expensesCurrency: val));
+                        unawaited(
+                          _update(
+                            settings,
+                            settings.copyWith(expensesCurrency: val),
+                          ),
+                        );
                       }
                     },
                   ),
@@ -164,13 +182,14 @@ class _ExpensesSettingsScreenState
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 20,
                       ),
-                      onTap: () =>
-                          _openCategoryEditor(settings, existing: cat),
+                      onTap: () => _openCategoryEditor(settings, existing: cat),
                       leading: Container(
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: hexToColor(cat.colorHex).withValues(alpha: 0.12),
+                          color: hexToColor(
+                            cat.colorHex,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -181,9 +200,9 @@ class _ExpensesSettingsScreenState
                       ),
                       title: Text(cat.name),
                       trailing: IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.delete_outline,
-                          color: AppColors.error,
+                          color: context.colors.error,
                           size: 20,
                         ),
                         onPressed: () => _deleteCategory(settings, cat),

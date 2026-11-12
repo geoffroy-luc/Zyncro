@@ -1,15 +1,23 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/services/notification_service.dart';
-import '../core/services/update_service.dart';
-import '../core/theme/app_theme.dart';
-import '../features/auth/presentation/providers/auth_provider.dart';
-import '../features/chat/presentation/providers/messages_provider.dart';
-import '../features/chat/presentation/providers/share_provider.dart';
-import '../features/groups/presentation/providers/groups_provider.dart';
-import '../features/groups/presentation/providers/invite_link_provider.dart';
-import 'router.dart';
+import 'package:zyncro/app/notification_banner.dart';
+import 'package:zyncro/app/router.dart';
+import 'package:zyncro/core/app_update/app_update_service.dart';
+import 'package:zyncro/core/logging/app_logger.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
+import 'package:zyncro/core/notifications/local_notifications.dart';
+import 'package:zyncro/core/notifications/notification_providers.dart';
+import 'package:zyncro/core/theme/app_theme.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/chat/presentation/providers/share_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/groups/presentation/providers/invite_link_provider.dart';
+import 'package:zyncro/l10n/generated/app_localizations.dart';
 
 class ZyncroApp extends ConsumerStatefulWidget {
   const ZyncroApp({super.key});
@@ -23,13 +31,14 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
   @override
   void initState() {
     super.initState();
+    ref.read(pushNotificationServiceProvider).onTap = _onNotificationTap;
     WidgetsBinding.instance.addObserver(this);
     // Run after the first frame so the GoRouter navigator is ready.
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkUpdate());
   }
 
   Future<void> _checkUpdate() async {
-    final info = await UpdateService.check();
+    final info = await ref.read(appUpdateServiceProvider).check();
     if (info == null || !mounted) return;
 
     // Use GoRouter's navigator key — it always has a valid context.
@@ -37,36 +46,61 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     final ctx = navKey.currentContext;
     if (ctx == null || !ctx.mounted) return;
 
-    showDialog<void>(
-      context: ctx,
-      barrierDismissible: !info.isMandatory,
-      builder: (dialogCtx) => PopScope(
-        canPop: !info.isMandatory,
-        child: AlertDialog(
-          title: Text(
-            info.isMandatory
-                ? 'Mise à jour requise'
-                : 'Mise à jour disponible',
-          ),
-          content: Text(
-            info.isMandatory
-                ? "Cette version de Zyncro n'est plus supportée. Veuillez mettre à jour l'application pour continuer."
-                : 'La version ${info.latestVersion} est disponible. Voulez-vous mettre à jour ?',
-          ),
-          actions: [
-            if (!info.isMandatory)
-              TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(),
-                child: const Text('Plus tard'),
-              ),
-            TextButton(
-              onPressed: () => UpdateService.openStore(info.storeUrl),
-              child: const Text('Mettre à jour'),
+    unawaited(
+      showDialog<void>(
+        context: ctx,
+        barrierDismissible: !info.isMandatory,
+        builder: (dialogCtx) => PopScope(
+          canPop: !info.isMandatory,
+          child: AlertDialog(
+            title: Text(
+              info.isMandatory
+                  ? dialogCtx.l10n.updateRequiredTitle
+                  : dialogCtx.l10n.updateAvailableTitle,
             ),
-          ],
+            content: Text(
+              info.isMandatory
+                  ? dialogCtx.l10n.updateRequiredBody
+                  : dialogCtx.l10n.updateAvailableBody(info.latestVersion),
+            ),
+            actions: [
+              if (!info.isMandatory)
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  child: Text(dialogCtx.l10n.updateLater),
+                ),
+              TextButton(
+                onPressed: () =>
+                    ref.read(appUpdateServiceProvider).openStore(info.storeUrl),
+                child: Text(dialogCtx.l10n.updateNow),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  /// Ouverture d'une notification : sélectionne le groupe puis navigue vers
+  /// l'onglet visé.
+  Future<void> _onNotificationTap(String groupId, String? screen) async {
+    final route = switch (screen) {
+      'chat' => AppRoutes.chat,
+      'expenses' => AppRoutes.expenses,
+      'notes' => AppRoutes.notes,
+      'calendar' => AppRoutes.calendar,
+      _ => AppRoutes.home,
+    };
+    await ref.read(selectedGroupIdProvider.notifier).select(groupId);
+
+    // Double post-frame : le 1er frame laisse GoRouter traiter le refresh
+    // déclenché par selectedGroupIdProvider, le 2e effectue la navigation.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        AppLogger.info('Notif', 'navigating → $route');
+        ref.read(routerProvider).go(route);
+      });
+    });
   }
 
   @override
@@ -80,7 +114,7 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     final inForeground = state == AppLifecycleState.resumed;
     ref.read(appInForegroundProvider.notifier).setForeground(inForeground);
     if (inForeground) {
-      NotificationService.dismissAllNotifications();
+      unawaited(LocalNotifications.dismissAll());
     }
   }
 
@@ -99,7 +133,9 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     ref.listen(authStateProvider, (_, next) {
       final user = next.asData?.value;
       if (user != null) {
-        NotificationService.initialize(user.uid, ref);
+        unawaited(
+          ref.read(pushNotificationServiceProvider).initialize(user.uid),
+        );
       }
     });
 
@@ -107,10 +143,12 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
     ref.listen(selectedGroupIdProvider, (_, next) {
       final groupId = next.asData?.value;
       if (groupId != null) {
-        NotificationService.dismissAllNotifications();
-        ref
-            .read(shareShortcutsControllerProvider.notifier)
-            .recordInteraction(groupId);
+        unawaited(LocalNotifications.dismissAll());
+        unawaited(
+          ref
+              .read(shareShortcutsControllerProvider.notifier)
+              .recordInteraction(groupId),
+        );
       }
     });
 
@@ -120,14 +158,12 @@ class _ZyncroAppState extends ConsumerState<ZyncroApp>
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('fr', 'FR'),
-        Locale('en', 'US'),
-      ],
+      supportedLocales: const [Locale('fr', 'FR'), Locale('en', 'US')],
       locale: const Locale('fr', 'FR'),
       builder: (context, child) =>
           NotificationBanner(child: child ?? const SizedBox.shrink()),

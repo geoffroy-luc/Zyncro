@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/notes_repository.dart';
-import '../../domain/repositories/i_notes_repository.dart';
-import '../../../../shared/models/note.dart';
-import '../../../groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/core/firebase/firebase_providers.dart';
+import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
+import 'package:zyncro/features/notes/data/repositories/firestore_notes_repository.dart';
+import 'package:zyncro/features/notes/domain/entities/note.dart';
+import 'package:zyncro/features/notes/domain/repositories/notes_repository.dart';
 
-final notesRepositoryProvider = Provider<INotesRepository>(
-  (_) => NotesRepository(),
+final notesRepositoryProvider = Provider<NotesRepository>(
+  (ref) => FirestoreNotesRepository(ref.watch(firestoreProvider)),
 );
 
 final notesProvider = StreamProvider<List<Note>>((ref) {

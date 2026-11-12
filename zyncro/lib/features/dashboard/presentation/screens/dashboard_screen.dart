@@ -1,69 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/models/group_member.dart';
-import '../../../../shared/widgets/user_avatar.dart';
-import '../../../../shared/models/event.dart';
-import '../../../../shared/models/message.dart';
-import '../../../../shared/models/note.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../calendar/presentation/providers/events_provider.dart';
-import '../../../calendar/presentation/screens/event_form_screen.dart';
-import '../../../expenses/presentation/providers/expenses_provider.dart';
-import '../../../chat/presentation/providers/messages_provider.dart';
-import '../../../chat/presentation/screens/media_gallery_screen.dart';
-import '../../../notes/presentation/providers/notes_provider.dart';
-import '../../../notes/presentation/screens/note_editor_screen.dart';
-import '../../../groups/presentation/providers/tab_settings_provider.dart';
-import '../../../../shared/models/tab_settings.dart';
-
-
-Color _darken(Color color) {
-  final hsl = HSLColor.fromColor(color);
-  return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
-}
-
-const _defaultTabColors = [
-  Color(0xFF9B59B6), // Home
-  Color(0xFF4F7CFF), // Calendrier
-  Color(0xFF2BB8A5), // Notes
-  Color(0xFFFFB86B), // Dépenses
-  Color(0xFFE85D75), // Chat
-];
-
-Color _colorForTab(int idx, TabSettings settings) {
-  final hex = switch (idx) {
-    0 => settings.homeThemeColor,
-    1 => settings.calendarThemeColor,
-    2 => settings.notesThemeColor,
-    3 => settings.expensesThemeColor,
-    4 => settings.chatThemeColor,
-    _ => null,
-  };
-  if (hex == null) return _defaultTabColors[idx];
-  return Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
-}
-
-bool _isToday(DateTime dt) {
-  final now = DateTime.now();
-  return dt.year == now.year && dt.month == now.month && dt.day == now.day;
-}
-
-String _formatAmount(double v) =>
-    NumberFormat.currency(locale: 'fr_FR', symbol: '€', decimalDigits: 2)
-        .format(v);
-
-String _timeAgo(DateTime dt) {
-  final diff = DateTime.now().difference(dt);
-  if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
-  if (diff.inHours < 24) return 'Il y a ${diff.inHours} h';
-  return 'Il y a ${diff.inDays} j';
-}
-
-
+import 'package:zyncro/core/navigation/app_routes.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/calendar/presentation/providers/events_provider.dart';
+import 'package:zyncro/features/calendar/presentation/screens/event_form_screen.dart';
+import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
+import 'package:zyncro/features/chat/presentation/screens/media_gallery_screen.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/dashboard_card.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/dashboard_card_header.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/dashboard_empty_hint.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/dashboard_screen_helpers.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/event_row.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/expense_row.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/message_row.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/pinned_note_card.dart';
+import 'package:zyncro/features/dashboard/presentation/widgets/quick_action_button.dart';
+import 'package:zyncro/features/expenses/presentation/providers/expenses_provider.dart';
+import 'package:zyncro/features/notes/presentation/providers/notes_provider.dart';
+import 'package:zyncro/features/notes/presentation/screens/note_editor_screen.dart';
+import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
+import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -76,19 +35,22 @@ class DashboardScreen extends ConsumerWidget {
     final allNotes = ref.watch(notesProvider).asData?.value ?? [];
     final allExpenses = ref.watch(expensesProvider).asData?.value ?? [];
     final balances = ref.watch(balancesProvider);
-    final allMessages = ref.watch(chatMessagesProvider).asData?.value.messages ?? [];
+    final allMessages =
+        ref.watch(chatMessagesProvider).asData?.value.messages ?? [];
     final members = ref.watch(expenseMembersProvider).asData?.value ?? [];
     final memberNames = {for (final m in members) m.uid: m.displayName};
 
     final now = DateTime.now();
 
     // Prochains événements (à partir d'aujourd'hui, triés)
-    final upcomingEvents = (allEvents
-          ..sort((a, b) => a.startDate.compareTo(b.startDate)))
-        .where((e) => !e.startDate.isBefore(
-            DateTime(now.year, now.month, now.day)))
-        .take(3)
-        .toList();
+    final upcomingEvents =
+        (allEvents..sort((a, b) => a.startDate.compareTo(b.startDate)))
+            .where(
+              (e) =>
+                  !e.startDate.isBefore(DateTime(now.year, now.month, now.day)),
+            )
+            .take(3)
+            .toList();
 
     // Note épinglée
     final pinnedNote = allNotes.where((n) => n.isPinned).isNotEmpty
@@ -96,719 +58,302 @@ class DashboardScreen extends ConsumerWidget {
         : null;
 
     // Résumé dépenses
-    final totalExpenses =
-        allExpenses.fold(0.0, (s, e) => s + e.amount);
-    final myBalance =
-        currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
+    final totalExpenses = allExpenses.fold(0.0, (s, e) => s + e.amount);
+    final myBalance = currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
     // Derniers messages (activité récente)
     final recentMessages = allMessages.take(3).toList();
 
     // Médias partagés
-    final allMedia = ref.watch(mediaMessagesProvider).asData?.value ?? [];
+    final allMedia = ref.watch(recentMediaMessagesProvider).asData?.value ?? [];
     final previewMedia = allMedia.take(6).toList();
 
-    final tabSettings = ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
-    final homeColor = _colorForTab(0, tabSettings);
-    final calendarColor = _colorForTab(1, tabSettings);
-    final notesColor = _colorForTab(2, tabSettings);
+    final tabSettings =
+        ref.watch(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
+    final homeColor = dashboardColorForTab(0, tabSettings);
+    final calendarColor = dashboardColorForTab(1, tabSettings);
+    final notesColor = dashboardColorForTab(2, tabSettings);
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: context.colors.background,
       body: SafeArea(
-        top: true,
         child: SingleChildScrollView(
-        child: Column(
-          children: [
-            // ── Contenu ──────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Prochains événements
-                  _Card(
-                    child: Column(
-                      children: [
-                        _CardHeader(
-                          icon: Icons.calendar_today,
-                          iconColor: homeColor,
-                          title: 'Prochains événements',
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                          child: upcomingEvents.isEmpty
-                              ? _EmptyHint(
-                                  label: 'Aucun événement à venir',
-                                  onTap: () => Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                        builder: (_) =>
-                                            const EventFormScreen()),
-                                  ),
-                                )
-                              : Column(
-                                  children: upcomingEvents
-                                      .map((e) => Padding(
-                                            padding: const EdgeInsets.only(
-                                                bottom: 12),
-                                            child: _EventRow(event: e),
-                                          ))
-                                      .toList(),
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Note épinglée
-                  if (pinnedNote != null) ...[
-                    _PinnedNoteCard(note: pinnedNote, color: notesColor),
-                    const SizedBox(height: 12),
-                  ],
-
-                  // Résumé dépenses
-                  _Card(
-                    child: Column(
-                      children: [
-                        _CardHeader(
-                          icon: Icons.trending_up,
-                          iconColor: homeColor,
-                          title: 'Résumé des dépenses',
-                        ),
-                        Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: [
-                                  Text(
-                                    _formatAmount(totalExpenses),
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    'total du groupe',
-                                    style: TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              const Divider(
-                                  height: 1, color: AppColors.border),
-                              _ExpenseRow(
-                                label: 'Votre solde',
-                                value: myBalance >= 0
-                                    ? '+${_formatAmount(myBalance)}'
-                                    : _formatAmount(myBalance),
-                                valueColor: myBalance >= 0
-                                    ? const Color(0xFF2BB8A5)
-                                    : AppColors.error,
-                              ),
-                              const SizedBox(height: 4),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Activité récente (messages)
-                  if (recentMessages.isNotEmpty) ...[
-                    _Card(
+          child: Column(
+            children: [
+              // ── Contenu ──────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Prochains événements
+                    DashboardCard(
                       child: Column(
                         children: [
-                          _CardHeader(
-                            icon: Icons.chat_bubble_outline,
+                          DashboardCardHeader(
+                            icon: Icons.calendar_today,
                             iconColor: homeColor,
-                            title: 'Activité récente',
+                            title: 'Prochains événements',
                           ),
                           Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                            child: Column(
-                              children: recentMessages
-                                  .map((m) => Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 12),
-                                        child: _MessageRow(
-                                            message: m,
-                                            isMe: m.senderId == currentUid,
-                                            memberNames: memberNames,
-                                            members: members),
-                                      ))
-                                  .toList(),
-                            ),
+                            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                            child: upcomingEvents.isEmpty
+                                ? DashboardEmptyHint(
+                                    label: 'Aucun événement à venir',
+                                    onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => const EventFormScreen(),
+                                      ),
+                                    ),
+                                  )
+                                : Column(
+                                    children: upcomingEvents
+                                        .map(
+                                          (e) => Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 12,
+                                            ),
+                                            child: EventRow(event: e),
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
-                  ] else
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
-                  // Médias partagés
-                  if (previewMedia.isNotEmpty) ...[
-                    _Card(
+                    // Note épinglée
+                    if (pinnedNote != null) ...[
+                      PinnedNoteCard(note: pinnedNote, color: notesColor),
+                      const SizedBox(height: 12),
+                    ],
+
+                    // Résumé dépenses
+                    DashboardCard(
                       child: Column(
                         children: [
+                          DashboardCardHeader(
+                            icon: Icons.trending_up,
+                            iconColor: homeColor,
+                            title: 'Résumé des dépenses',
+                          ),
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
-                            child: Row(
+                            padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: homeColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(Icons.photo_library_outlined,
-                                      size: 16, color: homeColor),
+                                Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(
+                                      dashboardFormatAmount(totalExpenses),
+                                      style: TextStyle(
+                                        color: context.colors.textPrimary,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'total du groupe',
+                                      style: TextStyle(
+                                        color: context.colors.textSecondary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  'Médias partagés',
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
-                                  ),
+                                const SizedBox(height: 8),
+                                Divider(
+                                  height: 1,
+                                  color: context.colors.border,
                                 ),
-                                const Spacer(),
-                                TextButton(
-                                  onPressed: () => context.push('/media-gallery'),
-                                  child: const Text('Voir tout',
-                                      style: TextStyle(fontSize: 13)),
+                                ExpenseRow(
+                                  label: 'Votre solde',
+                                  value: myBalance >= 0
+                                      ? '+${dashboardFormatAmount(myBalance)}'
+                                      : dashboardFormatAmount(myBalance),
+                                  valueColor: myBalance >= 0
+                                      ? const Color(0xFF2BB8A5)
+                                      : context.colors.error,
                                 ),
+                                const SizedBox(height: 4),
                               ],
                             ),
                           ),
-                          const Divider(height: 1, color: AppColors.border),
-                          SizedBox(
-                            height: 88,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              itemCount: previewMedia.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(width: 8),
-                              itemBuilder: (_, i) =>
-                                  MediaPreviewTile(message: previewMedia[i]),
-                            ),
-                          ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 12),
-                  ],
 
-                  // Actions rapides
-                  const Text(
-                    'Actions rapides',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _QuickActionButton(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [calendarColor, _darken(calendarColor)],
-                          ),
-                          icon: Icons.calendar_today,
-                          label: 'Ajouter un événement',
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const EventFormScreen()),
-                          ),
+                    // Activité récente (messages)
+                    if (recentMessages.isNotEmpty) ...[
+                      DashboardCard(
+                        child: Column(
+                          children: [
+                            DashboardCardHeader(
+                              icon: Icons.chat_bubble_outline,
+                              iconColor: homeColor,
+                              title: 'Activité récente',
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                12,
+                                20,
+                                20,
+                              ),
+                              child: Column(
+                                children: recentMessages
+                                    .map(
+                                      (m) => Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        child: MessageRow(
+                                          message: m,
+                                          isMe: m.senderId == currentUid,
+                                          memberNames: memberNames,
+                                          members: members,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _QuickActionButton(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [notesColor, _darken(notesColor)],
-                          ),
-                          icon: Icons.sticky_note_2_outlined,
-                          label: 'Nouvelle note',
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const NoteEditorScreen()),
-                          ),
+                      const SizedBox(height: 20),
+                    ] else
+                      const SizedBox(height: 8),
+
+                    // Médias partagés
+                    if (previewMedia.isNotEmpty) ...[
+                      DashboardCard(
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                16,
+                                12,
+                                12,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: homeColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.photo_library_outlined,
+                                      size: 16,
+                                      color: homeColor,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Médias partagés',
+                                    style: TextStyle(
+                                      color: context.colors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  TextButton(
+                                    onPressed: () =>
+                                        context.push(AppRoutes.mediaGallery),
+                                    child: const Text(
+                                      'Voir tout',
+                                      style: TextStyle(fontSize: 13),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Divider(height: 1, color: context.colors.border),
+                            SizedBox(
+                              height: 88,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                itemCount: previewMedia.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 8),
+                                itemBuilder: (_, i) =>
+                                    MediaPreviewTile(message: previewMedia[i]),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      const SizedBox(height: 12),
                     ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      ), // SafeArea
-    );
-  }
-}
 
-// ── Widgets helpers ──────────────────────────────────────────────────────────
-
-class _Card extends StatelessWidget {
-  final Widget child;
-  const _Card({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
-        ],
-      ),
-      child: child,
-    );
-  }
-}
-
-class _CardHeader extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-
-  const _CardHeader(
-      {required this.icon, required this.iconColor, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 16, color: iconColor),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyHint extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _EmptyHint({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label,
-            style: const TextStyle(
-                color: AppColors.textSecondary, fontSize: 13)),
-        TextButton.icon(
-          onPressed: onTap,
-          icon: const Icon(Icons.add, size: 16),
-          label: const Text('Ajouter'),
-        ),
-      ],
-    );
-  }
-}
-
-class _EventRow extends StatelessWidget {
-  final Event event;
-  const _EventRow({required this.event});
-
-  Color _parseEventColor() {
-    if (event.color == null) return const Color(0xFF4F7CFF);
-    try {
-      return Color(int.parse('FF${event.color!.replaceAll('#', '')}', radix: 16));
-    } catch (_) {
-      return const Color(0xFF4F7CFF);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isToday = _isToday(event.startDate);
-
-    final baseColor = _parseEventColor();
-    final colorPair = [baseColor, Color.fromARGB(
-      (baseColor.a * 255.0).round() & 0xff,
-      ((baseColor.r * 255.0).round() & 0xff) * 4 ~/ 5,
-      ((baseColor.g * 255.0).round() & 0xff) * 4 ~/ 5,
-      ((baseColor.b * 255.0).round() & 0xff) * 4 ~/ 5,
-    )];
-
-    String dateLabel;
-    if (isToday) {
-      dateLabel =
-          "Aujourd'hui • ${DateFormat('HH:mm').format(event.startDate)}";
-    } else {
-      dateLabel = DateFormat('d MMM • HH:mm', 'fr_FR').format(event.startDate);
-    }
-
-    return Row(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: colorPair,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: colorPair.first.withValues(alpha: 0.3),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                DateFormat('MMM', 'fr_FR')
-                    .format(event.startDate)
-                    .toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                '${event.startDate.day}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  height: 1,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                event.title,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                dateLabel,
-                style: const TextStyle(
-                    color: AppColors.textSecondary, fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PinnedNoteCard extends StatelessWidget {
-  final Note note;
-  final Color color;
-  const _PinnedNoteCard({required this.note, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [color.withValues(alpha: 0.05), color.withValues(alpha: 0.10)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))
-        ],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.sticky_note_2, size: 16, color: color),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Note épinglée',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
-                const Spacer(),
-                const Icon(Icons.push_pin, size: 16, color: AppColors.accent),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: color.withValues(alpha: 0.2)),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  note.title,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 15,
-                  ),
-                ),
-                if (note.content.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    note.content,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      height: 1.5,
+                    // Actions rapides
+                    Text(
+                      'Actions rapides',
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                const SizedBox(height: 12),
-                Text(
-                  'Modifié ${_timeAgo(note.updatedAt)}',
-                  style: TextStyle(color: color, fontSize: 11),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: QuickActionButton(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [calendarColor, darken(calendarColor)],
+                            ),
+                            icon: Icons.calendar_today,
+                            label: 'Ajouter un événement',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const EventFormScreen(),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: QuickActionButton(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [notesColor, darken(notesColor)],
+                            ),
+                            icon: Icons.sticky_note_2_outlined,
+                            label: 'Nouvelle note',
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const NoteEditorScreen(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ExpenseRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color valueColor;
-
-  const _ExpenseRow(
-      {required this.label, required this.value, required this.valueColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style: const TextStyle(
-                  color: AppColors.textSecondary, fontSize: 13)),
-          Text(value,
-              style: TextStyle(
-                  color: valueColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14)),
-        ],
-      ),
-    );
-  }
-}
-
-class _MessageRow extends StatelessWidget {
-  final Message message;
-  final bool isMe;
-  final Map<String, String> memberNames;
-  final List<GroupMember> members;
-  const _MessageRow({
-    required this.message,
-    required this.isMe,
-    required this.memberNames,
-    required this.members,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final resolvedName = isMe ? 'Vous' : (memberNames[message.senderId] ?? message.senderName ?? '?');
-    final name = resolvedName;
-    final member = members.where((m) => m.uid == message.senderId).firstOrNull;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        UserAvatar(
-          photoUrl: member?.photoUrl,
-          showPhoto: member?.showProfilePhoto ?? true,
-          displayName: isMe ? 'Vous' : resolvedName,
-          radius: 18,
-          color: avatarColorForUid(message.senderId ?? ''),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(name,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                      )),
-                  const SizedBox(width: 8),
-                  Text(_timeAgo(message.timestamp),
-                      style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 11)),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                message.type == MessageType.image
-                    ? 'a envoyé une photo'
-                    : message.type == MessageType.file
-                        ? 'a envoyé un fichier'
-                        : message.type == MessageType.audio
-                            ? 'a envoyé un audio'
-                            : message.type == MessageType.poll
-                                ? 'a créé un sondage'
-                                : message.content,
-                style: const TextStyle(
-                    color: AppColors.textSecondary, fontSize: 13),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
-      ],
-    );
-  }
-}
-
-class _QuickActionButton extends StatelessWidget {
-  final LinearGradient gradient;
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickActionButton({
-    required this.gradient,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: gradient.colors.first.withValues(alpha: 0.25),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                ),
-                child: Icon(icon, color: Colors.white, size: 20),
-              ),
-              const SizedBox(height: 12),
-              Text(label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
-                  )),
-            ],
-          ),
-        ),
-      ),
+      ), // SafeArea
     );
   }
 }

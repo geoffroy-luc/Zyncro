@@ -1,12 +1,14 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/widgets/user_avatar.dart';
-import '../providers/auth_provider.dart';
+import 'package:zyncro/core/notifications/notification_providers.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/auth/presentation/widgets/profile_card.dart';
+import 'package:zyncro/features/auth/presentation/widgets/profile_section_header.dart';
+import 'package:zyncro/shared/widgets/user_avatar.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -23,15 +25,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadNotifPref();
+    unawaited(_loadNotifPref());
   }
 
   Future<void> _loadNotifPref() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() =>
-          _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true);
-    }
+    final enabled = await ref.read(notificationPreferencesProvider).isEnabled();
+    if (mounted) setState(() => _notificationsEnabled = enabled);
   }
 
   // ── Pseudo ────────────────────────────────────────────────────────────────
@@ -64,7 +63,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     if (confirmed == true && controller.text.trim().isNotEmpty) {
-      await ref.read(authRepositoryProvider).updateDisplayName(controller.text.trim());
+      await ref
+          .read(authRepositoryProvider)
+          .updateDisplayName(controller.text.trim());
       if (mounted) setState(() {});
     }
   }
@@ -76,10 +77,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     bool showProfilePhoto,
   ) async {
     final user = ref.read(authRepositoryProvider).currentUser;
-    final hasProviderPhoto = (user?.photoURL ?? '').isNotEmpty;
+    final hasProviderPhoto = (user?.photoUrl ?? '').isNotEmpty;
     final hasCustomPhoto = (customPhotoUrl ?? '').isNotEmpty;
 
-    await showModalBottomSheet(
+    await showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -93,7 +94,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.border,
+                color: context.colors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -103,7 +104,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               title: const Text('Prendre une photo'),
               onTap: () {
                 Navigator.of(ctx).pop();
-                _pickPhoto(ImageSource.camera);
+                unawaited(_pickPhoto(ImageSource.camera));
               },
             ),
             ListTile(
@@ -111,7 +112,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               title: const Text('Choisir depuis la galerie'),
               onTap: () {
                 Navigator.of(ctx).pop();
-                _pickPhoto(ImageSource.gallery);
+                unawaited(_pickPhoto(ImageSource.gallery));
               },
             ),
             if (hasProviderPhoto && hasCustomPhoto)
@@ -120,7 +121,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: const Text('Réinitialiser avec la photo Google/Apple'),
                 onTap: () {
                   Navigator.of(ctx).pop();
-                  _resetToProviderPhoto();
+                  unawaited(_resetToProviderPhoto());
                 },
               ),
             const Divider(height: 1),
@@ -129,17 +130,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 showProfilePhoto
                     ? Icons.hide_image_outlined
                     : Icons.image_outlined,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
               title: Text(
                 showProfilePhoto
                     ? 'Afficher uniquement mes initiales'
                     : 'Afficher ma photo de profil',
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.colors.textSecondary),
               ),
               onTap: () {
                 Navigator.of(ctx).pop();
-                _toggleShowPhoto(!showProfilePhoto);
+                unawaited(_toggleShowPhoto(!showProfilePhoto));
               },
             ),
             const SizedBox(height: 8),
@@ -157,9 +158,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final msg = e.toString();
       if (msg.contains('cancelled')) return;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $msg')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $msg')));
       }
     } finally {
       if (mounted) setState(() => _loadingPhoto = false);
@@ -188,29 +189,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _toggleNotifications(bool value) async {
     setState(() => _loadingNotif = true);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('notifications_enabled', value);
+    await ref.read(notificationPreferencesProvider).setEnabled(value);
 
     final user = ref.read(authRepositoryProvider).currentUser;
     if (user != null) {
-      final messaging = FirebaseMessaging.instance;
-      if (value) {
-        final token = await messaging.getToken();
-        if (token != null) {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .set({'fcmToken': token}, SetOptions(merge: true));
-        }
-      } else {
-        try {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .update({'fcmToken': null});
-        } catch (_) {}
-        await messaging.deleteToken();
-      }
+      await ref
+          .read(pushNotificationServiceProvider)
+          .setEnabledForUser(user.uid, enabled: value);
     }
 
     if (mounted) {
@@ -260,9 +245,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: const Text('Annuler'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.colors.error,
+            ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Supprimer',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -272,9 +262,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         await ref.read(authRepositoryProvider).deleteAccount();
       } on Exception catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur : $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
         }
       }
     }
@@ -286,8 +276,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // Watch authStateProvider so the avatar refreshes if the Firebase Auth user changes.
-    final user = ref.watch(authStateProvider).asData?.value
-        ?? ref.read(authRepositoryProvider).currentUser;
+    final user =
+        ref.watch(authStateProvider).asData?.value ??
+        ref.read(authRepositoryProvider).currentUser;
     final userDoc = ref.watch(userDocProvider).asData?.value;
 
     final displayName = user?.displayName ?? user?.email ?? 'Utilisateur';
@@ -296,10 +287,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // Custom photo (uploaded) or null → fall back to provider photo
     final customPhotoUrl = userDoc?['photoUrl'] as String?;
     final showProfilePhoto = userDoc?['showProfilePhoto'] as bool? ?? true;
-    final effectivePhotoUrl = customPhotoUrl ?? user?.photoURL;
+    final effectivePhotoUrl = customPhotoUrl ?? user?.photoUrl;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(title: const Text('Mon profil')),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 24),
@@ -315,14 +306,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         height: 88,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                         ),
                       )
                     : GestureDetector(
-                        onTap: () => _showPhotoOptions(
-                          customPhotoUrl,
-                          showProfilePhoto,
-                        ),
+                        onTap: () =>
+                            _showPhotoOptions(customPhotoUrl, showProfilePhoto),
                         child: UserAvatar(
                           photoUrl: effectivePhotoUrl,
                           showPhoto: showProfilePhoto,
@@ -332,14 +321,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                 if (!_loadingPhoto)
                   GestureDetector(
-                    onTap: () => _showPhotoOptions(
-                      customPhotoUrl,
-                      showProfilePhoto,
-                    ),
+                    onTap: () =>
+                        _showPhotoOptions(customPhotoUrl, showProfilePhoto),
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        color: context.colors.primary,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                       ),
@@ -359,24 +346,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Text(
                 email,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
               ),
             ),
           const SizedBox(height: 32),
 
           // ── Section : Infos ──────────────────────────────────────────────
-          _SectionHeader(label: 'Informations'),
-          _Card(
+          const ProfileSectionHeader(label: 'Informations'),
+          ProfileCard(
             child: ListTile(
-              leading: const Icon(Icons.person_outline, color: AppColors.primary),
+              leading: Icon(
+                Icons.person_outline,
+                color: context.colors.primary,
+              ),
               title: const Text('Pseudo'),
               subtitle: Text(displayName),
               trailing: IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.edit_outlined,
                   size: 20,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
                 onPressed: _editPseudo,
               ),
@@ -384,8 +374,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
 
           // ── Section : Préférences ────────────────────────────────────────
-          _SectionHeader(label: 'Préférences'),
-          _Card(
+          const ProfileSectionHeader(label: 'Préférences'),
+          ProfileCard(
             child: Column(
               children: [
                 ListTile(
@@ -393,15 +383,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     showProfilePhoto
                         ? Icons.account_circle_outlined
                         : Icons.account_circle_outlined,
-                    color: AppColors.primary,
+                    color: context.colors.primary,
                   ),
                   title: const Text('Afficher ma photo de profil'),
                   subtitle: Text(
                     showProfilePhoto
                         ? 'Les autres voient ta photo'
                         : 'Les autres voient tes initiales',
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: AppColors.textSecondary),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: context.colors.textSecondary,
+                    ),
                   ),
                   trailing: _loadingPhoto
                       ? const SizedBox(
@@ -412,16 +403,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       : Switch(
                           value: showProfilePhoto,
                           onChanged: _toggleShowPhoto,
-                          activeThumbColor: AppColors.primary,
+                          activeThumbColor: context.colors.primary,
                         ),
                 ),
-                Divider(height: 1, indent: 16, endIndent: 16, color: AppColors.border),
+                Divider(
+                  height: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: context.colors.border,
+                ),
                 ListTile(
                   leading: Icon(
                     _notificationsEnabled
                         ? Icons.notifications_outlined
                         : Icons.notifications_off_outlined,
-                    color: AppColors.primary,
+                    color: context.colors.primary,
                   ),
                   title: const Text('Notifications'),
                   trailing: _loadingNotif
@@ -433,7 +429,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       : Switch(
                           value: _notificationsEnabled,
                           onChanged: _toggleNotifications,
-                          activeThumbColor: AppColors.primary,
+                          activeThumbColor: context.colors.primary,
                         ),
                 ),
               ],
@@ -441,27 +437,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
 
           // ── Section : Compte ─────────────────────────────────────────────
-          _SectionHeader(label: 'Compte'),
-          _Card(
+          const ProfileSectionHeader(label: 'Compte'),
+          ProfileCard(
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.logout_outlined,
-                      color: AppColors.textSecondary),
+                  leading: Icon(
+                    Icons.logout_outlined,
+                    color: context.colors.textSecondary,
+                  ),
                   title: const Text('Se déconnecter'),
                   onTap: _signOut,
                 ),
                 Divider(
-                    height: 1,
-                    indent: 16,
-                    endIndent: 16,
-                    color: AppColors.border),
+                  height: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: context.colors.border,
+                ),
                 ListTile(
-                  leading:
-                      const Icon(Icons.delete_outline, color: AppColors.error),
-                  title: const Text(
+                  leading: Icon(
+                    Icons.delete_outline,
+                    color: context.colors.error,
+                  ),
+                  title: Text(
                     'Supprimer le compte',
-                    style: TextStyle(color: AppColors.error),
+                    style: TextStyle(color: context.colors.error),
                   ),
                   onTap: _deleteAccount,
                 ),
@@ -470,46 +471,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-class _SectionHeader extends StatelessWidget {
-  final String label;
-  const _SectionHeader({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
-      child: Text(
-        label.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.textSecondary,
-              letterSpacing: 0.8,
-              fontWeight: FontWeight.w600,
-            ),
-      ),
-    );
-  }
-}
-
-class _Card extends StatelessWidget {
-  final Widget child;
-  const _Card({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: child,
     );
   }
 }

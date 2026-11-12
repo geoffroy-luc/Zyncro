@@ -3,3 +3,4 @@
 .vscode/
 firebase-tests/node_modules/
 firebase-tests/*.log
+*-debug.log

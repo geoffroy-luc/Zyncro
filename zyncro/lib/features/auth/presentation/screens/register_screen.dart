@@ -2,8 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../providers/auth_provider.dart';
+import 'package:zyncro/core/navigation/app_routes.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -38,11 +39,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _error = null;
     });
     try {
-      await ref.read(authRepositoryProvider).registerWithEmail(
-        _emailController.text.trim(),
-        _passwordController.text,
-        _nameController.text.trim(),
-      );
+      await ref
+          .read(authRepositoryProvider)
+          .registerWithEmail(
+            _emailController.text.trim(),
+            _passwordController.text,
+            _nameController.text.trim(),
+          );
     } on FirebaseAuthException catch (e) {
       setState(() => _error = _mapError(e.code));
     } finally {
@@ -75,10 +78,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 48),
-                Text(
-                  'Créer un compte',
-                  style: theme.textTheme.headlineMedium,
-                ),
+                Text('Créer un compte', style: theme.textTheme.headlineMedium),
                 const SizedBox(height: 8),
                 Text(
                   'Rejoins ou crée ton espace partagé',
@@ -148,13 +148,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.08),
+                      color: context.colors.error.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       _error!,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.error,
+                        color: context.colors.error,
                       ),
                     ),
                   ),
@@ -175,7 +175,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () => context.go('/login'),
+                  onPressed: () => context.go(AppRoutes.login),
                   child: const Text('Déjà un compte ? Se connecter'),
                 ),
               ],

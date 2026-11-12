@@ -28,4 +28,5 @@ const expenseCategoryIcons = <String, IconData>{
   'party': Icons.celebration_outlined,
 };
 
-IconData iconForKey(String key) => expenseCategoryIcons[key] ?? Icons.label_outline;
+IconData iconForKey(String key) =>
+    expenseCategoryIcons[key] ?? Icons.label_outline;

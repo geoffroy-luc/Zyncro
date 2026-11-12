@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/expense_categories.dart';
-import '../../core/theme/app_theme.dart';
-import '../models/expense_category.dart';
-import 'color_picker_row.dart';
+import 'package:zyncro/core/constants/expense_categories.dart';
+import 'package:zyncro/core/theme/app_theme.dart';
+import 'package:zyncro/core/utils/color_hex.dart';
+import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/shared/domain/categories/expense_category.dart';
+import 'package:zyncro/shared/widgets/color_picker_row.dart';
 
 Future<ExpenseCategory?> showCategoryEditor(
   BuildContext context, {
@@ -81,17 +82,17 @@ class _CategoryEditorSheetState extends State<CategoryEditorSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: context.colors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             Text(
               isEditing ? 'Modifier la catégorie' : 'Nouvelle catégorie',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
             const SizedBox(height: 20),
@@ -106,12 +107,12 @@ class _CategoryEditorSheetState extends State<CategoryEditorSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Icône',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
             const SizedBox(height: 10),
@@ -126,29 +127,31 @@ class _CategoryEditorSheetState extends State<CategoryEditorSheet> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: selected ? color.withValues(alpha: 0.12) : Colors.white,
+                      color: selected
+                          ? color.withValues(alpha: 0.12)
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: selected ? color : AppColors.border,
+                        color: selected ? color : context.colors.border,
                         width: selected ? 1.5 : 1,
                       ),
                     ),
                     child: Icon(
                       entry.value,
                       size: 18,
-                      color: selected ? color : AppColors.textSecondary,
+                      color: selected ? color : context.colors.textSecondary,
                     ),
                   ),
                 );
               }).toList(),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Couleur',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
             const SizedBox(height: 10),

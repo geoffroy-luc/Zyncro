@@ -1,0 +1,1 @@
+enum ViewMode { month, agenda }

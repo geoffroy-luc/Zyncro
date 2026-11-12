@@ -17,9 +17,11 @@ import 'package:image_picker/image_picker.dart';
 ///   GroupMember docs store the *effective* photoUrl so they can be displayed
 ///   without extra reads.
 class UserProfileService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  UserProfileService(this._auth, this._db, this._storage);
+
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _db;
+  final FirebaseStorage _storage;
 
   User? get _user => _auth.currentUser;
 
@@ -30,11 +32,7 @@ class UserProfileService {
   Stream<Map<String, dynamic>?> watchUserDoc() {
     final uid = _user?.uid;
     if (uid == null) return Stream.value(null);
-    return _db
-        .collection('users')
-        .doc(uid)
-        .snapshots()
-        .map((s) => s.data());
+    return _db.collection('users').doc(uid).snapshots().map((s) => s.data());
   }
 
   /// Picks an image from [source], uploads it to Storage, updates Firestore
@@ -60,10 +58,9 @@ class UserProfileService {
     final url = await ref.getDownloadURL();
 
     final showPhoto = await _getShowProfilePhoto(uid);
-    await _db
-        .collection('users')
-        .doc(uid)
-        .set({'photoUrl': url}, SetOptions(merge: true));
+    await _db.collection('users').doc(uid).set({
+      'photoUrl': url,
+    }, SetOptions(merge: true));
 
     final effective = showPhoto ? url : null;
     await _propagateToGroups(uid, effective, showPhoto);
@@ -78,10 +75,9 @@ class UserProfileService {
     await _tryDeleteStoragePhoto(uid);
 
     final showPhoto = await _getShowProfilePhoto(uid);
-    await _db
-        .collection('users')
-        .doc(uid)
-        .set({'photoUrl': null}, SetOptions(merge: true));
+    await _db.collection('users').doc(uid).set({
+      'photoUrl': null,
+    }, SetOptions(merge: true));
 
     final effective = showPhoto ? _user?.photoURL : null;
     await _propagateToGroups(uid, effective, showPhoto);
@@ -95,10 +91,9 @@ class UserProfileService {
     final customUrl = await _getCustomPhotoUrl(uid);
     final effective = show ? (customUrl ?? _user?.photoURL) : null;
 
-    await _db
-        .collection('users')
-        .doc(uid)
-        .set({'showProfilePhoto': show}, SetOptions(merge: true));
+    await _db.collection('users').doc(uid).set({
+      'showProfilePhoto': show,
+    }, SetOptions(merge: true));
     await _propagateToGroups(uid, effective, show);
   }
 
@@ -127,13 +122,10 @@ class UserProfileService {
 
     final batch = _db.batch();
     for (final g in groupsSnap.docs) {
-      batch.update(
-        g.reference.collection('members').doc(uid),
-        {
-          'photoUrl': effectivePhotoUrl,
-          'showProfilePhoto': showProfilePhoto,
-        },
-      );
+      batch.update(g.reference.collection('members').doc(uid), {
+        'photoUrl': effectivePhotoUrl,
+        'showProfilePhoto': showProfilePhoto,
+      });
     }
     await batch.commit();
   }

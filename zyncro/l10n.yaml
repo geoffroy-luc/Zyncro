@@ -1,0 +1,9 @@
+# Localisation (flutter gen-l10n). Français uniquement pour l'instant :
+# app_fr.arb est le modèle ; ajouter app_en.arb suffira pour l'anglais.
+arb-dir: lib/l10n
+template-arb-file: app_fr.arb
+output-dir: lib/l10n/generated
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false
+format: true
