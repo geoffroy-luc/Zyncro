@@ -86,23 +86,26 @@ mixin _ChatComposer on _ChatScreenStateBase {
     _currentUserId = user.uid;
     _repo = repo;
 
-    unawaited(
-      repo.setTyping(
-        groupId: groupId,
-        userId: user.uid,
-        userName:
-            ref.read(currentMemberProvider).asData?.value?.displayName ??
-            user.displayName ??
-            user.email ??
-            'Anonyme',
-      ),
-    );
+    if (_typingThrottle.shouldSend()) {
+      unawaited(
+        repo.setTyping(
+          groupId: groupId,
+          userId: user.uid,
+          userName:
+              ref.read(currentMemberProvider).asData?.value?.displayName ??
+              user.displayName ??
+              user.email ??
+              'Anonyme',
+        ),
+      );
+    }
 
     _typingTimer?.cancel();
     _typingTimer = Timer(const Duration(seconds: 4), _clearTyping);
   }
 
   void _clearTyping() {
+    _typingThrottle.reset();
     final groupId = _currentGroupId;
     final userId = _currentUserId;
     final repo = _repo;

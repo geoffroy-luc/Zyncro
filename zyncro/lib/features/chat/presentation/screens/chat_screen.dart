@@ -13,6 +13,7 @@ import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';
 import 'package:zyncro/features/chat/domain/repositories/messages_repository.dart';
+import 'package:zyncro/features/chat/domain/typing_throttle.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/chat/presentation/screens/media_picker_screen.dart';
 import 'package:zyncro/features/chat/presentation/widgets/chat_search_bar.dart';
@@ -68,6 +69,7 @@ abstract class _ChatScreenStateBase extends ConsumerState<ChatScreen> {
   final _inputFocusNode = FocusNode();
   bool _sending = false;
   Timer? _typingTimer;
+  final _typingThrottle = TypingThrottle();
   final Set<String> _visibleTimestamps = {};
   Message? _replyingTo;
   Message? _editingMessage;
