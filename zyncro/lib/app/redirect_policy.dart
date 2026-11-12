@@ -5,7 +5,8 @@ import 'package:zyncro/core/navigation/app_routes.dart';
 /// - pas connecté → login (sauf inscription) ;
 /// - connecté sur login/inscription → lien d'invitation en attente, sinon
 ///   la liste des espaces ;
-/// - onglet du shell sans espace sélectionné → liste des espaces.
+/// - onglet du shell, réglage d'onglet ou galerie sans espace sélectionné →
+///   liste des espaces.
 /// `null` = pas de redirection (y compris pendant les chargements).
 String? computeRedirect({
   required bool authLoading,
@@ -26,7 +27,13 @@ String? computeRedirect({
     return AppRoutes.groups;
   }
   if (groupLoading) return null;
-  final inShell = AppRoutes.shellTabs.contains(path);
-  if (inShell && selectedGroupId == null) return AppRoutes.groups;
+  // BUG G9 corrigé : les écrans liés à un espace (onglets, réglages
+  // d'onglet, galerie) renvoient à la liste quand il n'y a plus d'espace
+  // sélectionné (groupe supprimé, retrait) au lieu d'un spinner infini.
+  final groupScoped =
+      AppRoutes.shellTabs.contains(path) ||
+      AppRoutes.tabSettings.contains(path) ||
+      path == AppRoutes.mediaGallery;
+  if (groupScoped && selectedGroupId == null) return AppRoutes.groups;
   return null;
 }

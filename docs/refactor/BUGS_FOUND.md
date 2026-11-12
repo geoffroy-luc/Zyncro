@@ -5,13 +5,13 @@
 >
 > Mêmes alias que l'AUDIT : chemins Dart relatifs à `zyncro/lib/`, FR = `firestore.rules`, FN = `functions/src/index.ts`.
 >
-> **État au 2026-11-12** : 64 corrigés (✅ dans les tableaux), 35 restants. G1, D1, D2 sur `fix/client-hotfixes` ; les autres sur `fix/bugs`, chaque correctif inverse son test `BUG …` ou en ajoute un, avec le test bout en bout vert. Corrigés : C1, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C17, C18, CA1, CA2, CA3, CA4, CA6, CA7, CA8, CA9, CA10, D1, D2, E1, E2, E3, E5, E8, E9, E12, E14, E15, E16, E17, E21, E22, E23, E25, F1, F2, G1, G4, G5, G7, G8, G11, G12, G15, K1, K2, K3, M1, M2, M7, M8, M11, M12, M14, M15, M17.
+> **État au 2026-11-12** : 65 corrigés (✅ dans les tableaux), 34 restants. G1, D1, D2 sur `fix/client-hotfixes` ; les autres sur `fix/bugs`, chaque correctif inverse son test `BUG …` ou en ajoute un, avec le test bout en bout vert. Corrigés : C1, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C17, C18, CA1, CA2, CA3, CA4, CA6, CA7, CA8, CA9, CA10, D1, D2, E1, E2, E3, E5, E8, E9, E12, E14, E15, E16, E17, E21, E22, E23, E25, F1, F2, G1, G4, G5, G7, G8, G9, G11, G12, G15, K1, K2, K3, M1, M2, M7, M8, M11, M12, M14, M15, M17.
 >
 > **Restants, et pourquoi** :
 > - **Changement de schéma ou mise à jour forcée** (à planifier avec S3) : K4 (horodatage serveur), G17 (un jeton FCM par appareil), E10 / E11 (`settled` et identifiants par occurrence), E20 (catégories par identifiant), G2 (couleurs masquées par palette), CA11 (filtres du calendrier personnels).
 > - **Fonctionnalité à part entière** : G3 (suppression de compte complète : purge serveur et transfert de propriété des groupes), CA5 (rappels partagés et replanifiés), G10 (bouton retour, feature prévue), C2 (anciens messages en temps réel), « uniquement cette occurrence » pour les séries (exceptions de série).
 > - **Décision produit** : E7 (abréviations k/M), E19 (devise), G18 (effacement des notifications), E4 / E6 (affichage et saisie des répartitions), E18 (membres partis), C16 (compter ses propres messages dans les non-lus).
-> - **Petits défauts restants** : E13, E24, F3, F4, G6, G9, G13, G14, G16, M3, M4, M5, M6, M9, M10, M13, M16.
+> - **Petits défauts restants** : E13, E24, F3, F4, G6, G13, G14, G16, M3, M4, M5, M6, M9, M10, M13, M16.
 >
 > Gravité : 🔴 perte ou corruption de données / montant faux · 🟠 fonctionnalité cassée · 🟡 gêne ou incohérence.
 >
@@ -129,7 +129,7 @@
 | G6 🟠 | Codes d'invitation | Régénération sans transaction (GR:218-239) ; aucun test de collision (`group.dart:28-32`) : en cas de collision, la création du groupe **échoue** (les rules n'autorisent pas l'`update` d'un code existant, vérifié sur émulateur) au lieu d'écraser l'autre code ; nom et emoji non répercutés dans `invite_codes` (GR:206-215 ; HS:139-142) |
 | G7 🟠 ✅ | Suppression de groupe | La purge de `members` déclenche `onMemberRemoved` : chaque membre reçoit en plus « Tu as été retiré du groupe » (FN:52-66, 71-104). `config` n'est pas purgé (FN:52), le Storage non plus |
 | G8 🟠 ✅ | Quitter un groupe | Celui qui part reçoit « Tu as été retiré du groupe » (FN:71-104 + GR:155-179) |
-| G9 🟡 | Spinner infini sur `/settings/*` après suppression du groupe ou retrait | La redirection ne couvre que le shell (GP:51-57 ; RT:72-79 ; HS:525-527) |
+| G9 🟡 ✅ | Spinner infini sur `/settings/*` après suppression du groupe ou retrait | La redirection ne couvre que le shell (GP:51-57 ; RT:72-79 ; HS:525-527) |
 | G10 🟠 | Bouton retour Android | Ferme l'app depuis un onglet : aucun `PopScope`, uniquement des `go` (RT ; GSEL:50 ; JL:46). Feature à venir, à ne pas corriger pendant le refactor |
 | G11 🟠 ✅ | Perte de mise à jour des notes | `copyWith` sur l'instantané d'ouverture puis `update(toMap())` complet (NE:153-164 ; `notes_repository.dart:62-64`). Épingler modifie `updatedAt` côté client (`note.dart:104`) |
 | G12 🟡 ✅ | Dashboard | Événements récurrents absents (DB:75) ; événements multi-jours en cours exclus (DB:88-89) ; total incluant les remboursements (DB:99-100) ; « € » en dur (DB:55-57) |

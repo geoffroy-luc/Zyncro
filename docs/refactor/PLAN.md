@@ -24,7 +24,7 @@
 | 10 Performance | 🟡 non-lus, aperçu médias, galerie paginée (D9), frappe limitée, cache des aperçus de lien ; restent `cacheWidth`, cache disque, `autoDispose` |
 | 11 Cloud Functions | ✅ découpées, Node 22, déployées |
 | 12 Documentation | ✅ |
-| 13 Corrections de bugs | ⏳ (hors G1/D1/D2), à valider bug par bug |
+| 13 Corrections de bugs | 🟡 65 / 99 corrigés (`fix/bugs`) ; restants listés en tête de BUGS_FOUND |
 
 ## 1. Principes et garde-fous
 

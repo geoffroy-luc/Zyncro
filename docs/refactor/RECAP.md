@@ -10,7 +10,8 @@ Tout est fusionné **localement** dans `main` (rien n'est poussé : `origin/main
 main
  ├─ merge fix/security-rules       rules Firestore/Storage durcies + firebase-tests/ (98 tests)
  ├─ merge fix/client-hotfixes      G1 réglages champ par champ, D1/D2 parsing tolérant, App Check
- └─ merge refactor/architecture    ~35 commits [REFACTO]
+ ├─ merge refactor/architecture    ~35 commits [REFACTO]
+ └─ merge fix/bugs                 corrections de bugs (BUGS_FOUND.md), un commit par lot
 ```
 
 ## 2. Ce qui est en production
@@ -20,6 +21,7 @@ main
 | Rules **Firestore** durcies (S1) | ✅ Déployées et vérifiées : version déployée = dépôt. Validées par 98 tests émulateur et par le test bout en bout de l'app réelle (0 refus de permission) |
 | Rules **Storage** durcies (S1) | ✅ Déployées et vérifiées (= dépôt). Le rôle IAM `roles/firebaserules.firestoreServiceAgent` a été accordé par la CLI Firebase lors du déploiement |
 | Cloud Functions | ✅ Redéployées en **Node 22** (le runtime Node 20 est décommissionné depuis le 2026-10-30). Code découpé par domaine, notifications strictement identiques (tests snapshot) |
+| Cloud Functions (corrections G7, G8, F1, F2) | ✅ `onMemberRemoved`, `onEventDeleted`, `onNoteDeleted` passés aux triggers « WithAuthContext » (migration en place, exports inchangés) et `onEventUpdated` : déployées le 2026-11-12 |
 | Index Firestore | ✅ Index composite `messages (type ASC, timestamp DESC)` déployé : aperçu médias du dashboard et galerie paginée |
 | Sauvegarde des rules d'avant S1 | `/home/zoff/Dev/zyncro-tools/deployed-rules-backup/` (rollback possible) |
 
@@ -42,7 +44,7 @@ Le code client (App Check, G1, D1, refactor) doit encore être publié via une r
 
 **Qualité** :
 - `flutter analyze` à **0 issue** avec `strict-casts`, `strict-inference`, `strict-raw-types` et environ 40 règles (point de départ : 24 infos, ou 726 avec ce jeu).
-- Tests : 0 au départ, maintenant **135** côté Flutter (unitaires, caractérisation, architecture, l10n, repositories sur Firestore simulé), **32** côté functions et **98** côté rules, plus **1 test bout en bout** (app réelle sur émulateur Android, contre les émulateurs Firebase : invité, espace, note, événement, dépense, message, galerie, réglages de l'accueil).
+- Tests : 0 au départ, maintenant **163** côté Flutter (unitaires, caractérisation, architecture, l10n, repositories sur Firestore simulé), **37** côté functions et **98** côté rules, plus **1 test bout en bout** (app réelle sur émulateur Android, contre les émulateurs Firebase : invité, espace, note, événement, dépense, message, galerie, réglages de l'accueil).
 - CI de PR ajoutée, Flutter épinglé, `node_modules` et `lib/` des functions retirés du dépôt.
 
 **Performance** :
@@ -52,12 +54,14 @@ Le code client (App Check, G1, D1, refactor) doit encore être publié via une r
 - **Indicateur de frappe** : au plus une écriture Firestore toutes les 2 s pendant la saisie, au lieu d'une par frappe. L'affichage chez les autres membres est identique (seuil de lecture de 6 s, suppression 4 s après la dernière frappe).
 - Aperçus de liens mis en cache en mémoire (succès seulement) : un lien n'est plus re-téléchargé à chaque réaffichage d'une bulle.
 
-**Corrigés** (voie rapide validée) :
-- **G1** : les réglages d'onglet ne s'écrasent plus entre membres.
-- **D1** : un document malformé ne casse plus un onglet.
-- **D2** : un horodatage serveur en attente ne fait plus planter.
+**Bugs corrigés** : 65 sur 99 (détail et restants dans `BUGS_FOUND.md`, en-tête). Les plus importants :
+- **Chat** : messages qui disparaissaient après « charger plus » (C1), pagination bloquée (C3), médias cassés par « Modifier » (C5), état conservé d'un groupe à l'autre (C14), texte perdu si l'envoi échoue (C11), réactions comptées comme votes (C8).
+- **Dépenses** : montants au centime près, soldes qui somment exactement à 0, y compris sur les données existantes (E1, E2, E3, E5) ; modifier ou supprimer une occurrence d'une série ne touche plus le passé (E8, E9) ; remboursements hors des totaux (E23).
+- **Calendrier** : événements sur plusieurs mois (K1), occurrences de série et heure d'été (K2, CA3, E12), champs et couleur effaçables (CA1, CA2, K3), choix « celle-ci et les suivantes / toute la série » (K2, CA6).
+- **Notifications** : plus de « Tu as été retiré du groupe » en quittant ou à la suppression du groupe (G7, G8), suppressions attribuées à leur auteur (F1).
+- **Divers** : modifications concurrentes de notes conservées (G11), rejoindre un groupe déjà rejoint (G5), vidéos en erreur (M14), envois de fichiers (M1, M2), crashs de règles et de sélecteurs de date (E15, CA4).
 
-Tous les autres bugs sont **conservés**, et figés par des tests `BUG …`.
+Aucun nouveau champ en base : les correctifs n'utilisent que des champs existants (`until`, `count`…) ou des suppressions de clé, lisibles par les versions publiées.
 
 ## 4. Dette technique assumée
 
@@ -82,12 +86,7 @@ Tous les autres bugs sont **conservés**, et figés par des tests `BUG …`.
    - timestamps serveur pour les messages (corrige K4, l'ordre des messages) ;
    - enforcement App Check ;
    - hausse de `minimum_version`.
-4. **Corriger les bugs** par priorité (PLAN étape 13), en inversant leur test `BUG …` :
-   - K2 / E8 / E9 : édition d'une occurrence ;
-   - E1 / E2 : arrondis des montants ;
-   - C1 à C3 : pagination du chat (`LiveWindowPager`, déjà utilisé par la galerie, règle C1) ;
-   - K1, K3 ;
-   - G7 / G8 : notifications en double.
+4. **Bugs restants** (`BUGS_FOUND.md`, en-tête) : ceux qui demandent un changement de schéma sont à planifier avec S3 (K4, G17, E10, E11, E20, G2, CA11). G3 (suppression de compte complète) est le plus important des restants.
 5. Poursuivre le refactor de présentation (dette §4) en même temps que les nouvelles features : chaque nouvel écran suit `ARCHITECTURE.md` §9.
 6. Compléter `invite.html` avec l'id App Store, et `assetlinks.json` avec l'empreinte Play App Signing.
 
