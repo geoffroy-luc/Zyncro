@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zyncro/core/error/failure.dart';
 import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
-import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/groups/domain/repositories/groups_repository.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/invite_link_provider.dart';
@@ -86,17 +86,7 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
         return;
       }
 
-      final userName = freshUser.displayName ?? user.email ?? 'Quelqu\'un';
-      unawaited(
-        ref
-            .read(messagesRepositoryProvider)
-            .sendSystemMessage(
-              groupId: group.id,
-              userId: user.uid,
-              content: '👋 $userName a rejoint le groupe',
-              notifScreen: 'chat',
-            ),
-      );
+      // Le message « a rejoint le groupe » est écrit par le serveur (S3).
 
       await ref.read(selectedGroupIdProvider.notifier).select(group.id);
       if (mounted) context.go(AppRoutes.home);
@@ -104,7 +94,7 @@ class _JoinByLinkScreenState extends ConsumerState<JoinByLinkScreen> {
       if (mounted) {
         setState(() {
           _joining = false;
-          _error = 'Erreur : $e';
+          _error = e is ValidationFailure ? e.code : 'Erreur : $e';
         });
       }
     }

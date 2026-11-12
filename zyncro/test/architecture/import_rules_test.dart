@@ -42,7 +42,7 @@ void main() {
 
   test('instances Firebase obtenues uniquement via core/firebase', () {
     final pattern = RegExp(
-      r'Firebase(Firestore|Storage|Auth|Messaging)\.instance',
+      r'Firebase(Firestore|Storage|Auth|Messaging|Functions)\.instance',
     );
     const allowed = [
       'lib/core/firebase/firebase_providers.dart',

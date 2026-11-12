@@ -48,6 +48,19 @@ mixin _ChatScreenSections
     });
   }
 
+  /// Changement de compte (déconnexion) : l'indicateur de frappe de
+  /// l'ancien compte n'est plus effaçable par le nouveau (refus des rules) ;
+  /// on abandonne ce nettoyage, le document expire de lui-même (6 s).
+  void _listenAccountChange() {
+    ref.listen(authStateProvider.select((s) => s.value?.uid), (previous, next) {
+      if (previous == null || previous == next) return;
+      _typingTimer?.cancel();
+      _currentUserId = null;
+      _currentGroupId = null;
+      _repo = null;
+    });
+  }
+
   /// À appeler depuis `build` (ref.listen).
   void _listenReadReceipts() {
     // Marque le dernier message comme lu quand un nouveau message arrive

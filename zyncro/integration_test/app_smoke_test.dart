@@ -188,7 +188,51 @@ void main() {
     await pumpUntil(tester, find.text('Paramètres Accueil'));
     await pumpUntil(tester, find.text(groupName));
     await pumpUntil(tester, find.textContaining('Testeur'));
+    final codeText = find.byWidgetPredicate(
+      // Le code est affiché espacé (letterSpacing 4), contrairement aux
+      // titres de section en capitales (« ESPACE »).
+      (w) =>
+          w is Text &&
+          w.style?.letterSpacing == 4 &&
+          RegExp(r'^[A-Z0-9]{6}$').hasMatch(w.data ?? ''),
+    );
+    await pumpUntil(tester, codeText);
+    final inviteCode = (codeText.evaluate().first.widget as Text).data!;
+    debugPrint('E2E code d\'invitation : $inviteCode');
     GoRouter.of(tester.element(find.text('Paramètres Accueil'))).pop();
     await pumpUntilGone(tester, find.text('Paramètres Accueil'));
+
+    // ── Adhésion d'un 2e compte par code (callable joinGroupByCode, S3) ───
+    unawaited(
+      GoRouter.of(
+        tester.element(find.text('Événement E2E').first),
+      ).push(AppRoutes.profile),
+    );
+    await pumpUntil(tester, find.text('Se déconnecter'));
+    await tapAndPump(tester, find.text('Se déconnecter'));
+    await pumpUntil(tester, find.text('Déconnecter'));
+    await tapAndPump(tester, find.text('Déconnecter'));
+
+    await pumpUntil(tester, find.text('Continuer sans compte'));
+    await tapAndPump(tester, find.text('Continuer sans compte').first);
+    await pumpUntil(tester, field('Pseudo'));
+    await tester.enterText(field('Pseudo'), 'Invité Deux');
+    await tapAndPump(tester, find.widgetWithText(ElevatedButton, 'Continuer'));
+
+    await pumpUntil(tester, find.text('Rejoindre avec un code'));
+    await tapAndPump(tester, find.text('Rejoindre avec un code'));
+    final codeField = find.widgetWithText(TextField, "Code d'invitation");
+    await pumpUntil(tester, codeField);
+    await tester.enterText(codeField, inviteCode);
+    await tapAndPump(tester, find.text('Rejoindre').last);
+
+    // L'espace rejoint s'ouvre, avec les données du premier compte…
+    await pumpUntil(tester, find.text('Événement E2E'));
+    // … et le message d'arrivée écrit par le serveur.
+    await tapAndPump(tester, navTab('Chat'));
+    await pumpUntil(
+      tester,
+      find.textContaining('Invité Deux a rejoint le groupe'),
+    );
   });
 }

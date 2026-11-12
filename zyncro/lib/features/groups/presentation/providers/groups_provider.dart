@@ -13,6 +13,7 @@ final groupsRepositoryProvider = Provider<GroupsRepository>(
   (ref) => FirestoreGroupsRepository(
     ref.watch(firestoreProvider),
     ref.watch(firebaseStorageProvider),
+    functions: ref.watch(firebaseFunctionsProvider),
   ),
 );
 

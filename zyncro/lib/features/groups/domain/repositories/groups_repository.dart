@@ -27,13 +27,11 @@ abstract interface class GroupsRepository {
     String? photoUrl,
     bool showProfilePhoto,
   });
-  Future<void> joinGroup(
-    String groupId,
-    String userId,
-    String displayName, {
-    String? photoUrl,
-    bool showProfilePhoto,
-  });
+
+  /// Adhésion par code, **côté serveur** (callable `joinGroupByCode`, S3) :
+  /// le serveur ajoute le membre et écrit le message « a rejoint le groupe ».
+  /// `null` si le code est inconnu. Déjà membre : rien n'est écrit.
+  /// Trop de tentatives ou données invalides : [ValidationFailure].
   Future<Group?> joinGroupByCode(
     String code,
     String userId,
