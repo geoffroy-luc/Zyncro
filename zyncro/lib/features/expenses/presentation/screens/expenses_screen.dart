@@ -20,6 +20,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   late final TabController _tabController;
   int _currentTab = 0;
   String _search = '';
+  // BUG E21 corrigé : le champ affiche toujours le filtre actif (il
+  // revenait vide après un changement d'onglet alors que la liste restait
+  // filtrée).
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -34,6 +38,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   @override
   void dispose() {
+    _searchController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -128,6 +133,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       ),
                       Expanded(
                         child: TextField(
+                          controller: _searchController,
                           onChanged: (v) => setState(() => _search = v),
                           decoration: InputDecoration(
                             hintText: context.l10n.expensesRechercherUneDepense,

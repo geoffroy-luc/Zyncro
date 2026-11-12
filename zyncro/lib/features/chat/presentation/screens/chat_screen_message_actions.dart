@@ -77,11 +77,14 @@ mixin _ChatMessageActions on _ChatScreenStateBase {
                 ),
               ),
             const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.reply_outlined),
-              title: Text(context.l10n.chatRepondre),
-              onTap: () => Navigator.of(ctx).pop('reply'),
-            ),
+            // BUG C9 corrigé : pas de « Répondre » sur un sondage (la carte
+            // n'affiche pas de citation, le balayage est déjà désactivé).
+            if (message.type != MessageType.poll)
+              ListTile(
+                leading: const Icon(Icons.reply_outlined),
+                title: Text(context.l10n.chatRepondre),
+                onTap: () => Navigator.of(ctx).pop('reply'),
+              ),
             if (message.type == MessageType.text)
               ListTile(
                 leading: const Icon(Icons.content_copy_outlined),

@@ -107,6 +107,7 @@ mixin _ExpenseFormActions on _ExpenseFormScreenStateBase {
             splitType: _splitType,
             splitAmounts: splitAmounts,
             category: _selectedCategory,
+            clearCategory: _selectedCategory == null,
             date: original.isSeriesOccurrence
                 ? shiftAnchor(
                     original.seriesStart!,

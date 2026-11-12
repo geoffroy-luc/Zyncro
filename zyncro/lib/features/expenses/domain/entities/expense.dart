@@ -74,6 +74,8 @@ class Expense {
     String? updatedBy,
     RecurrenceRule? recurrence,
     bool clearRecurrence = false,
+    // BUG E17 corrigé : la catégorie peut être retirée.
+    bool clearCategory = false,
   }) {
     return Expense(
       id: id,
@@ -85,7 +87,7 @@ class Expense {
       paidByName: paidByName ?? this.paidByName,
       splitWith: splitWith ?? this.splitWith,
       settled: settled ?? this.settled,
-      category: category ?? this.category,
+      category: clearCategory ? null : category ?? this.category,
       date: date ?? this.date,
       createdBy: createdBy,
       createdAt: createdAt,

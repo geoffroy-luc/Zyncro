@@ -245,7 +245,11 @@ mixin _ExpenseFormScreenSections
           final color = hexToColor(cat.colorHex);
           final selected = _selectedCategory == label;
           return GestureDetector(
-            onTap: () => setState(() => _selectedCategory = label),
+            // Toucher la catégorie choisie la retire (BUG E17 corrigé).
+            onTap: () => setState(
+              () =>
+                  _selectedCategory = _selectedCategory == label ? null : label,
+            ),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(

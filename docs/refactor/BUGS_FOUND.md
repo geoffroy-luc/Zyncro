@@ -32,7 +32,7 @@
 | C6 🟠 ✅ | « Télécharger » sur un album ne fait rien | `data['url']` est absent et l'erreur est avalée (CHAT:466-467, 473) |
 | C7 🟡 ✅ | Mauvais libellé dans la citation de réponse | « Sondage » pour toute citation JSON, « Photo / Vidéo » pour un texte commençant par http (CHAT:3136-3140). Incohérent avec CHAT:1644-1652 |
 | C8 🟠 ✅ | Les réactions emoji sur un sondage comptent comme des votes | Elles sont comptées comme votes (CHAT:333-363, 3606-3608) et effacées par un vote exclusif (CHAT:590) |
-| C9 🟡 | « Répondre » proposé sur un sondage mais sans effet visible | `_PollCard` n'affiche pas de citation, et le swipe est désactivé (CHAT:367, 1476) |
+| C9 🟡 ✅ | « Répondre » proposé sur un sondage mais sans effet visible | `_PollCard` n'affiche pas de citation, et le swipe est désactivé (CHAT:367, 1476) |
 | C10 🟠 ✅ | Réponse perdue | `sendAudio` et `sendPoll` ne transmettent pas la réponse, et la barre de réponse reste affichée (CHAT:605-618, 694-706) |
 | C11 🟠 ✅ | Texte perdu si l'envoi échoue | Le champ est vidé avant l'`await`, sans `catch` ni retour à l'utilisateur (CHAT:252, 256-281) |
 | C12 🟡 ✅ | Recherche sans résultat | Affiche « Aucun message. Soyez le premier ! » (CHAT:1392-1398) |
@@ -53,8 +53,8 @@
 | M4 🟡 | ID de raccourci appliqué au mauvais partage | Il n'est pas consommé quand le partage est un lien d'invitation (SP:103 vs 105) |
 | M5 🟡 | Deux partages successifs à chaud | Deux écrans `/share` s'empilent (SP:127-129) |
 | M6 🟡 | Démarrage à froid déconnecté : ordre non garanti | `push('/share')` et le redirect login → groups partent du même événement (SP:67-71, RT:62-66). À tester |
-| M7 🟡 | Envoi en double possible | Échec après un envoi réussi : « Échec du partage » s'affiche quand même (STG:200-215) |
-| M8 🟡 | Écran vide sans AppBar si `share == null` | (STG:45-50) |
+| M7 🟡 ✅ | Envoi en double possible | Échec après un envoi réussi : « Échec du partage » s'affiche quand même (STG:200-215) |
+| M8 🟡 ✅ | Écran vide sans AppBar si `share == null` | (STG:45-50) |
 | M9 🟠 | Fichiers orphelins dans Storage | Album partiellement uploadé, ancien fond de chat jamais supprimé. `delete: if false` (SR:32), CSET:184 |
 | M10 🟡 | Réglages du chat | Pas de loader au premier choix d'image, `_update` non awaited, `settings` capturés au build (CSET:147-152, 221-245) |
 | M11 🟡 ✅ | Téléchargement avec une URL vide | Exception brute affichée (MV:526, 911) |
@@ -85,11 +85,11 @@
 | E14 🟡 ✅ | `until` exclut le jour même ; assertion du date picker | `initialDate < firstDate` (RU:111 ; EXF:329-330) |
 | E15 🟠 ✅ | Crash sur une règle incohérente | `count!`, `until!` (RU:110-111, `recurrence_rule.dart:50`) |
 | E16 🟠 ✅ | Pas d'état chargement ni erreur | Affiche 0,00 € ou « Aucune dépense » (EXS:128-139) |
-| E17 🟡 | Impossible de retirer une catégorie | `copyWith` (`expense.dart:134, 140` ; EXF:1054) |
+| E17 🟡 ✅ | Impossible de retirer une catégorie | `copyWith` (`expense.dart:134, 140` ; EXF:1054) |
 | E18 🟠 | Membres partis | Nom affiché comme un uid tronqué ; « Rembourser » produit un message avec un nom vide ; leur part est retirée silencieusement à l'édition (EXS:393 ; RF:113 ; EXF:160) |
 | E19 🟡 | Devise cosmétique | « € » en dur (EXF:668-669, 685, 961, 989 ; RF:170 ; DB:55-57) ; yen affiché avec 2 décimales (EXS:48) |
 | E20 🟠 | Catégories référencées par leur nom | Renommer ou supprimer les fait passer en gris ; doublons acceptés (`expense.dart:20` ; `expenses_settings_screen.dart:50-64` ; `category_editor_sheet.dart:56-63`) |
-| E21 🟡 | Filtre de recherche fantôme après changement d'onglet | Le champ revient vide mais la liste reste filtrée (EXS:196, 214) |
+| E21 🟡 ✅ | Filtre de recherche fantôme après changement d'onglet | Le champ revient vide mais la liste reste filtrée (EXS:196, 214) |
 | E22 🟡 | « Aujourd'hui » calculé sur des tranches de 24 h | (EXS:53-57) |
 | E23 🟡 ✅ | Totaux incluant remboursements et dépenses réglées | Recevoir un remboursement augmente « Votre part » (EXS:143-149 ; DB:99-100) |
 | E24 🟡 | Messages et limites incohérents | Toute erreur de suppression affiche « Permission refusée » (EXF:556) ; le nom vient de `user.displayName` et non du pseudo de membre (EXF:542) ; RF n'a pas de limite (RF:157-181) |
