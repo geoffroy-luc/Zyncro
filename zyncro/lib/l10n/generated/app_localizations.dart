@@ -772,6 +772,60 @@ abstract class AppLocalizations {
   /// **'Impossible de charger les dépenses.'**
   String get expensesErreurChargement;
 
+  /// No description provided for @expensesModifierRecurrente.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier une dépense récurrente'**
+  String get expensesModifierRecurrente;
+
+  /// No description provided for @expensesSupprimerRecurrente.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer une dépense récurrente'**
+  String get expensesSupprimerRecurrente;
+
+  /// No description provided for @calendarModifierRecurrent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier un événement récurrent'**
+  String get calendarModifierRecurrent;
+
+  /// No description provided for @calendarSupprimerRecurrent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer un événement récurrent'**
+  String get calendarSupprimerRecurrent;
+
+  /// No description provided for @seriesPorteeExplication.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appliquer à cette occurrence et aux suivantes, ou à toute la série (occurrences passées comprises) ?'**
+  String get seriesPorteeExplication;
+
+  /// No description provided for @seriesAnnuler.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get seriesAnnuler;
+
+  /// No description provided for @seriesToute.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toute la série'**
+  String get seriesToute;
+
+  /// No description provided for @seriesCelleCiEtSuivantes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Celle-ci et les suivantes'**
+  String get seriesCelleCiEtSuivantes;
+
+  /// No description provided for @seriesSuppressionSerieEntiere.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est la première occurrence : toute la série sera supprimée. Cette action est irréversible.'**
+  String get seriesSuppressionSerieEntiere;
+
   /// No description provided for @chatEchecEnvoiMessage.
   ///
   /// In fr, this message translates to:

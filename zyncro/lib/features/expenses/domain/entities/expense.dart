@@ -26,7 +26,15 @@ class Expense {
   final String? updatedBy;
   final RecurrenceRule? recurrence;
 
+  /// Occurrence d'une série uniquement (calculé, jamais stocké) : date de
+  /// l'ancre de la série et rang de l'occurrence (0 = première).
+  final DateTime? seriesStart;
+  final int? occurrenceIndex;
+
   String get firestoreId => baseExpenseId ?? id;
+
+  bool get isSeriesOccurrence =>
+      recurrence != null && seriesStart != null && occurrenceIndex != null;
 
   const Expense({
     required this.id,
@@ -47,6 +55,8 @@ class Expense {
     this.splitAmounts,
     this.updatedBy,
     this.recurrence,
+    this.seriesStart,
+    this.occurrenceIndex,
   });
 
   Expense copyWith({
@@ -84,6 +94,8 @@ class Expense {
       splitAmounts: splitAmounts ?? this.splitAmounts,
       updatedBy: updatedBy ?? this.updatedBy,
       recurrence: clearRecurrence ? null : recurrence ?? this.recurrence,
+      seriesStart: seriesStart,
+      occurrenceIndex: occurrenceIndex,
     );
   }
 

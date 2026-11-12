@@ -375,6 +375,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String get expensesErreurChargement => 'Impossible de charger les dépenses.';
 
   @override
+  String get expensesModifierRecurrente => 'Modifier une dépense récurrente';
+
+  @override
+  String get expensesSupprimerRecurrente => 'Supprimer une dépense récurrente';
+
+  @override
+  String get calendarModifierRecurrent => 'Modifier un événement récurrent';
+
+  @override
+  String get calendarSupprimerRecurrent => 'Supprimer un événement récurrent';
+
+  @override
+  String get seriesPorteeExplication =>
+      'Appliquer à cette occurrence et aux suivantes, ou à toute la série (occurrences passées comprises) ?';
+
+  @override
+  String get seriesAnnuler => 'Annuler';
+
+  @override
+  String get seriesToute => 'Toute la série';
+
+  @override
+  String get seriesCelleCiEtSuivantes => 'Celle-ci et les suivantes';
+
+  @override
+  String get seriesSuppressionSerieEntiere =>
+      'C\'est la première occurrence : toute la série sera supprimée. Cette action est irréversible.';
+
+  @override
   String get chatEchecEnvoiMessage => 'Échec de l\'envoi du message.';
 
   @override

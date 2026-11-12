@@ -76,8 +76,8 @@
 | E5 🟠 ✅ | Résidus d'arrondi visibles | Carte rouge « -0,00 € » alors que les comptes sont équilibrés (EXS:414, 443, 462, 634 ; RF:43-44) |
 | E6 🟡 | La répartition personnalisée est réinitialisée | Au changement de montant ; chaque frappe écrase les autres membres (EXF:120-136, 673-679) |
 | E7 🟡 | Soldes et dettes abrégés en k/M | Imprécis pour de l'argent (EXS:41-44) |
-| E8 🔴 | Éditer une instance récurrente modifie toute la série | Elle est rétro-datée (`expense.dart:126`, ER:67, EXF:55, 466) |
-| E9 🔴 | Supprimer une instance supprime toute la série | Sans avertissement (EXF:541) |
+| E8 🔴 ✅ | Éditer une instance récurrente modifie toute la série | Elle est rétro-datée (`expense.dart:126`, ER:67, EXF:55, 466) |
+| E9 🔴 ✅ | Supprimer une instance supprime toute la série | Sans avertissement (EXF:541) |
 | E10 🟠 | `settled` partagé par toutes les instances | (RU:123) |
 | E11 🟡 | IDs d'instance instables | `${base.id}_$idx` (RU:115), bloquant pour lier une dépense à un événement |
 | E12 🟠 | Dérive des dates de récurrence | Mensuel (31/01 → 03/03) et heure d'été (`add(Duration)`) (RU:77-80) |

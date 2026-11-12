@@ -55,6 +55,8 @@ List<Expense> _expandRecurringExpense(Expense base, DateTime now) {
         splitAmounts: base.splitAmounts,
         updatedBy: base.updatedBy,
         recurrence: base.recurrence,
+        seriesStart: base.date,
+        occurrenceIndex: idx,
       ),
     );
 
