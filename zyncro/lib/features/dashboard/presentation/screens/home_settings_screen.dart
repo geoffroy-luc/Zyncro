@@ -30,10 +30,12 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
 
   // ── Tab settings ────────────────────────────────────────────────────────────
 
-  Future<void> _updateTabSettings(TabSettings next) async {
+  Future<void> _updateTabSettings(TabSettings from, TabSettings to) async {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    await ref.read(tabSettingsRepositoryProvider).updateSettings(groupId, next);
+    await ref
+        .read(tabSettingsRepositoryProvider)
+        .updateSettings(groupId, from: from, to: to);
   }
 
   // ── Emoji / Photo du groupe ──────────────────────────────────────────────────
@@ -169,7 +171,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
             .collection('groups')
             .doc(groupId)
             .update({'photoUrl': url}),
-        _updateTabSettings(settings.copyWith(homePhotoUrl: url)),
+        _updateTabSettings(settings, settings.copyWith(homePhotoUrl: url)),
       ]);
     } on Exception catch (e) {
       if (e.toString().contains('cancelled')) return;
@@ -197,7 +199,7 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
           .collection('groups')
           .doc(groupId)
           .update({'photoUrl': null}),
-      _updateTabSettings(settings.copyWith(clearHomePhotoUrl: true)),
+      _updateTabSettings(settings, settings.copyWith(clearHomePhotoUrl: true)),
     ]);
   }
 
@@ -767,12 +769,12 @@ class _HomeSettingsScreenState extends ConsumerState<HomeSettingsScreen> {
                   extraColors: settings.customColors,
                   hiddenBaseColors: settings.hiddenBaseColors,
                   onSelect: (hex) =>
-                      _updateTabSettings(settings.copyWith(homeThemeColor: hex)),
+                      _updateTabSettings(settings, settings.copyWith(homeThemeColor: hex)),
                   onAddColor: (hex) => _updateTabSettings(
-                    settings.copyWith(customColors: [...settings.customColors, hex]),
+                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
                   ),
                   onDeleteColor: (hex) =>
-                      _updateTabSettings(settings.withColorRemoved(hex)),
+                      _updateTabSettings(settings, settings.withColorRemoved(hex)),
                 ),
               ),
             ),

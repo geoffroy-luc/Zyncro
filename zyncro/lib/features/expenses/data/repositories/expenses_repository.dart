@@ -16,9 +16,8 @@ class ExpensesRepository implements IExpensesRepository {
         .orderBy('date', descending: true)
         .snapshots()
         .map(
-          (snap) => snap.docs
-              .map((doc) => Expense.fromMap(doc.id, doc.data()))
-              .toList(),
+          (snap) =>
+              mapDocsSafely(snap.docs, Expense.fromMap, label: 'watchExpenses'),
         )
         .surfacePermissionDenied('watchExpenses');
   }

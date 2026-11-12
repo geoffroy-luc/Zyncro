@@ -3,7 +3,10 @@ import '../../../../core/utils/firestore_stream_extensions.dart';
 import '../../../../shared/models/tab_settings.dart';
 
 class TabSettingsRepository {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  TabSettingsRepository({FirebaseFirestore? firestore})
+    : _db = firestore ?? FirebaseFirestore.instance;
+
+  final FirebaseFirestore _db;
 
   DocumentReference<Map<String, dynamic>> _doc(String groupId) => _db
       .collection('groups')
@@ -21,7 +24,20 @@ class TabSettingsRepository {
         .surfacePermissionDenied('watchSettings');
   }
 
-  Future<void> updateSettings(String groupId, TabSettings settings) async {
-    await _doc(groupId).set(settings.toMap(), SetOptions(merge: true));
+  /// Écrit uniquement les champs qui diffèrent entre [from] (l'état à partir
+  /// duquel l'utilisateur a fait sa modification) et [to].
+  ///
+  /// `set(merge: true)` conserve le document existant : les champs non
+  /// modifiés — y compris ceux qu'un autre membre vient de changer, ou les
+  /// valeurs réelles quand [from] vaut les défauts pendant un chargement —
+  /// ne sont pas touchés.
+  Future<void> updateSettings(
+    String groupId, {
+    required TabSettings from,
+    required TabSettings to,
+  }) async {
+    final changes = from.changedFieldsTo(to);
+    if (changes.isEmpty) return;
+    await _doc(groupId).set(changes, SetOptions(merge: true));
   }
 }

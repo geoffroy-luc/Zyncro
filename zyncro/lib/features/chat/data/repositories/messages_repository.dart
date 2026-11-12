@@ -23,9 +23,8 @@ class MessagesRepository implements IMessagesRepository {
         .limit(50)
         .snapshots()
         .map(
-          (snap) => snap.docs
-              .map((doc) => Message.fromMap(doc.id, doc.data()))
-              .toList(),
+          (snap) =>
+              mapDocsSafely(snap.docs, Message.fromMap, label: 'watchMessages'),
         )
         .surfacePermissionDenied('watchMessages');
   }
@@ -41,9 +40,11 @@ class MessagesRepository implements IMessagesRepository {
         .where('timestamp', isLessThan: Timestamp.fromDate(before))
         .limit(limit)
         .get();
-    return snap.docs
-        .map((doc) => Message.fromMap(doc.id, doc.data()))
-        .toList();
+    return mapDocsSafely(
+      snap.docs,
+      Message.fromMap,
+      label: 'fetchMessagesBefore',
+    );
   }
 
   @override
@@ -52,9 +53,11 @@ class MessagesRepository implements IMessagesRepository {
         .where('type', whereIn: ['image', 'file'])
         .snapshots()
         .map((snap) {
-          final msgs = snap.docs
-              .map((doc) => Message.fromMap(doc.id, doc.data()))
-              .toList();
+          final msgs = mapDocsSafely(
+            snap.docs,
+            Message.fromMap,
+            label: 'watchMediaMessages',
+          );
           msgs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
           return msgs;
         })

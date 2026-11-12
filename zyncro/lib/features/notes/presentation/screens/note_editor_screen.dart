@@ -244,7 +244,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final settings = ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
     await ref.read(tabSettingsRepositoryProvider).updateSettings(
       groupId,
-      settings.copyWith(customColors: [...settings.customColors, hex]),
+      from: settings,
+      to: settings.copyWith(customColors: [...settings.customColors, hex]),
     );
   }
 
@@ -254,7 +255,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final settings = ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
     await ref.read(tabSettingsRepositoryProvider).updateSettings(
       groupId,
-      settings.withColorRemoved(hex),
+      from: settings,
+      to: settings.withColorRemoved(hex),
     );
   }
 

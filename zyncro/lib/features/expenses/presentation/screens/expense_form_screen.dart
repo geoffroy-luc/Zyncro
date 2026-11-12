@@ -570,7 +570,11 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     final updated = [...settings.expensesCategories, result];
     await ref
         .read(tabSettingsRepositoryProvider)
-        .updateSettings(groupId, settings.copyWith(expensesCategories: updated));
+        .updateSettings(
+          groupId,
+          from: settings,
+          to: settings.copyWith(expensesCategories: updated),
+        );
     if (!mounted) return;
     setState(() => _selectedCategory = result.name);
   }

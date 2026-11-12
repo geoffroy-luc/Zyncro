@@ -16,7 +16,7 @@ class GroupsRepository implements IGroupsRepository {
         .snapshots()
         .map(
           (snap) =>
-              snap.docs.map((doc) => Group.fromMap(doc.id, doc.data())).toList(),
+              mapDocsSafely(snap.docs, Group.fromMap, label: 'watchUserGroups'),
         )
         .surfacePermissionDenied('watchUserGroups');
   }
@@ -134,8 +134,11 @@ class GroupsRepository implements IGroupsRepository {
         .collection('members')
         .snapshots()
         .map(
-          (snap) =>
-              snap.docs.map((doc) => GroupMember.fromMap(doc.data())).toList(),
+          (snap) => mapDocsSafely(
+            snap.docs,
+            (_, data) => GroupMember.fromMap(data),
+            label: 'watchMembers',
+          ),
         )
         .surfacePermissionDenied('watchMembers');
   }

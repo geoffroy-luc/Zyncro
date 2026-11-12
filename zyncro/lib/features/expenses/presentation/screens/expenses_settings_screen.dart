@@ -31,10 +31,12 @@ class ExpensesSettingsScreen extends ConsumerStatefulWidget {
 
 class _ExpensesSettingsScreenState
     extends ConsumerState<ExpensesSettingsScreen> {
-  Future<void> _update(TabSettings next) async {
+  Future<void> _update(TabSettings from, TabSettings to) async {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    await ref.read(tabSettingsRepositoryProvider).updateSettings(groupId, next);
+    await ref
+        .read(tabSettingsRepositoryProvider)
+        .updateSettings(groupId, from: from, to: to);
   }
 
   Future<void> _openCategoryEditor(
@@ -54,14 +56,14 @@ class _ExpensesSettingsScreenState
     } else {
       categories.add(result);
     }
-    await _update(settings.copyWith(expensesCategories: categories));
+    await _update(settings, settings.copyWith(expensesCategories: categories));
   }
 
   Future<void> _deleteCategory(TabSettings settings, ExpenseCategory cat) async {
     final updated = settings.expensesCategories
         .where((c) => c != cat)
         .toList();
-    await _update(settings.copyWith(expensesCategories: updated));
+    await _update(settings, settings.copyWith(expensesCategories: updated));
   }
 
   @override
@@ -105,11 +107,11 @@ class _ExpensesSettingsScreenState
                   extraColors: settings.customColors,
                   hiddenBaseColors: settings.hiddenBaseColors,
                   onSelect: (hex) =>
-                      _update(settings.copyWith(expensesThemeColor: hex)),
+                      _update(settings, settings.copyWith(expensesThemeColor: hex)),
                   onAddColor: (hex) => _update(
-                    settings.copyWith(customColors: [...settings.customColors, hex]),
+                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
                   ),
-                  onDeleteColor: (hex) => _update(settings.withColorRemoved(hex)),
+                  onDeleteColor: (hex) => _update(settings, settings.withColorRemoved(hex)),
                 ),
               ),
             ],
@@ -144,7 +146,7 @@ class _ExpensesSettingsScreenState
                         .toList(),
                     onChanged: (val) {
                       if (val != null) {
-                        _update(settings.copyWith(expensesCurrency: val));
+                        _update(settings, settings.copyWith(expensesCurrency: val));
                       }
                     },
                   ),

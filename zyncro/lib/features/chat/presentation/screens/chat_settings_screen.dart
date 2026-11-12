@@ -21,10 +21,12 @@ class ChatSettingsScreen extends ConsumerStatefulWidget {
 class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
   bool _loadingBg = false;
 
-  Future<void> _update(TabSettings next) async {
+  Future<void> _update(TabSettings from, TabSettings to) async {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    await ref.read(tabSettingsRepositoryProvider).updateSettings(groupId, next);
+    await ref
+        .read(tabSettingsRepositoryProvider)
+        .updateSettings(groupId, from: from, to: to);
   }
 
   Future<void> _pickBackgroundImage() async {
@@ -89,7 +91,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
       final settings =
           this.ref.read(tabSettingsProvider).asData?.value ?? TabSettings.defaults;
       await _update(
-        settings.copyWith(chatBackgroundType: 'image', chatBackgroundValue: url),
+        settings, settings.copyWith(chatBackgroundType: 'image', chatBackgroundValue: url),
       );
     } on Exception catch (e) {
       if (e.toString().contains('cancelled')) return;
@@ -145,11 +147,11 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                   extraColors: settings.customColors,
                   hiddenBaseColors: settings.hiddenBaseColors,
                   onSelect: (hex) =>
-                      _update(settings.copyWith(chatThemeColor: hex)),
+                      _update(settings, settings.copyWith(chatThemeColor: hex)),
                   onAddColor: (hex) => _update(
-                    settings.copyWith(customColors: [...settings.customColors, hex]),
+                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
                   ),
-                  onDeleteColor: (hex) => _update(settings.withColorRemoved(hex)),
+                  onDeleteColor: (hex) => _update(settings, settings.withColorRemoved(hex)),
                 ),
               ),
             ],
@@ -181,10 +183,10 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                   onSelectionChanged: (Set<String> sel) async {
                     final type = sel.first;
                     if (type == 'none') {
-                      await _update(settings.copyWith(clearChatBackground: true));
+                      await _update(settings, settings.copyWith(clearChatBackground: true));
                     } else if (type == 'color') {
                       await _update(
-                        settings.copyWith(
+                        settings, settings.copyWith(
                           chatBackgroundType: 'color',
                           chatBackgroundValue:
                               settings.chatBackgroundValue ?? '#F7F9FC',
@@ -205,16 +207,16 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                     extraColors: settings.customColors,
                     hiddenBaseColors: settings.hiddenBaseColors,
                     onSelect: (hex) => _update(
-                      settings.copyWith(
+                      settings, settings.copyWith(
                         chatBackgroundType: 'color',
                         chatBackgroundValue: hex,
                       ),
                     ),
                     onAddColor: (hex) => _update(
-                      settings.copyWith(customColors: [...settings.customColors, hex]),
+                      settings, settings.copyWith(customColors: [...settings.customColors, hex]),
                     ),
                     onDeleteColor: (hex) =>
-                        _update(settings.withColorRemoved(hex)),
+                        _update(settings, settings.withColorRemoved(hex)),
                   ),
                 ),
               ],

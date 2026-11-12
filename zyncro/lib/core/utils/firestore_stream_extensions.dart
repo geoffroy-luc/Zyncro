@@ -25,3 +25,28 @@ extension FirestoreStreamErrors<T> on Stream<T> {
     );
   }
 }
+
+/// Convertit les documents d'une requête en ignorant — et en journalisant —
+/// ceux qui ne peuvent pas être lus.
+///
+/// Sans cette protection, un seul document malformé (champ manquant, type
+/// inattendu, valeur d'enum inconnue écrite par une version plus récente)
+/// faisait échouer tout le stream : l'onglet entier devenait vide ou en
+/// erreur pour tous les membres du groupe (BUGS_FOUND D1).
+List<T> mapDocsSafely<T>(
+  Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  T Function(String id, Map<String, dynamic> data) parse, {
+  required String label,
+}) {
+  final result = <T>[];
+  for (final doc in docs) {
+    try {
+      result.add(parse(doc.id, doc.data()));
+    } catch (error) {
+      // Error (TypeError, ArgumentError de values.byName…) autant qu'Exception :
+      // on ne veut perdre que le document fautif, jamais la liste.
+      debugPrint('[$label] document ignoré (${doc.reference.path}) : $error');
+    }
+  }
+  return result;
+}

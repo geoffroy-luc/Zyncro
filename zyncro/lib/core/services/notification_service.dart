@@ -77,7 +77,8 @@ class NotificationService {
 
     // Save initial token
     final token = await _messaging.getToken();
-    debugPrint('[FCM] token=$token');
+    // Ne jamais journaliser le token FCM (visible dans logcat en release).
+    debugPrint('[FCM] token ${token == null ? 'absent' : 'obtenu'}');
     if (token != null) await _saveToken(userId, token);
 
     // Refresh token — stocké pour pouvoir l'annuler au logout

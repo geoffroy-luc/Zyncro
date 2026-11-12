@@ -17,10 +17,12 @@ class CalendarSettingsScreen extends ConsumerStatefulWidget {
 
 class _CalendarSettingsScreenState
     extends ConsumerState<CalendarSettingsScreen> {
-  Future<void> _update(TabSettings next) async {
+  Future<void> _update(TabSettings from, TabSettings to) async {
     final groupId = ref.read(selectedGroupIdProvider).asData?.value;
     if (groupId == null) return;
-    await ref.read(tabSettingsRepositoryProvider).updateSettings(groupId, next);
+    await ref
+        .read(tabSettingsRepositoryProvider)
+        .updateSettings(groupId, from: from, to: to);
   }
 
   @override
@@ -64,11 +66,11 @@ class _CalendarSettingsScreenState
                   extraColors: settings.customColors,
                   hiddenBaseColors: settings.hiddenBaseColors,
                   onSelect: (hex) =>
-                      _update(settings.copyWith(calendarThemeColor: hex)),
+                      _update(settings, settings.copyWith(calendarThemeColor: hex)),
                   onAddColor: (hex) => _update(
-                    settings.copyWith(customColors: [...settings.customColors, hex]),
+                    settings, settings.copyWith(customColors: [...settings.customColors, hex]),
                   ),
-                  onDeleteColor: (hex) => _update(settings.withColorRemoved(hex)),
+                  onDeleteColor: (hex) => _update(settings, settings.withColorRemoved(hex)),
                 ),
               ),
             ],
@@ -93,7 +95,7 @@ class _CalendarSettingsScreenState
                   ],
                   selected: {settings.calendarDisplayMode},
                   onSelectionChanged: (Set<String> sel) =>
-                      _update(settings.copyWith(calendarDisplayMode: sel.first)),
+                      _update(settings, settings.copyWith(calendarDisplayMode: sel.first)),
                 ),
               ),
             ],
