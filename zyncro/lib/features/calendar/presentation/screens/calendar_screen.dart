@@ -20,6 +20,9 @@ import 'package:zyncro/features/groups/presentation/providers/groups_provider.da
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 
+part 'calendar_screen_filters.dart';
+part 'calendar_screen_agenda.dart';
+
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
 
@@ -27,7 +30,8 @@ class CalendarScreen extends ConsumerStatefulWidget {
   ConsumerState<CalendarScreen> createState() => _CalendarScreenState();
 }
 
-class _CalendarScreenState extends ConsumerState<CalendarScreen> {
+/// Champs et contrat commun des mixins de l'écran (parts calendar_screen_filters.dart, calendar_screen_agenda.dart).
+abstract class _CalendarScreenStateBase extends ConsumerState<CalendarScreen> {
   ViewMode _viewMode = ViewMode.month;
   String _search = '';
   DateTime _displayedMonth = DateTime(
@@ -43,240 +47,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   bool get _hasActiveFilters =>
       _filterParticipantIds.isNotEmpty || _filterRecurrenceOnly;
 
-  Future<void> _showFilterSheet(
-    List<GroupMember> members,
-    Color primaryColor,
-  ) async {
-    final tempParticipants = List<String>.from(_filterParticipantIds);
-    final tempRecurrence = [_filterRecurrenceOnly];
+  // ── Implémentées par les mixins ──
+}
 
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            24,
-            16,
-            24,
-            MediaQuery.of(ctx).viewInsets.bottom + 32,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: context.colors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Filtres',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
-                  ),
-                  if (tempParticipants.isNotEmpty || tempRecurrence[0])
-                    TextButton(
-                      onPressed: () => setSheet(() {
-                        tempParticipants.clear();
-                        tempRecurrence[0] = false;
-                      }),
-                      child: Text(
-                        'Réinitialiser',
-                        style: TextStyle(color: context.colors.error),
-                      ),
-                    ),
-                ],
-              ),
-              if (members.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(
-                  'Participants',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: context.colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: members.map((m) {
-                    final sel = tempParticipants.contains(m.uid);
-                    return FilterChip(
-                      label: Text(
-                        m.displayName,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: sel
-                              ? Colors.white
-                              : context.colors.textPrimary,
-                        ),
-                      ),
-                      selected: sel,
-                      onSelected: (v) => setSheet(() {
-                        if (v) {
-                          tempParticipants.add(m.uid);
-                        } else {
-                          tempParticipants.remove(m.uid);
-                        }
-                      }),
-                      selectedColor: primaryColor,
-                      checkmarkColor: Colors.white,
-                      backgroundColor: context.colors.background,
-                      side: BorderSide(color: context.colors.border),
-                      showCheckmark: false,
-                    );
-                  }).toList(),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Récurrents uniquement',
-                    style: TextStyle(fontSize: 15),
-                  ),
-                  Switch(
-                    value: tempRecurrence[0],
-                    activeThumbColor: primaryColor,
-                    onChanged: (v) => setSheet(() => tempRecurrence[0] = v),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: primaryColor),
-                  onPressed: () {
-                    setState(() {
-                      _filterParticipantIds = List<String>.from(
-                        tempParticipants,
-                      );
-                      _filterRecurrenceOnly = tempRecurrence[0];
-                    });
-                    Navigator.pop(ctx);
-                  },
-                  child: const Text('Appliquer'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _prevMonth() => setState(() {
-    _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month - 1);
-    _selectedDay = null;
-  });
-
-  void _nextMonth() => setState(() {
-    _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month + 1);
-    _selectedDay = null;
-  });
-
-  List<Widget> _buildAgendaSections(List<Event> events, Color primaryColor) {
-    final Map<DateTime, List<Event>> grouped = {};
-    for (final e in events) {
-      final day = DateTime(
-        e.startDate.year,
-        e.startDate.month,
-        e.startDate.day,
-      );
-      grouped.putIfAbsent(day, () => []).add(e);
-    }
-    final sortedDays = grouped.keys.toList()..sort();
-    final today = DateTime.now();
-    final widgets = <Widget>[];
-
-    for (final day in sortedDays) {
-      final isToday = isSameDay(day, today);
-      final isTomorrow = isSameDay(
-        day,
-        DateTime(today.year, today.month, today.day + 1),
-      );
-
-      final label = isToday
-          ? "Aujourd'hui"
-          : isTomorrow
-          ? 'Demain'
-          : DateFormat('EEEE d MMMM', 'fr_FR').format(day);
-
-      widgets.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  gradient: isToday
-                      ? LinearGradient(
-                          colors: [primaryColor, darken(primaryColor)],
-                        )
-                      : null,
-                  color: isToday
-                      ? null
-                      : isTomorrow
-                      ? const Color(0x1A2BB8A5)
-                      : context.colors.background,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: isToday
-                        ? Colors.white
-                        : isTomorrow
-                        ? context.colors.secondary
-                        : context.colors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              ...grouped[day]!.map(
-                (e) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: AgendaEventCard(event: e),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    return widgets;
-  }
-
-  List<Event> _applyFilters(List<Event> events, String search) => EventFilter(
-    search: search,
-    participantIds: _filterParticipantIds.toSet(),
-    recurrenceOnly: _filterRecurrenceOnly,
-  ).apply(events);
-
+class _CalendarScreenState extends _CalendarScreenStateBase
+    with _CalendarFilterActions, _CalendarNavigation {
   @override
   Widget build(BuildContext context) {
     final tabSettings =
