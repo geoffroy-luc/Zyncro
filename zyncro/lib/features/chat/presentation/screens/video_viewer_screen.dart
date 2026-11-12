@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
+import 'package:zyncro/core/utils/duration_format.dart';
 import 'package:zyncro/features/chat/presentation/widgets/media_downloader.dart';
 import 'package:zyncro/features/chat/presentation/widgets/media_viewer_helpers.dart';
 
@@ -27,6 +28,7 @@ class VideoViewerScreen extends StatefulWidget {
 class _VideoViewerScreenState extends State<VideoViewerScreen> {
   late VideoPlayerController _controller;
   bool _initialized = false;
+  bool _failed = false;
   bool _downloading = false;
   bool _showControls = true;
 
@@ -38,12 +40,18 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
     );
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
     unawaited(
-      _controller.initialize().then((_) {
-        if (mounted) {
-          setState(() => _initialized = true);
-          unawaited(_controller.play());
-        }
-      }),
+      _controller
+          .initialize()
+          .then((_) {
+            if (mounted) {
+              setState(() => _initialized = true);
+              unawaited(_controller.play());
+            }
+          })
+          .catchError((Object _) {
+            // BUG M14 corrigé : erreur affichée au lieu d'un spinner infini.
+            if (mounted) setState(() => _failed = true);
+          }),
     );
     unawaited(_controller.setLooping(true));
     _controller.addListener(_onControllerUpdate);
@@ -68,11 +76,7 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
     if (mounted) setState(() => _downloading = false);
   }
 
-  String _fmtDuration(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
+  String _fmtDuration(Duration d) => formatDuration(d);
 
   @override
   Widget build(BuildContext context) {
@@ -95,8 +99,28 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
                       aspectRatio: _controller.value.aspectRatio,
                       child: VideoPlayer(_controller),
                     )
+                  : _failed
+                  ? const Icon(
+                      Icons.error_outline_rounded,
+                      color: Colors.white70,
+                      size: 48,
+                    )
                   : const CircularProgressIndicator(color: Colors.white),
             ),
+
+            // BUG M14 corrigé : bouton retour disponible pendant le
+            // chargement et en cas d'erreur.
+            if (!_initialized)
+              Positioned(
+                top: 0,
+                left: 0,
+                child: SafeArea(
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ),
 
             // ── Overlay contrôles ───────────────────────────────────────
             if (_showControls && _initialized) ...[

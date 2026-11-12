@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:zyncro/core/utils/duration_format.dart';
 
 // ── Page vidéo dans le swipe viewer ──────────────────────────────────────────
 
@@ -26,18 +27,25 @@ class SwipeVideoPage extends StatefulWidget {
 class _SwipeVideoPageState extends State<SwipeVideoPage> {
   late VideoPlayerController _controller;
   bool _initialized = false;
+  bool _failed = false;
 
   @override
   void initState() {
     super.initState();
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
     unawaited(
-      _controller.initialize().then((_) {
-        if (mounted) {
-          setState(() => _initialized = true);
-          if (widget.isActive) unawaited(_controller.play());
-        }
-      }),
+      _controller
+          .initialize()
+          .then((_) {
+            if (mounted) {
+              setState(() => _initialized = true);
+              if (widget.isActive) unawaited(_controller.play());
+            }
+          })
+          .catchError((Object _) {
+            // BUG M14 corrigé : erreur affichée au lieu d'un spinner infini.
+            if (mounted) setState(() => _failed = true);
+          }),
     );
     unawaited(_controller.setLooping(true));
     _controller.addListener(_onUpdate);
@@ -67,11 +75,7 @@ class _SwipeVideoPageState extends State<SwipeVideoPage> {
     super.dispose();
   }
 
-  String _fmtDuration(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
+  String _fmtDuration(Duration d) => formatDuration(d);
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +93,12 @@ class _SwipeVideoPageState extends State<SwipeVideoPage> {
                 ? AspectRatio(
                     aspectRatio: _controller.value.aspectRatio,
                     child: VideoPlayer(_controller),
+                  )
+                : _failed
+                ? const Icon(
+                    Icons.error_outline_rounded,
+                    color: Colors.white70,
+                    size: 48,
                   )
                 : const CircularProgressIndicator(color: Colors.white),
           ),

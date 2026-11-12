@@ -404,6 +404,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'C\'est la première occurrence : toute la série sera supprimée. Cette action est irréversible.';
 
   @override
+  String get chatMediaIndisponible => 'Ce média n\'est plus disponible.';
+
+  @override
   String get chatEchecEnvoiMessage => 'Échec de l\'envoi du message.';
 
   @override

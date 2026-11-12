@@ -57,13 +57,13 @@
 | M8 🟡 | Écran vide sans AppBar si `share == null` | (STG:45-50) |
 | M9 🟠 | Fichiers orphelins dans Storage | Album partiellement uploadé, ancien fond de chat jamais supprimé. `delete: if false` (SR:32), CSET:184 |
 | M10 🟡 | Réglages du chat | Pas de loader au premier choix d'image, `_update` non awaited, `settings` capturés au build (CSET:147-152, 221-245) |
-| M11 🟡 | Téléchargement avec une URL vide | Exception brute affichée (MV:526, 911) |
-| M12 🟡 | Clé dupliquée si la même vidéo apparaît deux fois | `ValueKey(url)` (MV:558, 939) |
+| M11 🟡 ✅ | Téléchargement avec une URL vide | Exception brute affichée (MV:526, 911) |
+| M12 🟡 ✅ | Clé dupliquée si la même vidéo apparaît deux fois | `ValueKey(url)` (MV:558, 939) |
 | M13 🟡 | Accès limité Android : liste non rechargée | Rien ne recharge au retour des réglages (MP:130) |
-| M14 🟠 | Vidéo en erreur : spinner infini, aucun bouton retour | `initialize()` sans `catchError`, bouton retour conditionné à l'init (MV:247, 315, 723) |
-| M15 🟠 | Picker bloqué après une exception | Les drapeaux de chargement restent à true (MP:56-159) |
+| M14 🟠 ✅ | Vidéo en erreur : spinner infini, aucun bouton retour | `initialize()` sans `catchError`, bouton retour conditionné à l'init (MV:247, 315, 723) |
+| M15 🟠 ✅ | Picker bloqué après une exception | Les drapeaux de chargement restent à true (MP:56-159) |
 | M16 🟡 | Fichiers temporaires jamais supprimés | (MV:21, 44 ; STG:229 ; CHAT:644, 756, 853) |
-| M17 🟡 | Durées affichées sans les heures | 1h05 s'affiche « 05:00 » (MV:284, 757 ; MP:161) |
+| M17 🟡 ✅ | Durées affichées sans les heures | 1h05 s'affiche « 05:00 » (MV:284, 757 ; MP:161) |
 
 ## Dépenses
 

@@ -2,11 +2,7 @@ part of 'chat_screen.dart';
 
 /// Enregistrement et envoi des messages vocaux.
 mixin _ChatRecording on _ChatScreenStateBase {
-  String _fmtDuration(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
+  String _fmtDuration(Duration d) => formatDuration(d);
 
   Future<void> _startRecording() async {
     if (!await _recorder.hasPermission()) {

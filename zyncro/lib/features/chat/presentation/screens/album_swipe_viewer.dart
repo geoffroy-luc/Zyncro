@@ -88,7 +88,9 @@ class _AlbumSwipeViewerState extends State<AlbumSwipeViewer> {
               final mimeType = (item['mimeType'] as String?) ?? '';
               if (mimeType.startsWith('video/')) {
                 return SwipeVideoPage(
-                  key: ValueKey(url),
+                  // BUG M12 corrigé : clé unique même si la même vidéo
+                  // apparaît deux fois dans l'album.
+                  key: ValueKey('$index:$url'),
                   url: url,
                   isActive: index == _currentIndex,
                   showControls: _showControls,

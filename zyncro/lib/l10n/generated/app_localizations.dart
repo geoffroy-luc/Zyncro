@@ -826,6 +826,12 @@ abstract class AppLocalizations {
   /// **'C\'est la première occurrence : toute la série sera supprimée. Cette action est irréversible.'**
   String get seriesSuppressionSerieEntiere;
 
+  /// No description provided for @chatMediaIndisponible.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce média n\'est plus disponible.'**
+  String get chatMediaIndisponible;
+
   /// No description provided for @chatEchecEnvoiMessage.
   ///
   /// In fr, this message translates to:

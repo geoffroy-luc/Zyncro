@@ -165,6 +165,7 @@
   "seriesToute": "Toute la série",
   "seriesCelleCiEtSuivantes": "Celle-ci et les suivantes",
   "seriesSuppressionSerieEntiere": "C'est la première occurrence : toute la série sera supprimée. Cette action est irréversible.",
+  "chatMediaIndisponible": "Ce média n'est plus disponible.",
   "chatEchecEnvoiMessage": "Échec de l'envoi du message.",
   "chatModifierLeMessage": "Modifier le message",
   "chatEnregistrement": "Enregistrement…",

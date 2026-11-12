@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:zyncro/core/utils/duration_format.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/design_system/tokens/brand_palette.dart';
 import 'package:zyncro/features/chat/presentation/widgets/asset_thumbnail.dart';
@@ -55,7 +56,17 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
     }
   }
 
+  // BUG M15 corrigé : une exception ne laisse plus l'écran bloqué en
+  // chargement (drapeaux remis à zéro).
   Future<void> _init() async {
+    try {
+      await _initUnguarded();
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _initUnguarded() async {
     final permission = await PhotoManager.requestPermissionExtend();
     if (!permission.hasAccess) {
       if (mounted) {
@@ -110,18 +121,22 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
     setState(() => _loadingMore = true);
 
     final nextPage = _currentPage + 1;
-    final more = await _album!.getAssetListPaged(
-      page: nextPage,
-      size: pickerKPageSize,
-    );
-
-    if (mounted) {
-      setState(() {
-        _assets.addAll(more);
-        _currentPage = nextPage;
-        _hasMore = more.length == pickerKPageSize;
-        _loadingMore = false;
-      });
+    try {
+      final more = await _album!.getAssetListPaged(
+        page: nextPage,
+        size: pickerKPageSize,
+      );
+      if (mounted) {
+        setState(() {
+          _assets.addAll(more);
+          _currentPage = nextPage;
+          _hasMore = more.length == pickerKPageSize;
+        });
+      }
+    } catch (_) {
+      // Page ignorée : un nouveau défilement la redemandera.
+    } finally {
+      if (mounted) setState(() => _loadingMore = false);
     }
   }
 
@@ -155,24 +170,25 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
     setState(() => _confirming = true);
 
     final result = <({String path, String mimeType})>[];
-    for (final asset in _selected) {
-      final file = await asset.originFile;
-      if (file != null) {
-        final mimeType =
-            asset.mimeType ??
-            (asset.type == AssetType.video ? 'video/mp4' : 'image/jpeg');
-        result.add((path: file.path, mimeType: mimeType));
+    try {
+      for (final asset in _selected) {
+        final file = await asset.originFile;
+        if (file != null) {
+          final mimeType =
+              asset.mimeType ??
+              (asset.type == AssetType.video ? 'video/mp4' : 'image/jpeg');
+          result.add((path: file.path, mimeType: mimeType));
+        }
       }
+    } catch (_) {
+      if (mounted) setState(() => _confirming = false);
+      return;
     }
 
     if (mounted) Navigator.of(context).pop(result);
   }
 
-  String _fmtDuration(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
+  String _fmtDuration(Duration d) => formatDuration(d);
 
   @override
   Widget build(BuildContext context) {

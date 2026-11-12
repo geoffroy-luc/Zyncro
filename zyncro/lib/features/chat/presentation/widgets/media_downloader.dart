@@ -14,21 +14,31 @@ import 'package:zyncro/l10n/generated/app_localizations.dart';
 class MediaDownloader {
   static Future<void> downloadImage(BuildContext context, String url) => _save(
     context,
+    url,
     (saver) => saver.saveImageFromUrl(url),
     (l10n) => l10n.chatImageEnregistreeDansLaGalerie,
   );
 
   static Future<void> downloadVideo(BuildContext context, String url) => _save(
     context,
+    url,
     (saver) => saver.saveVideoFromUrl(url),
     (l10n) => l10n.chatVideoEnregistreeDansLaGalerie,
   );
 
   static Future<void> _save(
     BuildContext context,
+    String url,
     Future<void> Function(GallerySaver saver) save,
     String Function(AppLocalizations l10n) successMessage,
   ) async {
+    // BUG M11 corrigé : message clair au lieu de l'exception brute.
+    if (url.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.chatMediaIndisponible)),
+      );
+      return;
+    }
     final saver = ProviderScope.containerOf(context).read(gallerySaverProvider);
     try {
       await save(saver);
