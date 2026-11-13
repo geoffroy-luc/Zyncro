@@ -85,7 +85,7 @@ Aucun nouveau champ en base : les correctifs n'utilisent que des champs existant
 3. **S3** : la phase 1 est prête (release N). Ensuite, hausse de `minimum_version` 2 à 4 semaines après la release, puis règles strictes et enforcement App Check (`S3.md`).
 4. **Bugs restants** (`BUGS_FOUND.md`, en-tête) : ceux qui demandent un changement de schéma sont à planifier avec S3 (G17, E10, E11, E20, G2, CA11). G3 (suppression de compte complète) est le plus important des restants.
 5. Poursuivre le refactor de présentation (dette §4) en même temps que les nouvelles features : chaque nouvel écran suit `ARCHITECTURE.md` §9.
-6. Compléter `invite.html` avec l'id App Store, et `assetlinks.json` avec l'empreinte Play App Signing.
+6. Vérifier que `assetlinks.json` contient l'empreinte Play App Signing (l'id App Store est en place sur `invite.html`).
 
 ## 6. Vérifier les rules déployées
 
