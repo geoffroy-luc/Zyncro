@@ -219,12 +219,15 @@ void main() {
     await tester.enterText(field('Pseudo'), 'Invité Deux');
     await tapAndPump(tester, find.widgetWithText(ElevatedButton, 'Continuer'));
 
+    // Lien d'invitation : l'aperçu affiche le nom actuel de l'espace
+    // (callable getInvitePreview), puis on rejoint (joinGroupByCode).
     await pumpUntil(tester, find.text('Rejoindre avec un code'));
-    await tapAndPump(tester, find.text('Rejoindre avec un code'));
-    final codeField = find.widgetWithText(TextField, "Code d'invitation");
-    await pumpUntil(tester, codeField);
-    await tester.enterText(codeField, inviteCode);
-    await tapAndPump(tester, find.text('Rejoindre').last);
+    GoRouter.of(
+      tester.element(find.text('Rejoindre avec un code')),
+    ).go(AppRoutes.invite(inviteCode));
+    await pumpUntil(tester, find.text('Tu as été invité·e à rejoindre'));
+    await pumpUntil(tester, find.text(groupName));
+    await tapAndPump(tester, find.widgetWithText(ElevatedButton, 'Rejoindre'));
 
     // L'espace rejoint s'ouvre, avec les données du premier compte…
     await pumpUntil(tester, find.text('Événement E2E'));
