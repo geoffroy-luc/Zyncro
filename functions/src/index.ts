@@ -17,3 +17,4 @@ export { onNoteCreated } from "./notes/onNoteCreated";
 export { onNoteUpdated } from "./notes/onNoteUpdated";
 export { onNoteDeleted } from "./notes/onNoteDeleted";
 export { joinGroupByCode } from "./invites/joinGroupByCode";
+export { getInvitePreview } from "./invites/getInvitePreview";

@@ -4,6 +4,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { db } from "../shared/firebase";
 import { asString } from "../shared/guards";
 import { paths } from "../shared/paths";
+import { consumeAttempt } from "../shared/rateLimit";
 
 /** S3, phase 1 : adhésion à un espace par code, côté serveur.
  *
@@ -57,7 +58,7 @@ export const joinGroupByCode = onCall<JoinRequest | null, Promise<JoinResult>>(
     const photoUrl = typeof rawPhoto === "string" && rawPhoto.length <= 2048 ? rawPhoto : null;
     const showProfilePhoto = data.showProfilePhoto !== false;
 
-    await consumeAttempt(uid);
+    await consumeAttempt(`join_${uid}`, JOIN_ATTEMPTS_PER_HOUR);
 
     const codeDoc = await db().doc(`invite_codes/${code}`).get();
     const groupId = asString(codeDoc.data()?.groupId);
@@ -100,23 +101,3 @@ export const joinGroupByCode = onCall<JoinRequest | null, Promise<JoinResult>>(
     return { groupId, alreadyMember: false };
   },
 );
-
-/** Fenêtre glissante d'une heure par compte, en transaction. */
-async function consumeAttempt(uid: string): Promise<void> {
-  const ref = db().doc(`rate_limits/join_${uid}`);
-  const now = Date.now();
-  await db().runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
-    const data = snap.data();
-    const windowStart = typeof data?.windowStart === "number" ? data.windowStart : 0;
-    const count = typeof data?.count === "number" ? data.count : 0;
-    if (now - windowStart >= 3_600_000) {
-      tx.set(ref, { windowStart: now, count: 1 });
-      return;
-    }
-    if (count >= JOIN_ATTEMPTS_PER_HOUR) {
-      throw new HttpsError("resource-exhausted", "Trop de tentatives, réessaie plus tard.");
-    }
-    tx.set(ref, { windowStart, count: count + 1 });
-  });
-}

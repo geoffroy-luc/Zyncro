@@ -236,33 +236,72 @@ class FirestoreGroupsRepository implements GroupsRepository {
 
   @override
   Future<InvitePreview?> resolveInviteCode(String code) async {
-    final codeDoc = await _db
-        .collection('invite_codes')
-        .doc(code.toUpperCase().trim())
-        .get();
+    final normalized = code.toUpperCase().trim();
+    final ({String groupId, String? name, String? emoji})? info;
+    try {
+      info = await _previewFromServer(normalized);
+    } on FirebaseFunctionsException {
+      // Callable indisponible : copie stockée avec le code (ancien
+      // comportement, nom possiblement absent ou périmé).
+      return _previewFromCodeDoc(normalized);
+    }
+    if (info == null) return null;
+    return InvitePreview(
+      groupId: info.groupId,
+      groupName: info.name,
+      groupEmoji: info.emoji,
+      groupPhotoUrl: await _groupPhotoUrl(info.groupId),
+    );
+  }
+
+  /// Nom et emoji **actuels** de l'espace (callable `getInvitePreview`) :
+  /// la copie de `invite_codes` ne suit pas un renommage et manque sur
+  /// d'anciens codes (l'aperçu affichait « un espace Zyncro »).
+  Future<({String groupId, String? name, String? emoji})?> _previewFromServer(
+    String code,
+  ) async {
+    final functions = _functions;
+    if (functions == null) {
+      throw FirebaseFunctionsException(
+        code: 'unavailable',
+        message: 'FirebaseFunctions non injecté',
+      );
+    }
+    final result = await functions
+        .httpsCallable('getInvitePreview')
+        .call<Map<String, dynamic>>({'code': code});
+    final groupId = result.data['groupId'] as String?;
+    if (groupId == null) return null;
+    return (
+      groupId: groupId,
+      name: result.data['groupName'] as String?,
+      emoji: result.data['groupEmoji'] as String?,
+    );
+  }
+
+  Future<InvitePreview?> _previewFromCodeDoc(String code) async {
+    final codeDoc = await _db.collection('invite_codes').doc(code).get();
     if (!codeDoc.exists) return null;
     final data = codeDoc.data()!;
     final groupId = data['groupId'] as String;
-
-    // La photo du groupe est lue en direct depuis Storage (chemin déterministe
-    // `group_photos/<groupId>.jpg`, lisible par tout utilisateur connecté) :
-    // toujours à jour, et accessible avant l'adhésion — contrairement au
-    // document `groups`, réservé aux membres. Absente → on retombe sur l'emoji.
-    String? photoUrl;
-    try {
-      photoUrl = await _storage
-          .ref('group_photos/$groupId.jpg')
-          .getDownloadURL();
-    } catch (_) {
-      photoUrl = null;
-    }
-
     return InvitePreview(
       groupId: groupId,
       groupName: data['groupName'] as String?,
       groupEmoji: data['groupEmoji'] as String?,
-      groupPhotoUrl: photoUrl,
+      groupPhotoUrl: await _groupPhotoUrl(groupId),
     );
+  }
+
+  /// La photo du groupe est lue en direct depuis Storage (chemin déterministe
+  /// `group_photos/<groupId>.jpg`, lisible par tout utilisateur connecté) :
+  /// toujours à jour, et accessible avant l'adhésion — contrairement au
+  /// document `groups`, réservé aux membres. Absente → on retombe sur l'emoji.
+  Future<String?> _groupPhotoUrl(String groupId) async {
+    try {
+      return await _storage.ref('group_photos/$groupId.jpg').getDownloadURL();
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
