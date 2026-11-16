@@ -31,7 +31,19 @@ class SwipeableBranches extends StatefulWidget {
   State<SwipeableBranches> createState() => _SwipeableBranchesState();
 }
 
-class _SwipeableBranchesState extends State<SwipeableBranches> {
+class _SwipeableBranchesState extends State<SwipeableBranches>
+    with SingleTickerProviderStateMixin {
+  /// Fondu pour un saut vers un onglet éloigné (barre d'onglets).
+  late final AnimationController _fade = AnimationController(
+    vsync: this,
+    value: 1,
+  );
+
+  /// Animation déclenchée par la barre d'onglets en cours : les pages
+  /// traversées ne sont pas signalées comme des changements d'onglet.
+  int _programmaticRun = 0;
+  bool get _programmatic => _programmaticRun > 0;
+
   late final PageController _controller;
 
   /// Dernier onglet connu des deux côtés : évite que le changement venu du
@@ -51,15 +63,54 @@ class _SwipeableBranchesState extends State<SwipeableBranches> {
   void didUpdateWidget(SwipeableBranches oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Changement venu d'ailleurs (barre d'onglets, notification, lien) :
-    // saut direct, comme avant.
+    // glissement vers un onglet voisin, fondu vers un onglet éloigné.
     if (widget.currentIndex != _shown) {
       _shown = widget.currentIndex;
-      if (_controller.hasClients) _controller.jumpToPage(_shown);
+      final target = _shown;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && target == _shown) unawaited(_goTo(target));
+      });
+    }
+  }
+
+  Future<void> _goTo(int target) async {
+    if (!_controller.hasClients) return;
+    final from = (_controller.page ?? target.toDouble()).round();
+    if (from == target) return;
+    _programmaticRun++;
+    try {
+      if ((target - from).abs() == 1) {
+        await _controller.animateToPage(
+          target,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        await _fade.animateTo(
+          0,
+          duration: const Duration(milliseconds: 90),
+          curve: Curves.easeIn,
+        );
+        if (!mounted) return;
+        _controller.jumpToPage(target);
+      }
+    } finally {
+      _programmaticRun--;
+      if (mounted && _fade.value < 1) {
+        unawaited(
+          _fade.animateTo(
+            1,
+            duration: const Duration(milliseconds: 210),
+            curve: Curves.easeOut,
+          ),
+        );
+      }
     }
   }
 
   @override
   void dispose() {
+    _fade.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -129,10 +180,14 @@ class _SwipeableBranchesState extends State<SwipeableBranches> {
   }
 
   Widget _buildPages() {
+    return FadeTransition(opacity: _fade, child: _pageView());
+  }
+
+  Widget _pageView() {
     return PageView(
       controller: _controller,
       onPageChanged: (index) {
-        if (index == _shown) return;
+        if (_programmatic || index == _shown) return;
         setState(() => _shown = index);
         widget.onSwipeTo(index);
       },

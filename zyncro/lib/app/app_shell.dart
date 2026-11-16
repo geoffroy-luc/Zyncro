@@ -47,6 +47,9 @@ List<String> _navLabels(AppLocalizations l10n) => [
 
 // ── App shell ────────────────────────────────────────────────────────────────
 
+/// Durée des transitions de couleur et de titre entre onglets.
+const _tabTransition = Duration(milliseconds: 250);
+
 class AppShell extends ConsumerStatefulWidget {
   final StatefulNavigationShell shell;
 
@@ -110,8 +113,12 @@ class _AppShellState extends ConsumerState<AppShell> {
     // Hauteur totale du top bar : padding haut + contenu (40px) + padding bas
     final topBarHeight = topPad + 76.0;
 
-    return Theme(
+    // Couleur de l'onglet : fondu entre les couleurs au changement d'onglet
+    // (boutons, accents) au lieu d'un basculement net.
+    return AnimatedTheme(
       data: AppTheme.themed(primaryColor),
+      duration: _tabTransition,
+      curve: Curves.easeOut,
       child: Scaffold(
         backgroundColor: context.colors.background,
         body: Builder(
@@ -141,7 +148,9 @@ class _AppShellState extends ConsumerState<AppShell> {
                   top: 0,
                   left: 0,
                   right: 0,
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: _tabTransition,
+                    curve: Curves.easeOut,
                     padding: EdgeInsets.fromLTRB(24, topPad + 16, 24, 20),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -226,11 +235,19 @@ class _AppShellState extends ConsumerState<AppShell> {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              Text(
-                                tabTitle,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.85),
-                                  fontSize: 13,
+                              AnimatedSwitcher(
+                                duration: _tabTransition,
+                                layoutBuilder: (current, previous) => Stack(
+                                  alignment: Alignment.centerLeft,
+                                  children: [...previous, ?current],
+                                ),
+                                child: Text(
+                                  tabTitle,
+                                  key: ValueKey(tabTitle),
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ),
                             ],
@@ -294,30 +311,36 @@ class _AppShellState extends ConsumerState<AppShell> {
                             horizontal: 12,
                             vertical: 4,
                           ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                isActive ? item.activeIcon : item.icon,
-                                size: 24,
-                                color: isActive
-                                    ? primaryColor
-                                    : context.colors.textSecondary,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                navLabels[i],
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: isActive
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                  color: isActive
-                                      ? primaryColor
-                                      : context.colors.textSecondary,
+                          // Couleur de l'icône et du libellé : fondu.
+                          child: TweenAnimationBuilder<Color?>(
+                            tween: ColorTween(
+                              end: isActive
+                                  ? primaryColor
+                                  : context.colors.textSecondary,
+                            ),
+                            duration: _tabTransition,
+                            curve: Curves.easeOut,
+                            builder: (context, color, _) => Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isActive ? item.activeIcon : item.icon,
+                                  size: 24,
+                                  color: color,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 4),
+                                Text(
+                                  navLabels[i],
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: isActive
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                    color: color,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );

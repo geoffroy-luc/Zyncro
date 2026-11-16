@@ -62,8 +62,9 @@ void main() {
     expect(swipes, [1, 0]);
   });
 
-  testWidgets('changement venu de la barre d’onglets : saut direct, sans '
-      'écho', (tester) async {
+  testWidgets('changement venu de la barre d’onglets : sans écho', (
+    tester,
+  ) async {
     final swipes = <int>[];
     await tester.pumpWidget(MaterialApp(home: _Host(swipes: swipes)));
     await tester.tap(find.text('aller à 2'));
@@ -230,5 +231,80 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Notes'), findsOneWidget);
     expect(swipes, [1]);
+  });
+
+  group('barre d’onglets : transition animée', () {
+    late int index;
+    late List<int> swipes;
+
+    Future<void> pump(WidgetTester tester) async {
+      index = 0;
+      swipes = [];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) => Scaffold(
+              body: SwipeableBranches(
+                currentIndex: index,
+                onSwipeTo: swipes.add,
+                children: [
+                  for (final name in ['A', 'B', 'C', 'D'])
+                    Center(child: Text('page $name')),
+                ],
+              ),
+              bottomNavigationBar: Row(
+                children: [
+                  for (final (i, name) in ['A', 'B', 'C', 'D'].indexed)
+                    TextButton(
+                      onPressed: () => setState(() => index = i),
+                      child: Text('onglet $name'),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('onglet voisin : la page glisse', (tester) async {
+      await pump(tester);
+      await tester.tap(find.text('onglet B'));
+      await tester.pump(); // post-frame : lancement de l'animation
+      await tester.pump(); // premier tick : origine du temps de l'animation
+      await tester.pump(const Duration(milliseconds: 120));
+      // En pleine glissade, les deux pages sont à l'écran.
+      expect(find.text('page A'), findsOneWidget);
+      expect(find.text('page B'), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.text('page A'), findsNothing);
+      expect(swipes, isEmpty);
+    });
+
+    testWidgets('onglet éloigné : fondu, sans traverser les autres', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.tap(find.text('onglet D'));
+      await tester.pump(); // post-frame : lancement du fondu
+      await tester.pump(); // premier tick
+      await tester.pump(const Duration(milliseconds: 60));
+      final fade = tester.widget<FadeTransition>(
+        find
+            .ancestor(
+              of: find.byType(PageView),
+              matching: find.byType(FadeTransition),
+            )
+            .first,
+      );
+      expect(fade.opacity.value, lessThan(1));
+      // Jamais de page B / C affichée pendant le saut.
+      expect(find.text('page B'), findsNothing);
+      expect(find.text('page C'), findsNothing);
+      await tester.pumpAndSettle();
+      expect(find.text('page D'), findsOneWidget);
+      expect(fade.opacity.value, 1);
+      expect(swipes, isEmpty);
+    });
   });
 }
