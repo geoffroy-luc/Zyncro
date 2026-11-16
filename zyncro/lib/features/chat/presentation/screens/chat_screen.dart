@@ -13,11 +13,14 @@ import 'package:zyncro/core/utils/duration_format.dart';
 import 'package:zyncro/core/utils/scroll_reveal.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
+import 'package:zyncro/features/chat/domain/chat_items.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';
 import 'package:zyncro/features/chat/domain/repositories/messages_repository.dart';
 import 'package:zyncro/features/chat/domain/typing_throttle.dart';
+import 'package:zyncro/features/chat/presentation/providers/chat_preferences_provider.dart';
 import 'package:zyncro/features/chat/presentation/providers/messages_provider.dart';
 import 'package:zyncro/features/chat/presentation/screens/media_picker_screen.dart';
+import 'package:zyncro/features/chat/presentation/widgets/activity_group_tile.dart';
 import 'package:zyncro/features/chat/presentation/widgets/chat_search_bar.dart';
 import 'package:zyncro/features/chat/presentation/widgets/composer_context_bar.dart';
 import 'package:zyncro/features/chat/presentation/widgets/create_poll_dialog.dart';
@@ -84,6 +87,9 @@ abstract class _ChatScreenStateBase extends ConsumerState<ChatScreen> {
   final LayerLink _plusButtonLink = LayerLink();
 
   final Map<String, GlobalKey> _messageKeys = {};
+
+  /// Blocs d'activité dépliés (clé : message le plus récent du bloc).
+  final Set<String> _expandedActivity = {};
   String? _highlightedMessageId;
 
   late final VoiceRecorder _recorder;

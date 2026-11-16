@@ -862,6 +862,30 @@ abstract class AppLocalizations {
   /// **'Aucune dépense ne correspond à la recherche.'**
   String get expensesAucuneDepenseTrouvee;
 
+  /// No description provided for @chatActivites.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucune activité} =1{1 activité} other{{count} activités}}'**
+  String chatActivites(int count);
+
+  /// No description provided for @chatAffichage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Affichage'**
+  String get chatAffichage;
+
+  /// No description provided for @chatActiviteDansLeChat.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activité de l\'espace dans le chat'**
+  String get chatActiviteDansLeChat;
+
+  /// No description provided for @chatActiviteDansLeChatDetail.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notes, événements, dépenses et arrivées. Réglage de cet appareil.'**
+  String get chatActiviteDansLeChatDetail;
+
   /// No description provided for @chatEchecEnvoiMessage.
   ///
   /// In fr, this message translates to:

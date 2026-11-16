@@ -425,6 +425,28 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune dépense ne correspond à la recherche.';
 
   @override
+  String chatActivites(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count activités',
+      one: '1 activité',
+      zero: 'Aucune activité',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatAffichage => 'Affichage';
+
+  @override
+  String get chatActiviteDansLeChat => 'Activité de l\'espace dans le chat';
+
+  @override
+  String get chatActiviteDansLeChatDetail =>
+      'Notes, événements, dépenses et arrivées. Réglage de cet appareil.';
+
+  @override
   String get chatEchecEnvoiMessage => 'Échec de l\'envoi du message.';
 
   @override

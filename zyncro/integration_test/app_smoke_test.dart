@@ -243,7 +243,20 @@ void main() {
     await pumpUntil(tester, find.text('Bonjour E2E'));
 
     // Les messages système des autres onglets sont arrivés dans le chat.
-    await pumpUntil(tester, find.textContaining('Note E2E'));
+    // L'activité des autres onglets (note, événement, dépense) est regroupée
+    // en un bloc replié : on le déplie pour la voir.
+    await pumpUntil(tester, find.text('3 activités'));
+    await tapAndPump(tester, find.text('3 activités'));
+    // hitTestable : les onglets Notes / Dépenses, gardés en mémoire hors
+    // écran, contiennent aussi ces titres.
+    await pumpUntil(
+      tester,
+      find.textContaining('a créé une note').hitTestable(),
+    );
+    await pumpUntil(
+      tester,
+      find.textContaining('a ajouté une dépense').hitTestable(),
+    );
 
     // ── Galerie paginée (requête média réelle, rules du dépôt) ────────────
     unawaited(GoRouter.of(tester.element(input)).push(AppRoutes.mediaGallery));

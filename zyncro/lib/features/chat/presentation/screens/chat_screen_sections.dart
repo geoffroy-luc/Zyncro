@@ -96,7 +96,14 @@ mixin _ChatScreenSections
     List<GroupMember> members,
     String? bgType,
   ) {
-    final allMessages = chatState.messages;
+    // Réglage de l'appareil : masquer l'activité de l'espace (messages
+    // système) dans le chat.
+    final activityVisible = ref.watch(chatActivityVisibleProvider);
+    final allMessages = activityVisible
+        ? chatState.messages
+        : chatState.messages
+              .where((m) => m.type != MessageType.system)
+              .toList();
     final messages = _search.isEmpty
         ? allMessages
         : allMessages.where((m) {
@@ -129,13 +136,17 @@ mixin _ChatScreenSections
       seenByMessage.putIfAbsent(rid, () => []).add(member);
     }
 
+    // Activités consécutives (notes, événements, dépenses, arrivées)
+    // regroupées en un bloc repliable.
+    final items = groupActivity(messages);
+
     return ListView.builder(
       controller: _scrollController,
       reverse: true,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      itemCount: messages.length + (chatState.loadingMore ? 1 : 0),
-      itemBuilder: (_, i) {
-        if (i == messages.length) {
+      itemCount: items.length + (chatState.loadingMore ? 1 : 0),
+      itemBuilder: (_, j) {
+        if (j == items.length) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -147,6 +158,11 @@ mixin _ChatScreenSections
           );
         }
 
+        final item = items[j];
+        if (item is ActivityGroupItem) {
+          return _buildActivityGroup(item, messages, seenByMessage, bgType);
+        }
+        final i = (item as MessageItem).index;
         final msg = messages[i];
         final isMe = msg.senderId == currentUid;
 
@@ -341,6 +357,43 @@ mixin _ChatScreenSections
                   ),
               ],
             ),
+    );
+  }
+
+  Widget _buildActivityGroup(
+    ActivityGroupItem group,
+    List<Message> messages,
+    Map<String, List<GroupMember>> seenByMessage,
+    String? bgType,
+  ) {
+    final activities = [for (final i in group.indices) messages[i]];
+    final key = activities.first.id;
+    // Lu jusqu'à l'une de ces activités : affiché sous le bloc.
+    final seenBy = {
+      for (final m in activities)
+        for (final member in seenByMessage[m.id] ?? <GroupMember>[])
+          member.uid: member,
+    }.values.toList();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          ActivityGroupTile(
+            activities: activities,
+            expanded: _expandedActivity.contains(key),
+            hasCustomBackground: bgType != null && bgType != 'none',
+            onToggle: () => setState(() {
+              if (!_expandedActivity.remove(key)) _expandedActivity.add(key);
+            }),
+          ),
+          if (seenBy.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, right: 4),
+              child: SeenByRow(members: seenBy),
+            ),
+        ],
+      ),
     );
   }
 }

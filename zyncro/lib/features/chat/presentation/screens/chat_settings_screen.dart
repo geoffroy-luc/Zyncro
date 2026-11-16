@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,7 @@ import 'package:zyncro/core/media/media_providers.dart';
 import 'package:zyncro/core/media/media_source.dart';
 import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
+import 'package:zyncro/features/chat/presentation/providers/chat_preferences_provider.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
@@ -261,6 +264,23 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                       : null,
                 ),
               ],
+            ],
+          ),
+          SettingsSection(
+            title: context.l10n.chatAffichage,
+            children: [
+              SettingsTile(
+                title: context.l10n.chatActiviteDansLeChat,
+                subtitle: context.l10n.chatActiviteDansLeChatDetail,
+                trailing: Switch(
+                  value: ref.watch(chatActivityVisibleProvider),
+                  onChanged: (visible) => unawaited(
+                    ref
+                        .read(chatActivityVisibleProvider.notifier)
+                        .set(visible: visible),
+                  ),
+                ),
+              ),
             ],
           ),
           SettingsSection(
