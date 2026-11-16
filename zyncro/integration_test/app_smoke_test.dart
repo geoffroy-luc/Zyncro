@@ -63,17 +63,28 @@ Future<void> pumpUntilGone(
 }
 
 Future<void> tapAndPump(WidgetTester tester, Finder finder) async {
-  await tester.ensureVisible(finder.first);
+  // ensureVisible remonte tous les défileurs parents, y compris la PageView
+  // des onglets : sur un bouton déjà à l'écran, il décalait la page jusqu'à
+  // l'onglet voisin. On ne fait défiler que si la cible n'est pas touchable.
+  if (finder.hitTestable().evaluate().isEmpty) {
+    await tester.ensureVisible(finder.first);
+  }
   await tester.tap(finder.first);
   await tester.pump(const Duration(milliseconds: 500));
 }
 
-Finder field(String label) => find.widgetWithText(TextFormField, label);
+// `hitTestable()` : seulement ce qui est réellement touchable à l'écran. Avec
+// le balayage entre onglets, les onglets voisins restent dans l'arbre, hors
+// écran ; un finder non restreint pouvait viser le « + » d'un autre onglet.
+Finder field(String label) =>
+    find.widgetWithText(TextFormField, label).hitTestable();
 
-Finder fab() => find.descendant(
-  of: find.byType(FloatingActionButton),
-  matching: find.byIcon(Icons.add),
-);
+Finder fab() => find
+    .descendant(
+      of: find.byType(FloatingActionButton),
+      matching: find.byIcon(Icons.add),
+    )
+    .hitTestable();
 
 Finder navTab(String label) => find.text(label).last;
 
@@ -137,6 +148,23 @@ void main() {
     await tester.enterText(field('Titre'), 'Note E2E');
     await save(tester);
     await pumpUntil(tester, find.text('Note E2E'));
+
+    // Balayer vers la gauche passe à l'onglet suivant (Dépenses), vers la
+    // droite revient aux notes.
+    await tester.fling(
+      find.text('Note E2E').hitTestable(),
+      const Offset(-400, 0),
+      1500,
+    );
+    await pumpUntil(tester, find.text('Équilibre').hitTestable());
+    // Retour : on balaie sur la barre « Dépenses / Équilibre ». Sur la liste,
+    // le balayage change d'onglet interne (Dépenses ⇄ Équilibre), prioritaire.
+    await tester.fling(
+      find.text('Équilibre').hitTestable(),
+      const Offset(400, 0),
+      1500,
+    );
+    await pumpUntil(tester, find.text('Note E2E').hitTestable());
 
     // ── Calendrier ────────────────────────────────────────────────────────
     await tapAndPump(tester, navTab('Calendar'));

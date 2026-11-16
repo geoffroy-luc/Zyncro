@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zyncro/core/logging/app_logger.dart';
 import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
@@ -131,7 +132,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _startLoading(LoadingType.anonymous);
     try {
       await ref.read(authRepositoryProvider).signInAnonymously(pseudo);
-    } on FirebaseAuthException catch (_) {
+    } on FirebaseAuthException catch (e) {
+      AppLogger.warning('Auth', 'connexion anonyme : ${e.code} ${e.message}');
       _setError('Connexion anonyme échouée.');
     } finally {
       _stopLoading();

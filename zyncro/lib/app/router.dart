@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zyncro/app/app_shell.dart';
 import 'package:zyncro/app/redirect_policy.dart';
+import 'package:zyncro/app/swipeable_branches.dart';
 import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/auth/presentation/screens/login_screen.dart';
@@ -101,10 +102,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.settingsChat,
         builder: (_, __) => const ChatSettingsScreen(),
       ),
-      StatefulShellRoute.indexedStack(
+      // Onglets : balayage gauche / droite entre onglets (SwipeableBranches),
+      // tous préchargés pour qu'un onglet jamais ouvert ne soit pas vide
+      // pendant le balayage.
+      StatefulShellRoute(
         builder: (context, state, shell) => AppShell(shell: shell),
+        navigatorContainerBuilder: (context, shell, children) =>
+            SwipeableBranches(
+              currentIndex: shell.currentIndex,
+              onSwipeTo: shell.goBranch,
+              children: children,
+            ),
         branches: [
           StatefulShellBranch(
+            preload: true,
             routes: [
               GoRoute(
                 path: AppRoutes.home,
@@ -113,6 +124,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           StatefulShellBranch(
+            preload: true,
             routes: [
               GoRoute(
                 path: AppRoutes.calendar,
@@ -121,6 +133,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           StatefulShellBranch(
+            preload: true,
             routes: [
               GoRoute(
                 path: AppRoutes.notes,
@@ -129,6 +142,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           StatefulShellBranch(
+            preload: true,
             routes: [
               GoRoute(
                 path: AppRoutes.expenses,
@@ -137,6 +151,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           StatefulShellBranch(
+            preload: true,
             routes: [
               GoRoute(
                 path: AppRoutes.chat,

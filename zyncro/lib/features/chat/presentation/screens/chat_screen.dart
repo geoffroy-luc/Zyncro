@@ -10,6 +10,7 @@ import 'package:zyncro/core/media/media_source.dart';
 import 'package:zyncro/core/media/voice_recorder.dart';
 import 'package:zyncro/core/utils/color_hex.dart';
 import 'package:zyncro/core/utils/duration_format.dart';
+import 'package:zyncro/core/utils/scroll_reveal.dart';
 import 'package:zyncro/design_system/context_extensions.dart';
 import 'package:zyncro/features/auth/presentation/providers/auth_provider.dart';
 import 'package:zyncro/features/chat/domain/entities/message.dart';

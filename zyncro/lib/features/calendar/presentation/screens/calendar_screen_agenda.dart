@@ -15,6 +15,7 @@ mixin _CalendarNavigation on _CalendarScreenStateBase {
   });
 
   List<Widget> _buildAgendaSections(List<Event> events, Color primaryColor) {
+    final now = DateTime.now();
     final Map<DateTime, List<Event>> grouped = {};
     for (final e in events) {
       final day = DateTime(
@@ -82,7 +83,10 @@ mixin _CalendarNavigation on _CalendarScreenStateBase {
               ...grouped[day]!.map(
                 (e) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: AgendaEventCard(event: e),
+                  // Événement terminé : estompé, comme dans la vue mois.
+                  child: isPastEvent(e, now)
+                      ? Opacity(opacity: 0.6, child: AgendaEventCard(event: e))
+                      : AgendaEventCard(event: e),
                 ),
               ),
             ],

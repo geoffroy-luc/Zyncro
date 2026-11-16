@@ -28,6 +28,10 @@ List<Event> eventsInMonth(Iterable<Event> events, DateTime month) {
       .toList();
 }
 
+/// Terminé à [now] : sa fin (ou son début s'il n'a pas de fin) est passée.
+bool isPastEvent(Event e, DateTime now) =>
+    (e.endDate ?? e.startDate).isBefore(now);
+
 /// Sépare les événements par rapport à [now] :
 /// - **à venir** : en cours ou pas encore terminés, du plus proche au plus
 ///   lointain ;
@@ -40,7 +44,7 @@ List<Event> eventsInMonth(Iterable<Event> events, DateTime month) {
   final upcoming = <Event>[];
   final past = <Event>[];
   for (final e in events) {
-    ((e.endDate ?? e.startDate).isBefore(now) ? past : upcoming).add(e);
+    (isPastEvent(e, now) ? past : upcoming).add(e);
   }
   upcoming.sort((a, b) => a.startDate.compareTo(b.startDate));
   past.sort((a, b) => b.startDate.compareTo(a.startDate));

@@ -29,11 +29,11 @@ mixin _ChatComposer on _ChatScreenStateBase {
 
     if (key.currentContext != null) {
       unawaited(
-        Scrollable.ensureVisible(
+        revealInScrollPosition(
+          _scrollController.position,
           key.currentContext!,
           duration: const Duration(milliseconds: 350),
           curve: Curves.easeInOut,
-          alignment: 0.5,
         ).then((_) => highlight()),
       );
     } else {
@@ -51,11 +51,11 @@ mixin _ChatComposer on _ChatScreenStateBase {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (key.currentContext != null) {
                   unawaited(
-                    Scrollable.ensureVisible(
+                    revealInScrollPosition(
+                      _scrollController.position,
                       key.currentContext!,
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.easeInOut,
-                      alignment: 0.5,
                     ).then((_) => highlight()),
                   );
                 } else {
