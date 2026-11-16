@@ -7,6 +7,7 @@ import 'package:zyncro/features/expenses/presentation/providers/expenses_provide
 import 'package:zyncro/features/expenses/presentation/screens/expense_form_screen.dart';
 import 'package:zyncro/features/expenses/presentation/widgets/depenses_tab.dart';
 import 'package:zyncro/features/expenses/presentation/widgets/equilibre_tab.dart';
+import 'package:zyncro/features/expenses/presentation/widgets/expense_search_field.dart';
 
 class ExpensesScreen extends ConsumerStatefulWidget {
   const ExpensesScreen({super.key});
@@ -61,7 +62,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final nameByUid = {for (final m in members) m.uid: m.displayName};
 
     final myBalance = currentUid != null ? (balances[currentUid] ?? 0.0) : 0.0;
-    final (:total, :myShare) = spendingOf(expenses, currentUid);
+    // Aperçu du groupe : toujours sur toutes les dépenses (la recherche ne
+    // filtre que la liste).
+    final (:total, :myShare) = spendingOf(allExpenses, currentUid);
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -110,52 +113,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               ),
             ),
 
-            // ── Search bar ──────────────────────────────────────────
-            if (_currentTab == 0)
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: context.colors.background,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: context.colors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        child: Icon(
-                          Icons.search,
-                          color: context.colors.textSecondary,
-                          size: 20,
-                        ),
-                      ),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: (v) => setState(() => _search = v),
-                          decoration: InputDecoration(
-                            hintText: context.l10n.expensesRechercherUneDepense,
-                            hintStyle: TextStyle(
-                              color: context.colors.textSecondary,
-                              fontSize: 14,
-                            ),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                            ),
-                            filled: false,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
             // ── Tabs ─────────────────────────────────────────────────
             Expanded(
               // BUG E16 corrigé : chargement et erreur visibles (au lieu de
@@ -184,9 +141,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         // ── Tab 0 : Dépenses ─────────────────────────────
                         DepensesTab(
                           expenses: expenses,
+                          hasAnyExpense: allExpenses.isNotEmpty,
+                          searching: _search.isNotEmpty,
                           total: total,
                           myShare: myShare,
                           currentUid: currentUid,
+                          search: ExpenseSearchField(
+                            controller: _searchController,
+                            onChanged: (v) => setState(() => _search = v),
+                          ),
                         ),
                         // ── Tab 1 : Équilibre ────────────────────────────
                         EquilibreTab(

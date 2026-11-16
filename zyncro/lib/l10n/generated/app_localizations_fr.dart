@@ -421,6 +421,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Plus rien de prévu d\'ici la fin du mois.';
 
   @override
+  String get expensesAucuneDepenseTrouvee =>
+      'Aucune dépense ne correspond à la recherche.';
+
+  @override
   String get chatEchecEnvoiMessage => 'Échec de l\'envoi du message.';
 
   @override

@@ -19,6 +19,7 @@ import 'package:intl/intl.dart';
 import 'package:zyncro/core/firebase/firebase_emulators.dart';
 import 'package:zyncro/core/navigation/app_routes.dart';
 import 'package:zyncro/features/calendar/presentation/widgets/month_swipe_detector.dart';
+import 'package:zyncro/features/expenses/presentation/widgets/expense_search_field.dart';
 import 'package:zyncro/main.dart' as app;
 
 Future<void> pumpUntil(
@@ -220,6 +221,16 @@ void main() {
     await tester.enterText(field('Titre'), 'Dépense E2E');
     await tester.enterText(field('Montant (€)'), '42.50');
     await save(tester);
+    await pumpUntil(tester, find.text('Dépense E2E'));
+
+    // La recherche (dans la liste des dépenses) filtre la liste seulement.
+    final search = find.byKey(ExpenseSearchField.fieldKey).hitTestable();
+    await tester.enterText(search, 'zzz');
+    await pumpUntil(
+      tester,
+      find.text('Aucune dépense ne correspond à la recherche.'),
+    );
+    await tester.enterText(search, '');
     await pumpUntil(tester, find.text('Dépense E2E'));
 
     // ── Chat ──────────────────────────────────────────────────────────────

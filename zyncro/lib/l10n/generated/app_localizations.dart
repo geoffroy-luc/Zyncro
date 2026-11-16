@@ -856,6 +856,12 @@ abstract class AppLocalizations {
   /// **'Plus rien de prévu d\'ici la fin du mois.'**
   String get calendarRienDePrevuCeMois;
 
+  /// No description provided for @expensesAucuneDepenseTrouvee.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune dépense ne correspond à la recherche.'**
+  String get expensesAucuneDepenseTrouvee;
+
   /// No description provided for @chatEchecEnvoiMessage.
   ///
   /// In fr, this message translates to:

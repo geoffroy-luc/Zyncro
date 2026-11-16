@@ -12,17 +12,30 @@ import 'package:zyncro/features/settings/presentation/providers/tab_settings_pro
 // ── Tab Dépenses ─────────────────────────────────────────────────────────────
 
 class DepensesTab extends ConsumerWidget {
+  /// Dépenses affichées (filtrées par la recherche).
   final List<Expense> expenses;
+
+  /// L'espace a au moins une dépense (sinon pas de recherche à proposer).
+  final bool hasAnyExpense;
+
+  /// Une recherche est en cours.
+  final bool searching;
   final double total;
   final double myShare;
   final String? currentUid;
 
+  /// Champ de recherche, placé au-dessus de la liste.
+  final Widget search;
+
   const DepensesTab({
     super.key,
     required this.expenses,
+    required this.hasAnyExpense,
+    required this.searching,
     required this.total,
     required this.myShare,
     required this.currentUid,
+    required this.search,
   });
 
   @override
@@ -69,7 +82,21 @@ class DepensesTab extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          if (expenses.isEmpty)
+          // La recherche porte sur la liste ci-dessous uniquement.
+          if (hasAnyExpense) ...[search, const SizedBox(height: 16)],
+
+          if (expenses.isEmpty && searching)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  context.l10n.expensesAucuneDepenseTrouvee,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: context.colors.textSecondary),
+                ),
+              ),
+            )
+          else if (expenses.isEmpty)
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 32),

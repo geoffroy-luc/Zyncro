@@ -170,6 +170,7 @@
   "calendarEvenementsAVenir": "Événements à venir",
   "calendarEvenementsPasses": "Événements passés",
   "calendarRienDePrevuCeMois": "Plus rien de prévu d'ici la fin du mois.",
+  "expensesAucuneDepenseTrouvee": "Aucune dépense ne correspond à la recherche.",
   "chatEchecEnvoiMessage": "Échec de l'envoi du message.",
   "chatModifierLeMessage": "Modifier le message",
   "chatEnregistrement": "Enregistrement…",
