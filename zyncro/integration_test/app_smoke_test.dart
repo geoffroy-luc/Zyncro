@@ -15,8 +15,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:intl/intl.dart';
 import 'package:zyncro/core/firebase/firebase_emulators.dart';
 import 'package:zyncro/core/navigation/app_routes.dart';
+import 'package:zyncro/features/calendar/presentation/widgets/month_swipe_detector.dart';
 import 'package:zyncro/main.dart' as app;
 
 Future<void> pumpUntil(
@@ -143,6 +145,25 @@ void main() {
     await pumpUntil(tester, field('Titre'));
     await tester.enterText(field('Titre'), 'Événement E2E');
     await save(tester);
+    await pumpUntil(tester, find.text('Événement E2E'));
+
+    // Balayer la grille change de mois (gauche → suivant, droite → retour).
+    final now = DateTime.now();
+    String monthLabel(DateTime m) => DateFormat('MMMM yyyy', 'fr_FR').format(m);
+    final thisMonth = monthLabel(DateTime(now.year, now.month));
+    final nextMonth = monthLabel(DateTime(now.year, now.month + 1));
+    await tester.fling(
+      find.byType(MonthSwipeDetector),
+      const Offset(-300, 0),
+      1500,
+    );
+    await pumpUntil(tester, find.text(nextMonth));
+    await tester.fling(
+      find.byType(MonthSwipeDetector),
+      const Offset(300, 0),
+      1500,
+    );
+    await pumpUntil(tester, find.text(thisMonth));
     await pumpUntil(tester, find.text('Événement E2E'));
 
     // ── Dépenses ──────────────────────────────────────────────────────────

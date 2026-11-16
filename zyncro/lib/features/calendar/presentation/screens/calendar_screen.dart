@@ -14,14 +14,15 @@ import 'package:zyncro/features/calendar/presentation/widgets/agenda_event_card.
 import 'package:zyncro/features/calendar/presentation/widgets/calendar_event_card.dart';
 import 'package:zyncro/features/calendar/presentation/widgets/calendar_screen_helpers.dart';
 import 'package:zyncro/features/calendar/presentation/widgets/calendar_toggle_button.dart';
+import 'package:zyncro/features/calendar/presentation/widgets/month_swipe_detector.dart';
 import 'package:zyncro/features/calendar/presentation/widgets/view_mode.dart';
 import 'package:zyncro/features/groups/domain/entities/group_member.dart';
 import 'package:zyncro/features/groups/presentation/providers/groups_provider.dart';
 import 'package:zyncro/features/settings/domain/entities/tab_settings.dart';
 import 'package:zyncro/features/settings/presentation/providers/tab_settings_provider.dart';
 
-part 'calendar_screen_filters.dart';
 part 'calendar_screen_agenda.dart';
+part 'calendar_screen_filters.dart';
 part 'calendar_screen_sections.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -39,6 +40,10 @@ abstract class _CalendarScreenStateBase extends ConsumerState<CalendarScreen> {
     DateTime.now().year,
     DateTime.now().month,
   );
+
+  /// Sens du dernier changement de mois (+1 suivant, -1 précédent) : sens
+  /// de l'animation de la grille.
+  int _monthStep = 1;
   DateTime? _selectedDay;
 
   // Filtres locaux
@@ -109,14 +114,22 @@ class _CalendarScreenState extends _CalendarScreenStateBase
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   if (_viewMode == ViewMode.month) ...[
-                    // Grille
-                    _buildMonthGrid(
-                      displayMode,
-                      primaryColor,
-                      monthEvents,
-                      today,
-                      daysInMonth,
-                      leadingBlanks,
+                    // Grille : balayer à gauche / à droite change de mois.
+                    MonthSwipeDetector(
+                      onPrevious: _prevMonth,
+                      onNext: _nextMonth,
+                      child: MonthSlideSwitcher(
+                        month: _displayedMonth,
+                        step: _monthStep,
+                        child: _buildMonthGrid(
+                          displayMode,
+                          primaryColor,
+                          monthEvents,
+                          today,
+                          daysInMonth,
+                          leadingBlanks,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 24),
                     Text(

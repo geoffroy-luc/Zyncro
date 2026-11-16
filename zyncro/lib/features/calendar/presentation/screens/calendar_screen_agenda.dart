@@ -5,11 +5,13 @@ mixin _CalendarNavigation on _CalendarScreenStateBase {
   void _prevMonth() => setState(() {
     _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month - 1);
     _selectedDay = null;
+    _monthStep = -1;
   });
 
   void _nextMonth() => setState(() {
     _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month + 1);
     _selectedDay = null;
+    _monthStep = 1;
   });
 
   List<Widget> _buildAgendaSections(List<Event> events, Color primaryColor) {
