@@ -96,4 +96,139 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Onglet 2'), findsOneWidget);
   });
+
+  testWidgets('onglets internes : relais aux onglets de l’app aux bords', (
+    tester,
+  ) async {
+    final swipes = <int>[];
+    var index = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setState) => Scaffold(
+            body: SwipeableBranches(
+              currentIndex: index,
+              onSwipeTo: (i) {
+                swipes.add(i);
+                setState(() => index = i);
+              },
+              children: [
+                const Center(child: Text('Notes')),
+                // Comme Dépenses / Équilibre : pages internes à bords francs.
+                PageView(
+                  physics: const PageScrollPhysics(
+                    parent: ClampingScrollPhysics(),
+                  ),
+                  children: const [
+                    Center(child: Text('Dépenses')),
+                    Center(child: Text('Équilibre')),
+                  ],
+                ),
+                const Center(child: Text('Chat')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Notes → onglet Dépenses (page interne 1).
+    await tester.fling(find.text('Notes'), const Offset(-400, 0), 1500);
+    await tester.pumpAndSettle();
+    expect(find.text('Dépenses'), findsOneWidget);
+
+    // Dans l'onglet : Dépenses → Équilibre (interne, pas de changement
+    // d'onglet de l'app).
+    await tester.fling(find.text('Dépenses'), const Offset(-400, 0), 1500);
+    await tester.pumpAndSettle();
+    expect(find.text('Équilibre'), findsOneWidget);
+    expect(swipes, [1]);
+
+    // Au bord droit : le balayage passe au Chat.
+    await tester.fling(find.text('Équilibre'), const Offset(-400, 0), 1500);
+    await tester.pumpAndSettle();
+    expect(find.text('Chat'), findsOneWidget);
+    expect(swipes, [1, 2]);
+
+    // Retour : Chat → Équilibre, puis Équilibre → Dépenses (interne), puis
+    // au bord gauche → Notes.
+    await tester.fling(find.text('Chat'), const Offset(400, 0), 1500);
+    await tester.pumpAndSettle();
+    expect(find.text('Équilibre'), findsOneWidget);
+    await tester.fling(find.text('Équilibre'), const Offset(400, 0), 1500);
+    await tester.pumpAndSettle();
+    expect(find.text('Dépenses'), findsOneWidget);
+    await tester.fling(find.text('Dépenses'), const Offset(400, 0), 1500);
+    await tester.pumpAndSettle();
+    expect(find.text('Notes'), findsOneWidget);
+    expect(swipes, [1, 2, 1, 0]);
+  });
+
+  testWidgets('relais : petit glissé au bord, on revient sur l’onglet', (
+    tester,
+  ) async {
+    final swipes = <int>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SwipeableBranches(
+          currentIndex: 0,
+          onSwipeTo: swipes.add,
+          children: [
+            PageView(
+              physics: const PageScrollPhysics(parent: ClampingScrollPhysics()),
+              children: const [
+                Center(child: Text('Dépenses')),
+                Center(child: Text('Équilibre')),
+              ],
+            ),
+            const Center(child: Text('Chat')),
+          ],
+        ),
+      ),
+    );
+    await tester.fling(find.text('Dépenses'), const Offset(-400, 0), 1500);
+    await tester.pumpAndSettle();
+    // Glissé lent et court au bord : pas assez pour changer d'onglet.
+    await tester.timedDrag(
+      find.text('Équilibre'),
+      const Offset(-60, 0),
+      const Duration(milliseconds: 600),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Équilibre'), findsOneWidget);
+    expect(swipes, isEmpty);
+  });
+
+  testWidgets('relais sur écran étroit : un seul onglet par balayage', (
+    tester,
+  ) async {
+    // Largeur d'un téléphone : un balayage de 400 px dépasse la page.
+    tester.view.physicalSize = const Size(393, 851);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final swipes = <int>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SwipeableBranches(
+          currentIndex: 2,
+          onSwipeTo: swipes.add,
+          children: [
+            const Center(child: Text('Calendrier')),
+            const Center(child: Text('Notes')),
+            PageView(
+              physics: const PageScrollPhysics(parent: ClampingScrollPhysics()),
+              children: const [
+                Center(child: Text('Dépenses')),
+                Center(child: Text('Équilibre')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.fling(find.text('Dépenses'), const Offset(400, 0), 1500);
+    await tester.pumpAndSettle();
+    expect(find.text('Notes'), findsOneWidget);
+    expect(swipes, [1]);
+  });
 }

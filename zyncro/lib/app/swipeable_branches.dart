@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// Conteneur des onglets du shell : on passe d'un onglet à l'autre en
@@ -6,7 +8,8 @@ import 'package:flutter/material.dart';
 /// Chaque onglet garde son état (défilement, saisie…) comme avec l'ancien
 /// `IndexedStack`. Les gestes horizontaux internes (grille du calendrier,
 /// onglets Dépenses / Équilibre, glisser pour répondre dans le chat) restent
-/// prioritaires : ils sont plus profonds dans l'arbre.
+/// prioritaires ; une liste horizontale interne arrivée à son bord passe le
+/// relais aux onglets (Équilibre → Chat, Dépenses → Notes).
 class SwipeableBranches extends StatefulWidget {
   const SwipeableBranches({
     super.key,
@@ -61,8 +64,71 @@ class _SwipeableBranchesState extends State<SwipeableBranches> {
     super.dispose();
   }
 
+  /// Un balayage horizontal interne (onglets Dépenses / Équilibre…) arrivé
+  /// en bout de course est en train de déplacer les onglets.
+  bool _handingOff = false;
+
+  /// Onglet de départ du relais : on ne s'en éloigne que d'un onglet.
+  int _handoffFrom = 0;
+
+  /// Passage de relais : quand une liste horizontale interne est à son bord
+  /// et que le doigt continue, l'excédent fait glisser les onglets (au plus
+  /// d'un onglet) ; au lâcher, on se cale sur l'onglet voisin ou on revient,
+  /// selon la vitesse et la distance.
+  bool _onInnerScroll(ScrollNotification n) {
+    if (n.depth == 0 || n.metrics.axis != Axis.horizontal) return false;
+    if (!_controller.hasClients) return false;
+    final position = _controller.position;
+    final pageWidth = position.viewportDimension;
+    if (n is OverscrollNotification && n.dragDetails != null) {
+      if (!_handingOff) {
+        _handingOff = true;
+        _handoffFrom = (_controller.page ?? _shown.toDouble()).round();
+      }
+      final min = (_handoffFrom - 1) * pageWidth;
+      final max = (_handoffFrom + 1) * pageWidth;
+      position.jumpTo(
+        (position.pixels + n.overscroll)
+            .clamp(min, max)
+            .clamp(position.minScrollExtent, position.maxScrollExtent),
+      );
+    } else if (n is ScrollEndNotification && _handingOff) {
+      _handingOff = false;
+      final page = _controller.page ?? _handoffFrom.toDouble();
+      final delta = page - _handoffFrom;
+      final velocity = n.dragDetails?.primaryVelocity ?? 0;
+      final int target;
+      if (velocity < -_flingVelocity && delta > 0) {
+        target = _handoffFrom + 1; // doigt vers la gauche : onglet suivant
+      } else if (velocity > _flingVelocity && delta < 0) {
+        target = _handoffFrom - 1; // doigt vers la droite : onglet précédent
+      } else {
+        target = delta.abs() >= 0.5
+            ? _handoffFrom + delta.sign.toInt()
+            : _handoffFrom;
+      }
+      unawaited(
+        _controller.animateToPage(
+          target.clamp(0, widget.children.length - 1),
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+        ),
+      );
+    }
+    return false;
+  }
+
+  static const _flingVelocity = 300.0;
+
   @override
   Widget build(BuildContext context) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onInnerScroll,
+      child: _buildPages(),
+    );
+  }
+
+  Widget _buildPages() {
     return PageView(
       controller: _controller,
       onPageChanged: (index) {

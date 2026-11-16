@@ -175,6 +175,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     )
                   : TabBarView(
                       controller: _tabController,
+                      // Bords francs (aussi sur iOS) : arrivé au bord, le
+                      // balayage passe aux onglets de l'app (SwipeableBranches).
+                      physics: const PageScrollPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
                       children: [
                         // ── Tab 0 : Dépenses ─────────────────────────────
                         DepensesTab(

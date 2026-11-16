@@ -157,10 +157,11 @@ void main() {
       1500,
     );
     await pumpUntil(tester, find.text('Équilibre').hitTestable());
-    // Retour : on balaie sur la barre « Dépenses / Équilibre ». Sur la liste,
-    // le balayage change d'onglet interne (Dépenses ⇄ Équilibre), prioritaire.
+    // Retour en balayant sur la liste des dépenses : « Dépenses » est le
+    // premier onglet interne, le balayage passe donc le relais aux onglets
+    // de l'app et revient aux notes.
     await tester.fling(
-      find.text('Équilibre').hitTestable(),
+      find.text('Aucune dépense').hitTestable(),
       const Offset(400, 0),
       1500,
     );
