@@ -367,4 +367,43 @@ mixin _CalendarScreenSections
       ),
     );
   }
+
+  /// Mois en cours : événements à venir (en cours compris), puis passés,
+  /// légèrement estompés.
+  List<Widget> _buildUpcomingPastSections(List<Event> events, DateTime now) {
+    final (:upcoming, :past) = splitUpcomingPast(events, now);
+    Widget title(String text) => Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: context.colors.textPrimary,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+      ),
+    );
+    Widget card(Event e) => Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: CalendarEventCard(event: e),
+    );
+    return [
+      title(context.l10n.calendarEvenementsAVenir),
+      if (upcoming.isEmpty)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            context.l10n.calendarRienDePrevuCeMois,
+            style: TextStyle(color: context.colors.textSecondary, fontSize: 14),
+          ),
+        )
+      else
+        ...upcoming.map(card),
+      if (past.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        title(context.l10n.calendarEvenementsPasses),
+        ...past.map((e) => Opacity(opacity: 0.6, child: card(e))),
+      ],
+    ];
+  }
 }

@@ -145,7 +145,8 @@ void main() {
     await pumpUntil(tester, field('Titre'));
     await tester.enterText(field('Titre'), 'Événement E2E');
     await save(tester);
-    await pumpUntil(tester, find.text('Événement E2E'));
+    // Mois en cours : la liste commence par les événements à venir.
+    await pumpUntil(tester, find.text('Événements à venir'));
 
     // Balayer la grille change de mois (gauche → suivant, droite → retour).
     final now = DateTime.now();
@@ -158,13 +159,29 @@ void main() {
       1500,
     );
     await pumpUntil(tester, find.text(nextMonth));
+    // Autre mois : liste simple, sans sections à venir / passés.
+    await pumpUntil(tester, find.text('Événements du mois'));
     await tester.fling(
       find.byType(MonthSwipeDetector),
       const Offset(300, 0),
       1500,
     );
     await pumpUntil(tester, find.text(thisMonth));
-    await pumpUntil(tester, find.text('Événement E2E'));
+    // L'événement de test (aujourd'hui, 9 h – 10 h) est « à venir » ou
+    // « passé » selon l'heure : on fait défiler jusqu'à lui.
+    await tester.scrollUntilVisible(
+      find.text('Événement E2E'),
+      300,
+      scrollable: find
+          .descendant(
+            of: find.byType(CustomScrollView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    if (DateTime.now().hour >= 10) {
+      expect(find.text('Événements passés'), findsOneWidget);
+    }
 
     // ── Dépenses ──────────────────────────────────────────────────────────
     await tapAndPump(tester, navTab('Expenses'));

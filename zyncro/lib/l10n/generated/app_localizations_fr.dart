@@ -411,6 +411,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tu utilises un compte invité : en te déconnectant, il sera définitivement perdu, avec l\'accès à tes espaces. Cette action est irréversible.';
 
   @override
+  String get calendarEvenementsAVenir => 'Événements à venir';
+
+  @override
+  String get calendarEvenementsPasses => 'Événements passés';
+
+  @override
+  String get calendarRienDePrevuCeMois =>
+      'Plus rien de prévu d\'ici la fin du mois.';
+
+  @override
   String get chatEchecEnvoiMessage => 'Échec de l\'envoi du message.';
 
   @override

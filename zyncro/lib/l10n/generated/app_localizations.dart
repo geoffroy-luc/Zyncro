@@ -838,6 +838,24 @@ abstract class AppLocalizations {
   /// **'Tu utilises un compte invité : en te déconnectant, il sera définitivement perdu, avec l\'accès à tes espaces. Cette action est irréversible.'**
   String get authDeconnexionInvite;
 
+  /// No description provided for @calendarEvenementsAVenir.
+  ///
+  /// In fr, this message translates to:
+  /// **'Événements à venir'**
+  String get calendarEvenementsAVenir;
+
+  /// No description provided for @calendarEvenementsPasses.
+  ///
+  /// In fr, this message translates to:
+  /// **'Événements passés'**
+  String get calendarEvenementsPasses;
+
+  /// No description provided for @calendarRienDePrevuCeMois.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus rien de prévu d\'ici la fin du mois.'**
+  String get calendarRienDePrevuCeMois;
+
   /// No description provided for @chatEchecEnvoiMessage.
   ///
   /// In fr, this message translates to:

@@ -83,6 +83,11 @@ class _CalendarScreenState extends _CalendarScreenStateBase
       0,
     ).day;
     final leadingBlanks = firstOfMonth.weekday - 1;
+    final splitByNow =
+        _viewMode == ViewMode.month &&
+        _selectedDay == null &&
+        _displayedMonth.year == today.year &&
+        _displayedMonth.month == today.month;
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -132,17 +137,24 @@ class _CalendarScreenState extends _CalendarScreenStateBase
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Text(
-                      _selectedDay != null
-                          ? DateFormat('d MMMM', 'fr_FR').format(_selectedDay!)
-                          : 'Événements du mois',
-                      style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                    // Mois en cours sans jour choisi : les sections « À venir »
+                    // / « Passés » portent leur propre titre.
+                    if (!splitByNow || visibleEvents.isEmpty) ...[
+                      Text(
+                        _selectedDay != null
+                            ? DateFormat(
+                                'd MMMM',
+                                'fr_FR',
+                              ).format(_selectedDay!)
+                            : 'Événements du mois',
+                        style: TextStyle(
+                          color: context.colors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
+                    ],
                   ] else ...[
                     Text(
                       DateFormat('MMMM yyyy', 'fr_FR').format(_displayedMonth),
@@ -162,6 +174,8 @@ class _CalendarScreenState extends _CalendarScreenStateBase
                     _buildEmptyEvents(primaryColor, today)
                   else if (_viewMode == ViewMode.agenda)
                     ..._buildAgendaSections(visibleEvents, primaryColor)
+                  else if (splitByNow)
+                    ..._buildUpcomingPastSections(visibleEvents, today)
                   else
                     ...visibleEvents.map(
                       (e) => Padding(

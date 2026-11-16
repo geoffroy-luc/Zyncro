@@ -52,6 +52,35 @@ void main() {
     },
   );
 
+  test('mois en cours : à venir (en cours compris) puis passés', () {
+    final now = DateTime(2026, 11, 16, 14);
+    final finished = ev(
+      DateTime(2026, 11, 16, 9),
+      end: DateTime(2026, 11, 16, 10),
+      title: 'ce matin',
+    );
+    final noEnd = ev(DateTime(2026, 11, 3, 9), title: 'début du mois');
+    final ongoing = ev(
+      DateTime(2026, 11, 16, 13),
+      end: DateTime(2026, 11, 16, 15),
+      title: 'en cours',
+    );
+    final later = ev(DateTime(2026, 11, 20, 18), title: 'plus tard');
+    final soon = ev(DateTime(2026, 11, 16, 18), title: 'ce soir');
+
+    final (:upcoming, :past) = splitUpcomingPast([
+      later,
+      finished,
+      soon,
+      noEnd,
+      ongoing,
+    ], now);
+    // À venir : du plus proche au plus lointain, l'événement en cours inclus.
+    expect(upcoming.map((e) => e.title), ['en cours', 'ce soir', 'plus tard']);
+    // Passés : du plus récent au plus ancien.
+    expect(past.map((e) => e.title), ['ce matin', 'début du mois']);
+  });
+
   group('EventFilter', () {
     final a = ev(
       DateTime(2026),
